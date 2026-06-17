@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>环境感知联动</title><link rel="stylesheet" href="_base.css">
+<style>
+.split{display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;}
+.left-panel{width:240px;min-width:240px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+.right-area{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--gap);}
+.strat-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;}
+.strat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.strat-title{font-size:13px;font-weight:600;color:var(--tx);}
+.cond-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px solid rgba(30,58,110,.3);margin-bottom:6px;font-size:12px;color:var(--ts);}
+.cond-row .tag{flex-shrink:0;}
+.arr-ic{color:var(--ts);font-size:14px;}
+.tree-item{padding:7px 10px;border-radius:4px;font-size:12px;color:var(--ts);cursor:pointer;}
+.tree-item:hover{background:rgba(255,255,255,.04);color:var(--tx);}
+.tree-item.active{background:rgba(0,229,255,.08);color:var(--hl);border-left:2px solid var(--hl);}
+.tree-grp{font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;padding:8px 4px 4px;border-top:1px solid rgba(30,58,110,.3);margin-top:6px;}
+</style></head><body>
+<div class="ph">
+  <div class="pt">环境感知联动</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <button class="btn btnp" onclick="alert('新增策略')">+ 新增策略</button>
+  </div>
+</div>
+<div class="split">
+<div class="left-panel">
+  <div style="font-size:12px;color:var(--ts);font-weight:600;margin-bottom:4px;">策略列表</div>
+  <div class="tree-item active" onclick="selS(this)">人员感知节能策略</div>
+  <div class="tree-item" onclick="selS(this)">CO2浓度联动策略</div>
+  <div class="tree-item" onclick="selS(this)">温湿度自适应策略</div>
+  <div class="tree-item" onclick="selS(this)">门窗开关联动策略</div>
+  <div class="tree-grp">已停用</div>
+  <div class="tree-item" onclick="selS(this)" style="opacity:.55;">夜间防冻策略（停用）</div>
+</div>
+<div class="right-area">
+  <div class="strat-card">
+    <div class="strat-head">
+      <div class="strat-title" id="st">人员感知节能策略</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="tag tok">启用中</span>
+        <button class="btn" onclick="alert('编辑策略')">编辑</button>
+        <button class="btn btnd" onclick="alert('停用策略')">停用</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);">
+      <div>
+        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">触发条件</div>
+        <div class="cond-row"><span class="tag thl">感知设备</span><span>楼层内人感传感器</span></div>
+        <div class="cond-row"><span class="tag twn">触发条件</span><span>持续无人 ≥ 15 分钟</span></div>
+        <div class="cond-row"><span class="tag tin">有效时段</span><span>09:00 ~ 22:00（工作日）</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">执行动作</div>
+        <div class="cond-row"><span class="tag tbl">控制对象</span><span>当前楼层全部空调</span></div>
+        <div class="cond-row"><span class="tag tok">无人动作</span><span>升温至 28℃ / 低风速</span></div>
+        <div class="cond-row"><span class="tag tok">有人恢复</span><span>恢复 26℃ / 自动风速</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="strat-card">
+    <div class="strat-head"><div style="font-size:12px;font-weight:600;color:var(--ts);letter-spacing:.06em;">策略执行记录</div>
+      <button class="btn">导出</button>
+    </div>
+    <div class="tw" style="margin:0;">
+      <table><thead><tr><th>执行时间</th><th>触发设备</th><th>触发值</th><th>控制对象</th><th>执行动作</th><th>执行结果</th></tr></thead>
+      <tbody>
+        <tr><td>2026-06-11 14:20</td><td>2F-人感-02</td><td>持续无人 18min</td><td>二楼会议群组</td><td>升温至 28℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 13:05</td><td>2F-人感-02</td><td>检测到有人</td><td>二楼会议群组</td><td>恢复 26℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 11:30</td><td>3F-人感-03</td><td>持续无人 25min</td><td>三楼办公B区</td><td>升温至 28℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 09:45</td><td>1F-人感-03</td><td>持续无人 20min</td><td>一楼展示区</td><td>关机</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 09:02</td><td>1F-人感-03</td><td>检测到有人</td><td>一楼展示区</td><td>开机 / 26℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-10 16:50</td><td>2F-人感-05</td><td>持续无人 30min</td><td>二楼走廊空调</td><td>升温至 28℃</td><td><span class="tag twn">部分失败</span></td></tr>
+      </tbody></table>
+      <div class="pg"><div class="pg-info">共 48 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">›</span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+function selS(el){el.closest('div').querySelectorAll('.tree-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('st').textContent=el.textContent;}
+</script>
+</body></html>

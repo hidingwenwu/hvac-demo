@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>环境感知监测</title><link rel="stylesheet" href="_base.css">
+<style>
+.tabs{display:flex;gap:1px;background:var(--bd);border-radius:5px;overflow:hidden;margin-bottom:var(--gap);width:fit-content;}
+.tab{padding:7px 22px;font-size:13px;cursor:pointer;color:var(--ts);background:var(--bg);transition:all .15s;}
+.tab.act{background:var(--bl);color:#fff;font-weight:600;}
+.tab:hover:not(.act){color:var(--tx);background:rgba(255,255,255,.04);}
+.sc-row{display:flex;gap:6px;flex-wrap:wrap;}
+.sc-btn{padding:4px 14px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--bd);color:var(--ts);background:transparent;transition:all .15s;}
+.sc-btn.act{background:var(--hl);color:#030b1c;border-color:var(--hl);font-weight:600;}
+.sc-btn:hover:not(.act){border-color:var(--gw);color:var(--tx);}
+.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--gap);}
+.ec{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;transition:border-color .15s;}
+.ec:hover{border-color:var(--gw);}
+.ech{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.4);}
+.ecn{font-size:13px;font-weight:600;color:var(--tx);}
+.ecl{font-size:11px;color:var(--ts);margin-top:2px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
+.mi{background:rgba(255,255,255,.03);border:1px solid rgba(30,58,110,.3);border-radius:4px;padding:7px 8px;text-align:center;}
+.ml{font-size:10px;color:var(--ts);margin-bottom:3px;}
+.mv{font-size:22px;font-weight:700;font-family:'Roboto Mono',monospace;line-height:1.1;}
+.mv.tc{color:#00e5ff;}.mv.hc{color:#2979ff;}.mv.na{color:rgba(255,255,255,.2);font-size:14px;}
+.mu{font-size:11px;color:var(--ts);}
+.sb{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0 6px;gap:6px;}
+.si{font-size:34px;line-height:1;}
+.st{font-size:15px;font-weight:700;}
+.st.ok{color:var(--ok);}.st.wn{color:var(--wn);}.st.dim{color:rgba(255,255,255,.22);}
+.ef{font-size:10px;color:var(--ts);padding-top:6px;border-top:1px solid rgba(30,58,110,.3);margin-top:4px;}
+</style></head><body>
+<div class="ph"><div class="pt">环境感知监测</div><div class="pa"><button class="btn">导出</button></div></div>
+<div class="tabs">
+  <div class="tab act" onclick="sw(0,this)">温湿度状态</div>
+  <div class="tab" onclick="sw(1,this)">人体感知状态</div>
+  <div class="tab" onclick="sw(2,this)">门窗感知状态</div>
+</div>
+
+<div id="p0">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
+    <div class="sc-row"><div class="sc-btn act">全部 8</div><div class="sc-btn">接入 6</div><div class="sc-btn">未接入 1</div><div class="sc-btn">告警 1</div></div>
+    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
+      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
+      <div class="fi"><div class="fl">状态</div><select style="width:100px"><option>全部</option><option>接入</option><option>未接入</option><option>告警</option></select></div>
+      <button class="btn btnp">查询</button><button class="btn">重置</button>
+    </div>
+  </div>
+  <div class="eg" id="thg"></div>
+</div>
+
+<div id="p1" style="display:none">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
+    <div class="sc-row"><div class="sc-btn act">全部 10</div><div class="sc-btn">有人 3</div><div class="sc-btn">无人 6</div><div class="sc-btn">离线 1</div></div>
+    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
+      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
+      <button class="btn btnp">查询</button><button class="btn">重置</button>
+    </div>
+  </div>
+  <div class="eg" id="hug"></div>
+</div>
+
+<div id="p2" style="display:none">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
+    <div class="sc-row"><div class="sc-btn act">全部 8</div><div class="sc-btn">开启 2</div><div class="sc-btn">关闭 5</div><div class="sc-btn">离线 1</div></div>
+    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
+      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
+      <button class="btn btnp">查询</button><button class="btn">重置</button>
+    </div>
+  </div>
+  <div class="eg" id="dwg"></div>
+</div>
+
+<script>
+function sw(i,el){[0,1,2].forEach(j=>document.getElementById('p'+j).style.display=j===i?'':'none');document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('act',j===i));}
+const TH=[
+  {n:'5M传感器',l:'一楼入口',s:'on',t:31.3,h:27.4,ta:null,ha:null,u:'06-11 09:32'},
+  {n:'温湿度传感器-1F-01',l:'一楼大厅',s:'on',t:29.8,h:31.2,ta:35,ha:70,u:'06-11 09:31'},
+  {n:'温湿度传感器-2F-01',l:'二楼会议室',s:'on',t:24.1,h:45.0,ta:32,ha:70,u:'06-11 09:30'},
+  {n:'温湿度传感器-2F-02',l:'二楼开放办公',s:'warn',t:36.2,h:28.5,ta:35,ha:70,u:'06-11 09:29'},
+  {n:'温湿度传感器-3F-01',l:'三楼储藏室',s:'on',t:28.9,h:52.1,ta:null,ha:null,u:'06-11 09:28'},
+  {n:'温湿度传感器-B1-01',l:'B1餐饮区',s:'on',t:22.5,h:68.3,ta:30,ha:80,u:'06-11 09:27'},
+  {n:'温湿度传感器-B1-02',l:'B1通道',s:'on',t:23.1,h:62.5,ta:30,ha:80,u:'06-11 09:26'},
+  {n:'温湿度传感器-B1-03',l:'B1停车场',s:'off',t:null,h:null,ta:null,ha:null,u:'06-10 18:00'},
+];
+document.getElementById('thg').innerHTML=TH.map(d=>`<div class="ec" style="${d.s==='warn'?'border-color:var(--er)':''}">
+  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='warn'?'ter':d.s==='on'?'tok':'tin'}">${d.s==='warn'?'告警':d.s==='on'?'接入':'未接入'}</span></div>
+  <div class="mg">
+    <div class="mi"><div class="ml">当前温度</div>${d.t!=null?`<div class="mv tc">${d.t}<span class="mu">℃</span></div>`:`<div class="mv na">-℃</div>`}</div>
+    <div class="mi"><div class="ml">当前湿度</div>${d.h!=null?`<div class="mv hc">${d.h}<span class="mu">%RH</span></div>`:`<div class="mv na">-%</div>`}</div>
+    <div class="mi"><div class="ml">告警温度上限</div>${d.ta!=null?`<div class="mv tc" style="font-size:16px">${d.ta}<span class="mu">℃</span></div>`:`<div class="mv na">-℃</div>`}</div>
+    <div class="mi"><div class="ml">告警湿度上限</div>${d.ha!=null?`<div class="mv hc" style="font-size:16px">${d.ha}<span class="mu">%</span></div>`:`<div class="mv na">-%</div>`}</div>
+  </div>
+  <div class="ef">上次更新: ${d.u}</div>
+</div>`).join('');
+
+const HU=[
+  {n:'人体感知-1F-01',l:'一楼大厅入口',s:'in',u:'06-11 09:30'},
+  {n:'人体感知-1F-02',l:'一楼走廊',s:'none',u:'06-11 09:31'},
+  {n:'人体感知-2F-01',l:'二楼会议室A',s:'in',u:'06-11 09:28'},
+  {n:'人体感知-2F-02',l:'二楼开放办公',s:'in',u:'06-11 09:29'},
+  {n:'人体感知-2F-03',l:'二楼小会议室',s:'none',u:'06-11 09:25'},
+  {n:'人体感知-3F-01',l:'三楼储藏室',s:'none',u:'06-11 08:55'},
+  {n:'人体感知-3F-02',l:'三楼走廊',s:'none',u:'06-11 09:20'},
+  {n:'人体感知-B1-01',l:'B1餐饮区',s:'none',u:'06-11 09:30'},
+  {n:'人体感知-B1-02',l:'B1通道',s:'none',u:'06-11 09:22'},
+  {n:'人体感知-B1-03',l:'B1车库入口',s:'off',u:'06-10 20:15'},
+];
+document.getElementById('hug').innerHTML=HU.map(d=>`<div class="ec" style="${d.s==='in'?'border-color:var(--ok)':''}${d.s==='off'?'opacity:.55':''}">
+  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='in'?'tok':d.s==='off'?'tin':''}">${d.s==='in'?'有人':d.s==='off'?'离线':'无人'}</span></div>
+  <div class="sb"><div class="si">${d.s==='in'?'🚶':d.s==='off'?'⊘':'○'}</div><div class="st ${d.s==='in'?'ok':d.s==='off'?'dim':''}">${d.s==='in'?'有人':d.s==='off'?'离线':'无人'}</div></div>
+  <div class="ef">上次更新: ${d.u}</div>
+</div>`).join('');
+
+const DW=[
+  {n:'门磁感知-1F-01',l:'一楼大门',s:'open',u:'06-11 09:30'},
+  {n:'门磁感知-1F-02',l:'一楼侧门',s:'close',u:'06-11 09:31'},
+  {n:'门磁感知-2F-01',l:'二楼会议室A',s:'open',u:'06-11 09:28'},
+  {n:'门磁感知-2F-02',l:'二楼机房门',s:'close',u:'06-11 09:29'},
+  {n:'窗磁感知-2F-01',l:'二楼东侧窗',s:'close',u:'06-11 09:25'},
+  {n:'门磁感知-3F-01',l:'三楼储藏室',s:'close',u:'06-11 08:55'},
+  {n:'门磁感知-B1-01',l:'B1设备间',s:'close',u:'06-11 09:22'},
+  {n:'门磁感知-B1-02',l:'B1紧急出口',s:'off',u:'06-10 18:30'},
+];
+document.getElementById('dwg').innerHTML=DW.map(d=>`<div class="ec" style="${d.s==='open'?'border-color:var(--wn)':''}${d.s==='off'?'opacity:.55':''}">
+  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='open'?'twn':d.s==='off'?'tin':'tok'}">${d.s==='open'?'开启':d.s==='off'?'离线':'关闭'}</span></div>
+  <div class="sb"><div class="si">${d.s==='open'?'🔓':d.s==='off'?'⊘':'🔒'}</div><div class="st ${d.s==='open'?'wn':d.s==='off'?'dim':'ok'}">${d.s==='open'?'开启':d.s==='off'?'离线':'关闭'}</div></div>
+  <div class="ef">上次更新: ${d.u}</div>
+</div>`).join('');
+</script>
+</body></html>

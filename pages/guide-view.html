@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>平台操作指引</title>
+<style>
+:root{
+  --bg-base:#030b1c;
+  --bg-topbar:rgba(6,14,36,.88);
+  --bg-sidebar:rgba(8,20,50,.90);
+  --bg-card:rgba(14,28,66,.78);
+  --glass-mid:rgba(10,22,52,.82);
+  --glass-thick:rgba(8,18,44,.92);
+  --glass-solid:rgba(6,14,36,.97);
+  --border:rgba(255,255,255,.14);
+  --border-mid:rgba(255,255,255,.22);
+  --border-bright:rgba(255,255,255,.35);
+  --border-accent:rgba(77,166,255,.38);
+  --accent:#5ab8ff;
+  --accent-glow:rgba(90,184,255,.35);
+  --accent-dim:rgba(90,184,255,.12);
+  --text-primary:#f0f8ff;
+  --text-secondary:#a8c8e8;
+  --text-muted:#6888aa;
+  --text-label:#7a9bbe;
+  --red:#ff6b6b;
+  --red-dim:rgba(255,107,107,.12);
+  --radius-xs:4px;
+  --radius-sm:8px;
+  --radius:13px;
+  --radius-lg:18px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);
+  --spring:.38s cubic-bezier(.34,1.56,.64,1);
+  --shadow-card:0 8px 32px rgba(0,0,0,.50),0 2px 6px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.07);
+  --shadow-btn:0 4px 16px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09);
+  --shadow-modal:0 40px 90px rgba(0,0,0,.80),0 8px 32px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg-base);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text-primary);-webkit-font-smoothing:antialiased;}
+body{background:radial-gradient(ellipse at 25% 12%,rgba(22,55,140,.55) 0%,transparent 55%),radial-gradient(ellipse at 80% 85%,rgba(10,28,88,.45) 0%,transparent 50%),var(--bg-base);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.20);}
+
+/* 面包屑栏 */
+.bc-bar{
+  height:40px;flex-shrink:0;
+  background:var(--bg-topbar);
+  border-bottom:1px solid var(--border-mid);
+  display:flex;align-items:center;padding:0 20px;gap:10px;
+}
+.bc-back{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;font-size:12.5px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:var(--radius-xs);color:var(--text-secondary);
+  transition:all var(--transition);user-select:none;
+}
+.bc-back:hover{background:rgba(255,255,255,.10);color:var(--text-primary);}
+.bc-sep{color:var(--text-muted);font-size:12px;}
+.bc-cur{font-size:13px;color:var(--text-primary);font-weight:600;}
+
+/* 顶部 Tab */
+.guide-tabs{
+  flex-shrink:0;display:flex;align-items:stretch;
+  background:var(--bg-sidebar);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;gap:0;height:44px;
+}
+.guide-tab{
+  display:flex;align-items:center;gap:7px;
+  padding:0 18px;font-size:13.5px;color:var(--text-muted);
+  cursor:pointer;white-space:nowrap;
+  border-bottom:2.5px solid transparent;
+  transition:color var(--transition),border-color var(--transition),background var(--transition);
+  user-select:none;
+}
+.guide-tab:hover{color:var(--text-secondary);background:rgba(255,255,255,.04);}
+.guide-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+/* 页面整体布局 */
+#shell{display:flex;flex-direction:column;height:100vh;}
+.guide-body{flex:1;display:flex;overflow:hidden;}
+
+/* 左侧视频列表 */
+.guide-vidlist{
+  width:260px;min-width:260px;
+  background:var(--bg-sidebar);
+  backdrop-filter:blur(28px) saturate(180%);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;overflow:hidden;
+}
+.guide-vidlist-head{
+  padding:10px 12px 8px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;display:flex;flex-direction:column;gap:5px;
+  background:rgba(255,255,255,.02);
+}
+.guide-vidlist-search{position:relative;}
+.guide-vidlist-search input{
+  width:100%;
+  background:rgba(255,255,255,.07);border:1px solid var(--border-mid);
+  color:var(--text-primary);border-radius:var(--radius-sm);
+  padding:7px 10px 7px 30px;font-size:12.5px;font-family:inherit;outline:none;
+  transition:border-color var(--transition),background var(--transition);
+  backdrop-filter:blur(8px);
+}
+.guide-vidlist-search input:focus{border-color:var(--accent);background:rgba(90,184,255,.08);}
+.guide-vidlist-search input::placeholder{color:var(--text-label);}
+.guide-vidlist-search-icon{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  color:var(--text-label);font-size:13px;pointer-events:none;
+}
+.guide-vidlist-count{font-size:11px;color:var(--text-label);text-align:center;padding:1px 0 0;transition:color .2s;}
+.guide-vidlist-count.has-result{color:var(--accent);}
+.guide-vidlist-scroll{flex:1;overflow-y:auto;padding:4px 0 16px;}
+
+/* 视频行 */
+.vid-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px 8px 22px;
+  cursor:pointer;border-left:3px solid transparent;
+  color:#9ab8d8;font-size:13.5px;line-height:1.4;
+  transition:background var(--transition),border-color var(--transition),color var(--transition);
+}
+.vid-row:hover{background:rgba(255,255,255,.07);color:#c8e0f8;}
+.vid-row.active{background:rgba(90,184,255,.14);border-left-color:var(--accent);color:#e8f6ff;font-weight:500;}
+.vid-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* 右侧内容区 */
+#content{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;overflow:hidden;background:var(--bg-base);}
+
+/* 信息栏 */
+#infoBar{
+  flex-shrink:0;padding:11px 24px 10px;
+  border-bottom:1px solid var(--border);
+  display:none;
+  background:var(--glass-mid);backdrop-filter:blur(24px);
+  animation:slideDown .2s ease;
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ib-row1{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
+.ib-cat{font-size:12px;font-weight:600;color:var(--accent);background:rgba(77,174,255,.09);border:1px solid rgba(77,174,255,.20);border-radius:var(--radius-sm);padding:2px 10px;white-space:nowrap;flex-shrink:0;}
+.ib-title{font-size:17px;font-weight:700;color:var(--text-primary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.ib-progress{font-size:11.5px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;}
+.ib-desc{font-size:13.5px;color:var(--text-label);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* 播放区 */
+#playerZone{flex:1;min-height:0;display:none;flex-direction:column;padding:12px 24px 14px;gap:10px;overflow:hidden;}
+#playerBox{flex:1;min-height:0;position:relative;background:#000;border-radius:var(--radius);overflow:hidden;box-shadow:0 0 0 1px var(--border),var(--shadow-card);}
+#videoEl{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;}
+#loadingOverlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,10,24,.88);flex-direction:column;gap:12px;backdrop-filter:blur(8px);}
+.loading-spin{width:36px;height:36px;border-radius:50%;border:3px solid rgba(77,174,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text-label);}
+#errMsg{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:var(--bg-base);color:var(--text-label);font-size:14px;padding:20px;text-align:center;}
+#errMsg .e-icon{font-size:42px;opacity:.3;margin-bottom:4px;}
+#errFile{color:var(--text-muted);font-size:12.5px;font-family:monospace;word-break:break-all;}
+
+/* 导航按钮 */
+#navBar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 20px;
+  background:rgba(77,174,255,.07);border:1px solid rgba(77,174,255,.18);
+  color:var(--text-secondary);border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;
+  transition:all var(--transition);backdrop-filter:blur(12px);box-shadow:var(--shadow-btn);
+}
+.nav-btn:hover:not(:disabled){background:rgba(77,174,255,.16);color:#b4d8f8;border-color:rgba(77,174,255,.38);transform:translateY(-2px);}
+.nav-btn:disabled{opacity:.2;cursor:not-allowed;}
+.nav-pos-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.nav-pos{font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
+.nav-kb-hint{font-size:11px;color:var(--text-muted);opacity:.5;}
+.nav-kb-hint kbd{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:0 4px;font-family:inherit;font-size:10px;}
+
+/* 欢迎状态 */
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-muted);padding:40px;text-align:center;}
+.w-icon-wrap{width:76px;height:76px;border-radius:22px;background:var(--glass-mid);border:1px solid var(--border);box-shadow:var(--shadow-card),0 0 40px rgba(77,174,255,.08);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:4px;animation:floatUp 3s ease-in-out infinite;backdrop-filter:blur(16px);}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+#welcome h3{font-size:18px;color:var(--text-label);font-weight:600;}
+#welcome p{font-size:13.5px;color:var(--text-muted);line-height:1.7;max-width:280px;}
+.w-tips{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center;}
+.w-tip{font-size:11.5px;color:var(--text-muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;backdrop-filter:blur(8px);}
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- 面包屑栏 -->
+  <div class="bc-bar">
+    <div class="bc-back" onclick="goBack()">← 返回</div>
+    <span class="bc-sep">/</span>
+    <span class="bc-cur">平台操作指引</span>
+  </div>
+
+  <!-- 分类 Tab -->
+  <div class="guide-tabs" id="guideTabs"></div>
+
+  <!-- 主体 -->
+  <div class="guide-body">
+
+    <!-- 左侧视频列表 -->
+    <div class="guide-vidlist">
+      <div class="guide-vidlist-head">
+        <div class="guide-vidlist-search">
+          <span class="guide-vidlist-search-icon">🔍</span>
+          <input type="text" id="vidSearchInput" placeholder="搜索视频…" oninput="filterVidlist(this.value)">
+        </div>
+        <div class="guide-vidlist-count" id="vidCountLabel"></div>
+      </div>
+      <div class="guide-vidlist-scroll" id="vidScroll"></div>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div id="content">
+      <div id="infoBar">
+        <div class="ib-row1">
+          <span class="ib-cat" id="ibCat"></span>
+          <span class="ib-title" id="ibTitle"></span>
+          <span class="ib-progress" id="ibProgress"></span>
+        </div>
+        <div class="ib-desc" id="ibDesc"></div>
+      </div>
+
+      <div id="playerZone">
+        <div id="playerBox">
+          <video id="videoEl" controls></video>
+          <div id="loadingOverlay">
+            <div class="loading-spin"></div>
+            <div class="loading-text">视频加载中…</div>
+          </div>
+          <div id="errMsg">
+            <div class="e-icon">🎬</div>
+            <div>视频文件尚未放置</div>
+            <div id="errFile"></div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">请将视频文件放入与此 HTML 相同的目录</div>
+          </div>
+        </div>
+        <div id="navBar">
+          <button class="nav-btn" id="btnPrev" onclick="navigate(-1)">← 上一个</button>
+          <div class="nav-pos-wrap">
+            <span class="nav-pos" id="navPos"></span>
+            <span class="nav-kb-hint"><kbd>←</kbd> <kbd>→</kbd> 切换</span>
+          </div>
+          <button class="nav-btn" id="btnNext" onclick="navigate(1)">下一个 →</button>
+        </div>
+      </div>
+
+      <div id="welcome">
+        <div class="w-icon-wrap">🎬</div>
+        <h3>平台操作指引</h3>
+        <p>从左侧选择一个视频开始学习，了解平台各功能的使用方法。</p>
+        <div class="w-tips">
+          <span class="w-tip">左右方向键切换视频</span>
+          <span class="w-tip">支持全屏播放</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CATEGORIES=[
+  {name:'常用集控操作',icon:'❄️',videos:[
+    {id:'D02',title:'平台访问与登录',desc:'介绍平台登录方式，包括账号密码登录和手机号登录，以及首次登录的操作步骤。',file:'【D02】集控计费平台01-如何登录平台.mp4'},
+    {id:'D03',title:'查看项目综合监控大屏',desc:'展示大屏各模块关键数据，包含空调运行状态统计、项目总览、能耗趋势及日使用详情等。',file:'【D03】集控计费平台02-综合大屏查看项目总览.mp4'},
+    {id:'D04',title:'查看空调详细状态',desc:'演示如何进入空调详情页，查看单台空调的运行参数、温度设定、模式及风速等状态信息。',file:'【D04】集控计费平台03-查看空调详细状态.mp4'},
+    {id:'D05',title:'单台或批量控制空调',desc:'演示如何对单台空调进行开关机、调温等控制，以及如何批量统一控制多台空调。',file:'【D05】集控计费平台04-单台&批量控制空调.mp4'},
+    {id:'D06',title:'创建定时任务',desc:'演示如何创建空调定时开关机任务，支持按周循环、指定时间段等灵活配置。',file:'【D06】集控计费平台05-创建定时任务.mp4'},
+    {id:'D07',title:'创建群组及群组控制',desc:'演示如何将多台空调加入群组，并通过群组一键统一控制，提升管理效率。',file:'【D07】集控计费平台06-创建群组及群组控制.mp4'},
+    {id:'D08',title:'锁定空调状态',desc:'演示如何锁定空调状态，防止其他用户修改，适用于需要保持特定运行状态的场景。',file:'【D08】集控计费平台07-空调状态锁定功能.mp4'},
+    {id:'D09',title:'查看开关机记录',desc:'演示如何查询空调的历史开关机操作记录，了解空调使用情况与操作日志。',file:'【D09】集控计费平台08-查看开关机记录.mp4'},
+    {id:'D10',title:'查看空调故障记录',desc:'演示如何查看空调故障告警历史，包括故障类型、发生时间及处理状态。',file:'【D10】集控计费平台09-安装-故障记录.mp4'},
+    {id:'D11',title:'查看环境感知状态',desc:'演示如何在平台中查看各环境传感器的实时数据，如温度、湿度、CO₂浓度等。',file:'【D11】集控计费平台10-查看环境感知状态.mp4'},
+    {id:'D19',title:'创建空调可视化布局',desc:'演示如何使用空调可视化管理功能，在平面图上查看并控制各区域空调设备。',file:'【D19】集控计费平台23-空调可视化管理.mp4'},
+  ]},
+  {name:'项目调试维护',icon:'🔧',videos:[
+    {id:'D12',title:'创建建筑物及绑定空调关系',desc:'演示如何在项目设置中创建建筑物结构，并将空调设备与楼层、区域进行绑定。',file:'【D12】集控计费平台11-项目设置页.mp4'},
+    {id:'D13',title:'自定义空调名称',desc:'演示如何修改空调设备的显示名称，便于现场对应识别与日常管理。',file:'【D13】集控计费平台12-空调名称自定义.mp4'},
+    {id:'D14',title:'添加网关设备',desc:'演示如何在平台中添加新的网关设备，完成配网并与项目绑定。',file:'【D14】集控计费平台13-添加网关设备.mp4'},
+    {id:'D15',title:'添加子账户',desc:'演示如何创建子账户，并为其分配可管理的项目及功能权限。',file:'【D15】集控计费平台14-添加子账户.mp4'},
+    {id:'D24',title:'添加传感器',desc:'演示如何在平台中添加环境传感器，完成配置并与空调联动策略绑定。',file:'【D24】集控计费平台17-添加传感器.mp4'},
+    {id:'D25',title:'添加电表',desc:'演示如何在平台中添加电表设备，完成通信配置并与计费系统关联。',file:'【D25】集控计费平台18-添加电表.mp4'},
+  ]},
+  {name:'节能策略相关',icon:'♻️',videos:[
+    {id:'D16',title:'创建环境感知联动策略',desc:'演示如何根据传感器数据创建自动联动策略，实现空调智能调节。',file:'【D16】集控计费平台15-创建环境感知联动策略.mp4'},
+    {id:'D17',title:'创建极致节能策略',desc:'演示如何创建极致节能运行策略，通过参数优化在保证舒适度的同时最大化节能效果。',file:'【D17】集控计费平台16-创建极致节能策略.mp4'},
+  ]},
+  {name:'分户计费相关',icon:'💰',videos:[
+    {id:'D20',title:'查询电费账单',desc:'演示如何查询各租户的月度电费账单，支持按项目、日期范围筛选查看。',file:'【D20】集控计费平台19-查询电费账单.mp4'},
+    {id:'D21',title:'查询费用明细',desc:'演示如何查看租户用电明细，包括分时用电量、空调用电占比等详细统计数据。',file:'【D21】集控计费平台20-查看详情用电情况.mp4'},
+    {id:'D22',title:'设定电价',desc:'演示如何为项目设置分时电价方案，支持峰谷平电价及自定义时段配置。',file:'【D22】集控计费平台21-设定电价.mp4'},
+    {id:'D23',title:'维护租户信息',desc:'演示如何添加、编辑、删除租户信息，包括绑定对应空调设备和用电区域。',file:'【D23】集控计费平台22-租户管理.mp4'},
+  ]},
+];
+
+const allVideos=CATEGORIES.flatMap(c=>c.videos);
+let currentId=null;
+let activeTab=0;
+
+function getTabVideos(i){return CATEGORIES[i]?CATEGORIES[i].videos:[];}
+
+function buildTabs(){
+  const el=document.getElementById('guideTabs');el.innerHTML='';
+  CATEGORIES.forEach((cat,i)=>{
+    const btn=document.createElement('div');
+    btn.className='guide-tab'+(i===activeTab?' active':'');
+    btn.innerHTML=`<span>${cat.name}</span>`;
+    btn.addEventListener('click',()=>{
+      if(i===activeTab)return;
+      activeTab=i;buildTabs();buildVidlist();
+      const vids=getTabVideos(activeTab);
+      if(vids.length>0&&!vids.some(v=>v.id===currentId))pickVideo(vids[0].id);
+    });
+    el.appendChild(btn);
+  });
+}
+
+let searchQ='';
+function filterVidlist(q){searchQ=q.trim().toLowerCase();buildVidlist();}
+
+function highlight(text,q){
+  const idx=text.toLowerCase().indexOf(q);
+  if(idx<0)return text;
+  return text.slice(0,idx)+`<mark style="background:rgba(77,174,255,.22);color:#a8d8ff;border-radius:2px;padding:0 1px">${text.slice(idx,idx+q.length)}</mark>`+text.slice(idx+q.length);
+}
+
+function buildVidlist(){
+  const scroll=document.getElementById('vidScroll');scroll.innerHTML='';
+  const vids=getTabVideos(activeTab);
+  const filtered=searchQ?vids.filter(v=>v.title.toLowerCase().includes(searchQ)||v.desc.toLowerCase().includes(searchQ)):vids;
+  filtered.forEach(v=>{
+    const row=document.createElement('div');
+    row.className='vid-row'+(v.id===currentId?' active':'');
+    row.id='vr-'+v.id;
+    row.innerHTML=`<span class="vid-name">${searchQ?highlight(v.title,searchQ):v.title}</span>`;
+    row.addEventListener('click',()=>pickVideo(v.id));
+    scroll.appendChild(row);
+  });
+  const cnt=document.getElementById('vidCountLabel');
+  if(searchQ){cnt.textContent=`找到 ${filtered.length} 个`;cnt.className='guide-vidlist-count'+(filtered.length>0?' has-result':'');}
+  else{cnt.textContent=`共 ${vids.length} 个视频`;cnt.className='guide-vidlist-count';}
+}
+
+function pickVideo(id){
+  currentId=id;
+  const video=allVideos.find(v=>v.id===id);
+  if(!video)return;
+  const cat=CATEGORIES.find(c=>c.videos.some(v=>v.id===id));
+  document.getElementById('infoBar').style.display='block';
+  document.getElementById('ibCat').textContent=cat.name;
+  document.getElementById('ibTitle').textContent=video.title;
+  document.getElementById('ibDesc').textContent=video.desc;
+  const tabVids=getTabVideos(activeTab);
+  const tabIdx=tabVids.findIndex(v=>v.id===id);
+  document.getElementById('ibProgress').textContent=tabIdx>=0?`${tabIdx+1} / ${tabVids.length}`:'';
+  document.getElementById('playerZone').style.display='flex';
+  document.getElementById('welcome').style.display='none';
+  const videoEl=document.getElementById('videoEl');
+  const errMsg=document.getElementById('errMsg');
+  const loading=document.getElementById('loadingOverlay');
+  videoEl.style.display='block';errMsg.style.display='none';loading.style.display='flex';
+  videoEl.src='';videoEl.load();videoEl.src=video.file;videoEl.load();
+  videoEl.oncanplay=()=>{loading.style.display='none';};
+  videoEl.onerror=()=>{loading.style.display='none';videoEl.style.display='none';document.getElementById('errFile').textContent=video.file;errMsg.style.display='flex';};
+  document.getElementById('btnPrev').disabled=(tabIdx<=0);
+  document.getElementById('btnNext').disabled=(tabIdx>=tabVids.length-1);
+  document.getElementById('navPos').textContent=tabIdx>=0?(tabIdx+1)+' / '+tabVids.length:'';
+  buildVidlist();
+  requestAnimationFrame(()=>{const el=document.getElementById('vr-'+id);if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'});});
+}
+
+function navigate(dir){
+  const vids=getTabVideos(activeTab);
+  const idx=vids.findIndex(v=>v.id===currentId);
+  const next=vids[idx+dir];
+  if(next)pickVideo(next.id);
+}
+
+function goBack(){
+  try{
+    if(window.parent&&window.parent.nav){window.parent.nav('overview-big');return;}
+  }catch(e){}
+  window.history.back();
+}
+
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();navigate(1);}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();navigate(-1);}
+});
+
+buildTabs();
+buildVidlist();
+// 默认选中第一个视频
+const firstVid=getTabVideos(0)[0];
+if(firstVid)pickVideo(firstVid.id);
+</script>
+</body>
+</html>

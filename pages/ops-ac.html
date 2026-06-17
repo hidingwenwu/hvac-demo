@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>空调参数</title><link rel="stylesheet" href="_base.css">
+<style>
+.fb{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--gap);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.fi{display:flex;flex-direction:column;}
+.fl{font-size:12px;color:var(--ts);margin-bottom:4px;}
+.ac-param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--gap);}
+.apc{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;transition:border-color .15s;}
+.apc:hover{border-color:var(--gw);}
+.apc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.4);}
+.apc-name{font-size:13px;font-weight:600;color:var(--tx);}
+.apc-loc{font-size:11px;color:var(--ts);margin-top:2px;}
+.param-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.param-row:last-child{border-bottom:none;}
+.param-key{color:var(--ts);}
+.param-val{color:var(--tx);font-family:'Roboto Mono',monospace;font-size:12px;}
+.param-val.hl{color:var(--hl);}
+.param-val.ok{color:var(--ok);}
+.param-val.er{color:var(--er);}
+.param-val.wn{color:var(--wn);}
+.apc-ops{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(30,58,110,.3);}
+</style></head><body>
+<div class="ph">
+  <div class="pt">空调参数</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <button class="btn">导出</button>
+  </div>
+</div>
+<div class="fb">
+  <div class="fi"><div class="fl">楼层</div><select style="width:100px"><option value="">全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
+  <div class="fi"><div class="fl">品牌</div><select style="width:100px"><option value="">全部</option><option>大金</option><option>格力</option><option>美的</option><option>海信</option></select></div>
+  <div class="fi"><div class="fl">空调名称</div><input placeholder="请输入" style="width:140px"></div>
+  <div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>在线</option><option>离线</option><option>故障</option></select></div>
+  <button class="btn btnp">查询</button><button class="btn">重置</button>
+</div>
+<div class="ac-param-grid" id="apg"></div>
+<script>
+const ACS=[
+  {n:'1F-大厅-01',loc:'一楼大厅',ctrl:'CTR001',ch:'CH01',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'01',fw:'V2.3.1',t:25,set:26,mode:'制冷',wind:'自动',s:'on'},
+  {n:'1F-大厅-02',loc:'一楼大厅',ctrl:'CTR001',ch:'CH02',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'02',fw:'V2.3.1',t:24,set:26,mode:'制冷',wind:'低速',s:'on'},
+  {n:'1F-大厅-03',loc:'一楼大厅',ctrl:'CTR001',ch:'CH03',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'03',fw:'V2.3.0',t:null,set:26,mode:'制冷',wind:'自动',s:'fault'},
+  {n:'2F-会议-01',loc:'二楼大会议室',ctrl:'CTR002',ch:'CH01',brand:'格力',model:'KFR-72LW/NhBa3BG',ip:'192.168.1.11',port:'8080',addr:'01',fw:'V3.1.2',t:22,set:22,mode:'制冷',wind:'中速',s:'on'},
+  {n:'2F-会议-02',loc:'二楼小会议室',ctrl:'CTR002',ch:'CH02',brand:'格力',model:'KFR-50LW/NhBa3BG',ip:'192.168.1.11',port:'8080',addr:'02',fw:'V3.1.2',t:null,set:26,mode:'制冷',wind:'自动',s:'off'},
+  {n:'2F-办公-01',loc:'二楼开放办公',ctrl:'CTR002',ch:'CH03',brand:'美的',model:'KFR-35GW/BP3DN8Y-IA400',ip:'192.168.1.11',port:'8080',addr:'03',fw:'V1.8.5',t:26,set:26,mode:'制冷',wind:'自动',s:'on'},
+  {n:'3F-储藏-01',loc:'三楼储藏室',ctrl:'CTR003',ch:'CH01',brand:'美的',model:'KFR-35GW/BP3DN8Y-IA400',ip:'192.168.1.12',port:'8080',addr:'01',fw:'V1.8.4',t:null,set:28,mode:'制冷',wind:'低速',s:'fault'},
+  {n:'B1-餐饮-01',loc:'B1餐饮区',ctrl:'CTR005',ch:'CH01',brand:'海信',model:'KFR-72LW/H3FDBp-A3',ip:'192.168.1.14',port:'8080',addr:'01',fw:'V2.0.6',t:23,set:24,mode:'制冷',wind:'高速',s:'on'},
+];
+document.getElementById('apg').innerHTML=ACS.map(a=>{
+  const stc=a.s==='on'?'ok':a.s==='fault'?'er':'';
+  const sl=a.s==='on'?'在线':a.s==='fault'?'故障':'待机';
+  const tc=a.t!=null?a.t+'℃':'—';
+  return`<div class="apc">
+    <div class="apc-head">
+      <div><div class="apc-name">${a.n}</div><div class="apc-loc">${a.loc} / ${a.ctrl} ${a.ch}</div></div>
+      <span class="tag ${a.s==='on'?'tok':a.s==='fault'?'ter':'tin'}">${sl}</span>
+    </div>
+    <div class="param-row"><span class="param-key">品牌型号</span><span class="param-val">${a.brand} ${a.model}</span></div>
+    <div class="param-row"><span class="param-key">通信地址</span><span class="param-val hl">${a.ip}:${a.port} / 地址${a.addr}</span></div>
+    <div class="param-row"><span class="param-key">固件版本</span><span class="param-val">${a.fw}</span></div>
+    <div class="param-row"><span class="param-key">当前回风温度</span><span class="param-val ${stc}">${tc}</span></div>
+    <div class="param-row"><span class="param-key">设定温度</span><span class="param-val">${a.set}℃</span></div>
+    <div class="param-row"><span class="param-key">运行模式</span><span class="param-val">${a.mode}</span></div>
+    <div class="param-row"><span class="param-key">风速</span><span class="param-val">${a.wind}</span></div>
+    <div class="apc-ops">
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('查看详情')">详情</button>
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('修改参数')">修改</button>
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('下发指令')">下发</button>
+    </div>
+  </div>`;
+}).join('');
+</script>
+</body></html>

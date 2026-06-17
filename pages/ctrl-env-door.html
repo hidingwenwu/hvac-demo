@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>门窗感知状态</title><link rel="stylesheet" href="_base.css">
+<style>
+.env-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.env-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;text-align:center;transition:border-color .15s;}
+.env-card:hover{border-color:var(--gw);}
+.env-card.open{border-color:rgba(255,179,0,.4);background:rgba(255,179,0,.06);}
+.env-card.closed{border-color:rgba(0,230,118,.3);}
+.env-card.offline{opacity:.45;}
+.ev-ic{font-size:28px;margin-bottom:6px;}
+.ev-st{font-size:13px;font-weight:700;margin-bottom:4px;}
+.ev-n{font-size:11px;color:var(--ts);margin-bottom:2px;}
+.ev-loc{font-size:10px;color:var(--ts);}
+.ev-time{font-size:10px;color:var(--ts);margin-top:6px;}
+.fl-tab{padding:4px 12px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;display:inline-block;}
+.fl-tab.active{background:rgba(41,121,255,.2);border-color:var(--bl);color:var(--tx);}
+</style></head><body>
+<div class="ph">
+  <div class="pt">门窗感知状态</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <span style="font-size:12px;color:var(--ts);">开启 <b style="color:var(--wn);">5</b> / 关闭 <b style="color:var(--ok);">13</b> / 离线 <b style="color:var(--er);">2</b></span>
+  </div>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+  <div class="fl-tab active" onclick="flt(this,'all')">全部</div>
+  <div class="fl-tab" onclick="flt(this,'1F')">1F</div>
+  <div class="fl-tab" onclick="flt(this,'2F')">2F</div>
+  <div class="fl-tab" onclick="flt(this,'3F')">3F</div>
+  <div class="fl-tab" onclick="flt(this,'B1')">B1</div>
+  <div class="fl-tab" onclick="flt(this,'open')">开启</div>
+  <div class="fl-tab" onclick="flt(this,'closed')">关闭</div>
+</div>
+<div class="env-grid" id="eg"></div>
+<script>
+const DEVS=[
+  {n:'1F-门窗-01',loc:'一楼大厅正门',fl:'1F',s:'open',t:'14:20'},
+  {n:'1F-门窗-02',loc:'一楼大厅侧门',fl:'1F',s:'closed',t:'09:00'},
+  {n:'1F-门窗-03',loc:'一楼展示区门',fl:'1F',s:'closed',t:'08:30'},
+  {n:'1F-门窗-04',loc:'一楼货梯门',fl:'1F',s:'open',t:'14:18'},
+  {n:'2F-门窗-01',loc:'二楼会议室A主门',fl:'2F',s:'open',t:'14:05'},
+  {n:'2F-门窗-02',loc:'二楼会议室B主门',fl:'2F',s:'closed',t:'11:30'},
+  {n:'2F-门窗-03',loc:'二楼办公区门',fl:'2F',s:'closed',t:'08:45'},
+  {n:'2F-门窗-04',loc:'二楼楼梯间门',fl:'2F',s:'closed',t:'08:00'},
+  {n:'2F-门窗-05',loc:'二楼消防通道',fl:'2F',s:'closed',t:'08:00'},
+  {n:'3F-门窗-01',loc:'三楼办公区门',fl:'3F',s:'closed',t:'08:50'},
+  {n:'3F-门窗-02',loc:'三楼储藏室门',fl:'3F',s:'closed',t:'10:00'},
+  {n:'3F-门窗-03',loc:'三楼机房门',fl:'3F',s:'offline',t:'—'},
+  {n:'B1-门窗-01',loc:'B1餐饮入口',fl:'B1',s:'open',t:'10:00'},
+  {n:'B1-门窗-02',loc:'B1货物通道',fl:'B1',s:'open',t:'13:45'},
+  {n:'B1-门窗-03',loc:'B1消防出口',fl:'B1',s:'closed',t:'08:00'},
+  {n:'B1-门窗-04',loc:'B1库房门',fl:'B1',s:'closed',t:'09:30'},
+  {n:'B1-门窗-05',loc:'B1设备间',fl:'B1',s:'offline',t:'—'},
+  {n:'1F-门窗-05',loc:'一楼停车入口',fl:'1F',s:'closed',t:'08:00'},
+  {n:'2F-门窗-06',loc:'二楼天台入口',fl:'2F',s:'closed',t:'08:00'},
+  {n:'3F-门窗-04',loc:'三楼展览厅门',fl:'3F',s:'closed',t:'09:15'},
+];
+let cf='all';
+function flt(el,f){cf=f;el.closest('div').querySelectorAll('.fl-tab').forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function render(){
+  const list=DEVS.filter(d=>cf==='all'||(cf==='open'||cf==='closed')?d.s===cf:d.fl===cf);
+  document.getElementById('eg').innerHTML=list.map(d=>{
+    const ic=d.s==='open'?'🚪':d.s==='offline'?'📵':'🚪';
+    const stc=d.s==='open'?'color:var(--wn)':d.s==='offline'?'color:var(--er)':'color:var(--ok)';
+    const sl=d.s==='open'?'开启':d.s==='offline'?'离线':'关闭';
+    return`<div class="env-card ${d.s}"><div class="ev-ic">${ic}</div><div class="ev-st" style="${stc}">${sl}</div><div class="ev-n">${d.n}</div><div class="ev-loc">${d.loc}</div><div class="ev-time">更新: ${d.t}</div></div>`;
+  }).join('');
+}
+render();
+</script>
+</body></html>

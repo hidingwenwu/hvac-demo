@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>项目总览大屏</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#020d1f;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;overflow:hidden;}
+.shell{display:flex;flex-direction:column;height:100vh;}
+.hd{height:48px;display:flex;align-items:center;justify-content:center;background:linear-gradient(to bottom,#081c3a,transparent);border-bottom:1px solid rgba(0,229,255,.15);flex-shrink:0;position:relative;}
+.hd-title{font-size:18px;font-weight:700;letter-spacing:.12em;background:linear-gradient(to right,#00e5ff,#fff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hd-side{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,229,255,.7);font-family:monospace;}
+.hd-side.l{left:20px;}
+.hd-side.r{right:20px;}
+.bd{display:flex;flex:1;overflow:hidden;padding:12px;gap:12px;}
+.col-l{width:200px;min-width:200px;display:flex;flex-direction:column;gap:10px;}
+.col-c{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;}
+.col-r{width:220px;min-width:220px;display:flex;flex-direction:column;gap:10px;}
+.stat-box{background:rgba(0,40,90,.5);border:1px solid rgba(0,229,255,.2);border-radius:6px;padding:12px 16px;}
+.stat-lbl{font-size:11px;color:rgba(0,229,255,.7);letter-spacing:.06em;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.stat-lbl::before{content:'';width:4px;height:4px;border-radius:50%;background:#00e5ff;box-shadow:0 0 6px #00e5ff;display:inline-block;}
+.stat-val{font-size:28px;font-weight:700;font-family:'Roboto Mono',monospace;color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,.5);}
+.stat-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.map-box{flex:1;background:rgba(0,20,50,.6);border:1px solid rgba(0,229,255,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.map-svg{width:100%;height:100%;}
+.chart-row{height:130px;display:flex;gap:10px;}
+.chart-box{flex:1;background:rgba(0,40,90,.5);border:1px solid rgba(0,229,255,.2);border-radius:6px;padding:10px 12px;}
+.chart-title{font-size:11px;color:rgba(0,229,255,.8);letter-spacing:.06em;margin-bottom:8px;}
+canvas{width:100%;height:90px;}
+.dot-list{display:flex;flex-direction:column;gap:6px;}
+.dot-item{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.75);}
+.dot-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-item .val{margin-left:auto;font-family:monospace;color:#00e5ff;}
+.seg-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:2px;}
+.seg-fill{height:100%;border-radius:3px;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head><body>
+<div class="shell">
+  <div class="hd">
+    <div class="hd-side l" id="clk"></div>
+    <div class="hd-title">飞奕中央空调项目分布总览</div>
+    <div class="hd-side r">21°C &nbsp;|&nbsp; 晴 &nbsp;|&nbsp; 上海</div>
+  </div>
+  <div class="bd">
+    <div class="col-l">
+      <div class="stat-box"><div class="stat-lbl">总项目数</div><div class="stat-val">1,211</div><div class="stat-sub">较上月 +24</div></div>
+      <div class="stat-box"><div class="stat-lbl">总设备数</div><div class="stat-val">16,319</div><div class="stat-sub">在线率 97.2%</div></div>
+      <div class="stat-box"><div class="stat-lbl">KW能耗(今日)</div><div class="stat-val">174,094</div><div class="stat-sub">较昨日 -2.1%</div></div>
+      <div class="stat-box"><div class="stat-lbl">节约电费(本月)</div><div class="stat-val">70,710</div><div class="stat-sub">元 &nbsp;节能率 18.4%</div></div>
+      <div class="chart-box" style="flex:1;">
+        <div class="chart-title">设备状态分布</div>
+        <div class="dot-list">
+          <div class="dot-item"><div class="dot" style="background:#00e676;box-shadow:0 0 5px #00e676"></div>在线运行<div class="val">15,862</div></div>
+          <div class="dot-item"><div class="dot" style="background:#2979ff"></div>在线待机<div class="val">324</div></div>
+          <div class="dot-item"><div class="dot" style="background:#ffb300"></div>离线<div class="val">98</div></div>
+          <div class="dot-item"><div class="dot" style="background:#ff4d4f;box-shadow:0 0 5px #ff4d4f"></div>故障<div class="val">35</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-c">
+      <div class="map-box" id="mapChart"></div>
+      <div class="chart-row">
+        <div class="chart-box"><div class="chart-title">各省项目数量 TOP10</div><div id="barChart" style="height:90px;"></div></div>
+        <div class="chart-box"><div class="chart-title">能耗类型分布</div><div id="pieChart" style="height:90px;"></div></div>
+        <div class="chart-box"><div class="chart-title">近7日节能趋势</div><div id="lineChart" style="height:90px;"></div></div>
+      </div>
+    </div>
+    <div class="col-r">
+      <div class="stat-box"><div class="stat-lbl">接入省份</div><div class="stat-val">10,035</div><div class="stat-sub">覆盖31个省市</div></div>
+      <div class="stat-box"><div class="stat-lbl">接入城市</div><div class="stat-val">8,891</div></div>
+      <div class="stat-box"><div class="stat-lbl">合作服务商</div><div class="stat-val">93</div></div>
+      <div class="stat-box"><div class="stat-lbl">累计节电(kWh)</div><div class="stat-val">118,926</div><div class="stat-sub">万度</div></div>
+      <div class="chart-box" style="flex:1;">
+        <div class="chart-title">近期新增项目</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+          <div style="font-size:12px;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:6px;">上海浦东某商业综合体 <span style="color:#00e5ff;font-size:11px;float:right;">今日</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:6px;">北京朝阳区某写字楼 <span style="color:#00e5ff;font-size:11px;float:right;">昨日</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:6px;">广州天河某购物中心 <span style="color:#00e5ff;font-size:11px;float:right;">2天前</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:6px;">深圳南山某科技园 <span style="color:#00e5ff;font-size:11px;float:right;">3天前</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);">杭州西湖区某办公楼 <span style="color:#00e5ff;font-size:11px;float:right;">4天前</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function tick(){const n=new Date();document.getElementById('clk').textContent=n.toLocaleString('zh-CN',{hour12:false});}
+tick();setInterval(tick,1000);
+
+const mapC=echarts.init(document.getElementById('mapChart'));
+mapC.setOption({backgroundColor:'transparent',geo:{map:'china',roam:false,label:{show:false},itemStyle:{areaColor:'#0a1f44',borderColor:'#1e3a6e',borderWidth:.8},emphasis:{itemStyle:{areaColor:'#1a3a6e'}}},series:[{type:'effectScatter',coordinateSystem:'geo',data:[[121.47,31.23,80],[116.40,39.90,60],[113.26,23.13,55],[114.06,22.54,45],[120.15,30.28,40],[104.06,30.67,35],[117.19,39.13,30],[108.94,34.46,28],[106.55,29.56,25],[117.12,36.65,22]],symbolSize:v=>Math.sqrt(v[2])*1.8,itemStyle:{color:'#00e5ff'},rippleEffect:{scale:3,brushType:'stroke'}}]});
+
+const barC=echarts.init(document.getElementById('barChart'));
+barC.setOption({backgroundColor:'transparent',grid:{top:4,bottom:20,left:30,right:8},xAxis:{type:'category',data:['广东','上海','北京','浙江','江苏','四川','湖北','山东','福建','重庆'],axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.4)'}}},series:[{type:'bar',data:[210,185,160,142,138,95,88,76,68,55],itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#00e5ff'},{offset:1,color:'#0a4a7a'}]}},barMaxWidth:12}]});
+
+const pieC=echarts.init(document.getElementById('pieChart'));
+pieC.setOption({backgroundColor:'transparent',legend:{show:false},series:[{type:'pie',radius:['40%','70%'],data:[{value:65,name:'空调制冷',itemStyle:{color:'#2979ff'}},{value:18,name:'空调制热',itemStyle:{color:'#ff8060'}},{value:10,name:'通风换气',itemStyle:{color:'#00e676'}},{value:7,name:'其他',itemStyle:{color:'#ffb300'}}],label:{fontSize:9,color:'#8fa4c9'}}]});
+
+const lineC=echarts.init(document.getElementById('lineChart'));
+lineC.setOption({backgroundColor:'transparent',grid:{top:4,bottom:20,left:36,right:8},xAxis:{type:'category',data:['6/5','6/6','6/7','6/8','6/9','6/10','6/11'],axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(30,58,110,.4)'}}},series:[{type:'line',data:[16.2,17.8,18.1,17.5,18.9,19.2,18.4],smooth:true,symbol:'none',lineStyle:{color:'#00e5ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,229,255,.3)'},{offset:1,color:'rgba(0,229,255,0)'}]}}}]});
+
+window.addEventListener('resize',()=>{mapC.resize();barC.resize();pieC.resize();lineC.resize();});
+</script>
+</body></html>

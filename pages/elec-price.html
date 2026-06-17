@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>电价设定</title><link rel="stylesheet" href="_base.css"></head><body>
+<div class="ph"><div class="pt">电价设定</div><div class="pa"><button class="btn btnp">+ 新增电价方案</button></div></div>
+<div class="tw" style="margin-bottom:var(--gap)">
+<table><thead><tr><th>方案名称</th><th>适用项目</th><th>生效日期</th><th>失效日期</th><th>峰电价(元/kWh)</th><th>谷电价(元/kWh)</th><th>平电价(元/kWh)</th><th>状态</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>2026年标准电价</td><td>上海某商业广场</td><td>2026-01-01</td><td>2026-12-31</td><td>1.2</td><td>0.5</td><td>0.8</td><td><span class="tag tok">当前有效</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
+<tr><td>2025年标准电价</td><td>上海某商业广场</td><td>2025-01-01</td><td>2025-12-31</td><td>1.1</td><td>0.48</td><td>0.75</td><td><span class="tag tin">已过期</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
+<tr><td>北京分时电价</td><td>北京某写字楼</td><td>2026-01-01</td><td>2026-12-31</td><td>1.35</td><td>0.45</td><td>0.9</td><td><span class="tag tok">当前有效</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
+</tbody></table></div>
+<div class="panel"><div class="pnt">分时段电价设置（当前有效方案）</div>
+<div class="tw"><table><thead><tr><th>时段类型</th><th>时间段</th><th>电价(元/kWh)</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><span class="tag twn">峰时段</span></td><td>08:00–11:00 / 14:00–17:00</td><td>1.20</td><td>工作日高峰用电</td></tr>
+<tr><td><span class="tag tok">平时段</span></td><td>11:00–14:00 / 17:00–22:00</td><td>0.80</td><td>正常用电时段</td></tr>
+<tr><td><span class="tag tbl">谷时段</span></td><td>22:00–08:00（次日）</td><td>0.50</td><td>深夜低谷用电</td></tr>
+</tbody></table></div></div></body></html>

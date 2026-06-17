@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>负荷调控</title><link rel="stylesheet" href="_base.css">
+<style>
+.split{display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;}
+.left-panel{width:240px;min-width:240px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.right-area{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--gap);}
+.strat-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;}
+.strat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.strat-title{font-size:13px;font-weight:600;color:var(--tx);}
+.cond-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px solid rgba(30,58,110,.3);margin-bottom:6px;font-size:12px;color:var(--ts);}
+.tree-item{padding:7px 10px;border-radius:4px;font-size:12px;color:var(--ts);cursor:pointer;}
+.tree-item:hover{background:rgba(255,255,255,.04);color:var(--tx);}
+.tree-item.active{background:rgba(0,229,255,.08);color:var(--hl);border-left:2px solid var(--hl);}
+.tree-grp{font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;padding:8px 4px 4px;border-top:1px solid rgba(30,58,110,.3);margin-top:6px;}
+.meter{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px;}
+.meter-fill{height:100%;border-radius:4px;background:linear-gradient(to right,var(--ok),var(--wn));}
+</style></head><body>
+<div class="ph">
+  <div class="pt">负荷调控</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <button class="btn btnp" onclick="alert('新增策略')">+ 新增策略</button>
+  </div>
+</div>
+<div class="split">
+<div class="left-panel">
+  <div style="font-size:12px;color:var(--ts);font-weight:600;margin-bottom:4px;">策略列表</div>
+  <div class="tree-item active" onclick="selS(this)">峰时段功率削减策略</div>
+  <div class="tree-item" onclick="selS(this)">变压器容量保护策略</div>
+  <div class="tree-item" onclick="selS(this)">按需轮控策略</div>
+  <div class="tree-grp">已停用</div>
+  <div class="tree-item" onclick="selS(this)" style="opacity:.55;">用电超额告警策略（停用）</div>
+</div>
+<div class="right-area">
+  <div class="strat-card">
+    <div class="strat-head">
+      <div class="strat-title" id="st">峰时段功率削减策略</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="tag tok">启用中</span>
+        <button class="btn" onclick="alert('编辑策略')">编辑</button>
+        <button class="btn btnd" onclick="alert('停用策略')">停用</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);">
+      <div>
+        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">触发条件</div>
+        <div class="cond-row"><span class="tag thl">监测点</span><span>总配电变压器负荷率</span></div>
+        <div class="cond-row"><span class="tag twn">触发阈值</span><span>负荷率 ≥ 85%</span></div>
+        <div class="cond-row"><span class="tag tin">有效时段</span><span>08:00 ~ 11:00 / 14:00 ~ 17:00</span></div>
+        <div class="cond-row"><span class="tag tin">持续时间</span><span>触发后持续检测 5 分钟</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">执行动作</div>
+        <div class="cond-row"><span class="tag tbl">第一级</span><span>非必要区域升温 +2℃</span></div>
+        <div class="cond-row"><span class="tag twn">第二级</span><span>负荷率≥90%：进一步升温 +1℃</span></div>
+        <div class="cond-row"><span class="tag ter">第三级</span><span>负荷率≥95%：关停低优先级空调</span></div>
+        <div class="cond-row"><span class="tag tok">恢复条件</span><span>负荷率 &lt; 80% 持续 10 分钟</span></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(30,58,110,.4);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--ts);">当前负荷率</span>
+        <span style="font-size:13px;font-weight:700;font-family:monospace;" id="load-val">72.4%</span>
+      </div>
+      <div class="meter"><div class="meter-fill" id="load-bar" style="width:72.4%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:4px;"><span>0%</span><span style="color:var(--wn);">85% 触发</span><span>100%</span></div>
+    </div>
+  </div>
+  <div class="strat-card">
+    <div class="strat-head"><div style="font-size:12px;font-weight:600;color:var(--ts);letter-spacing:.06em;">策略执行记录</div>
+      <button class="btn">导出</button>
+    </div>
+    <div class="tw" style="margin:0;">
+      <table><thead><tr><th>执行时间</th><th>触发值</th><th>触发级别</th><th>控制对象</th><th>执行动作</th><th>执行结果</th></tr></thead>
+      <tbody>
+        <tr><td>2026-06-11 10:25</td><td>负荷率 87.2%</td><td><span class="tag tbl">第一级</span></td><td>3F非必要空调(4台)</td><td>升温 +2℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 10:32</td><td>负荷率 91.5%</td><td><span class="tag twn">第二级</span></td><td>2F展厅空调(2台)</td><td>升温 +1℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-11 10:55</td><td>负荷率 78.1%</td><td><span class="tag tok">恢复</span></td><td>3F/2F受控空调</td><td>恢复原设定</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-10 14:18</td><td>负荷率 86.0%</td><td><span class="tag tbl">第一级</span></td><td>B1通道空调(3台)</td><td>升温 +2℃</td><td><span class="tag tok">成功</span></td></tr>
+        <tr><td>2026-06-10 14:45</td><td>负荷率 79.3%</td><td><span class="tag tok">恢复</span></td><td>B1受控空调</td><td>恢复原设定</td><td><span class="tag tok">成功</span></td></tr>
+      </tbody></table>
+      <div class="pg"><div class="pg-info">共 32 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+function selS(el){el.closest('div').querySelectorAll('.tree-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('st').textContent=el.textContent;}
+// simulate live load
+let lv=72.4;
+setInterval(()=>{lv+=(Math.random()-.5)*1.2;lv=Math.max(60,Math.min(96,lv));const v=lv.toFixed(1);document.getElementById('load-val').textContent=v+'%';document.getElementById('load-bar').style.width=v+'%';document.getElementById('load-bar').style.background=lv>=90?'var(--er)':lv>=85?'var(--wn)':'linear-gradient(to right,var(--ok),var(--wn))';},2000);
+</script>
+</body></html>

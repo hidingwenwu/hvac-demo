@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>公告管理</title>
+<style>
+:root{
+  --bg-base:#030b1c;
+  --glass-mid:rgba(10,22,52,.82);
+  --glass-thick:rgba(8,18,44,.92);
+  --border:rgba(255,255,255,.14);
+  --border-mid:rgba(255,255,255,.22);
+  --accent:#5ab8ff;
+  --text-primary:#f0f8ff;
+  --text-secondary:#a8c8e8;
+  --text-muted:#6888aa;
+  --text-label:#7a9bbe;
+  --green:#00f0a0;
+  --red:#ff6b6b;
+  --red-dim:rgba(255,107,107,.12);
+  --amber:#ffc030;
+  --radius-sm:8px;
+  --radius:13px;
+  --radius-lg:18px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);
+  --shadow-btn:0 4px 16px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:auto;background:var(--bg-base);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text-primary);-webkit-font-smoothing:antialiased;}
+body{background:radial-gradient(ellipse at 25% 12%,rgba(22,55,140,.55) 0%,transparent 55%),radial-gradient(ellipse at 80% 85%,rgba(10,28,88,.45) 0%,transparent 50%),var(--bg-base);min-height:100vh;}
+button{font-family:inherit;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:4px;}
+
+/* 面包屑栏 */
+.bc-bar{
+  height:40px;background:rgba(6,14,36,.88);
+  border-bottom:1px solid var(--border-mid);
+  display:flex;align-items:center;padding:0 20px;gap:10px;
+  position:sticky;top:0;z-index:10;
+}
+.bc-title{font-size:14px;font-weight:700;color:var(--text-primary);}
+
+/* 主内容 */
+.page-body{padding:24px;max-width:640px;}
+
+/* 卡片式 section */
+.ann-section{background:var(--glass-mid);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;}
+.ann-section-hd{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:12.5px;font-weight:700;color:var(--text-label);letter-spacing:.4px;
+  background:rgba(255,255,255,.02);display:flex;align-items:center;gap:8px;
+}
+.ann-section-body{padding:18px;display:flex;flex-direction:column;gap:14px;}
+
+/* 开关 */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0;}
+.toggle-label{font-size:13.5px;color:var(--text-secondary);font-weight:500;}
+.toggle-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:24px;transition:all .25s ease;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:var(--text-muted);border-radius:50%;transition:all .25s ease;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.toggle input:checked+.toggle-slider{background:rgba(77,174,255,.25);border-color:rgba(77,174,255,.45);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:var(--accent);box-shadow:0 0 8px rgba(77,174,255,.7);}
+
+/* 表单 */
+.form-row{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:12px;color:var(--text-label);font-weight:600;display:flex;align-items:center;gap:4px;}
+.form-req{color:var(--red);}
+.form-input,.form-textarea,.form-select{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-primary);
+  border-radius:var(--radius-sm);padding:9px 13px;font-size:13.5px;font-family:inherit;
+  transition:border-color var(--transition),background var(--transition),box-shadow var(--transition);outline:none;
+}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent);background:rgba(77,174,255,.06);box-shadow:0 0 0 3px rgba(77,174,255,.10);}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.6;}
+.form-select option{background:#0a1428;}
+.form-hint{font-size:11.5px;color:var(--text-muted);line-height:1.5;}
+.form-row-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.char-count{font-size:11px;color:var(--text-muted);text-align:right;margin-top:1px;}
+
+/* 预览区 */
+.preview-zone{
+  background:rgba(255,255,255,.015);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.preview-label{font-size:11.5px;color:var(--text-muted);letter-spacing:.3px;}
+/* 模拟跑马灯 */
+.marquee-preview{
+  background:rgba(6,14,36,.88);border:1px solid var(--border-mid);
+  border-radius:var(--radius-sm);padding:9px 14px;
+  display:flex;align-items:center;gap:8px;overflow:hidden;
+}
+.marquee-track{flex:1;min-width:0;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+.marquee-text{display:inline-block;white-space:nowrap;font-size:12.5px;color:var(--text-secondary);animation:marqueeScroll linear infinite;}
+@keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* 弹出卡预览 */
+.popup-preview{
+  border-radius:var(--radius-lg);overflow:hidden;
+  border:1px solid var(--border-mid);box-shadow:0 8px 32px rgba(0,0,0,.40);
+}
+.popup-bar{height:3px;width:100%;}
+.popup-body{padding:13px 16px 15px;display:flex;flex-direction:column;gap:7px;background:var(--glass-thick);}
+.popup-badge{font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;}
+.popup-title{font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.4;}
+.popup-content{font-size:12px;color:var(--text-secondary);line-height:1.7;}
+
+/* 操作栏 */
+.action-bar{display:flex;gap:10px;justify-content:flex-end;padding-top:4px;}
+.btn{padding:9px 20px;font-size:13px;font-family:inherit;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);backdrop-filter:blur(12px);box-shadow:var(--shadow-btn);}
+.btn:hover{transform:translateY(-1.5px);}
+.btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-label);}
+.btn-ghost:hover{background:rgba(255,255,255,.09);color:var(--text-secondary);}
+.btn-danger{background:var(--red-dim);border:1px solid rgba(255,90,90,.22);color:#cc5858;}
+.btn-danger:hover{background:rgba(255,90,90,.18);color:#ff7a7a;}
+.btn-primary{background:rgba(77,174,255,.13);border:1px solid rgba(77,174,255,.32);color:#88c4ff;}
+.btn-primary:hover{background:rgba(77,174,255,.26);color:#bedfff;box-shadow:0 0 18px rgba(77,174,255,.28),var(--shadow-btn);}
+
+/* 状态提示 */
+.status-bar{
+  display:flex;align-items:center;gap:9px;padding:10px 14px;
+  background:rgba(0,240,160,.06);border:1px solid rgba(0,240,160,.18);
+  border-radius:var(--radius-sm);font-size:12.5px;color:var(--green);
+}
+.status-bar.inactive{background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text-muted);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* Toast */
+#toast{position:fixed;bottom:28px;left:50%;z-index:900;transform:translateX(-50%) translateY(20px);background:var(--glass-thick);backdrop-filter:blur(32px);border:1px solid var(--border-mid);color:#88c4f0;font-size:13px;padding:10px 22px 10px 16px;border-radius:var(--radius-lg);box-shadow:0 12px 36px rgba(0,0,0,.55);display:flex;align-items:center;gap:9px;opacity:0;pointer-events:none;transition:opacity .24s ease,transform .26s cubic-bezier(.34,1.45,.64,1);max-width:320px;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:rgba(0,232,152,.30);color:var(--green);}
+#toast.err{border-color:rgba(255,90,90,.30);color:#ff8888;}
+.toast-icon{font-size:15px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div class="bc-bar">
+  <span class="bc-title">系统管理</span>
+  <span style="color:var(--text-muted);font-size:12px;">/</span>
+  <span style="font-size:13px;color:var(--accent);font-weight:600;">公告管理</span>
+</div>
+
+<div class="page-body">
+
+  <!-- 当前状态 -->
+  <div id="statusBar" class="status-bar inactive" style="margin-bottom:20px;">
+    <span class="status-dot"></span>
+    <span id="statusText">暂无生效中的公告</span>
+  </div>
+
+  <!-- 公告内容 -->
+  <div class="ann-section">
+    <div class="ann-section-hd">📢 公告内容配置</div>
+    <div class="ann-section-body">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">启用公告</div>
+          <div class="toggle-sub">关闭后前台顶部栏不显示公告跑马灯</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="annEnabled" checked onchange="updatePreview()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="form-label">公告类型 <span class="form-req">*</span></label>
+        <select class="form-select" id="annType" onchange="updatePreview()">
+          <option value="update">🔧 系统更新</option>
+          <option value="feature">✨ 新功能上线</option>
+          <option value="promo">🎉 活动推广</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">公告标题 <span class="form-req">*</span></label>
+        <input class="form-input" id="annTitle" placeholder="请输入公告标题，建议10字以内" maxlength="30" oninput="updatePreview()">
+        <div class="char-count"><span id="titleCount">0</span> / 30</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">公告内容 <span class="form-req">*</span></label>
+        <textarea class="form-textarea" id="annBody" placeholder="请输入公告内容，可包含版本号、更新时间、功能亮点等" maxlength="120" oninput="updatePreview()"></textarea>
+        <div class="char-count"><span id="bodyCount">0</span> / 120</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 展示时间 -->
+  <div class="ann-section">
+    <div class="ann-section-hd">📅 展示时间范围</div>
+    <div class="ann-section-body">
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">开始时间 <span class="form-req">*</span></label>
+          <input class="form-input" type="datetime-local" id="annStart">
+        </div>
+        <div class="form-row">
+          <label class="form-label">结束时间 <span class="form-req">*</span></label>
+          <input class="form-input" type="datetime-local" id="annEnd">
+        </div>
+      </div>
+      <div class="form-hint">公告仅在设定时间范围内向用户展示（精确到分钟）。当前时间不在范围内时，即使已启用也不显示。</div>
+    </div>
+  </div>
+
+  <!-- 效果预览 -->
+  <div class="ann-section">
+    <div class="ann-section-hd">👁 展示效果预览</div>
+    <div class="ann-section-body">
+      <div class="preview-zone">
+        <div class="preview-label">TOPBAR 跑马灯</div>
+        <div class="marquee-preview">
+          <span style="font-size:13px;opacity:.75;flex-shrink:0;">📢</span>
+          <div class="marquee-track">
+            <span class="marquee-text" id="prevMarquee">（请填写公告标题和内容后查看预览）</span>
+          </div>
+        </div>
+      </div>
+      <div class="preview-zone" style="margin-top:4px;">
+        <div class="preview-label">悬停弹出详情卡片</div>
+        <div class="popup-preview">
+          <div class="popup-bar" id="prevBar"></div>
+          <div class="popup-body">
+            <span class="popup-badge" id="prevBadge">系统更新</span>
+            <div class="popup-title" id="prevTitle">（预览）公告标题</div>
+            <div class="popup-content" id="prevContent">（预览）公告内容将在此处展示，用户将看到完整的公告文字。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作栏 -->
+  <div class="action-bar">
+    <button class="btn btn-danger" onclick="clearAnn()">清空配置</button>
+    <button class="btn btn-ghost" onclick="previewInPage()">在前台预览</button>
+    <button class="btn btn-primary" onclick="saveAnn()">保存发布</button>
+  </div>
+
+</div>
+
+<div id="toast"><span class="toast-icon" id="toastIcon"></span><span id="toastMsg"></span></div>
+
+<script>
+const ANN_KEY='announcement_config';
+const TYPE_MAP={
+  update: {label:'系统更新',icon:'🔧',barBg:'linear-gradient(90deg,#1a6fff,#5ab8ff)',badgeBg:'rgba(77,174,255,.12)',badgeBd:'rgba(77,174,255,.30)',badgeClr:'#5ab8ff'},
+  feature:{label:'新功能上线',icon:'✨',barBg:'linear-gradient(90deg,#00b870,#00f0a0)',badgeBg:'rgba(0,232,152,.09)',badgeBd:'rgba(0,232,152,.28)',badgeClr:'#00f0a0'},
+  promo:  {label:'活动推广',icon:'🎉',barBg:'linear-gradient(90deg,#c87d00,#ffc030)',badgeBg:'rgba(255,181,32,.09)',badgeBd:'rgba(255,181,32,.28)',badgeClr:'#ffc030'},
+};
+
+// 加载已保存配置
+function load(){
+  try{const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');if(!cfg)return;
+  document.getElementById('annEnabled').checked=!!cfg.enabled;
+  document.getElementById('annType').value=cfg.type||'update';
+  document.getElementById('annTitle').value=cfg.title||'';
+  document.getElementById('annBody').value=cfg.body||'';
+  document.getElementById('annStart').value=cfg.startDate||'';
+  document.getElementById('annEnd').value=cfg.endDate||'';
+  syncCount('annTitle','titleCount',30);syncCount('annBody','bodyCount',120);
+  updatePreview();updateStatus(cfg);
+  }catch(e){}
+}
+
+function updateStatus(cfg){
+  const bar=document.getElementById('statusBar');
+  const txt=document.getElementById('statusText');
+  if(!cfg||!cfg.enabled){bar.className='status-bar inactive';txt.textContent='公告已禁用';return;}
+  const now=Date.now();
+  const s=cfg.startDate?new Date(cfg.startDate).getTime():0;
+  const e=cfg.endDate?new Date(cfg.endDate).getTime():Infinity;
+  if(now>=s&&now<=e){bar.className='status-bar';txt.textContent='公告生效中：'+cfg.title;}
+  else if(now<s){bar.className='status-bar inactive';txt.textContent='公告未到展示时间：'+cfg.title;}
+  else{bar.className='status-bar inactive';txt.textContent='公告已过期：'+cfg.title;}
+}
+
+function updatePreview(){
+  const type=document.getElementById('annType').value;
+  const title=document.getElementById('annTitle').value.trim()||(document.getElementById('annTitle').placeholder.replace(/，.*$/,''));
+  const body=document.getElementById('annBody').value.trim()||'（预览）公告内容将在此处展示。';
+  const info=TYPE_MAP[type]||TYPE_MAP.update;
+
+  // 跑马灯
+  const snippet=body.slice(0,24)+(body.length>24?'…':'');
+  const text=(title||'公告标题')+(snippet?'　·　'+snippet:'');
+  const full=text+'　　　'+text;
+  const dur=Math.max(8,text.length*0.55);
+  const m=document.getElementById('prevMarquee');
+  m.textContent=full;m.style.animationDuration=dur+'s';
+
+  // 弹窗预览
+  document.getElementById('prevBar').style.background=info.barBg;
+  const badge=document.getElementById('prevBadge');
+  badge.textContent=info.label;
+  badge.style.cssText=`background:${info.badgeBg};border:1px solid ${info.badgeBd};color:${info.badgeClr};font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;`;
+  document.getElementById('prevTitle').textContent=title||'（预览）公告标题';
+  document.getElementById('prevContent').textContent=body;
+
+  syncCount('annTitle','titleCount',30);syncCount('annBody','bodyCount',120);
+}
+
+function syncCount(inId,cntId,max){const l=document.getElementById(inId).value.length;const el=document.getElementById(cntId);el.textContent=l;el.style.color=l>=max?'var(--red)':'';}
+
+function saveAnn(){
+  const title=document.getElementById('annTitle').value.trim();
+  const body=document.getElementById('annBody').value.trim();
+  const start=document.getElementById('annStart').value;
+  const end=document.getElementById('annEnd').value;
+  if(!title)return showToast('请填写公告标题','err');
+  if(!body)return showToast('请填写公告内容','err');
+  if(!start||!end)return showToast('请设置展示时间范围','err');
+  if(start>end)return showToast('结束时间不能早于开始时间','err');
+  const cfg={id:'ann_'+Date.now(),enabled:document.getElementById('annEnabled').checked,type:document.getElementById('annType').value,title,body,startDate:start,endDate:end};
+  localStorage.setItem(ANN_KEY,JSON.stringify(cfg));
+  updateStatus(cfg);showToast('公告已保存发布','ok');
+}
+
+function clearAnn(){
+  localStorage.removeItem(ANN_KEY);
+  ['annTitle','annBody','annStart','annEnd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('annEnabled').checked=true;document.getElementById('annType').value='update';
+  updatePreview();updateStatus(null);showToast('公告配置已清空','ok');
+}
+
+function previewInPage(){
+  try{if(window.parent&&window.parent.initAnnouncement){window.parent.initAnnouncement();showToast('已刷新前台公告展示','ok');return;}}catch(e){}
+  showToast('请在已登录的主界面查看前台展示效果','');
+}
+
+let toastTimer=null;
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=type==='ok'?'✅':type==='err'?'❌':'ℹ️';
+  el.className='show '+(type||'');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{document.getElementById('toast').className='';},2600);
+}
+
+// 初始化
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞奕集控计费平台 — 演示入口</title>
+<style>
+:root{
+  --bg-body:#030b1c;--bg-header:linear-gradient(to bottom,#0d1f44,rgba(3,11,28,.97));
+  --bg-sidebar:#061228;--bg-sidebar-hover:rgba(0,229,255,.06);--bg-sidebar-active:rgba(0,229,255,.08);
+  --border-panel:#1e3a6e;--border-glow:rgba(0,229,255,.35);
+  --text-main:#fff;--text-sub:#8fa4c9;--text-highlight:#00e5ff;
+  --color-primary-dim:rgba(0,229,255,.12);
+  --font-base:'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-num:'Roboto Mono',monospace;
+  --header-h:50px;--sidebar-w:200px;--sidebar-col:48px;
+  --glow-cyan:0 0 10px rgba(0,229,255,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-base);background:var(--bg-body);color:var(--text-main);font-size:14px;}
+#shell{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.hd{height:var(--header-h);min-height:var(--header-h);background:var(--bg-header);border-bottom:1px solid var(--border-panel);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100;backdrop-filter:blur(10px);}
+.hd-logo{display:flex;align-items:center;gap:10px;}
+.hd-icon{width:28px;height:28px;background:linear-gradient(135deg,#00e5ff,#2979ff);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#030b1c;box-shadow:var(--glow-cyan);}
+.hd-name{font-size:15px;font-weight:700;letter-spacing:.04em;}
+.hd-sub{font-size:11px;color:var(--text-sub);}
+.hd-tag{font-size:11px;padding:2px 8px;border-radius:2px;border:1px solid var(--border-glow);color:var(--text-highlight);background:var(--color-primary-dim);font-family:var(--font-num);}
+.hd-right{display:flex;align-items:center;gap:16px;}
+.hd-acts{display:flex;align-items:center;gap:10px;}
+.hd-act{width:30px;height:30px;border:1px solid var(--border-panel);border-radius:5px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-sub);transition:all .15s;position:relative;}
+.hd-act:hover{border-color:var(--border-glow);color:var(--text-highlight);}
+.hd-act .bdg{position:absolute;top:-3px;right:-3px;width:7px;height:7px;background:#ff4d4f;border-radius:50%;border:1px solid var(--bg-header);}
+.hd-user{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.hd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e3a6e,#2979ff);display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid var(--border-glow);}
+/* 操作指引入口按钮 */
+.hd-guide-btn{
+  width:30px;height:30px;border:1px solid var(--border-glow);border-radius:50%;
+  background:rgba(0,229,255,.06);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text-highlight);font-size:15px;font-weight:700;
+  transition:all .2s;position:relative;user-select:none;
+  animation:guidePulse 2.8s ease-in-out infinite;
+}
+.hd-guide-btn:hover{background:rgba(0,229,255,.18);border-color:var(--text-highlight);animation:none;transform:scale(1.1);}
+@keyframes guidePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.0)}50%{box-shadow:0 0 0 5px rgba(0,229,255,.18)}}
+.hd-guide-btn .hd-guide-tip{
+  position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#071833;border:1px solid var(--border-glow);color:var(--text-highlight);
+  font-size:11.5px;padding:4px 10px;border-radius:4px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;font-weight:400;
+}
+.hd-guide-btn:hover .hd-guide-tip{opacity:1;}
+/* 公告跑马灯 */
+.hd-ann{
+  display:none;align-items:center;gap:6px;max-width:300px;min-width:0;
+  position:relative;cursor:default;
+}
+.hd-ann-icon{font-size:13px;opacity:.8;flex-shrink:0;}
+.hd-ann-track{
+  flex:1;min-width:0;overflow:hidden;
+  mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
+}
+.hd-ann-text{display:inline-block;white-space:nowrap;font-size:12px;color:#9ab8d4;animation:annScroll linear infinite;}
+@keyframes annScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.hd-ann:hover .hd-ann-text{animation-play-state:paused;}
+/* 公告详情弹出卡 */
+.hd-ann-popup{
+  position:fixed;z-index:9000;width:300px;
+  background:rgba(4,9,26,.94);backdrop-filter:blur(52px) saturate(240%);
+  border:1px solid rgba(255,255,255,.09);border-radius:16px;
+  box-shadow:0 36px 90px rgba(0,0,0,.78),0 10px 28px rgba(0,0,0,.48);
+  overflow:hidden;opacity:0;pointer-events:none;
+  transform:translateY(-10px) scale(.96);transition:opacity .22s ease,transform .30s cubic-bezier(.34,1.52,.64,1);
+}
+.hd-ann-popup.show{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.hd-ann-popup-bar{height:3px;width:100%;}
+.hd-ann-popup-inner{padding:12px 15px 15px;display:flex;flex-direction:column;gap:6px;}
+.hd-ann-popup-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;letter-spacing:.4px;}
+.hd-ann-popup-title{font-size:13.5px;font-weight:700;color:#f0f8ff;line-height:1.4;}
+.hd-ann-popup-body{font-size:12px;color:#a8c8e8;line-height:1.7;}
+.bd{display:flex;flex:1;overflow:hidden;}
+.sb{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border-panel);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:width .2s,min-width .2s;}
+.sb.col{width:var(--sidebar-col);min-width:var(--sidebar-col);}
+.sb-toggle{padding:9px 12px;display:flex;justify-content:flex-end;cursor:pointer;color:var(--text-sub);font-size:13px;border-bottom:1px solid rgba(30,58,110,.3);flex-shrink:0;}
+.sb-toggle:hover{color:var(--text-highlight);}
+.nav-direct{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
+.nav-direct:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
+.nav-direct.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
+.nav-direct .ni{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-gt{display:flex;align-items:center;padding:10px 16px;font-size:12px;color:var(--text-sub);cursor:pointer;user-select:none;transition:color .15s;white-space:nowrap;}
+.nav-gt:hover{color:var(--text-highlight);}
+.nav-gt .ni{font-size:13px;width:16px;text-align:center;flex-shrink:0;margin-right:8px;}
+.nav-gt .arr{font-size:9px;margin-left:auto;transition:transform .2s;flex-shrink:0;}
+.nav-gt.open .arr{transform:rotate(90deg);}
+.nav-gb{overflow:hidden;transition:max-height .25s ease;}
+.nav-item{padding:8px 16px 8px 40px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
+.nav-item:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
+.nav-item.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
+.nav-st{display:flex;align-items:center;padding:8px 16px 8px 40px;font-size:12px;color:var(--text-sub);cursor:pointer;user-select:none;white-space:nowrap;}
+.nav-st:hover{color:var(--text-main);}
+.nav-st .arr{font-size:9px;margin-left:auto;transition:transform .2s;}
+.nav-st.open .arr{transform:rotate(90deg);}
+.nav-sb{overflow:hidden;transition:max-height .2s ease;}
+.nav-leaf{padding:7px 16px 7px 56px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
+.nav-leaf:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
+.nav-leaf.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
+.sb.col .nav-gt span:not(.ni),.sb.col .nav-gt .arr,.sb.col .nav-gb,.sb.col .nav-direct span:not(.ni){display:none;}
+.sb.col .nav-gt{justify-content:center;padding:10px;}
+.sb.col .nav-direct{justify-content:center;padding:10px;}
+.content{flex:1;overflow:hidden;background:var(--bg-body);}
+.content iframe{width:100%;height:100%;border:none;display:block;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#1e3a6e;border-radius:2px;} ::-webkit-scrollbar-thumb:hover{background:#2979ff;}
+</style>
+</head>
+<body>
+<div id="shell">
+  <header class="hd">
+    <div class="hd-logo">
+      <div class="hd-icon">飞</div>
+      <div><div class="hd-name">飞奕集控计费平台</div><div class="hd-sub">空调节能监控系统</div></div>
+    </div>
+    <div class="hd-right">
+      <span class="hd-tag" id="projTag">青岛飞奕科技</span>
+      <!-- 公告跑马灯（由JS控制显示） -->
+      <div class="hd-ann" id="hdAnn" onmouseenter="showAnnPopup(this)" onmouseleave="hideAnnPopup()">
+        <span class="hd-ann-icon">📢</span>
+        <div class="hd-ann-track">
+          <span class="hd-ann-text" id="hdAnnText"></span>
+        </div>
+      </div>
+      <!-- 操作指引入口 -->
+      <div class="hd-guide-btn" title="平台操作指引" onclick="nav('guide-view')">
+        <svg viewBox="0 0 1024 1024" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 99.072a412.928 412.928 0 1 0 0 825.856A412.928 412.928 0 0 0 512 99.072z m-5.312 577.408a52.48 52.48 0 0 1 36.992 13.888c9.28 9.28 14.592 21.12 14.592 35.712a48.32 48.32 0 0 1-15.232 36.288 50.944 50.944 0 0 1-36.352 13.888 51.456 51.456 0 0 1-36.288-14.528 46.336 46.336 0 0 1-14.528-35.648c0-14.592 4.608-26.432 14.528-35.712a50.944 50.944 0 0 1 36.288-13.888z m11.904-381.184c42.944 0 77.952 11.264 104.384 35.008 26.432 23.168 39.68 54.848 39.68 95.168 0 33.024-8.64 60.16-24.448 81.28-5.952 6.592-25.152 24.384-56.832 52.16a102.4 102.4 0 0 0-26.432 33.024 93.376 93.376 0 0 0-9.92 42.944v9.28H469.12V634.88c0-25.088 3.968-46.912 13.184-64.768 8.64-17.792 34.368-45.568 77.312-83.84l7.936-9.28c11.904-14.528 17.856-30.4 17.856-46.912 0-21.76-6.592-38.976-18.56-51.52-12.48-12.544-30.336-18.56-52.8-18.56-29.056 0-49.536 8.64-62.08 27.136-11.264 15.168-16.512 36.992-16.512 64.768H360.064c0-48.896 13.888-87.232 42.88-114.944 28.48-27.776 66.752-41.6 115.648-41.6z" fill="currentColor"/></svg>
+        <span class="hd-guide-tip">平台操作指引</span>
+      </div>
+      <div class="hd-acts">
+        <div class="hd-act" title="预警通知">🔔<span class="bdg"></span></div>
+        <div class="hd-act" title="全屏" onclick="toggleFS()">⛶</div>
+      </div>
+      <div class="hd-user"><div class="hd-avatar">👤</div><span style="font-size:13px;color:var(--text-sub)">飞奕科技</span></div>
+    </div>
+    <!-- 公告弹出卡（fixed定位，脱离topbar堆叠） -->
+    <div class="hd-ann-popup" id="hdAnnPopup">
+      <div class="hd-ann-popup-bar" id="hdAnnPopupBar"></div>
+      <div class="hd-ann-popup-inner">
+        <span class="hd-ann-popup-badge" id="hdAnnPopupBadge">系统更新</span>
+        <div class="hd-ann-popup-title" id="hdAnnPopupTitle"></div>
+        <div class="hd-ann-popup-body" id="hdAnnPopupBody"></div>
+      </div>
+    </div>
+  </header>
+  <div class="bd">
+    <aside class="sb" id="sb"><div class="sb-toggle" id="sbt">◀</div><nav id="nav"></nav></aside>
+    <main class="content"><iframe id="fr" src="pages/overview-big.html"></iframe></main>
+  </div>
+</div>
+<script>
+const MENU=[
+  {t:'d',id:'overview-big',ic:'⊞',lb:'项目总览大屏'},
+  {t:'d',id:'monitor-big',ic:'▣',lb:'综合监控大屏'},
+  {t:'g',ic:'❄',lb:'集中控制',ch:[
+    {id:'ctrl-ac',lb:'空调控制'},
+    {id:'ctrl-group',lb:'群组控制'},
+    {id:'ctrl-schedule',lb:'日程管理'},
+    {id:'ctrl-env',lb:'环境感知监测'},
+    {id:'ctrl-fault',lb:'故障记录'},
+    {id:'ctrl-onoff',lb:'开关机记录'},
+  ]},
+  {t:'g',ic:'⚡',lb:'节能策略',ch:[
+    {id:'strategy-env',lb:'环境感知联动'},
+    {id:'strategy-wind',lb:'风水联动'},
+    {id:'strategy-load',lb:'负荷调控'},
+  ]},
+  {t:'g',ic:'⚙',lb:'项目及设备管理',ch:[
+    {id:'device-project',lb:'项目管理'},
+    {id:'device-sub',lb:'子账号列表'},
+    {id:'device-ac-room',lb:'空调与房间关系'},
+    {id:'device-controller',lb:'控制器管理'},
+    {id:'device-node',lb:'节点管理'},
+    {id:'device-meter',lb:'电表管理'},
+    {id:'device-env',lb:'环境感知设备管理'},
+  ]},
+  {t:'g',ic:'💰',lb:'电费相关',ch:[
+    {id:'elec-query',lb:'电费查询'},
+    {lb:'记录查询',sub:[
+      {id:'elec-eq',lb:'当量记录'},
+      {id:'elec-meter-rec',lb:'抄表记录'},
+      {id:'elec-runtime',lb:'运行时间记录'},
+      {id:'elec-daily',lb:'日使用情况'},
+    ]},
+    {lb:'分摊规则设置',sub:[
+      {id:'elec-tenant',lb:'租户管理'},
+      {id:'elec-price',lb:'电价设定'},
+    ]},
+    {id:'elec-alert',lb:'异常预警信息'},
+    {lb:'新计费功能',sub:[
+      {id:'elec-nb-tenant',lb:'租户管理'},
+      {id:'elec-nb-query',lb:'电费查询'},
+      {id:'elec-nb-stat',lb:'用电量统计'},
+      {id:'elec-nb-abnormal',lb:'分摊异常处理'},
+      {id:'elec-nb-abnormal-log',lb:'异常处理操作记录'},
+      {id:'elec-nb-abnormal-query',lb:'异常查询'},
+      {id:'elec-nb-eq',lb:'当量数据查询'},
+    ]},
+    {id:'elec-warn',lb:'异常预警'},
+    {id:'elec-warn-hour',lb:'异常预警小时'},
+    {id:'elec-warn-daily',lb:'异常每日盘点'},
+  ]},
+  {t:'g',ic:'🔧',lb:'智慧运维',ch:[
+    {id:'ops-ac',lb:'空调参数'},
+    {id:'ops-r7',lb:'R7参数'},
+  ]},
+  {t:'g',ic:'🔒',lb:'系统管理',ch:[
+    {id:'sys-account',lb:'账号管理'},
+    {id:'sys-org',lb:'组织管理'},
+    {id:'sys-role',lb:'角色管理'},
+    {id:'sys-menu',lb:'菜单按钮'},
+    {id:'sys-log',lb:'日志入口'},
+    {id:'sys-platform',lb:'对接平台管理'},
+    {id:'sys-3rd',lb:'第三方设备注册'},
+    {id:'sys-bill-gw',lb:'计费网关列表'},
+    {id:'sys-pref',lb:'项目偏好设置'},
+    {id:'sys-x2000',lb:'x2000下发配置'},
+    {id:'sys-guide',lb:'操作指引管理'},
+    {id:'sys-announce',lb:'公告管理'},
+  ]},
+];
+let aid='overview-big';
+const fr=document.getElementById('fr');
+function nav(id){aid=id;fr.src='pages/'+id+'.html';render();}
+function hasA(ch){return ch.some(c=>c.id===aid||(c.sub&&c.sub.some(s=>s.id===aid)));}
+function render(){
+  const el=document.getElementById('nav');el.innerHTML='';
+  MENU.forEach(m=>{
+    if(m.t==='d'){
+      const d=document.createElement('div');
+      d.className='nav-direct'+(aid===m.id?' active':'');
+      d.innerHTML=`<span class="ni">${m.ic}</span><span>${m.lb}</span>`;
+      d.onclick=()=>nav(m.id);el.appendChild(d);
+    } else {
+      const g=document.createElement('div');
+      const open=hasA(m.ch);
+      const gt=document.createElement('div');
+      gt.className='nav-gt'+(open?' open':'');
+      gt.dataset.o=open?'1':'0';
+      gt.innerHTML=`<span class="ni">${m.ic}</span><span>${m.lb}</span><span class="arr">▶</span>`;
+      const gb=document.createElement('div');
+      gb.className='nav-gb';gb.style.maxHeight=open?'1000px':'0';
+      gt.onclick=()=>{const o=gt.dataset.o==='1';gt.dataset.o=o?'0':'1';gt.classList.toggle('open',!o);gb.style.maxHeight=o?'0':'1000px';};
+      m.ch.forEach(c=>{
+        if(c.sub){
+          const sa=c.sub.some(s=>s.id===aid);
+          const st=document.createElement('div');
+          st.className='nav-st'+(sa?' open':'');st.dataset.o=sa?'1':'0';
+          st.innerHTML=`<span>${c.lb}</span><span class="arr">▶</span>`;
+          const sb2=document.createElement('div');
+          sb2.className='nav-sb';sb2.style.maxHeight=sa?'400px':'0';
+          st.onclick=()=>{const o=st.dataset.o==='1';st.dataset.o=o?'0':'1';st.classList.toggle('open',!o);sb2.style.maxHeight=o?'0':'400px';};
+          c.sub.forEach(lf=>{
+            const l=document.createElement('div');
+            l.className='nav-leaf'+(aid===lf.id?' active':'');
+            l.textContent=lf.lb;l.onclick=()=>nav(lf.id);sb2.appendChild(l);
+          });
+          gb.appendChild(st);gb.appendChild(sb2);
+        } else {
+          const ni=document.createElement('div');
+          ni.className='nav-item'+(aid===c.id?' active':'');
+          ni.textContent=c.lb;ni.onclick=()=>nav(c.id);gb.appendChild(ni);
+        }
+      });
+      g.appendChild(gt);g.appendChild(gb);el.appendChild(g);
+    }
+  });
+}
+const sb=document.getElementById('sb');
+document.getElementById('sbt').onclick=()=>{
+  const c=sb.classList.toggle('col');
+  document.getElementById('sbt').textContent=c?'▶':'◀';
+};
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+
+// ── 公告跑马灯 ──
+const ANN_KEY='announcement_config';
+const ANN_TYPE_MAP={
+  update: {label:'系统更新',barBg:'linear-gradient(90deg,#1a6fff,#5ab8ff)',badgeBg:'rgba(77,174,255,.12)',badgeBd:'rgba(77,174,255,.30)',badgeClr:'#5ab8ff'},
+  feature:{label:'新功能上线',barBg:'linear-gradient(90deg,#00b870,#00f0a0)',badgeBg:'rgba(0,232,152,.09)',badgeBd:'rgba(0,232,152,.28)',badgeClr:'#00f0a0'},
+  promo:  {label:'活动推广',barBg:'linear-gradient(90deg,#c87d00,#ffc030)',badgeBg:'rgba(255,181,32,.09)',badgeBd:'rgba(255,181,32,.28)',badgeClr:'#ffc030'},
+};
+function initAnnouncement(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');
+    if(!cfg||!cfg.enabled){document.getElementById('hdAnn').style.display='none';return;}
+    const now=Date.now();
+    const s=cfg.startDate?new Date(cfg.startDate).getTime():0;
+    const e=cfg.endDate?new Date(cfg.endDate).getTime():Infinity;
+    if(now<s||now>e){document.getElementById('hdAnn').style.display='none';return;}
+    const snippet=(cfg.body||'').slice(0,24)+((cfg.body||'').length>24?'…':'');
+    const text=(cfg.title||'')+(snippet?'　·　'+snippet:'');
+    const full=text+'　　　'+text;
+    const dur=Math.max(8,text.length*0.55);
+    const m=document.getElementById('hdAnnText');
+    m.textContent=full;m.style.animationDuration=dur+'s';
+    document.getElementById('hdAnn').style.display='flex';
+    // 填充弹出卡
+    const info=ANN_TYPE_MAP[cfg.type]||ANN_TYPE_MAP.update;
+    document.getElementById('hdAnnPopupBar').style.background=info.barBg;
+    const badge=document.getElementById('hdAnnPopupBadge');
+    badge.textContent=info.label;
+    badge.style.cssText=`background:${info.badgeBg};border:1px solid ${info.badgeBd};color:${info.badgeClr};font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;display:inline-block;`;
+    document.getElementById('hdAnnPopupTitle').textContent=cfg.title||'';
+    document.getElementById('hdAnnPopupBody').textContent=cfg.body||'';
+  }catch(err){}
+}
+function showAnnPopup(el){
+  const rect=el.getBoundingClientRect();
+  const popup=document.getElementById('hdAnnPopup');
+  popup.style.top=(rect.bottom+6)+'px';
+  popup.style.left=Math.max(8,rect.left-260+rect.width/2)+'px';
+  popup.classList.add('show');
+}
+function hideAnnPopup(){document.getElementById('hdAnnPopup').classList.remove('show');}
+initAnnouncement();
+
+render();
+</script>
+</body>
+</html>

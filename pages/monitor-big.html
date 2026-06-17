@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>中央空调综合监控大屏</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#020d1f;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:13px;overflow:hidden;}
+.shell{display:flex;flex-direction:column;height:100vh;}
+.hd{height:44px;display:flex;align-items:center;justify-content:center;background:linear-gradient(to bottom,#081c3a,transparent);border-bottom:1px solid rgba(0,229,255,.15);flex-shrink:0;position:relative;}
+.hd-title{font-size:17px;font-weight:700;letter-spacing:.1em;background:linear-gradient(to right,#00e5ff,#fff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hd-side{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,229,255,.7);font-family:monospace;}
+.hd-side.l{left:16px;display:flex;gap:12px;}
+.hd-side.r{right:16px;}
+.bd{flex:1;overflow:hidden;padding:10px;display:grid;grid-template-rows:auto 1fr auto;gap:10px;}
+.row1{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:10px;}
+.row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;height:140px;}
+.box{background:rgba(0,30,70,.55);border:1px solid rgba(0,229,255,.18);border-radius:6px;padding:12px;}
+.box-title{font-size:10px;color:rgba(0,229,255,.75);letter-spacing:.08em;margin-bottom:8px;font-weight:600;}
+.big-num{font-size:32px;font-weight:700;font-family:'Roboto Mono',monospace;color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,.5);line-height:1.1;}
+.big-unit{font-size:12px;color:rgba(255,255,255,.5);margin-left:4px;}
+.sub-txt{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
+.gauge-wrap{display:flex;align-items:center;gap:8px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-item{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:6px 8px;text-align:center;}
+.stat-item .lbl{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;}
+.stat-item .val{font-size:16px;font-weight:700;font-family:monospace;}
+.stat-item .val.ok{color:#00e676;}
+.stat-item .val.er{color:#ff4d4f;}
+.stat-item .val.wn{color:#ffb300;}
+.stat-item .val.hl{color:#00e5ff;}
+.alert-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:100%;}
+.alert-row{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 6px;border-radius:3px;background:rgba(255,255,255,.03);}
+.alert-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head><body>
+<div class="shell">
+  <div class="hd">
+    <div class="hd-side l">
+      <span>27°C 晴</span>
+      <span id="clk"></span>
+    </div>
+    <div class="hd-title">中央空调综合监控大屏</div>
+    <div class="hd-side r">上海某商业广场 &nbsp;|&nbsp; 飞奕智控</div>
+  </div>
+  <div class="bd">
+    <div class="row1">
+      <div class="box">
+        <div class="box-title">室外温度</div>
+        <div class="big-num">27<span class="big-unit">℃</span></div>
+        <div id="outGauge" style="height:60px;"></div>
+      </div>
+      <div class="box">
+        <div class="box-title">室内平均温度</div>
+        <div class="big-num">27.6<span class="big-unit">℃</span></div>
+        <div class="sub-txt">设定 26℃ &nbsp;|&nbsp; 偏差 +1.6℃</div>
+        <div id="inGauge" style="height:44px;"></div>
+      </div>
+      <div class="box" style="grid-column:span 2;">
+        <div class="box-title">空调状态统计</div>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="lbl">制冷运行</div><div class="val ok">9</div></div>
+          <div class="stat-item"><div class="lbl">待机</div><div class="val" style="color:#556677">0</div></div>
+          <div class="stat-item"><div class="lbl">故障</div><div class="val er">0</div></div>
+          <div class="stat-item"><div class="lbl">离线</div><div class="val wn">9</div></div>
+        </div>
+      </div>
+      <div class="box" style="grid-column:span 2;">
+        <div class="box-title">CLH等状态统计</div>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="lbl">主机</div><div class="val ok">2</div></div>
+          <div class="stat-item"><div class="lbl">水泵</div><div class="val ok">2</div></div>
+          <div class="stat-item"><div class="lbl">冷却塔</div><div class="val ok">0</div></div>
+          <div class="stat-item"><div class="lbl">告警</div><div class="val er">0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="box" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="box-title">实时功率</div>
+        <div class="big-num" style="font-size:36px;">1.5<span class="big-unit">kW/台</span></div>
+        <div id="powerLine" style="flex:1;min-height:0;"></div>
+      </div>
+      <div class="box" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="box-title">今日累计用电</div>
+        <div class="big-num" style="font-size:30px;">1284.85<span class="big-unit">kWh</span></div>
+        <div id="energyBar" style="flex:1;min-height:0;"></div>
+      </div>
+      <div class="box">
+        <div class="box-title">实时告警</div>
+        <div class="alert-list">
+          <div class="alert-row"><div class="alert-dot" style="background:#ff4d4f;box-shadow:0 0 4px #ff4d4f;animation:blink 1s infinite;"></div><span style="color:rgba(255,255,255,.7);">1F-大厅-03 通信故障</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">14:32</span></div>
+          <div class="alert-row"><div class="alert-dot" style="background:#ff4d4f;box-shadow:0 0 4px #ff4d4f;animation:blink 1s infinite;"></div><span style="color:rgba(255,255,255,.7);">3F-储藏-01 传感器异常</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">10:15</span></div>
+          <div class="alert-row"><div class="alert-dot" style="background:#ffb300;"></div><span style="color:rgba(255,255,255,.55);">2F-开放-03 回风温度偏高</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">09:48</span></div>
+          <div class="alert-row"><div class="alert-dot" style="background:#ffb300;"></div><span style="color:rgba(255,255,255,.55);">CTR004 离线超30分钟</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">08:20</span></div>
+          <div class="alert-row"><div class="alert-dot" style="background:#556677;"></div><span style="color:rgba(255,255,255,.4);">B1-餐饮-02 正常恢复</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">08:05</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="box"><div class="box-title">各楼层用电占比</div><div id="floorPie" style="height:100px;"></div></div>
+      <div class="box"><div class="box-title">近24h功率趋势</div><div id="hrLine" style="height:100px;"></div></div>
+      <div class="box"><div class="box-title">本周节能率趋势</div><div id="saveLine" style="height:100px;"></div></div>
+      <div class="box">
+        <div class="box-title">设备在线率</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">空调</span><span style="color:#00e676;font-family:monospace;">88.5%</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:88.5%;height:100%;border-radius:3px;background:#00e676;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">控制器</span><span style="color:#00e5ff;font-family:monospace;">80.0%</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:80%;height:100%;border-radius:3px;background:#00e5ff;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">电表</span><span style="color:#2979ff;font-family:monospace;">94.4%</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:94.4%;height:100%;border-radius:3px;background:#2979ff;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">传感器</span><span style="color:#ffb300;font-family:monospace;">90.5%</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:90.5%;height:100%;border-radius:3px;background:#ffb300;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}</style>
+<script>
+function tick(){document.getElementById('clk').textContent=new Date().toLocaleString('zh-CN',{hour12:false});}
+tick();setInterval(tick,1000);
+
+const powerLine=echarts.init(document.getElementById('powerLine'));
+const hrs=Array.from({length:12},(_,i)=>(8+i)+':00');
+const pv=[1.2,1.4,1.6,1.8,1.5,1.3,1.7,1.9,1.6,1.4,1.5,1.5];
+powerLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:32,right:8},xAxis:{type:'category',data:hrs,axisLabel:{fontSize:9,color:'#8fa4c9',interval:1},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:pv,smooth:true,symbol:'none',lineStyle:{color:'#00e5ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,229,255,.3)'},{offset:1,color:'rgba(0,229,255,0)'}]}}}]});
+
+const energyBar=echarts.init(document.getElementById('energyBar'));
+const hrs2=Array.from({length:8},(_,i)=>(8+i*2)+':00');
+const ev=[85,102,118,134,148,160,145,133];
+energyBar.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:36,right:8},xAxis:{type:'category',data:hrs2,axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'bar',data:ev,itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#2979ff'},{offset:1,color:'#0a2040'}]}},barMaxWidth:16}]});
+
+const floorPie=echarts.init(document.getElementById('floorPie'));
+floorPie.setOption({backgroundColor:'transparent',legend:{show:false},series:[{type:'pie',radius:['35%','65%'],data:[{value:35,name:'1F',itemStyle:{color:'#2979ff'}},{value:28,name:'2F',itemStyle:{color:'#00e5ff'}},{value:18,name:'3F',itemStyle:{color:'#00e676'}},{value:19,name:'B1',itemStyle:{color:'#ffb300'}}],label:{fontSize:9,color:'#8fa4c9',formatter:'{b} {d}%'}}]});
+
+const hrLine=echarts.init(document.getElementById('hrLine'));
+const h24=Array.from({length:13},(_,i)=>i*2+':00');
+const hp=[0.2,0.1,0.1,0.2,0.4,1.2,1.8,1.6,1.4,1.9,1.7,1.5,1.5];
+hrLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:32,right:8},xAxis:{type:'category',data:h24,axisLabel:{fontSize:8,color:'#8fa4c9',interval:1},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:hp,smooth:true,symbol:'none',lineStyle:{color:'#2979ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(41,121,255,.3)'},{offset:1,color:'rgba(41,121,255,0)'}]}}}]});
+
+const saveLine=echarts.init(document.getElementById('saveLine'));
+saveLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:36,right:8},xAxis:{type:'category',data:['6/5','6/6','6/7','6/8','6/9','6/10','6/11'],axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:[16.2,17.8,18.1,17.5,18.9,19.2,18.4],smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#00e676',width:2},itemStyle:{color:'#00e676'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,230,118,.25)'},{offset:1,color:'rgba(0,230,118,0)'}]}}}]});
+
+window.addEventListener('resize',()=>{powerLine.resize();energyBar.resize();floorPie.resize();hrLine.resize();saveLine.resize();});
+</script>
+</body></html>

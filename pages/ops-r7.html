@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>R7参数</title><link rel="stylesheet" href="_base.css">
+<style>
+.ac-param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--gap);}
+.apc{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;transition:border-color .15s;}
+.apc:hover{border-color:var(--gw);}
+.apc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.4);}
+.apc-name{font-size:13px;font-weight:600;color:var(--tx);}
+.apc-loc{font-size:11px;color:var(--ts);margin-top:2px;}
+.param-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.param-row:last-child{border-bottom:none;}
+.param-key{color:var(--ts);flex:1;}
+.param-val{color:var(--tx);font-family:'Roboto Mono',monospace;font-size:12px;text-align:right;}
+.param-val.hl{color:var(--hl);}
+.param-val.ok{color:var(--ok);}
+.param-val.er{color:var(--er);}
+.param-val.wn{color:var(--wn);}
+.apc-ops{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(30,58,110,.3);}
+.p2col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+</style></head><body>
+<div class="ph">
+  <div class="pt">R7参数</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <button class="btn">导出</button>
+  </div>
+</div>
+<div class="fb" style="background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--gap);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+  <div class="fi"><div class="fl" style="font-size:12px;color:var(--ts);margin-bottom:4px;">楼层</div><select style="width:100px"><option value="">全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
+  <div class="fi"><div class="fl" style="font-size:12px;color:var(--ts);margin-bottom:4px;">控制器编号</div><select style="width:140px"><option value="">全部</option><option>CTR001</option><option>CTR002</option><option>CTR003</option><option>CTR004</option><option>CTR005</option></select></div>
+  <div class="fi"><div class="fl" style="font-size:12px;color:var(--ts);margin-bottom:4px;">在线状态</div><select style="width:100px"><option value="">全部</option><option>在线</option><option>离线</option></select></div>
+  <button class="btn btnp">查询</button><button class="btn">重置</button>
+</div>
+<div class="ac-param-grid" id="rg"></div>
+<script>
+const R7S=[
+  {n:'CTR-1F-01',sn:'CTR001',loc:'一楼大厅',ip:'192.168.1.10',port:8080,fw:'R7-V3.2.4',hw:'HW1.2',ac:8,online:7,fault:1,
+   params:{心跳间隔:'30s',上报周期:'60s',最大重连次数:'5',连接超时:'10s',数据压缩:'开启',TLS加密:'开启',设备发现:'自动',调试模式:'关闭'},s:'on'},
+  {n:'CTR-1F-02',sn:'CTR002',loc:'二楼会议/办公',ip:'192.168.1.11',port:8080,fw:'R7-V3.2.4',hw:'HW1.2',ac:10,online:9,fault:0,
+   params:{心跳间隔:'30s',上报周期:'60s',最大重连次数:'5',连接超时:'10s',数据压缩:'开启',TLS加密:'开启',设备发现:'自动',调试模式:'关闭'},s:'on'},
+  {n:'CTR-2F-01',sn:'CTR003',loc:'二楼开放办公',ip:'192.168.1.12',port:8080,fw:'R7-V3.1.8',hw:'HW1.1',ac:6,online:6,fault:0,
+   params:{心跳间隔:'60s',上报周期:'120s',最大重连次数:'3',连接超时:'15s',数据压缩:'关闭',TLS加密:'开启',设备发现:'手动',调试模式:'关闭'},s:'on'},
+  {n:'CTR-3F-01',sn:'CTR004',loc:'三楼区域',ip:'192.168.1.13',port:8080,fw:'R7-V3.2.4',hw:'HW1.2',ac:4,online:0,fault:0,
+   params:{心跳间隔:'30s',上报周期:'60s',最大重连次数:'5',连接超时:'10s',数据压缩:'开启',TLS加密:'开启',设备发现:'自动',调试模式:'关闭'},s:'off'},
+  {n:'CTR-B1-01',sn:'CTR005',loc:'B1层',ip:'192.168.1.14',port:8080,fw:'R7-V3.2.3',hw:'HW1.2',ac:12,online:12,fault:0,
+   params:{心跳间隔:'30s',上报周期:'60s',最大重连次数:'5',连接超时:'10s',数据压缩:'开启',TLS加密:'开启',设备发现:'自动',调试模式:'关闭'},s:'on'},
+];
+document.getElementById('rg').innerHTML=R7S.map(r=>{
+  const sl=r.s==='on'?'在线':'离线';
+  const tc=r.s==='on'?'tok':'ter';
+  const paramHtml=Object.entries(r.params).map(([k,v])=>`<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`).join('');
+  return`<div class="apc">
+    <div class="apc-head">
+      <div><div class="apc-name">${r.n}</div><div class="apc-loc">${r.loc} / ${r.ip}:${r.port}</div></div>
+      <span class="tag ${tc}">${sl}</span>
+    </div>
+    <div class="param-row"><span class="param-key">控制器编号</span><span class="param-val hl">${r.sn}</span></div>
+    <div class="param-row"><span class="param-key">固件版本</span><span class="param-val">${r.fw}</span></div>
+    <div class="param-row"><span class="param-key">硬件版本</span><span class="param-val">${r.hw}</span></div>
+    <div class="param-row"><span class="param-key">接入空调 / 在线</span><span class="param-val">${r.ac} / <span style="color:var(--ok)">${r.online}</span>${r.fault?` / <span style="color:var(--er)">故障${r.fault}</span>`:''}</span></div>
+    <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin:10px 0 6px;padding-top:8px;border-top:1px solid rgba(30,58,110,.3);">通信参数</div>
+    <div class="p2col">${paramHtml}</div>
+    <div class="apc-ops">
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('查看详情')">详情</button>
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('修改参数')">修改参数</button>
+      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('重启控制器')">重启</button>
+    </div>
+  </div>`;
+}).join('');
+</script>
+</body></html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>日程管理</title><link rel="stylesheet" href="_base.css">
+<style>
+.steps{display:flex;align-items:center;gap:0;margin-bottom:20px;}
+.step{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bp);border:1px solid var(--bd);cursor:pointer;}
+.step:first-child{border-radius:4px 0 0 4px;}
+.step:last-child{border-radius:0 4px 4px 0;}
+.step.active{background:rgba(41,121,255,.18);border-color:var(--bl);}
+.step-num{width:20px;height:20px;border-radius:50%;border:1px solid var(--ts);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--ts);}
+.step.active .step-num{background:var(--bl);border-color:var(--bl);color:#fff;}
+.step-lb{font-size:12px;color:var(--ts);}
+.step.active .step-lb{color:var(--tx);}
+.sep{width:1px;height:100%;background:var(--bd);}
+.day-btn{padding:5px 10px;border:1px solid var(--bd);border-radius:3px;font-size:12px;color:var(--ts);cursor:pointer;}
+.day-btn.sel{background:rgba(41,121,255,.2);border-color:var(--bl);color:var(--tx);}
+</style></head><body>
+<div class="ph">
+  <div class="pt">日程管理</div>
+  <div class="pa">
+    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
+    <button class="btn btnp" onclick="openAdd()">+ 新增日程</button>
+  </div>
+</div>
+
+<div id="wizard" style="display:none;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin-bottom:var(--gap);">
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-num">1</div><div class="step-lb">选择群组/设备</div></div>
+    <div class="step" id="s2"><div class="step-num">2</div><div class="step-lb">设置执行参数</div></div>
+    <div class="step" id="s3"><div class="step-num">3</div><div class="step-lb">设置执行计划</div></div>
+  </div>
+  <div id="p1">
+    <div style="font-size:12px;color:var(--ts);margin-bottom:10px;">选择控制对象（可多选）</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div class="fl-tab active" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按群组</div>
+      <div class="fl-tab" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按楼层</div>
+      <div class="fl-tab" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按空调</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox" checked> 一楼大厅群组</label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> 二楼会议群组</label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> 二楼办公群组</label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> B1餐饮群组</label>
+    </div>
+  </div>
+  <div id="p2" style="display:none;">
+    <div class="form-grid">
+      <div class="form-item"><label>动作类型</label>
+        <select><option>开机</option><option>关机</option><option>调温</option></select></div>
+      <div class="form-item"><label>设定温度(℃)</label>
+        <input type="number" value="26" min="16" max="30"></div>
+      <div class="form-item"><label>运行模式</label>
+        <select><option>制冷</option><option>制热</option><option>通风</option><option>除湿</option></select></div>
+      <div class="form-item"><label>风速</label>
+        <select><option>自动</option><option>低速</option><option>中速</option><option>高速</option></select></div>
+    </div>
+  </div>
+  <div id="p3" style="display:none;">
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="form-item"><label>日程名称</label><input placeholder="请输入" value="大厅工作日开机"></div>
+      <div class="form-item"><label>执行时间</label><input type="time" value="08:00"></div>
+      <div class="form-item"><label>生效日期</label><input type="date" value="2026-06-01"></div>
+      <div class="form-item"><label>失效日期</label><input type="date" value="2026-12-31"></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--ts);margin-bottom:8px;">重复周期</div>
+      <div style="display:flex;gap:6px;">
+        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周一</div>
+        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周二</div>
+        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周三</div>
+        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周四</div>
+        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周五</div>
+        <div class="day-btn" onclick="this.classList.toggle('sel')">周六</div>
+        <div class="day-btn" onclick="this.classList.toggle('sel')">周日</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+    <button class="btn" onclick="closeAdd()">取消</button>
+    <button class="btn" id="prevBtn" style="display:none;" onclick="goStep(-1)">上一步</button>
+    <button class="btn btnp" id="nextBtn" onclick="goStep(1)">下一步</button>
+    <button class="btn btnp" id="saveBtn" style="display:none;" onclick="save()">保存</button>
+  </div>
+</div>
+
+<div class="tw">
+  <table><thead><tr><th>日程名称</th><th>控制对象</th><th>动作</th><th>执行时间</th><th>重复</th><th>生效期间</th><th>状态</th><th>操作</th></tr></thead>
+  <tbody>
+    <tr><td>大厅工作日开机</td><td>一楼大厅群组</td><td>开机 / 制冷 / 26℃</td><td>08:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
+    <tr><td>大厅工作日关机</td><td>一楼大厅群组</td><td>关机</td><td>22:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
+    <tr><td>会议室上班开机</td><td>二楼会议群组</td><td>开机 / 制冷 / 24℃</td><td>09:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
+    <tr><td>餐饮区午间开机</td><td>B1餐饮群组</td><td>开机 / 制冷 / 23℃</td><td>10:00</td><td>每天</td><td>2026-05-01 ~ 2026-09-30</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
+    <tr><td>全楼节假日关机</td><td>全部群组</td><td>关机</td><td>00:00</td><td>法定节假日</td><td>长期有效</td><td><span class="tag twn">暂停</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
+  </tbody></table>
+  <div class="pg"><div class="pg-info">共 20 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div>
+</div>
+
+<script>
+let cur=1;
+function openAdd(){document.getElementById('wizard').style.display='block';cur=1;updStep();}
+function closeAdd(){document.getElementById('wizard').style.display='none';}
+function goStep(d){cur=Math.max(1,Math.min(3,cur+d));updStep();}
+function save(){alert('日程保存成功');closeAdd();}
+function updStep(){
+  [1,2,3].forEach(i=>{
+    document.getElementById('s'+i).classList.toggle('active',i===cur);
+    document.getElementById('p'+i).style.display=i===cur?'':'none';
+  });
+  document.getElementById('prevBtn').style.display=cur>1?'':'none';
+  document.getElementById('nextBtn').style.display=cur<3?'':'none';
+  document.getElementById('saveBtn').style.display=cur===3?'':'none';
+}
+</script>
+</body></html>
