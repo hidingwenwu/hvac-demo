@@ -1,1 +1,78 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>电表管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">电表管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">电表总数</div><div class="sc-v scc">36</div></div><div class="scd"><div class="sc-lb">正常</div><div class="sc-v scg">34</div></div><div class="scd"><div class="sc-lb">异常</div><div class="sc-v scr">2</div></div></div><div class="fb"><div class="fi"><div class="fl">电表名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>正常</option><option>异常</option><option>离线</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>电表名称</th><th>电表编号</th><th>所在位置</th><th>关联租户</th><th>最新读数(kWh)</th><th>抄表时间</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>电表-1F-A区</td><td>MTR001</td><td>1F A区配电箱</td><td>A公司</td><td>12,480.5</td><td>2026-06-10 12:00</td><td><span class="tag tok">正常</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>电表-2F-B区</td><td>MTR002</td><td>2F B区配电箱</td><td>B工作室</td><td>8,820.3</td><td>2026-06-10 12:00</td><td><span class="tag tok">正常</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>电表-3F-C区</td><td>MTR003</td><td>3F C区配电箱</td><td>C品牌店</td><td>15,640.2</td><td>2026-06-10 12:00</td><td><span class="tag tok">正常</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>电表-B1-公区</td><td>MTR004</td><td>B1公区配电箱</td><td>公区分摊</td><td>24,100.0</td><td>2026-06-10 12:00</td><td><span class="tag tok">正常</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>电表-3F-D区</td><td>MTR005</td><td>3F D区配电箱</td><td>D餐厅</td><td>5,320.8</td><td>2026-06-09 12:00</td><td><span class="tag twn">抄表延迟</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>电表管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.meter-card{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--gap);margin-top:var(--gap)}
+.protocol{border:1px solid var(--bd);border-radius:var(--r);background:var(--bp);padding:16px}
+.protocol h3{font-size:13px;margin-bottom:12px;color:#dbeaff}
+.param-table th,.param-table td{font-size:12px;padding:8px 10px}
+.textarea-like{border:1px solid var(--bd);border-radius:4px;background:rgba(255,255,255,.04);padding:10px;min-height:92px;color:#dbeaff;line-height:1.7;font-family:'Roboto Mono',monospace;font-size:12px}
+@media(max-width:1100px){.meter-card{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="ph">
+  <div class="pt">电表管理</div>
+  <div class="pa"><button class="btn">下发电表地址</button><button class="btn">设置上报频率</button><button class="btn btnp">添加电表</button></div>
+</div>
+<div class="sc">
+  <div class="scd"><div class="sc-lb">电表总数</div><div class="sc-v scc">36</div></div>
+  <div class="scd"><div class="sc-lb">Modbus自定义</div><div class="sc-v scb">8</div></div>
+  <div class="scd"><div class="sc-lb">正常</div><div class="sc-v scg">34</div></div>
+  <div class="scd"><div class="sc-lb">异常</div><div class="sc-v scr">2</div></div>
+</div>
+<div class="fb">
+  <div class="fi"><div class="fl">电表名称</div><input placeholder="请输入电表名称" style="width:150px"></div>
+  <div class="fi"><div class="fl">协议类型</div><select style="width:170px"><option>全部协议</option><option>DLT645-1997</option><option>DLT645-2007</option><option>CJ/T188</option><option>Modbus-RTU（自定义）</option></select></div>
+  <div class="fi"><div class="fl">设备状态</div><select style="width:110px"><option>全部状态</option><option>在线</option><option>离线</option><option>异常</option></select></div>
+  <button class="btn btnp">查询</button><button class="btn">重置</button>
+</div>
+<div class="tw">
+<table>
+<thead><tr><th>序号</th><th>电表名称</th><th>协议类型</th><th>波特率</th><th>校验方式</th><th>电表地址</th><th>变比</th><th>绑定主机</th><th>状态</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>办公楼1层总电表</td><td>DLT645-2007</td><td>9600</td><td>无校验</td><td>12345678</td><td>1.00</td><td>主机001</td><td><span class="tag tok">在线</span></td><td><div class="op"><a>编辑</a><a>抄表</a><a class="del">删除</a></div></td></tr>
+<tr><td>2</td><td>宿舍楼2层电表</td><td>Modbus-RTU（自定义）</td><td>4800</td><td>偶校验</td><td>87654321</td><td>0.50</td><td>主机002</td><td><span class="tag tin">离线</span></td><td><div class="op"><a>编辑</a><a>配置</a><a class="del">删除</a></div></td></tr>
+<tr><td>3</td><td>食堂后厨电表</td><td>CJ/T188</td><td>19200</td><td>无校验</td><td>11223344</td><td>2.00</td><td>主机003</td><td><span class="tag ter">异常</span></td><td><div class="op"><a>编辑</a><a>抄表</a><a class="del">删除</a></div></td></tr>
+<tr><td>4</td><td>能源站自定义表</td><td>Modbus-RTU（自定义）</td><td>9600</td><td>无校验</td><td>01020304</td><td>1.00</td><td>主机004</td><td><span class="tag tok">在线</span></td><td><div class="op"><a>编辑</a><a>配置</a><a class="del">删除</a></div></td></tr>
+</tbody>
+</table>
+<div class="pg"><div class="pg-info">显示 1-4 / 36 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+</div>
+
+<div class="meter-card">
+  <div class="protocol">
+    <h3>新增电表 - 基础配置</h3>
+    <div class="form-grid">
+      <div class="form-item"><label>绑定主机 *</label><select><option>主机001（办公楼监控室）</option><option>主机002（宿舍楼监控室）</option><option>主机003（食堂监控室）</option></select></div>
+      <div class="form-item"><label>协议类型 *</label><select><option>DLT645-1997</option><option>DLT645-2007</option><option>CJ/T188</option><option selected>Modbus-RTU（自定义）</option></select></div>
+      <div class="form-item"><label>波特率 *</label><select><option>1200</option><option>2400</option><option>4800</option><option selected>9600</option><option>19200</option></select></div>
+      <div class="form-item"><label>校验方式 *</label><select><option selected>无校验（NONE）</option><option>奇校验（ODD）</option><option>偶校验（EVEN）</option></select></div>
+      <div class="form-item"><label>电表名称 *</label><input value="能源站自定义表"></div>
+      <div class="form-item"><label>变比</label><input value="1.00"></div>
+    </div>
+    <div class="form-item" style="margin-top:14px"><label>电表地址 *（每行一个，支持批量创建）</label><div class="textarea-like">01020304<br>01020305<br>01020306</div></div>
+  </div>
+  <div class="protocol">
+    <h3>Modbus 自定义配置</h3>
+    <div class="tw">
+      <table class="param-table">
+        <thead><tr><th>参数</th><th>起始地址</th><th>数据格式</th><th>寄存器数量</th><th>变比系数</th><th>偏移量</th></tr></thead>
+        <tbody>
+          <tr><td>正向有功电能 *</td><td>40001</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
+          <tr><td>反向有功电能</td><td>40003</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
+          <tr><td>A相电压</td><td>40011</td><td>UINT16</td><td>1</td><td>10</td><td>0</td></tr>
+          <tr><td>A相电流</td><td>40021</td><td>FLOAT（CD AB）</td><td>2</td><td>1000</td><td>0</td></tr>
+          <tr><td>总有功功率</td><td>40031</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;color:var(--ts);font-size:12px;line-height:1.7">数据变比系数=存储值/实际值，数据偏移量=存储值-实际值；每个参数可独立配置数据格式，验证成功后可保存为项目协议模板。</div>
+    <div class="pa" style="margin-top:14px;justify-content:flex-end"><button class="btn">取消</button><button class="btn btnp">确认添加</button></div>
+  </div>
+</div>
+</body>
+</html>

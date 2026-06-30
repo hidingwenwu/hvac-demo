@@ -1,1 +1,88 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>风水联动</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">风水联动</div><div class="pa"><button class="btn">导出</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">联动设备</div><div class="sc-v scc">12</div></div><div class="scd"><div class="sc-lb">策略生效</div><div class="sc-v scg">10</div></div><div class="scd"><div class="sc-lb">异常</div><div class="sc-v scr">2</div></div></div><div class="fb"><div class="fi"><div class="fl">所属项目</div><select style="width:160px"><option value="">全部</option><option>上海某商业广场</option><option>北京某写字楼</option></select></div><div class="fi"><div class="fl">设备名称</div><input placeholder="请输入" style="width:140px"></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>设备名称</th><th>连接地址</th><th>回风温度(℃)</th><th>送风温度(℃)</th><th>防冻温度(℃)</th><th>进水温度(℃)</th><th>出水温度(℃)</th><th>策略状态</th><th>操作</th></tr></thead><tbody><tr><td>冷水机组-01</td><td>192.168.10.201</td><td>12.5</td><td>7.2</td><td>3.1</td><td>12.0</td><td>7.0</td><td><span class="tag tok">正常运行</span></td><td><div class="op"><a>详情</a><a>设置</a></div></td></tr><tr><td>冷水机组-02</td><td>192.168.10.202</td><td>13.1</td><td>7.5</td><td>3.4</td><td>12.8</td><td>7.3</td><td><span class="tag tok">正常运行</span></td><td><div class="op"><a>详情</a><a>设置</a></div></td></tr><tr><td>冷却塔-01</td><td>192.168.10.203</td><td>—</td><td>—</td><td>—</td><td>28.5</td><td>24.2</td><td><span class="tag tok">正常运行</span></td><td><div class="op"><a>详情</a><a>设置</a></div></td></tr><tr><td>空调机组-AHU01</td><td>192.168.10.204</td><td>18.2</td><td>14.5</td><td>2.8</td><td>12.2</td><td>7.1</td><td><span class="tag twn">偏差预警</span></td><td><div class="op"><a>详情</a><a>设置</a></div></td></tr><tr><td>空调机组-AHU02</td><td>192.168.10.205</td><td>17.8</td><td>13.9</td><td>2.5</td><td>—</td><td>—</td><td><span class="tag ter">离线</span></td><td><div class="op"><a>详情</a><a>设置</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>风水联动</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.tabs{display:flex;gap:8px;margin-bottom:var(--gap)}
+.tab{padding:7px 14px;border:1px solid var(--bd);border-radius:999px;color:var(--ts);background:rgba(255,255,255,.03)}
+.tab.active{border-color:var(--gw);color:var(--hl);background:var(--pd)}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap);margin-bottom:var(--gap)}
+.mini{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px}
+.mini .lb{font-size:11px;color:var(--ts);margin-bottom:6px}
+.mini .v{font:700 24px 'Roboto Mono',monospace}
+.trend{height:170px;border:1px solid rgba(30,58,110,.65);border-radius:var(--r);background:linear-gradient(180deg,rgba(0,229,255,.05),rgba(41,121,255,.02));position:relative;overflow:hidden}
+.trend svg{width:100%;height:100%}
+.legend{display:flex;gap:16px;color:var(--ts);font-size:12px;margin-top:10px}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:10px;height:2px;display:inline-block}
+.rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-top:var(--gap)}
+.rule{border:1px solid rgba(30,58,110,.8);border-radius:var(--r);background:rgba(255,255,255,.025);padding:14px}
+.rule h3{font-size:13px;margin-bottom:12px;color:#dbeaff}.rule p{color:var(--ts);line-height:1.7;font-size:12px}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.rule-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="ph">
+  <div class="pt">风水联动</div>
+  <div class="pa"><button class="btn">策略管理</button><button class="btn">执行日志</button><button class="btn btnp">创建新任务</button></div>
+</div>
+
+<div class="tabs"><div class="tab active">任务列表</div><div class="tab">风盘运行状态</div><div class="tab">策略配置</div><div class="tab">历史曲线</div></div>
+
+<div class="kpi-grid">
+  <div class="mini"><div class="lb">风盘开机率1</div><div class="v scc">68%</div></div>
+  <div class="mini"><div class="lb">风盘开机率2</div><div class="v scb">72%</div></div>
+  <div class="mini"><div class="lb">温度达标率</div><div class="v scg">89%</div></div>
+  <div class="mini"><div class="lb">低/无风比例</div><div class="v scw">32%</div></div>
+  <div class="mini"><div class="lb">温度正偏数量</div><div class="v scr">12</div></div>
+  <div class="mini"><div class="lb">风量最大仍不达标</div><div class="v scw">5</div></div>
+</div>
+
+<div class="fb">
+  <div class="fi"><div class="fl">任务状态</div><select style="width:130px"><option>全部状态</option><option>执行中</option><option>停用</option><option>未到执行时间</option><option>已过期</option></select></div>
+  <div class="fi"><div class="fl">房间范围</div><select style="width:150px"><option>所有房间</option><option>楼栋1</option><option>楼栋2</option><option>机房群控区域</option></select></div>
+  <div class="fi"><div class="fl">起始时间</div><input type="datetime-local" style="width:185px"></div>
+  <div class="fi"><div class="fl">结束时间</div><input type="datetime-local" style="width:185px"></div>
+  <button class="btn btnp">查询</button><button class="btn">重置</button>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>任务ID</th><th>任务名称</th><th>起始时间</th><th>结束时间</th><th>房间范围</th><th>执行策略</th><th>任务状态</th><th>创建时间</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>20230615001</td><td>办公区节能策略</td><td>2026-06-15 08:00</td><td>2026-06-15 18:00</td><td>楼栋1-1至5层</td><td>夏季制冷策略</td><td><span class="tag tok">执行中</span></td><td>2026-06-14 15:30</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
+<tr><td>20230614002</td><td>会议室温控调节</td><td>2026-06-14 09:00</td><td>2026-06-14 17:00</td><td>楼栋2-会议室</td><td>会议室专用策略</td><td><span class="tag tin">已过期</span></td><td>2026-06-13 10:15</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
+<tr><td>20230616003</td><td>夜间节能模式</td><td>2026-06-16 22:00</td><td>2026-06-17 06:00</td><td>楼栋1/楼栋2</td><td>夜间低温策略</td><td><span class="tag twn">未到执行时间</span></td><td>2026-06-15 09:45</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
+<tr><td>20230612004</td><td>测试策略</td><td>2026-06-12 10:00</td><td>2026-06-12 12:00</td><td>楼栋1-3层-301</td><td>测试用策略</td><td><span class="tag ter">停用</span></td><td>2026-06-12 09:30</td><td><div class="op"><a>启用</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
+</tbody>
+</table>
+<div class="pg"><div class="pg-info">显示 1 至 4 条，共 24 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+</div>
+
+<div class="rule-grid">
+  <div class="panel">
+    <div class="pnt">运行效率指标趋势</div>
+    <div class="trend">
+      <svg viewBox="0 0 600 170" preserveAspectRatio="none">
+        <polyline points="0,110 80,95 160,104 240,78 320,84 400,63 480,72 600,48" fill="none" stroke="#00e5ff" stroke-width="3"/>
+        <polyline points="0,132 80,120 160,126 240,106 320,112 400,100 480,92 600,82" fill="none" stroke="#00e676" stroke-width="3"/>
+        <polyline points="0,88 80,83 160,76 240,72 320,66 400,58 480,54 600,46" fill="none" stroke="#ffb300" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="legend"><span><i style="background:#00e5ff"></i>风盘开机率1</span><span><i style="background:#00e676"></i>风盘开机率2</span><span><i style="background:#ffb300"></i>温度达标率</span></div>
+  </div>
+  <div class="panel">
+    <div class="pnt">策略配置摘要</div>
+    <div class="rule">
+      <h3>夏季制冷策略</h3>
+      <p>模式锁定为制冷，设定温度上限 28℃、下限 24℃。当温差正偏超过 2℃ 时优先调高风速；连续 15 分钟不达标时下调设定温度。</p>
+    </div>
+    <div class="rule" style="margin-top:12px">
+      <h3>夜间低温策略</h3>
+      <p>夜间时段执行低负荷运行，降低低/无风比例，限制风量已最大但仍不达标房间数量，并记录每次调整日志。</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

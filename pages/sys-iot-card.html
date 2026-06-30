@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>物联网卡管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.warn-strip{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:var(--gap);margin-bottom:var(--gap)}
+.warn-card{border:1px solid var(--bd);border-radius:var(--r);background:linear-gradient(135deg,rgba(12,28,66,.86),rgba(4,12,31,.72));padding:16px 18px;position:relative;overflow:hidden}
+.warn-card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--hl),transparent)}
+.warn-title{font-size:12px;color:var(--ts);margin-bottom:8px}
+.warn-num{font-family:'Roboto Mono',monospace;font-size:28px;font-weight:700}
+.warn-meta{font-size:12px;color:var(--ts);margin-top:8px;line-height:1.6}
+.usage{min-width:150px}
+.bar{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-top:5px}
+.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#00e5ff,#00e676)}
+.fill.warn{background:linear-gradient(90deg,#ffb300,#ff4d4f)}
+.iccid{font-family:'Roboto Mono',monospace;color:#dbeaff}
+</style>
+</head>
+<body>
+<div class="ph">
+  <div class="pt">物联网卡管理</div>
+  <div class="pa">
+    <button class="btn">刷新数据</button>
+    <button class="btn">预警设置</button>
+    <button class="btn btnp">导出Excel</button>
+  </div>
+</div>
+
+<div class="warn-strip">
+  <div class="warn-card">
+    <div class="warn-title">当前触发预警卡数</div>
+    <div class="warn-num scr">3</div>
+    <div class="warn-meta">流量超额 2 张，到期预警 1 张</div>
+  </div>
+  <div class="warn-card">
+    <div class="warn-title">已接入物联网卡</div>
+    <div class="warn-num scc">28</div>
+    <div class="warn-meta">覆盖网关、控制器与环境感知设备</div>
+  </div>
+  <div class="warn-card">
+    <div class="warn-title">平均剩余流量</div>
+    <div class="warn-num scg">61%</div>
+    <div class="warn-meta">低于 20% 自动进入重点跟踪</div>
+  </div>
+</div>
+
+<div class="fb">
+  <div class="fi"><div class="fl">设备编码</div><input placeholder="请输入设备编码" style="width:170px"></div>
+  <div class="fi"><div class="fl">物联网卡号(ICCID)</div><input placeholder="请输入ICCID" style="width:190px"></div>
+  <div class="fi"><div class="fl">项目名称</div><select style="width:160px"><option>全部项目</option><option>智慧园区项目</option><option>工业控制项目</option><option>环境监测项目</option></select></div>
+  <div class="fi"><div class="fl">当月已使用比例</div><select style="width:140px"><option>全部</option><option>0%-20%</option><option>21%-40%</option><option>41%-60%</option><option>61%-80%</option><option>81%-100%</option></select></div>
+  <div class="fi"><div class="fl">运营商</div><select style="width:120px"><option>全部</option><option>中国移动</option><option>中国联通</option><option>中国电信</option></select></div>
+  <button class="btn btnp">筛选</button><button class="btn">重置</button>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>项目名称</th><th>设备编码</th><th>物联网卡号(ICCID)</th><th>运营商</th><th>套餐类型</th><th>激活时间</th><th>到期时间</th><th>使用情况</th><th>状态</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>智慧园区项目</td><td>GW-a8f57c9d</td><td class="iccid">8986061916000012345</td><td>中国移动</td><td>移动流量500M</td><td>2026-05-12</td><td>2027-05-11</td><td class="usage">0.48GB / 0.5GB<div class="bar"><div class="fill warn" style="width:98%"></div></div></td><td><span class="tag ter">流量超额</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
+<tr><td>智能安防项目</td><td>GW-b9e68d0e</td><td class="iccid">8986001916000067890</td><td>中国联通</td><td>移动小流量5GB</td><td>2026-06-18</td><td>2027-06-17</td><td class="usage">2.3GB / 5GB<div class="bar"><div class="fill" style="width:46%"></div></div></td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
+<tr><td>环境监测项目</td><td>SN-c0f79e1f</td><td class="iccid">8986031916000123456</td><td>中国电信</td><td>电信通用2GB月包</td><td>2026-07-22</td><td>2026-07-30</td><td class="usage">0.8GB / 2GB<div class="bar"><div class="fill" style="width:40%"></div></div></td><td><span class="tag twn">即将到期</span></td><td><div class="op"><a>详情</a><a>续费</a></div></td></tr>
+<tr><td>工业控制项目</td><td>GW-d1g80f2g</td><td class="iccid">8986011916000234567</td><td>中国移动</td><td>移动流量15GB</td><td>2026-08-05</td><td>2027-08-04</td><td class="usage">6.7GB / 15GB<div class="bar"><div class="fill" style="width:45%"></div></div></td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
+<tr><td>智慧园区项目</td><td>SN-e2h91g3h</td><td class="iccid">8986021916000345678</td><td>中国联通</td><td>电信流量8GB</td><td>2026-09-11</td><td>2027-09-10</td><td class="usage">7.9GB / 8GB<div class="bar"><div class="fill warn" style="width:99%"></div></div></td><td><span class="tag ter">流量超额</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
+</tbody>
+</table>
+<div class="pg"><div class="pg-info">显示 1-5 条，共 28 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+</div>
+</body>
+</html>
