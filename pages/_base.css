@@ -71,7 +71,7 @@ select{cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:28px
   background-repeat:no-repeat;background-position:right 10px center;}
 select option{background:var(--bg-panel-2);color:var(--tx);}
 input[type=date],input[type=month],input[type=datetime-local],input[type=time]{color-scheme:dark;}
-input[type=checkbox],input[type=radio]{height:auto;accent-color:var(--primary);cursor:pointer;}
+input[type=checkbox],input[type=radio]{width:14px;height:14px;padding:0;flex:none;accent-color:var(--primary);cursor:pointer;}
 input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--primary);}
 
 /* ── 统计卡 ── */

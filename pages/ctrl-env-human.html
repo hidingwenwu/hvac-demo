@@ -1,71 +1,109 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>人体感知状态</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>人体感知状态</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.env-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
-.env-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;text-align:center;transition:border-color .15s;}
-.env-card:hover{border-color:var(--gw);}
-.env-card.occupied{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06);}
-.env-card.empty{opacity:.7;}
-.env-card.offline{opacity:.45;}
-.ev-ic{font-size:28px;margin-bottom:6px;}
-.ev-st{font-size:13px;font-weight:700;margin-bottom:4px;}
-.ev-n{font-size:11px;color:var(--ts);margin-bottom:2px;}
-.ev-loc{font-size:10px;color:var(--ts);}
-.ev-time{font-size:10px;color:var(--ts);margin-top:6px;}
-.fl-tab{padding:4px 12px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;display:inline-block;}
-.fl-tab.active{background:rgba(41,121,255,.2);border-color:var(--bl);color:var(--tx);}
-</style></head><body>
-<div class="ph">
-  <div class="pt">人体感知状态</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <span style="font-size:12px;color:var(--ts);">有人 <b style="color:var(--hl);">9</b> / 无人 <b style="color:#556677;">10</b> / 离线 <b style="color:var(--er);">2</b></span>
-  </div>
+/* ── 本页专有样式:环境感知监测 · 人体感知状态(对齐线上截图) ── */
+/* 统计行:左侧四张小统计卡 + 右侧刷新按钮 */
+.sc-line{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.sc.env{display:flex;grid-template-columns:none;gap:10px;margin-bottom:0;flex-wrap:wrap;}
+.scd.mini{min-width:118px;padding:10px 14px;border-radius:4px;border:1px solid var(--bd2);background:var(--bg-panel-2);}
+.scd.mini .sc-lb{margin-bottom:4px;font-size:12px;}
+.scd.mini .sc-v{font-size:16px;}
+.scd.mini.hi{background:var(--primary);border-color:var(--primary);}          /* 首卡高亮蓝(线上形态) */
+.scd.mini.hi .sc-lb{color:rgba(255,255,255,.85);}
+/* 传感器卡片网格 */
+.env-grid{display:grid;grid-template-columns:repeat(auto-fill,250px);gap:12px;align-content:start;min-height:calc(100vh - 300px);}   /* 线上为固定宽卡片、左对齐 */
+.ec{border-radius:10px;padding:14px 16px;min-height:158px;display:flex;flex-direction:column;
+  background:linear-gradient(135deg,#3a4258 0%,#242a3d 70%);cursor:default;
+  transition:transform .18s,box-shadow .18s;}
+.ec:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.4);}
+.ec.on{background:linear-gradient(135deg,#3d7bff 0%,#1c3ba9 80%);}            /* 识别有人:蓝色渐变 */
+/* 卡片头:位置名 */
+.ecn{font-size:16px;font-weight:700;color:#fff;letter-spacing:1px;min-height:22px;}
+/* 状态区:大字状态 + 右侧圆形笑脸图标 */
+.est{display:flex;align-items:center;justify-content:space-between;flex:1;padding:8px 4px 8px 0;}
+.esv{font-size:26px;font-weight:700;color:#fff;}
+.eic{width:48px;height:48px;border:2px solid rgba(255,255,255,.4);border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,.55);}
+/* 设备名 + 当前状态一行 */
+.emeta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.85);margin-bottom:8px;}
+/* 卡片脚:最后更新时间 */
+.ect{font-size:12px;color:rgba(255,255,255,.75);}
+</style>
+</head>
+<body>
+<!-- 顶部标签页:三个文件互跳,当前页 active(与线上"一页三标签"体验一致) -->
+<div class="tabs">
+  <div class="tab" onclick="location.href='ctrl-env.html'">温湿度状态</div>
+  <div class="tab active">人体感知状态</div>
+  <div class="tab" onclick="location.href='ctrl-env-door.html'">门窗感知状态</div>
 </div>
-<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
-  <div class="fl-tab active" onclick="flt(this,'all')">全部</div>
-  <div class="fl-tab" onclick="flt(this,'1F')">1F</div>
-  <div class="fl-tab" onclick="flt(this,'2F')">2F</div>
-  <div class="fl-tab" onclick="flt(this,'3F')">3F</div>
-  <div class="fl-tab" onclick="flt(this,'B1')">B1</div>
-  <div class="fl-tab" onclick="flt(this,'occupied')">有人</div>
-  <div class="fl-tab" onclick="flt(this,'empty')">无人</div>
+
+<!-- 统计卡行 + 刷新按钮 -->
+<div class="sc-line">
+  <div class="sc env" id="stats"></div>
+  <button class="btn btnp" onclick="doRefresh()">⟳ 刷新</button>
 </div>
-<div class="env-grid" id="eg"></div>
+
+<!-- 传感器卡片列表 -->
+<div class="env-grid" id="grid"></div>
+
+<!-- 分页 -->
+<div id="pager"></div>
+
+<script src="_ui.js"></script>
 <script>
-const DEVS=[
-  {n:'1F-人感-01',loc:'一楼大厅入口',fl:'1F',s:'occupied',t:'2026-06-11 14:32'},
-  {n:'1F-人感-02',loc:'一楼大厅中区',fl:'1F',s:'occupied',t:'2026-06-11 14:31'},
-  {n:'1F-人感-03',loc:'一楼展示区',fl:'1F',s:'empty',t:'2026-06-11 12:05'},
-  {n:'1F-人感-04',loc:'一楼收银台',fl:'1F',s:'occupied',t:'2026-06-11 14:30'},
-  {n:'2F-人感-01',loc:'二楼会议室A',fl:'2F',s:'occupied',t:'2026-06-11 14:28'},
-  {n:'2F-人感-02',loc:'二楼会议室B',fl:'2F',s:'empty',t:'2026-06-11 11:20'},
-  {n:'2F-人感-03',loc:'二楼开放办公',fl:'2F',s:'occupied',t:'2026-06-11 14:32'},
-  {n:'2F-人感-04',loc:'二楼休息区',fl:'2F',s:'occupied',t:'2026-06-11 14:15'},
-  {n:'2F-人感-05',loc:'二楼走廊',fl:'2F',s:'empty',t:'2026-06-11 13:44'},
-  {n:'3F-人感-01',loc:'三楼办公区A',fl:'3F',s:'occupied',t:'2026-06-11 14:29'},
-  {n:'3F-人感-02',loc:'三楼办公区B',fl:'3F',s:'occupied',t:'2026-06-11 14:30'},
-  {n:'3F-人感-03',loc:'三楼储藏室',fl:'3F',s:'empty',t:'2026-06-11 08:00'},
-  {n:'3F-人感-04',loc:'三楼走廊',fl:'3F',s:'empty',t:'2026-06-11 13:15'},
-  {n:'B1-人感-01',loc:'B1餐饮区',fl:'B1',s:'occupied',t:'2026-06-11 14:32'},
-  {n:'B1-人感-02',loc:'B1通道A',fl:'B1',s:'empty',t:'2026-06-11 14:00'},
-  {n:'B1-人感-03',loc:'B1通道B',fl:'B1',s:'empty',t:'2026-06-11 12:30'},
-  {n:'B1-人感-04',loc:'B1停车入口',fl:'B1',s:'empty',t:'2026-06-11 10:00'},
-  {n:'3F-人感-05',loc:'三楼机房',fl:'3F',s:'offline',t:'2026-06-10 18:00'},
-  {n:'B1-人感-05',loc:'B1库房',fl:'B1',s:'offline',t:'2026-06-09 22:00'},
-  {n:'2F-人感-06',loc:'二楼卫生间走廊',fl:'2F',s:'empty',t:'2026-06-11 09:00'},
-  {n:'1F-人感-05',loc:'一楼电梯厅',fl:'1F',s:'occupied',t:'2026-06-11 14:28'},
+/* ── 模拟数据:人体感知传感器(位置名/设备名/状态 in=有人 out=无人 null=无数据) ── */
+const SENSORS=[
+  {name:'产品部',    dev:'人体感知测试',   s:'in', time:'2026-06-10 11:05:09'},
+  {name:'应用技术部',dev:'人体感知-A201',  s:'in', time:'2026-06-10 11:04:41'},
+  {name:'研发中心',  dev:'人体感知-A305',  s:'out',time:'2026-06-10 11:05:02'},
+  {name:'测试部',    dev:'人体感知-A308',  s:'out',time:'2026-06-10 11:03:55'},
+  {name:'市场部',    dev:'人体感知-B102',  s:'in', time:'2026-06-10 11:04:37'},
+  {name:'会议室A',   dev:'人体感知-B201',  s:'out',time:'2026-06-10 11:02:18'},
+  {name:'综合办公室',dev:'人体感知-B105',  s:null, time:'2025-12-05 11:41:39'},  // 无数据:状态 --
 ];
-let cf='all';
-function flt(el,f){cf=f;el.closest('div').querySelectorAll('.fl-tab').forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
-function render(){
-  const list=DEVS.filter(d=>cf==='all'||(cf==='occupied'||cf==='empty')?d.s===cf:d.fl===cf);
-  document.getElementById('eg').innerHTML=list.map(d=>{
-    const ic=d.s==='occupied'?'🧑':d.s==='offline'?'📵':'👤';
-    const stc=d.s==='occupied'?'color:var(--hl)':d.s==='offline'?'color:var(--er)':'color:#556677';
-    const sl=d.s==='occupied'?'有人':d.s==='offline'?'离线':'无人';
-    return`<div class="env-card ${d.s}"><div class="ev-ic">${ic}</div><div class="ev-st" style="${stc}">${sl}</div><div class="ev-n">${d.n}</div><div class="ev-loc">${d.loc}</div><div class="ev-time">更新: ${d.t.slice(11)}</div></div>`;
-  }).join('');
+
+/* ── 统计卡:监测房间总数 / 当前有人 / 当前无人 / 设备异常 ── */
+function renderStats(){
+  const inN=SENSORS.filter(s=>s.s==='in').length;
+  const outN=SENSORS.filter(s=>s.s==='out').length;
+  const bad=SENSORS.filter(s=>s.s==null).length;
+  document.getElementById('stats').innerHTML=`
+    <div class="scd mini hi"><div class="sc-lb">监测房间总数</div><div class="sc-v">${SENSORS.length}</div></div>
+    <div class="scd mini"><div class="sc-lb">当前有人</div><div class="sc-v">${inN}</div></div>
+    <div class="scd mini"><div class="sc-lb">当前无人</div><div class="sc-v">${outN}</div></div>
+    <div class="scd mini"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
 }
-render();
+
+/* ── 卡片列表 + 分页(有人蓝卡,无人/无数据灰卡) ── */
+const pg={total:SENSORS.length,page:1,size:10,onChange:()=>renderGrid()};
+function renderGrid(){
+  const start=(pg.page-1)*pg.size;
+  const rows=SENSORS.slice(start,start+pg.size);
+  document.getElementById('grid').innerHTML=rows.map(s=>{
+    const st=s.s==='in'?'有人':s.s==='out'?'无人':'--';
+    return`
+    <div class="ec ${s.s==='in'?'on':''}">
+      <div class="ecn">${s.name}</div>
+      <div class="est"><span class="esv">${st}</span><span class="eic">☺</span></div>
+      <div class="emeta"><span>${s.dev}</span><span>${st}</span></div>
+      <div class="ect">最后更新时间: ${s.time}</div>
+    </div>`;}).join('');
+}
+
+/* ── 刷新:重新渲染并提示 ── */
+function doRefresh(){
+  renderStats();renderGrid();
+  $msg('刷新成功','success');
+}
+
+renderStats();
+$pager('pager',pg);
+renderGrid();
 </script>
-</body></html>
+</body>
+</html>

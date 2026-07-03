@@ -1,1 +1,177 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>开关机记录</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">开关机记录</div><div class="pa"><button class="btn">导出</button></div></div><div class="fb"><div class="fi"><div class="fl">所属项目</div><select style="width:160px"><option value="">全部</option><option>上海某商业广场</option><option>全部</option></select></div><div class="fi"><div class="fl">空调名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">动作</div><select style="width:100px"><option value="">全部</option><option>开机</option><option>关机</option></select></div><div class="fi"><div class="fl">时间范围</div><input type="date" style="width:130px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="date" style="width:130px"></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>序号</th><th>空调名称</th><th>安装位置</th><th>动作</th><th>操作方式</th><th>操作人</th><th>操作时间</th></tr></thead><tbody><tr><td>1</td><td>1F-大厅-01</td><td>一楼大厅</td><td><span class="tag tok">开机</span></td><td>日程</td><td>系统自动</td><td>2026-06-10 08:00:00</td></tr><tr><td>2</td><td>1F-大厅-02</td><td>一楼大厅</td><td><span class="tag tok">开机</span></td><td>日程</td><td>系统自动</td><td>2026-06-10 08:00:02</td></tr><tr><td>3</td><td>2F-会议室-01</td><td>二楼大会议室</td><td><span class="tag tok">开机</span></td><td>手动</td><td>op_user1</td><td>2026-06-10 09:02:15</td></tr><tr><td>4</td><td>2F-办公区-01</td><td>二楼开放办公区</td><td><span class="tag tok">开机</span></td><td>策略</td><td>系统自动</td><td>2026-06-10 08:45:30</td></tr><tr><td>5</td><td>B1-餐饮-01</td><td>B1餐饮区</td><td><span class="tag ter">关机</span></td><td>手动</td><td>op_user2</td><td>2026-06-10 22:00:10</td></tr><tr><td>6</td><td>2F-会议室-01</td><td>二楼大会议室</td><td><span class="tag ter">关机</span></td><td>手动</td><td>op_user1</td><td>2026-06-10 18:05:00</td></tr><tr><td>7</td><td>1F-大厅-01</td><td>一楼大厅</td><td><span class="tag ter">关机</span></td><td>日程</td><td>系统自动</td><td>2026-06-09 22:00:00</td></tr></tbody></table><div class="pg"><div class="pg-info">共28条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>开关机记录</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
+.side-tree{min-height:100%;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- 左侧建筑物树 -->
+  <aside class="side-tree">
+    <div class="st-title">建筑物信息</div>
+    <div id="tree"></div>
+  </aside>
+
+  <!-- 右侧主区 -->
+  <div class="main-col">
+    <div class="fb">
+      <div class="fi"><span class="fl">内机地址</span><input id="fAddr" placeholder="请输入内机地址" style="width:180px"></div>
+      <div class="fi"><span class="fl">发生时间</span>
+        <input type="date" id="fStart" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:150px">
+      </div>
+      <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+      <button class="btn" onclick="doReset()">重置</button>
+      <button class="btn btnp" style="margin-left:auto" onclick="doExport()">⬆ 导出</button>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>内机地址</th><th>房间</th><th>发生时间</th><th>开关操作</th>
+          <th>触发方式</th><th>模式</th><th>温度</th><th>风速</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="pager"></div>
+  </div>
+</div>
+
+<!-- 记录详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>开关机记录详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDetail')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(与线上数据形态一致:今日晨间高频记录 + 近月历史) ── */
+const pad=n=>String(n).padStart(2,'0');
+const today=(()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;})();
+const RECORDS=(()=>{
+  const rows=[];
+  // 今日记录:楼层/房间贴近线上截图(1号楼 4~24层)
+  const rooms=[[18,1808],[9,908],[17,1712],[4,418],[5,506],[24,2414],[19,1902],[8,808],[10,1007],[22,2216],[7,713],[14,1408],[23,2305],[3,303],[12,1203],[16,1611],[20,2002],[6,602]];
+  const modes=['制冷','制冷','制冷','送风','制热'];
+  const fans=['低风','低风','中风','高风'];
+  let hh=10,mm=16,ss=17;
+  for(let i=0;i<40;i++){
+    const [fl,rm]=rooms[i%rooms.length];
+    rows.push({
+      addr:`${1+(i%2)}-${1+(i%3)}-${fl+(i%2?0:2)}-${1+(i*3)%8}`,
+      bld:'1号楼',fl:fl+'层',room:rm,
+      time:`${today} ${pad(hh)}:${pad(mm)}:${pad(ss)}`,
+      op:i%3?'关机':'开机',
+      trig:i%5===4?'远程':'线控器',
+      mode:modes[i%modes.length],temp:22+(i%5),fan:fans[i%fans.length]
+    });
+    // 时间递减,模拟真实上报间隔
+    ss-=17+(i*7)%40;if(ss<0){ss+=60;mm--;}mm-=(i%3);if(mm<0){mm+=60;hh--;}
+  }
+  // 历史记录(近月)
+  const hist=['2026-06-09 11:10:01','2026-05-19 16:07:58','2026-05-13 15:42:11','2026-04-28 09:31:26','2026-04-17 14:05:40','2026-03-26 19:00:13','2026-06-21 08:12:44','2026-06-30 20:33:02'];
+  hist.forEach((t,i)=>{
+    const [fl,rm]=rooms[(i*5)%rooms.length];
+    rows.push({addr:`${1+(i%2)}-${1+(i%3)}-${fl}-${1+i%8}`,bld:'1号楼',fl:fl+'层',room:rm,
+      time:t,op:i%2?'开机':'关机',trig:'线控器',mode:modes[i%modes.length],temp:23+(i%4),fan:fans[i%fans.length]});
+  });
+  return rows.sort((a,b)=>b.time.localeCompare(a.time));
+})();
+
+/* ── 建筑树 ── */
+const TREE=[{lb:'1号楼',open:false,children:['3层','4层','5层','7层','9层','14层','18层','22层']}];
+let treeSel='';
+function renderTree(){
+  const el=document.getElementById('tree');el.innerHTML='';
+  TREE.forEach(b=>{
+    const row=document.createElement('div');
+    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
+    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
+    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();doQuery();};
+    row.onclick=()=>{b.open=!b.open;renderTree();};
+    el.appendChild(row);
+    if(b.open){
+      const box=document.createElement('div');box.className='tree-children';
+      b.children.forEach(f=>{
+        const fr=document.createElement('div');
+        fr.className='tree-row'+(treeSel===f?' active':'');
+        fr.style.paddingLeft='30px';
+        fr.innerHTML=`<span>${f}</span>`;
+        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();doQuery();};
+        box.appendChild(fr);
+      });
+      el.appendChild(box);
+    }
+  });
+}
+
+/* ── 查询/表格/分页 ── */
+let filtered=RECORDS.slice();
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const addr=document.getElementById('fAddr').value.trim();
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  filtered=RECORDS.filter(r=>
+    (!addr||r.addr.includes(addr))&&
+    (!s||r.time>=s)&&(!e||r.time<=e+' 23:59:59')&&
+    (!treeSel||treeSel==='1号楼'||r.fl===treeSel)
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fAddr').value='';
+  // 线上默认发生时间为当天
+  document.getElementById('fStart').value=today;
+  document.getElementById('fEnd').value=today;
+  treeSel='';renderTree();doQuery();
+}
+function doExport(){$msg('导出任务已提交,请稍后在下载中心查看');}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
+    <tr>
+      <td>${r.addr}</td><td>${r.bld} ${r.fl} ${r.room}</td><td>${r.time}</td>
+      <td>${r.op}</td><td>${r.trig}</td><td>${r.mode}</td><td>${r.temp}</td><td>${r.fan}</td>
+      <td><span class="op"><a onclick='showDetail(${JSON.stringify(JSON.stringify(r))})'>查看</a></span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function showDetail(json){
+  const r=JSON.parse(json);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">内机地址:</span><span class="v">${r.addr}</span>
+    <span class="k">房间:</span><span class="v">${r.bld} ${r.fl} ${r.room}</span>
+    <span class="k">发生时间:</span><span class="v">${r.time}</span>
+    <span class="k">开关操作:</span><span class="v ${r.op==='开机'?'text-ok':'text-er'}">${r.op}</span>
+    <span class="k">触发方式:</span><span class="v">${r.trig}</span>
+    <span class="k">模式:</span><span class="v">${r.mode}</span>
+    <span class="k">温度:</span><span class="v">${r.temp}℃</span>
+    <span class="k">风速:</span><span class="v">${r.fan}</span>`;
+  $modal('dlgDetail');
+}
+
+// 初始:发生时间默认当天(与线上一致)
+document.getElementById('fStart').value=today;
+document.getElementById('fEnd').value=today;
+renderTree();doQuery();
+</script>
+</body>
+</html>

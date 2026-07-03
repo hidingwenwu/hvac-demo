@@ -1,127 +1,123 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>环境感知监测</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>温湿度状态</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.tabs{display:flex;gap:1px;background:var(--bd);border-radius:5px;overflow:hidden;margin-bottom:var(--gap);width:fit-content;}
-.tab{padding:7px 22px;font-size:13px;cursor:pointer;color:var(--ts);background:var(--bg);transition:all .15s;}
-.tab.act{background:var(--bl);color:#fff;font-weight:600;}
-.tab:hover:not(.act){color:var(--tx);background:rgba(255,255,255,.04);}
-.sc-row{display:flex;gap:6px;flex-wrap:wrap;}
-.sc-btn{padding:4px 14px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--bd);color:var(--ts);background:transparent;transition:all .15s;}
-.sc-btn.act{background:var(--hl);color:#030b1c;border-color:var(--hl);font-weight:600;}
-.sc-btn:hover:not(.act){border-color:var(--gw);color:var(--tx);}
-.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--gap);}
-.ec{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;transition:border-color .15s;}
-.ec:hover{border-color:var(--gw);}
-.ech{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.4);}
-.ecn{font-size:13px;font-weight:600;color:var(--tx);}
-.ecl{font-size:11px;color:var(--ts);margin-top:2px;}
-.mg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
-.mi{background:rgba(255,255,255,.03);border:1px solid rgba(30,58,110,.3);border-radius:4px;padding:7px 8px;text-align:center;}
-.ml{font-size:10px;color:var(--ts);margin-bottom:3px;}
-.mv{font-size:22px;font-weight:700;font-family:'Roboto Mono',monospace;line-height:1.1;}
-.mv.tc{color:#00e5ff;}.mv.hc{color:#2979ff;}.mv.na{color:rgba(255,255,255,.2);font-size:14px;}
-.mu{font-size:11px;color:var(--ts);}
-.sb{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0 6px;gap:6px;}
-.si{font-size:34px;line-height:1;}
-.st{font-size:15px;font-weight:700;}
-.st.ok{color:var(--ok);}.st.wn{color:var(--wn);}.st.dim{color:rgba(255,255,255,.22);}
-.ef{font-size:10px;color:var(--ts);padding-top:6px;border-top:1px solid rgba(30,58,110,.3);margin-top:4px;}
-</style></head><body>
-<div class="ph"><div class="pt">环境感知监测</div><div class="pa"><button class="btn">导出</button></div></div>
+/* ── 本页专有样式:环境感知监测 · 温湿度状态(对齐线上截图) ── */
+/* 统计行:左侧四张小统计卡 + 右侧刷新按钮 */
+.sc-line{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.sc.env{display:flex;grid-template-columns:none;gap:10px;margin-bottom:0;flex-wrap:wrap;}
+.scd.mini{min-width:118px;padding:10px 14px;border-radius:4px;border:1px solid var(--bd2);background:var(--bg-panel-2);}
+.scd.mini .sc-lb{margin-bottom:4px;font-size:12px;}
+.scd.mini .sc-v{font-size:16px;}
+.scd.mini.hi{background:var(--primary);border-color:var(--primary);}          /* 首卡高亮蓝(线上形态) */
+.scd.mini.hi .sc-lb{color:rgba(255,255,255,.85);}
+/* 传感器卡片网格 */
+.env-grid{display:grid;grid-template-columns:repeat(auto-fill,250px);gap:12px;align-content:start;min-height:calc(100vh - 300px);}   /* 线上为固定宽卡片、左对齐 */
+.ec{border-radius:10px;padding:14px 16px;min-height:150px;display:flex;flex-direction:column;
+  background:linear-gradient(135deg,#3a4258 0%,#242a3d 70%);cursor:default;
+  transition:transform .18s,box-shadow .18s;}
+.ec:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.4);}
+.ec.on{background:linear-gradient(135deg,#3d7bff 0%,#1c3ba9 80%);}            /* 有数据:蓝色渐变 */
+/* 卡片头:位置名 + 传感器编号 */
+.ech{display:flex;align-items:flex-start;justify-content:space-between;min-height:24px;gap:8px;}
+.ecn{font-size:16px;font-weight:700;color:#fff;letter-spacing:1px;}
+.ecid{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px;}
+/* 读数区:温度 | 湿度,中间竖分隔线 */
+.rd{display:flex;align-items:center;flex:1;padding:14px 0 10px;}
+.ri{flex:1;text-align:center;}
+.rv{font-size:24px;font-weight:700;color:#fff;line-height:1.2;}
+.rl{font-size:12px;color:rgba(255,255,255,.8);margin-top:5px;}
+.rsep{width:1px;height:36px;background:rgba(255,255,255,.35);flex-shrink:0;}
+/* 卡片脚:最后更新时间 */
+.ect{font-size:12px;color:rgba(255,255,255,.75);}
+</style>
+</head>
+<body>
+<!-- 顶部标签页:三个文件互跳,当前页 active(与线上"一页三标签"体验一致) -->
 <div class="tabs">
-  <div class="tab act" onclick="sw(0,this)">温湿度状态</div>
-  <div class="tab" onclick="sw(1,this)">人体感知状态</div>
-  <div class="tab" onclick="sw(2,this)">门窗感知状态</div>
+  <div class="tab active">温湿度状态</div>
+  <div class="tab" onclick="location.href='ctrl-env-human.html'">人体感知状态</div>
+  <div class="tab" onclick="location.href='ctrl-env-door.html'">门窗感知状态</div>
 </div>
 
-<div id="p0">
-  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
-    <div class="sc-row"><div class="sc-btn act">全部 8</div><div class="sc-btn">接入 6</div><div class="sc-btn">未接入 1</div><div class="sc-btn">告警 1</div></div>
-    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
-      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
-      <div class="fi"><div class="fl">状态</div><select style="width:100px"><option>全部</option><option>接入</option><option>未接入</option><option>告警</option></select></div>
-      <button class="btn btnp">查询</button><button class="btn">重置</button>
-    </div>
-  </div>
-  <div class="eg" id="thg"></div>
+<!-- 统计卡行 + 刷新按钮 -->
+<div class="sc-line">
+  <div class="sc env" id="stats"></div>
+  <button class="btn btnp" onclick="doRefresh()">⟳ 刷新</button>
 </div>
 
-<div id="p1" style="display:none">
-  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
-    <div class="sc-row"><div class="sc-btn act">全部 10</div><div class="sc-btn">有人 3</div><div class="sc-btn">无人 6</div><div class="sc-btn">离线 1</div></div>
-    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
-      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
-      <button class="btn btnp">查询</button><button class="btn">重置</button>
-    </div>
-  </div>
-  <div class="eg" id="hug"></div>
-</div>
+<!-- 传感器卡片列表 -->
+<div class="env-grid" id="grid"></div>
 
-<div id="p2" style="display:none">
-  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--gap);">
-    <div class="sc-row"><div class="sc-btn act">全部 8</div><div class="sc-btn">开启 2</div><div class="sc-btn">关闭 5</div><div class="sc-btn">离线 1</div></div>
-    <div class="fb" style="margin:0;padding:8px 12px;flex:1;min-width:0;">
-      <div class="fi"><div class="fl">楼层</div><select style="width:90px"><option>全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
-      <button class="btn btnp">查询</button><button class="btn">重置</button>
-    </div>
-  </div>
-  <div class="eg" id="dwg"></div>
-</div>
+<!-- 分页 -->
+<div id="pager"></div>
 
+<script src="_ui.js"></script>
 <script>
-function sw(i,el){[0,1,2].forEach(j=>document.getElementById('p'+j).style.display=j===i?'':'none');document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('act',j===i));}
-const TH=[
-  {n:'5M传感器',l:'一楼入口',s:'on',t:31.3,h:27.4,ta:null,ha:null,u:'06-11 09:32'},
-  {n:'温湿度传感器-1F-01',l:'一楼大厅',s:'on',t:29.8,h:31.2,ta:35,ha:70,u:'06-11 09:31'},
-  {n:'温湿度传感器-2F-01',l:'二楼会议室',s:'on',t:24.1,h:45.0,ta:32,ha:70,u:'06-11 09:30'},
-  {n:'温湿度传感器-2F-02',l:'二楼开放办公',s:'warn',t:36.2,h:28.5,ta:35,ha:70,u:'06-11 09:29'},
-  {n:'温湿度传感器-3F-01',l:'三楼储藏室',s:'on',t:28.9,h:52.1,ta:null,ha:null,u:'06-11 09:28'},
-  {n:'温湿度传感器-B1-01',l:'B1餐饮区',s:'on',t:22.5,h:68.3,ta:30,ha:80,u:'06-11 09:27'},
-  {n:'温湿度传感器-B1-02',l:'B1通道',s:'on',t:23.1,h:62.5,ta:30,ha:80,u:'06-11 09:26'},
-  {n:'温湿度传感器-B1-03',l:'B1停车场',s:'off',t:null,h:null,ta:null,ha:null,u:'06-10 18:00'},
+/* ── 模拟数据:温湿度传感器(位置名/编号/读数/最后更新时间,形态贴近线上) ── */
+const SENSORS=[
+  {name:'应用技术部',id:'21123591',t:31.3,h:27.4,time:'2026-06-10 11:05:09'},
+  {name:'',          id:'21123590',t:null,h:null,time:'2025-12-05 11:41:39'},   // 无数据传感器:读数 --
+  {name:'产品部',    id:'21123588',t:26.8,h:45.2,time:'2026-06-10 11:04:52'},
+  {name:'研发中心',  id:'21123586',t:25.4,h:48.6,time:'2026-06-10 11:05:01'},
+  {name:'测试部',    id:'21123585',t:27.1,h:42.8,time:'2026-06-10 11:03:47'},
+  {name:'市场部',    id:'21123583',t:24.9,h:51.3,time:'2026-06-10 11:04:15'},
+  {name:'综合办公室',id:'21123582',t:26.2,h:46.7,time:'2026-06-10 11:05:06'},
+  {name:'会议室A',   id:'21123580',t:23.6,h:55.1,time:'2026-06-10 11:02:33'},
+  {name:'会议室B',   id:'21123579',t:28.4,h:38.9,time:'2026-06-10 11:04:58'},
+  {name:'前台大厅',  id:'21123577',t:29.0,h:35.6,time:'2026-06-10 11:05:03'},
+  {name:'财务室',    id:'21123575',t:25.8,h:47.4,time:'2026-06-10 11:01:26'},
+  {name:'',          id:'21123574',t:null,h:null,time:'2025-12-05 11:41:39'},   // 无数据传感器:读数 --
 ];
-document.getElementById('thg').innerHTML=TH.map(d=>`<div class="ec" style="${d.s==='warn'?'border-color:var(--er)':''}">
-  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='warn'?'ter':d.s==='on'?'tok':'tin'}">${d.s==='warn'?'告警':d.s==='on'?'接入':'未接入'}</span></div>
-  <div class="mg">
-    <div class="mi"><div class="ml">当前温度</div>${d.t!=null?`<div class="mv tc">${d.t}<span class="mu">℃</span></div>`:`<div class="mv na">-℃</div>`}</div>
-    <div class="mi"><div class="ml">当前湿度</div>${d.h!=null?`<div class="mv hc">${d.h}<span class="mu">%RH</span></div>`:`<div class="mv na">-%</div>`}</div>
-    <div class="mi"><div class="ml">告警温度上限</div>${d.ta!=null?`<div class="mv tc" style="font-size:16px">${d.ta}<span class="mu">℃</span></div>`:`<div class="mv na">-℃</div>`}</div>
-    <div class="mi"><div class="ml">告警湿度上限</div>${d.ha!=null?`<div class="mv hc" style="font-size:16px">${d.ha}<span class="mu">%</span></div>`:`<div class="mv na">-%</div>`}</div>
-  </div>
-  <div class="ef">上次更新: ${d.u}</div>
-</div>`).join('');
 
-const HU=[
-  {n:'人体感知-1F-01',l:'一楼大厅入口',s:'in',u:'06-11 09:30'},
-  {n:'人体感知-1F-02',l:'一楼走廊',s:'none',u:'06-11 09:31'},
-  {n:'人体感知-2F-01',l:'二楼会议室A',s:'in',u:'06-11 09:28'},
-  {n:'人体感知-2F-02',l:'二楼开放办公',s:'in',u:'06-11 09:29'},
-  {n:'人体感知-2F-03',l:'二楼小会议室',s:'none',u:'06-11 09:25'},
-  {n:'人体感知-3F-01',l:'三楼储藏室',s:'none',u:'06-11 08:55'},
-  {n:'人体感知-3F-02',l:'三楼走廊',s:'none',u:'06-11 09:20'},
-  {n:'人体感知-B1-01',l:'B1餐饮区',s:'none',u:'06-11 09:30'},
-  {n:'人体感知-B1-02',l:'B1通道',s:'none',u:'06-11 09:22'},
-  {n:'人体感知-B1-03',l:'B1车库入口',s:'off',u:'06-10 20:15'},
-];
-document.getElementById('hug').innerHTML=HU.map(d=>`<div class="ec" style="${d.s==='in'?'border-color:var(--ok)':''}${d.s==='off'?'opacity:.55':''}">
-  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='in'?'tok':d.s==='off'?'tin':''}">${d.s==='in'?'有人':d.s==='off'?'离线':'无人'}</span></div>
-  <div class="sb"><div class="si">${d.s==='in'?'🚶':d.s==='off'?'⊘':'○'}</div><div class="st ${d.s==='in'?'ok':d.s==='off'?'dim':''}">${d.s==='in'?'有人':d.s==='off'?'离线':'无人'}</div></div>
-  <div class="ef">上次更新: ${d.u}</div>
-</div>`).join('');
+/* ── 统计卡:传感器总数 / 平均温度 / 平均湿度 / 设备异常 ── */
+function renderStats(){
+  const ok=SENSORS.filter(s=>s.t!=null);
+  const avgT=(ok.reduce((a,s)=>a+s.t,0)/ok.length).toFixed(1);
+  const avgH=(ok.reduce((a,s)=>a+s.h,0)/ok.length).toFixed(2);
+  const bad=SENSORS.length-ok.length;
+  document.getElementById('stats').innerHTML=`
+    <div class="scd mini hi"><div class="sc-lb">传感器总数</div><div class="sc-v">${SENSORS.length}</div></div>
+    <div class="scd mini"><div class="sc-lb">平均温度</div><div class="sc-v">${avgT}℃</div></div>
+    <div class="scd mini"><div class="sc-lb">平均湿度</div><div class="sc-v">${avgH}%</div></div>
+    <div class="scd mini"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
+}
 
-const DW=[
-  {n:'门磁感知-1F-01',l:'一楼大门',s:'open',u:'06-11 09:30'},
-  {n:'门磁感知-1F-02',l:'一楼侧门',s:'close',u:'06-11 09:31'},
-  {n:'门磁感知-2F-01',l:'二楼会议室A',s:'open',u:'06-11 09:28'},
-  {n:'门磁感知-2F-02',l:'二楼机房门',s:'close',u:'06-11 09:29'},
-  {n:'窗磁感知-2F-01',l:'二楼东侧窗',s:'close',u:'06-11 09:25'},
-  {n:'门磁感知-3F-01',l:'三楼储藏室',s:'close',u:'06-11 08:55'},
-  {n:'门磁感知-B1-01',l:'B1设备间',s:'close',u:'06-11 09:22'},
-  {n:'门磁感知-B1-02',l:'B1紧急出口',s:'off',u:'06-10 18:30'},
-];
-document.getElementById('dwg').innerHTML=DW.map(d=>`<div class="ec" style="${d.s==='open'?'border-color:var(--wn)':''}${d.s==='off'?'opacity:.55':''}">
-  <div class="ech"><div><div class="ecn">${d.n}</div><div class="ecl">${d.l}</div></div><span class="tag ${d.s==='open'?'twn':d.s==='off'?'tin':'tok'}">${d.s==='open'?'开启':d.s==='off'?'离线':'关闭'}</span></div>
-  <div class="sb"><div class="si">${d.s==='open'?'🔓':d.s==='off'?'⊘':'🔒'}</div><div class="st ${d.s==='open'?'wn':d.s==='off'?'dim':'ok'}">${d.s==='open'?'开启':d.s==='off'?'离线':'关闭'}</div></div>
-  <div class="ef">上次更新: ${d.u}</div>
-</div>`).join('');
+/* ── 卡片列表 + 分页(有数据蓝卡,无数据灰卡显示 --) ── */
+const pg={total:SENSORS.length,page:1,size:10,onChange:()=>renderGrid()};
+function renderGrid(){
+  const start=(pg.page-1)*pg.size;
+  const rows=SENSORS.slice(start,start+pg.size);
+  document.getElementById('grid').innerHTML=rows.map(s=>`
+    <div class="ec ${s.t!=null?'on':''}">
+      <div class="ech"><span class="ecn">${s.name}</span><span class="ecid">${s.id}</span></div>
+      <div class="rd">
+        <div class="ri"><div class="rv">${s.t!=null?s.t:'--'}°C</div><div class="rl">温度 (℃)</div></div>
+        <div class="rsep"></div>
+        <div class="ri"><div class="rv">${s.h!=null?s.h:'--'}%</div><div class="rl">湿度 (%)</div></div>
+      </div>
+      <div class="ect">最后更新时间: ${s.time}</div>
+    </div>`).join('');
+}
+
+/* ── 刷新:模拟读数轻微抖动并重新渲染 ── */
+function doRefresh(){
+  SENSORS.forEach(s=>{
+    if(s.t!=null){
+      s.t=+(s.t+(Math.random()-.5)*.4).toFixed(1);
+      s.h=+(s.h+(Math.random()-.5)*.8).toFixed(1);
+    }
+  });
+  renderStats();renderGrid();
+  $msg('刷新成功','success');
+}
+
+renderStats();
+$pager('pager',pg);
+renderGrid();
 </script>
-</body></html>
+</body>
+</html>

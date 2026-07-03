@@ -1,89 +1,338 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>群组控制</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>群组控制</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.grp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--gap);}
-.grp-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s;}
-.grp-card:hover,.grp-card.sel{border-color:var(--gw);}
-.grp-card.sel{background:rgba(0,229,255,.06);}
-.grp-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px;}
-.grp-meta{font-size:11px;color:var(--ts);line-height:1.8;}
-.grp-stat{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
-.ctrl-btn{padding:8px 4px;border-radius:4px;border:1px solid var(--bd);background:rgba(255,255,255,.03);color:var(--ts);font-size:11px;cursor:pointer;text-align:center;line-height:1.5;}
-.ctrl-btn:hover{border-color:var(--gw);color:var(--hl);}
-.brow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.brow button{width:22px;height:22px;border:1px solid var(--bd);border-radius:3px;background:transparent;color:var(--ts);cursor:pointer;}
-.brow button:hover{color:var(--hl);}
-.brow span{font-size:14px;font-weight:700;font-family:monospace;color:var(--tx);min-width:30px;text-align:center;}
-</style></head><body>
-<div class="ph">
-  <div class="pt">群组控制</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <button class="btn btnp" onclick="alert('新增群组')">+ 新增群组</button>
+/* ── 布局:左侧群组卡片区 + 右侧控制面板 ── */
+.layout{display:flex;gap:14px;align-items:flex-start;}
+.cards-col{flex:1;min-width:0;}
+.ctrl-col{width:360px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;}
+
+/* ── 群组卡片(蓝色渐变,同线上) ── */
+.grp-grid{display:grid;grid-template-columns:repeat(auto-fill,250px);gap:16px;}
+.grp-card{position:relative;height:180px;border-radius:10px;padding:14px 16px;cursor:pointer;
+  background:linear-gradient(135deg,#3d76f2 0%,#2350c0 45%,#152550 100%);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);outline:2px solid transparent;transition:outline-color .15s,transform .15s;}
+.grp-card:hover{transform:translateY(-2px);}
+.grp-card.sel{outline-color:#8ab0ff;}
+.grp-top{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.78);}
+.grp-tag{font-size:12px;color:rgba(255,255,255,.85);}
+.grp-name{font-size:22px;font-weight:700;color:#fff;margin-top:10px;word-break:break-all;}
+.grp-desc{font-size:12px;color:rgba(255,255,255,.62);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.grp-ops{position:absolute;right:12px;bottom:12px;display:flex;gap:8px;}
+.grp-ops .gbtn{height:22px;padding:0 10px;font-size:12px;color:#fff;background:rgba(255,255,255,.18);
+  border:none;border-radius:3px;cursor:pointer;transition:background .15s;}
+.grp-ops .gbtn:hover{background:rgba(255,255,255,.32);}
+
+/* ── 控制面板通用 ── */
+.cp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cp-title{font-size:16px;font-weight:600;color:var(--txw);}
+
+/* ── 状态控制:Off/On 大按钮 ── */
+.onoff{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.onoff-btn{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 16px;
+  background:#232d48;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:all .15s;}
+.onoff-btn .big{font-size:20px;font-weight:700;color:#fff;}
+.onoff-btn .sm{font-size:12px;color:var(--ts);}
+.onoff-btn:hover{border-color:var(--bd2);}
+.onoff-btn.active{border-color:var(--primary);background:rgba(31,101,255,.22);}
+.onoff-btn.active .sm{color:#9db9ff;}
+
+/* ── 温度滑条行 ── */
+.temp-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.sq{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:#232d48;border:1px solid var(--bd);border-radius:4px;color:var(--tx);font-size:15px;cursor:pointer;user-select:none;}
+.sq:hover{color:var(--primary);border-color:var(--primary);}
+.temp-row input[type=range]{flex:1;height:auto;}
+.temp-val{font-size:18px;font-weight:700;color:#fff;min-width:58px;text-align:right;white-space:nowrap;}
+
+/* ── 模式/风速图标按钮 ── */
+.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;}
+.mode-grid.wind{grid-template-columns:repeat(3,1fr);margin-bottom:0;}
+.mode-btn{height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:#232d48;border:1px solid transparent;border-radius:8px;font-size:12px;color:var(--ts);cursor:pointer;transition:all .15s;user-select:none;}
+.mode-btn .mi{font-size:20px;line-height:1;}
+.mode-btn:hover{border-color:var(--bd2);color:var(--tx);}
+.mode-btn.active{border-color:var(--primary);background:rgba(31,101,255,.25);color:#fff;}
+
+/* ── 锁定控制行 ── */
+.lk-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;}
+.lk-row:last-child{margin-bottom:0;}
+.lk-lb{width:56px;color:var(--tx);flex-shrink:0;}
+.lk-row input[type=range]{flex:1;height:auto;min-width:0;}
+.lk-val{font-size:16px;font-weight:700;color:#fff;width:44px;text-align:right;white-space:nowrap;flex-shrink:0;}
+.lk-ck{display:inline-flex;align-items:center;gap:4px;color:var(--tx);cursor:pointer;white-space:nowrap;}
+
+/* ── 弹窗内设备选择列表 ── */
+.dev-box{border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);max-height:180px;overflow-y:auto;padding:6px 10px;}
+.dev-box label{display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:13px;color:var(--tx);cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- 顶部筛选栏:群组名称 + 查询/添加/删除(同线上) -->
+<div class="fb">
+  <div class="fi"><span class="fl">群组名称</span><input id="fName" placeholder="请输入群组名称" style="width:200px"></div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn btnp" onclick="openEdit()">＋ 添加</button>
+  <button class="btn" onclick="delSelected()">删除</button>
+</div>
+
+<div class="layout">
+  <!-- 左侧:群组卡片网格 -->
+  <div class="cards-col">
+    <div class="grp-grid" id="grid"></div>
   </div>
-</div>
-<div style="display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;">
-<div style="flex:1;overflow-y:auto;min-width:0;">
-  <div class="grp-grid" id="gg"></div>
-</div>
-<div style="width:228px;min-width:228px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;overflow-y:auto;flex-shrink:0;">
-  <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">批量控制</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;">
-    <div class="ctrl-btn" style="border-color:rgba(0,230,118,.4);color:var(--ok);" onclick="bc('开机')">⏻<br>开机</div>
-    <div class="ctrl-btn" style="color:#8fa4c9;" onclick="bc('关机')">⏻<br>关机</div>
-    <div class="ctrl-btn" style="border-color:rgba(41,121,255,.4);color:var(--bl);" onclick="bc('制冷')">❄<br>制冷</div>
-    <div class="ctrl-btn" style="border-color:rgba(255,100,50,.4);color:#ff8060;" onclick="bc('制热')">☀<br>制热</div>
-    <div class="ctrl-btn" onclick="bc('通风')">⊕<br>通风</div>
-    <div class="ctrl-btn" style="border-color:rgba(167,139,250,.4);color:#a78bfa;" onclick="bc('除湿')">💧<br>除湿</div>
-  </div>
-  <hr style="border:none;border-top:1px solid rgba(30,58,110,.4);margin:10px 0;">
-  <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">统一设置</div>
-  <div class="brow"><span style="font-size:11px;color:var(--ts);">温度(℃)</span><div style="display:flex;align-items:center;gap:4px;"><button onclick="adj(-1)">−</button><span id="bt">26</span><button onclick="adj(1)">+</button></div></div>
-  <div class="brow"><span style="font-size:11px;color:var(--ts);">风速</span><div style="display:flex;align-items:center;gap:4px;"><button onclick="aw(-1)">−</button><span id="bw" style="font-size:11px;min-width:36px;">自动</span><button onclick="aw(1)">+</button></div></div>
-  <button style="width:100%;padding:6px;background:rgba(41,121,255,.15);border:1px solid var(--bl);border-radius:4px;color:var(--tx);font-size:12px;cursor:pointer;margin-top:4px;" onclick="apply()">批量下发</button>
-  <hr style="border:none;border-top:1px solid rgba(30,58,110,.4);margin:12px 0;">
-  <div id="panel-detail" style="font-size:12px;color:var(--ts);">← 点击群组卡片查看详情</div>
-</div>
-</div>
-<script>
-const GRPS=[
-  {n:'一楼大厅群组',fl:'1F',cnt:5,on:4,off:0,fault:1,t:25,m:'制冷'},
-  {n:'二楼会议群组',fl:'2F',cnt:4,on:2,off:2,fault:0,t:22,m:'制冷'},
-  {n:'二楼办公群组',fl:'2F',cnt:6,on:6,off:0,fault:0,t:26,m:'制冷'},
-  {n:'二楼开放区群组',fl:'2F',cnt:4,on:3,off:1,fault:0,t:25,m:'制冷'},
-  {n:'三楼群组',fl:'3F',cnt:4,on:3,off:0,fault:1,t:27,m:'制冷'},
-  {n:'B1餐饮群组',fl:'B1',cnt:3,on:2,off:1,fault:0,t:23,m:'制冷'},
-  {n:'B1通道群组',fl:'B1',cnt:2,on:2,off:0,fault:0,t:22,m:'制热'},
-  {n:'周末值班群组',fl:'全楼',cnt:8,on:0,off:8,fault:0,t:26,m:'制冷'},
-];
-let sel=-1;
-function render(){
-  document.getElementById('gg').innerHTML=GRPS.map((g,i)=>`
-  <div class="grp-card${sel===i?' sel':''}" onclick="selG(${i})">
-    <div class="grp-name">${g.n}</div>
-    <div class="grp-meta">楼层：${g.fl}<br>包含空调：${g.cnt} 台<br>当前模式：${g.m}&nbsp;${g.t}℃</div>
-    <div class="grp-stat">
-      <span class="tag tok">运行 ${g.on}</span>
-      ${g.off?`<span class="tag tin">待机 ${g.off}</span>`:''}
-      ${g.fault?`<span class="tag ter">故障 ${g.fault}</span>`:''}
+
+  <!-- 右侧:状态控制 + 锁定控制 -->
+  <div class="ctrl-col">
+    <!-- 状态控制面板 -->
+    <div class="panel">
+      <div class="cp-head">
+        <span class="cp-title">状态控制</span>
+        <button class="btn btnp" onclick="applyState()">生效</button>
+      </div>
+      <div class="onoff">
+        <div class="onoff-btn" id="btnOff" onclick="setPower('off')"><span class="big">Off</span><span class="sm">关机</span></div>
+        <div class="onoff-btn" id="btnOn" onclick="setPower('on')"><span class="big">On</span><span class="sm">开机</span></div>
+      </div>
+      <div class="temp-row">
+        <span class="sq" onclick="adjTemp(-1)">−</span>
+        <input type="range" id="tempRange" min="16" max="31" value="16" oninput="tempTouched=true;renderTemp()">
+        <span class="sq" onclick="adjTemp(1)">＋</span>
+        <span class="temp-val" id="tempVal">--°C</span>
+      </div>
+      <div class="mode-grid">
+        <div class="mode-btn" data-m="制冷" onclick="setMode(this)"><span class="mi">❄</span><span>制冷</span></div>
+        <div class="mode-btn" data-m="制热" onclick="setMode(this)"><span class="mi">☀</span><span>制热</span></div>
+        <div class="mode-btn" data-m="送风" onclick="setMode(this)"><span class="mi">✣</span><span>送风</span></div>
+        <div class="mode-btn" data-m="除湿" onclick="setMode(this)"><span class="mi">💧</span><span>除湿</span></div>
+      </div>
+      <div class="mode-grid wind">
+        <div class="mode-btn" data-w="高风" onclick="setWind(this)"><span class="mi">✣</span><span>高风</span></div>
+        <div class="mode-btn" data-w="中风" onclick="setWind(this)"><span class="mi">✣</span><span>中风</span></div>
+        <div class="mode-btn" data-w="低风" onclick="setWind(this)"><span class="mi">✣</span><span>低风</span></div>
+      </div>
     </div>
-  </div>`).join('');
+
+    <!-- 锁定控制面板 -->
+    <div class="panel">
+      <div class="cp-head">
+        <span class="cp-title">锁定控制</span>
+        <span style="display:flex;gap:8px">
+          <button class="btn" onclick="unlockAll()">一键解锁</button>
+          <button class="btn btnp" onclick="applyLock()">生效</button>
+        </span>
+      </div>
+      <div class="lk-row">
+        <span class="lk-lb">温度上限</span>
+        <label class="lk-ck"><input type="checkbox" id="lkHi">锁定</label>
+        <span class="sq" onclick="adjLk('hi',-1)">−</span>
+        <input type="range" id="hiRange" min="16" max="31" value="31" oninput="renderLk()">
+        <span class="sq" onclick="adjLk('hi',1)">＋</span>
+        <span class="lk-val" id="hiVal">31°C</span>
+      </div>
+      <div class="lk-row">
+        <span class="lk-lb">温度下限</span>
+        <label class="lk-ck"><input type="checkbox" id="lkLo">锁定</label>
+        <span class="sq" onclick="adjLk('lo',-1)">−</span>
+        <input type="range" id="loRange" min="16" max="31" value="16" oninput="renderLk()">
+        <span class="sq" onclick="adjLk('lo',1)">＋</span>
+        <span class="lk-val" id="loVal">16°C</span>
+      </div>
+      <div class="lk-row">
+        <span class="lk-lb">模式锁定</span>
+        <label class="lk-ck"><input type="checkbox" id="lkCool">制冷</label>
+        <label class="lk-ck"><input type="checkbox" id="lkHeat">制热</label>
+      </div>
+      <div class="lk-row">
+        <span class="lk-lb">开关锁定</span>
+        <button class="btn" id="lkNoOn" onclick="toggleSwLock(this)">禁止启动</button>
+        <button class="btn" id="lkNoOff" onclick="toggleSwLock(this)">禁止关机</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部分页(线上居中于内容区底部) -->
+<div id="pager" style="margin-top:20px"></div>
+
+<!-- 添加/编辑群组弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span id="dlgEditTitle">添加群组</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>群组名称</span>
+        <input id="eName" placeholder="请输入群组名称" style="flex:1">
+      </div>
+      <div class="form-row" style="margin-bottom:14px;align-items:flex-start">
+        <span class="fl" style="padding-top:6px">描述</span>
+        <textarea id="eDesc" rows="2" placeholder="请输入描述" style="flex:1"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl">联动模式</span>
+        <span class="switch" id="eLink" onclick="this.classList.toggle('on')"></span>
+      </div>
+      <div class="form-row" style="align-items:flex-start">
+        <span class="fl" style="padding-top:6px"><span class="req">*</span>选择空调设备</span>
+        <div class="dev-box" style="flex:1" id="eDevs"></div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveGroup()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 查看群组弹窗 -->
+<div class="modal" id="dlgView">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>查看群组</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
+    <div class="db">
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px" id="viewGrid"></div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgView')">关闭</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(与线上数据形态一致) ── */
+const DEVICES=['1-1-7-1(707室)','1-1-7-2(713室)','1-1-7-3(714室)','1-1-9-1(903室)','1-1-9-2(909室)',
+  '1-1-14-1(1404室)','1-1-14-2(1408室)','1-1-23-1(2302室)','1-1-23-2(2305室)','1-2-3-1(303室)'];
+let GROUPS=[
+  {id:1,name:'联动控制测试',desc:'',link:true, devs:['1-1-7-1(707室)','1-1-7-2(713室)','1-1-14-1(1404室)']},
+  {id:2,name:'测试',desc:'',link:false,devs:['1-1-9-1(903室)','1-1-9-2(909室)']},
+  {id:3,name:'dingwenwu',desc:'培训测试用',link:false,devs:['1-1-23-1(2302室)','1-1-23-2(2305室)','1-2-3-1(303室)']},
+];
+let nextId=4;
+
+/* ── 卡片列表:查询 + 分页 + 渲染 ── */
+let filtered=GROUPS.slice();
+let selId=-1;           // 当前选中群组(控制面板作用对象)
+const pg={total:0,page:1,size:10,onChange:()=>renderGrid()};
+function doQuery(){
+  const kw=document.getElementById('fName').value.trim();
+  filtered=GROUPS.filter(g=>!kw||g.name.includes(kw));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderGrid();
 }
-function selG(i){
-  sel=i;render();
-  const g=GRPS[i];
-  document.getElementById('panel-detail').innerHTML=`
-  <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:8px;">${g.n}</div>
-  <div style="line-height:2;color:var(--ts);">楼层：${g.fl}<br>空调总数：${g.cnt}<br>运行中：<span style="color:var(--ok)">${g.on}</span><br>待机：${g.off}<br>故障：<span style="color:var(--er)">${g.fault}</span><br>当前温度：${g.t}℃<br>当前模式：${g.m}</div>
-  <div style="display:flex;gap:6px;margin-top:10px;">
-    <button class="btn btnp" onclick="alert('编辑群组')" style="flex:1">编辑</button>
-    <button class="btn btnd" onclick="alert('删除群组')" style="flex:1">删除</button>
-  </div>`;
+function renderGrid(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('grid').innerHTML=rows.length?rows.map(g=>`
+    <div class="grp-card${selId===g.id?' sel':''}" onclick="selGroup(${g.id})">
+      <div class="grp-top"><span>群组</span>${g.link?'<span class="grp-tag">联动模式</span>':''}</div>
+      <div class="grp-name">${g.name}</div>
+      ${g.desc?`<div class="grp-desc">${g.desc}</div>`:''}
+      <div class="grp-ops">
+        <button class="gbtn" onclick="event.stopPropagation();viewGroup(${g.id})">查看</button>
+        <button class="gbtn" onclick="event.stopPropagation();openEdit(${g.id})">编辑</button>
+      </div>
+    </div>`).join('')
+    :'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
 }
-const W=['自动','低速','中速','高速'];let wi=0,tv=26;
-function adj(d){tv=Math.max(16,Math.min(30,tv+d));document.getElementById('bt').textContent=tv;}
-function aw(d){wi=Math.max(0,Math.min(3,wi+d));document.getElementById('bw').textContent=W[wi];}
-function apply(){alert('批量下发: '+tv+'℃ '+W[wi]);}
-function bc(cmd){alert('批量指令: '+cmd);}
-render();
+function selGroup(id){selId=selId===id?-1:id;renderGrid();}
+
+/* ── 添加/编辑弹窗 ── */
+let editId=-1;
+function openEdit(id){
+  editId=id||-1;
+  const g=GROUPS.find(x=>x.id===id);
+  document.getElementById('dlgEditTitle').textContent=g?'编辑群组':'添加群组';
+  document.getElementById('eName').value=g?g.name:'';
+  document.getElementById('eDesc').value=g?g.desc:'';
+  document.getElementById('eLink').classList.toggle('on',!!(g&&g.link));
+  document.getElementById('eDevs').innerHTML=DEVICES.map(d=>
+    `<label><input type="checkbox" value="${d}"${g&&g.devs.includes(d)?' checked':''}> ${d}</label>`).join('');
+  $modal('dlgEdit');
+}
+function saveGroup(){
+  const name=document.getElementById('eName').value.trim();
+  if(!name)return $msg('请输入群组名称','error');
+  const devs=[...document.querySelectorAll('#eDevs input:checked')].map(i=>i.value);
+  if(!devs.length)return $msg('请选择空调设备','error');
+  const data={name,desc:document.getElementById('eDesc').value.trim(),
+    link:document.getElementById('eLink').classList.contains('on'),devs};
+  if(editId>-1)Object.assign(GROUPS.find(x=>x.id===editId),data);
+  else GROUPS.push(Object.assign({id:nextId++},data));
+  $modalClose('dlgEdit');$msg('保存成功');doQuery();
+}
+
+/* ── 查看弹窗 ── */
+function viewGroup(id){
+  const g=GROUPS.find(x=>x.id===id);
+  document.getElementById('viewGrid').innerHTML=`
+    <span style="color:var(--ts);text-align:right">群组名称:</span><span>${g.name}</span>
+    <span style="color:var(--ts);text-align:right">描述:</span><span>${g.desc||'-'}</span>
+    <span style="color:var(--ts);text-align:right">联动模式:</span><span>${g.link?'开启':'关闭'}</span>
+    <span style="color:var(--ts);text-align:right">设备数量:</span><span>${g.devs.length} 台</span>
+    <span style="color:var(--ts);text-align:right">包含设备:</span><span>${g.devs.join('、')}</span>`;
+  $modal('dlgView');
+}
+
+/* ── 删除(顶栏按钮,作用于选中卡片) ── */
+function delSelected(){
+  if(selId<0)return $msg('请先选择要删除的群组','warning');
+  const g=GROUPS.find(x=>x.id===selId);
+  $confirm(`确定删除群组「${g.name}」吗?`,()=>{
+    GROUPS=GROUPS.filter(x=>x.id!==selId);selId=-1;
+    $msg('删除成功');doQuery();
+  });
+}
+
+/* ── 状态控制 ── */
+let power='',tempTouched=false;
+function setPower(p){
+  power=power===p?'':p;
+  document.getElementById('btnOff').classList.toggle('active',power==='off');
+  document.getElementById('btnOn').classList.toggle('active',power==='on');
+}
+function renderTemp(){
+  document.getElementById('tempVal').textContent=tempTouched
+    ?document.getElementById('tempRange').value+'°C':'--°C';
+}
+function adjTemp(d){
+  const el=document.getElementById('tempRange');
+  el.value=Math.max(16,Math.min(31,+el.value+d));tempTouched=true;renderTemp();
+}
+function setMode(el){
+  document.querySelectorAll('.mode-grid:not(.wind) .mode-btn').forEach(b=>{if(b!==el)b.classList.remove('active');});
+  el.classList.toggle('active');
+}
+function setWind(el){
+  document.querySelectorAll('.mode-grid.wind .mode-btn').forEach(b=>{if(b!==el)b.classList.remove('active');});
+  el.classList.toggle('active');
+}
+function applyState(){
+  if(selId<0)return $msg('请先选择群组','warning');
+  $msg('状态控制指令已下发');
+}
+
+/* ── 锁定控制 ── */
+function renderLk(){
+  document.getElementById('hiVal').textContent=document.getElementById('hiRange').value+'°C';
+  document.getElementById('loVal').textContent=document.getElementById('loRange').value+'°C';
+}
+function adjLk(k,d){
+  const el=document.getElementById(k+'Range');
+  el.value=Math.max(16,Math.min(31,+el.value+d));renderLk();
+}
+function toggleSwLock(el){el.classList.toggle('btnp');}
+function unlockAll(){
+  ['lkHi','lkLo','lkCool','lkHeat'].forEach(id=>document.getElementById(id).checked=false);
+  ['lkNoOn','lkNoOff'].forEach(id=>document.getElementById(id).classList.remove('btnp'));
+  $msg('已发送一键解锁指令');
+}
+function applyLock(){
+  if(selId<0)return $msg('请先选择群组','warning');
+  $msg('锁定控制指令已下发');
+}
+
+doQuery();
 </script>
-</body></html>
+</body>
+</html>

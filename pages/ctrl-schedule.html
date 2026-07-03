@@ -1,112 +1,299 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>日程管理</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>日程管理</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.steps{display:flex;align-items:center;gap:0;margin-bottom:20px;}
-.step{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bp);border:1px solid var(--bd);cursor:pointer;}
-.step:first-child{border-radius:4px 0 0 4px;}
-.step:last-child{border-radius:0 4px 4px 0;}
-.step.active{background:rgba(41,121,255,.18);border-color:var(--bl);}
-.step-num{width:20px;height:20px;border-radius:50%;border:1px solid var(--ts);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--ts);}
-.step.active .step-num{background:var(--bl);border-color:var(--bl);color:#fff;}
-.step-lb{font-size:12px;color:var(--ts);}
-.step.active .step-lb{color:var(--tx);}
-.sep{width:1px;height:100%;background:var(--bd);}
-.day-btn{padding:5px 10px;border:1px solid var(--bd);border-radius:3px;font-size:12px;color:var(--ts);cursor:pointer;}
-.day-btn.sel{background:rgba(41,121,255,.2);border-color:var(--bl);color:var(--tx);}
-</style></head><body>
-<div class="ph">
-  <div class="pt">日程管理</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <button class="btn btnp" onclick="openAdd()">+ 新增日程</button>
+/* ── 布局:左侧建筑物树 + 右侧主区(同故障记录页) ── */
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
+.side-tree{min-height:100%;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+/* 同步失败(线上为蓝色可点样式) */
+.sync-fail{color:var(--primary);cursor:pointer;}
+/* 弹窗内星期选择按钮 */
+.day-btn{height:28px;padding:0 12px;display:inline-flex;align-items:center;border:1px solid var(--bd2);
+  border-radius:4px;background:var(--bg-input);font-size:12px;color:var(--tx);cursor:pointer;user-select:none;transition:all .15s;}
+.day-btn.sel{background:var(--primary);border-color:var(--primary);color:#fff;}
+/* 查看详情栅格 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- 左侧建筑物树 -->
+  <aside class="side-tree">
+    <div class="st-title">建筑物信息</div>
+    <div id="tree"></div>
+  </aside>
+
+  <!-- 右侧主区 -->
+  <div class="main-col">
+    <!-- 筛选栏:三组日期区间 + 查询/重置;右侧 创建任务/同步(同线上) -->
+    <div class="fb">
+      <div class="fi"><span class="fl">开始日期</span>
+        <input type="date" id="f1s" style="width:140px"><span class="text-sub">至</span><input type="date" id="f1e" style="width:140px">
+      </div>
+      <div class="fi"><span class="fl">结束日期</span>
+        <input type="date" id="f2s" style="width:140px"><span class="text-sub">至</span><input type="date" id="f2e" style="width:140px">
+      </div>
+      <div class="fi"><span class="fl">创建时间</span>
+        <input type="date" id="f3s" style="width:140px"><span class="text-sub">至</span><input type="date" id="f3e" style="width:140px">
+      </div>
+      <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+      <button class="btn" onclick="doReset()">重置</button>
+      <span style="margin-left:auto;display:flex;gap:10px">
+        <button class="btn btnp" onclick="openTask()">＋ 创建任务</button>
+        <button class="btn btnp" onclick="doSync()">⟳ 同步</button>
+      </span>
+    </div>
+
+    <!-- 表格(列名严格按线上) -->
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th style="width:40px"><input type="checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+          <th>序号</th><th>定时任务名称</th><th>指令动作</th><th>模式</th><th>开关</th><th>风速</th>
+          <th>设定温度</th><th>锁定状态</th><th>执行时间</th><th>有效日期</th><th>同步状态</th><th>创建时间</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="pager"></div>
   </div>
 </div>
 
-<div id="wizard" style="display:none;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin-bottom:var(--gap);">
-  <div class="steps">
-    <div class="step active" id="s1"><div class="step-num">1</div><div class="step-lb">选择群组/设备</div></div>
-    <div class="step" id="s2"><div class="step-num">2</div><div class="step-lb">设置执行参数</div></div>
-    <div class="step" id="s3"><div class="step-num">3</div><div class="step-lb">设置执行计划</div></div>
-  </div>
-  <div id="p1">
-    <div style="font-size:12px;color:var(--ts);margin-bottom:10px;">选择控制对象（可多选）</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <div class="fl-tab active" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按群组</div>
-      <div class="fl-tab" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按楼层</div>
-      <div class="fl-tab" style="padding:4px 10px;border-radius:3px;font-size:12px;border:1px solid var(--bd);color:var(--ts);cursor:pointer;">按空调</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox" checked> 一楼大厅群组</label>
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> 二楼会议群组</label>
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> 二楼办公群组</label>
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:13px;"><input type="checkbox"> B1餐饮群组</label>
-    </div>
-  </div>
-  <div id="p2" style="display:none;">
-    <div class="form-grid">
-      <div class="form-item"><label>动作类型</label>
-        <select><option>开机</option><option>关机</option><option>调温</option></select></div>
-      <div class="form-item"><label>设定温度(℃)</label>
-        <input type="number" value="26" min="16" max="30"></div>
-      <div class="form-item"><label>运行模式</label>
-        <select><option>制冷</option><option>制热</option><option>通风</option><option>除湿</option></select></div>
-      <div class="form-item"><label>风速</label>
-        <select><option>自动</option><option>低速</option><option>中速</option><option>高速</option></select></div>
-    </div>
-  </div>
-  <div id="p3" style="display:none;">
-    <div class="form-grid" style="margin-bottom:16px;">
-      <div class="form-item"><label>日程名称</label><input placeholder="请输入" value="大厅工作日开机"></div>
-      <div class="form-item"><label>执行时间</label><input type="time" value="08:00"></div>
-      <div class="form-item"><label>生效日期</label><input type="date" value="2026-06-01"></div>
-      <div class="form-item"><label>失效日期</label><input type="date" value="2026-12-31"></div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:var(--ts);margin-bottom:8px;">重复周期</div>
-      <div style="display:flex;gap:6px;">
-        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周一</div>
-        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周二</div>
-        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周三</div>
-        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周四</div>
-        <div class="day-btn sel" onclick="this.classList.toggle('sel')">周五</div>
-        <div class="day-btn" onclick="this.classList.toggle('sel')">周六</div>
-        <div class="day-btn" onclick="this.classList.toggle('sel')">周日</div>
+<!-- 创建/编辑任务弹窗 -->
+<div class="modal" id="dlgTask">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span id="dlgTaskTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+    <div class="db">
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>任务名称</span>
+        <input id="tName" placeholder="请输入定时任务名称" style="flex:1">
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>指令动作</span>
+        <select id="tAct" style="width:180px" onchange="onActChange()">
+          <option>开机</option><option>关机</option><option>锁定设定</option>
+        </select>
+        <span class="fl" style="width:60px">开关</span>
+        <span class="rtabs">
+          <span class="rtab active" id="swOn" onclick="setSw('开')">开</span>
+          <span class="rtab" id="swOff" onclick="setSw('关')">关</span>
+        </span>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl">模式</span>
+        <select id="tMode" style="width:180px">
+          <option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>制热&送风</option>
+        </select>
+        <span class="fl" style="width:60px">风速</span>
+        <select id="tWind" style="width:150px">
+          <option>高风</option><option>中风</option><option>低风</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl">设定温度</span>
+        <input type="range" id="tTemp" min="16" max="31" value="25" style="width:220px;height:auto" oninput="document.getElementById('tTempV').textContent=this.value+'°C'">
+        <span id="tTempV" style="font-weight:700;color:var(--txw)">25°C</span>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>执行时间</span>
+        <input type="time" id="tTime" value="08:00" style="width:140px">
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>有效日期</span>
+        <input type="date" id="tVs" style="width:150px"><span class="text-sub">至</span><input type="date" id="tVe" style="width:150px">
+      </div>
+      <div class="form-row" style="align-items:flex-start">
+        <span class="fl" style="padding-top:5px">重复执行</span>
+        <span style="display:flex;gap:6px;flex-wrap:wrap" id="tDays"></span>
       </div>
     </div>
-  </div>
-  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-    <button class="btn" onclick="closeAdd()">取消</button>
-    <button class="btn" id="prevBtn" style="display:none;" onclick="goStep(-1)">上一步</button>
-    <button class="btn btnp" id="nextBtn" onclick="goStep(1)">下一步</button>
-    <button class="btn btnp" id="saveBtn" style="display:none;" onclick="save()">保存</button>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgTask')">取消</button>
+      <button class="btn btnp" onclick="saveTask()">保存</button>
+    </div>
   </div>
 </div>
 
-<div class="tw">
-  <table><thead><tr><th>日程名称</th><th>控制对象</th><th>动作</th><th>执行时间</th><th>重复</th><th>生效期间</th><th>状态</th><th>操作</th></tr></thead>
-  <tbody>
-    <tr><td>大厅工作日开机</td><td>一楼大厅群组</td><td>开机 / 制冷 / 26℃</td><td>08:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
-    <tr><td>大厅工作日关机</td><td>一楼大厅群组</td><td>关机</td><td>22:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
-    <tr><td>会议室上班开机</td><td>二楼会议群组</td><td>开机 / 制冷 / 24℃</td><td>09:00</td><td>周一至周五</td><td>2026-01-01 ~ 2026-12-31</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
-    <tr><td>餐饮区午间开机</td><td>B1餐饮群组</td><td>开机 / 制冷 / 23℃</td><td>10:00</td><td>每天</td><td>2026-05-01 ~ 2026-09-30</td><td><span class="tag tok">启用</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
-    <tr><td>全楼节假日关机</td><td>全部群组</td><td>关机</td><td>00:00</td><td>法定节假日</td><td>长期有效</td><td><span class="tag twn">暂停</span></td><td><div class="op"><a>编辑</a><a>复制</a><a class="del">删除</a></div></td></tr>
-  </tbody></table>
-  <div class="pg"><div class="pg-info">共 20 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div>
+<!-- 查看任务弹窗 -->
+<div class="modal" id="dlgView">
+  <div class="dialog" style="width:500px">
+    <div class="dh"><span>任务详情</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="viewGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgView')">关闭</button></div>
+  </div>
 </div>
 
+<script src="_ui.js"></script>
 <script>
-let cur=1;
-function openAdd(){document.getElementById('wizard').style.display='block';cur=1;updStep();}
-function closeAdd(){document.getElementById('wizard').style.display='none';}
-function goStep(d){cur=Math.max(1,Math.min(3,cur+d));updStep();}
-function save(){alert('日程保存成功');closeAdd();}
-function updStep(){
-  [1,2,3].forEach(i=>{
-    document.getElementById('s'+i).classList.toggle('active',i===cur);
-    document.getElementById('p'+i).style.display=i===cur?'':'none';
+/* ── 模拟数据(与线上数据形态一致) ── */
+let TASKS=[
+  {id:1,name:'啊大地方',act:'开机',mode:'制冷',sw:'开',wind:'高风',temp:'25',lock:'-',
+   time:'09:05:00',vs:'2026-05-21',ve:'2026-08-19',expired:false,sync:'同步失败',crt:'2026-05-21 14:31:23',days:[1,2,3,4,5]},
+  {id:2,name:'手机测试',act:'开机',mode:'制冷',sw:'开',wind:'中风',temp:'26',lock:'-',
+   time:'08:00:00',vs:'2026-04-28',ve:'2026-04-30',expired:true,sync:'同步完成',crt:'2026-04-28 08:51:46',days:[1,2,3,4,5]},
+  {id:3,name:'0427测试创建定时关机任务',act:'关机',mode:'-',sw:'关',wind:'-',temp:'-',lock:'-',
+   time:'18:30:00',vs:'2026-04-27',ve:'2026-04-27',expired:true,sync:'同步完成',crt:'2026-04-27 14:41:06',days:[6,0]},
+  {id:4,name:'0310测试3',act:'开机',mode:'制热',sw:'开',wind:'中风',temp:'25',lock:'-',
+   time:'14:10:00',vs:'2026-03-10',ve:'2026-03-12',expired:true,sync:'同步完成',crt:'2026-03-10 13:53:06',days:[1,3,5]},
+  {id:5,name:'0310测试2解锁开关',act:'锁定设定',mode:'制热&送风',sw:'-',wind:'-',temp:'-',lock:'模式锁定',
+   time:'14:05:00',vs:'2026-03-10',ve:'2026-03-10',expired:true,sync:'同步完成',crt:'2026-03-10 13:34:58',days:[2,4]},
+  {id:6,name:'0310测试01',act:'锁定设定',mode:'制热&送风',sw:'关',wind:'-',temp:'-',lock:'开关/模式锁定',
+   time:'14:00:00',vs:'2026-02-04',ve:'2026-02-28',expired:true,sync:'同步完成',crt:'2026-02-04 13:23:16',days:[1,2,3,4,5,6,0]},
+];
+let nextId=7;
+const DAY_NAMES=['周日','周一','周二','周三','周四','周五','周六'];
+
+/* ── 建筑树 ── */
+const TREE=[{lb:'1号楼',open:false,children:['3层','7层','9层','14层','23层']}];
+let treeSel='';
+function renderTree(){
+  const el=document.getElementById('tree');el.innerHTML='';
+  TREE.forEach(b=>{
+    const row=document.createElement('div');
+    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
+    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
+    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();};
+    row.onclick=()=>{b.open=!b.open;renderTree();};
+    el.appendChild(row);
+    if(b.open){
+      const box=document.createElement('div');box.className='tree-children';
+      b.children.forEach(f=>{
+        const fr=document.createElement('div');
+        fr.className='tree-row'+(treeSel===f?' active':'');
+        fr.style.paddingLeft='30px';
+        fr.innerHTML=`<span>${f}</span>`;
+        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();};
+        box.appendChild(fr);
+      });
+      el.appendChild(box);
+    }
   });
-  document.getElementById('prevBtn').style.display=cur>1?'':'none';
-  document.getElementById('nextBtn').style.display=cur<3?'':'none';
-  document.getElementById('saveBtn').style.display=cur===3?'':'none';
 }
+
+/* ── 查询/表格/分页 ── */
+let filtered=TASKS.slice();
+const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
+function gv(id){return document.getElementById(id).value;}
+function doQuery(){
+  filtered=TASKS.filter(r=>
+    (!gv('f1s')||r.vs>=gv('f1s'))&&(!gv('f1e')||r.vs<=gv('f1e'))&&
+    (!gv('f2s')||r.ve>=gv('f2s'))&&(!gv('f2e')||r.ve<=gv('f2e'))&&
+    (!gv('f3s')||r.crt>=gv('f3s'))&&(!gv('f3e')||r.crt<=gv('f3e')+' 23:59:59')
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['f1s','f1e','f2s','f2e','f3s','f3e'].forEach(id=>document.getElementById(id).value='');
+  treeSel='';renderTree();doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('chkAll').checked=false;
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td><input type="checkbox" class="row-ck"></td>
+      <td>${start+i+1}</td><td>${r.name}</td><td>${r.act}</td><td>${r.mode}</td><td>${r.sw}</td><td>${r.wind}</td>
+      <td>${r.temp}</td><td>${r.lock}</td><td>${r.time}</td>
+      <td>${r.expired?'已过期':r.vs+' 至 '+r.ve}</td>
+      <td>${r.sync==='同步失败'?`<span class="sync-fail" onclick="$msg('同步失败:设备离线,请重试','error')">同步失败</span>`:r.sync}</td>
+      <td>${r.crt}</td>
+      <td><span class="op">
+        <a onclick="viewTask(${r.id})">查看</a>
+        <a onclick="openTask(${r.id})">编辑</a>
+        <a class="danger" onclick="delTask(${r.id})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="14"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function toggleAll(el){document.querySelectorAll('.row-ck').forEach(c=>c.checked=el.checked);}
+
+/* ── 创建/编辑任务弹窗 ── */
+let editId=-1;
+function setSw(v){
+  document.getElementById('swOn').classList.toggle('active',v==='开');
+  document.getElementById('swOff').classList.toggle('active',v==='关');
+}
+function onActChange(){/* 关机时开关自动置关 */if(gv('tAct')==='关机')setSw('关');}
+function renderDays(sel){
+  document.getElementById('tDays').innerHTML=[1,2,3,4,5,6,0].map(d=>
+    `<span class="day-btn${sel.includes(d)?' sel':''}" data-d="${d}" onclick="this.classList.toggle('sel')">${DAY_NAMES[d]}</span>`).join('');
+}
+function openTask(id){
+  editId=id||-1;
+  const r=TASKS.find(x=>x.id===id);
+  document.getElementById('dlgTaskTitle').textContent=r?'编辑任务':'创建任务';
+  document.getElementById('tName').value=r?r.name:'';
+  document.getElementById('tAct').value=r&&r.act!=='-'?r.act:'开机';
+  document.getElementById('tMode').value=r&&r.mode!=='-'?r.mode:'制冷';
+  document.getElementById('tWind').value=r&&r.wind!=='-'?r.wind:'高风';
+  const t=r&&r.temp!=='-'?r.temp:'25';
+  document.getElementById('tTemp').value=t;document.getElementById('tTempV').textContent=t+'°C';
+  document.getElementById('tTime').value=r?r.time.slice(0,5):'08:00';
+  document.getElementById('tVs').value=r?r.vs:'';
+  document.getElementById('tVe').value=r?r.ve:'';
+  setSw(r&&r.sw==='关'?'关':'开');
+  renderDays(r?r.days:[1,2,3,4,5]);
+  $modal('dlgTask');
+}
+function saveTask(){
+  const name=gv('tName').trim();
+  if(!name)return $msg('请输入任务名称','error');
+  if(!gv('tVs')||!gv('tVe'))return $msg('请选择有效日期','error');
+  const days=[...document.querySelectorAll('#tDays .day-btn.sel')].map(b=>+b.dataset.d);
+  if(!days.length)return $msg('请选择重复执行的星期','error');
+  const act=gv('tAct');
+  const data={name,act,
+    mode:act==='关机'?'-':gv('tMode'),
+    sw:document.getElementById('swOn').classList.contains('active')?'开':'关',
+    wind:act==='开机'?gv('tWind'):'-',
+    temp:act==='开机'?gv('tTemp'):'-',
+    lock:act==='锁定设定'?'模式锁定':'-',
+    time:gv('tTime')+':00',vs:gv('tVs'),ve:gv('tVe'),
+    expired:gv('tVe')<'2026-07-03',days};
+  if(editId>-1)Object.assign(TASKS.find(x=>x.id===editId),data);
+  else TASKS.unshift(Object.assign({id:nextId++,sync:'未同步',
+    crt:new Date().toISOString().slice(0,19).replace('T',' ')},data));
+  $modalClose('dlgTask');$msg('保存成功');doQuery();
+}
+
+/* ── 查看详情 ── */
+function viewTask(id){
+  const r=TASKS.find(x=>x.id===id);
+  document.getElementById('viewGrid').innerHTML=`
+    <span class="k">定时任务名称:</span><span class="v">${r.name}</span>
+    <span class="k">指令动作:</span><span class="v">${r.act}</span>
+    <span class="k">模式:</span><span class="v">${r.mode}</span>
+    <span class="k">开关:</span><span class="v">${r.sw}</span>
+    <span class="k">风速:</span><span class="v">${r.wind}</span>
+    <span class="k">设定温度:</span><span class="v">${r.temp==='-'?'-':r.temp+'°C'}</span>
+    <span class="k">锁定状态:</span><span class="v">${r.lock}</span>
+    <span class="k">执行时间:</span><span class="v">${r.time}</span>
+    <span class="k">重复执行:</span><span class="v">${r.days.map(d=>DAY_NAMES[d]).join('、')}</span>
+    <span class="k">有效日期:</span><span class="v">${r.vs} 至 ${r.ve}${r.expired?'(已过期)':''}</span>
+    <span class="k">同步状态:</span><span class="v ${r.sync==='同步失败'?'text-er':''}">${r.sync}</span>
+    <span class="k">创建时间:</span><span class="v">${r.crt}</span>`;
+  $modal('dlgView');
+}
+
+/* ── 删除/同步 ── */
+function delTask(id){
+  const r=TASKS.find(x=>x.id===id);
+  $confirm(`确定删除定时任务「${r.name}」吗?`,()=>{
+    TASKS=TASKS.filter(x=>x.id!==id);
+    $msg('删除成功');doQuery();
+  });
+}
+function doSync(){$msg('同步指令已下发,请稍后刷新查看同步状态');}
+
+renderTree();doQuery();
 </script>
-</body></html>
+</body>
+</html>
