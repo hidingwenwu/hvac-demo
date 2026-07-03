@@ -1,1 +1,126 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>用电量统计</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">用电量统计</div><div class="pa"><button class="btn">导出报表</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">本月总用电(kWh)</div><div class="sc-v scc">7,640</div></div><div class="scd"><div class="sc-lb">上月总用电(kWh)</div><div class="sc-v scb">5,820</div></div><div class="scd"><div class="sc-lb">环比增长</div><div class="sc-v scw">↑31.3%</div></div></div><div class="fb"><div class="fi"><div class="fl">时间维度</div><select style="width:80px"><option value="">全部</option><option>日</option><option>周</option><option>月</option><option>年</option></select></div><div class="fi"><div class="fl">账期</div><input type="month" style="width:110px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="month" style="width:110px"></div><div class="fi"><div class="fl">租户</div><select style="width:140px"><option value="">全部</option><option>全部</option><option>A公司</option><option>B工作室</option><option>C品牌店</option><option>D餐厅</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>租户</th><th>本期用电(kWh)</th><th>上期用电(kWh)</th><th>环比变化</th><th>峰电量(kWh)</th><th>谷电量(kWh)</th><th>平均日用电(kWh)</th><th>操作</th></tr></thead><tbody><tr><td>A公司</td><td>1,388</td><td>1,204</td><td><span class="tag twn">↑15.3%</span></td><td>986</td><td>402</td><td>44.8</td><td><div class="op"><a>查看详情</a><a>导出</a></div></td></tr><tr><td>B工作室</td><td>963</td><td>890</td><td><span class="tag twn">↑8.2%</span></td><td>682</td><td>281</td><td>31.1</td><td><div class="op"><a>查看详情</a><a>导出</a></div></td></tr><tr><td>C品牌店</td><td>2,352</td><td>1,960</td><td><span class="tag ter">↑20.0%</span></td><td>1,680</td><td>672</td><td>75.9</td><td><div class="op"><a>查看详情</a><a>导出</a></div></td></tr><tr><td>D餐厅</td><td>3,405</td><td>3,210</td><td><span class="tag twn">↑6.1%</span></td><td>2,420</td><td>985</td><td>109.8</td><td><div class="op"><a>查看详情</a><a>导出</a></div></td></tr><tr><td>E零售店</td><td>432</td><td>480</td><td><span style="color:var(--ok)">↓10.0%</span></td><td>308</td><td>124</td><td>13.9</td><td><div class="op"><a>查看详情</a><a>导出</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>用电量统计</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 本页专有样式:横向滚动宽表 + 首列左固定 ── */
+.tw-x{background:var(--bg-panel-2);border-radius:var(--r);overflow-x:auto;}
+.tw-x table{width:max-content;min-width:100%;}
+.tw-x th,.tw-x td{white-space:nowrap;padding:0 16px;}
+.tw-x th{height:56px;line-height:1.5;}                      /* 表头两行(电表编号折行) */
+/* 首列"时间"左固定:sticky 需要不透明背景,分别覆盖表头/奇偶行/hover */
+.tw-x th:first-child,.tw-x td:first-child{position:sticky;left:0;z-index:2;}
+.tw-x th:first-child{background:#141c31;}
+.tw-x td:first-child{background:var(--bg-panel-2);}
+.tw-x tbody tr:nth-child(even) td:first-child{background:var(--bg-stripe);}
+.tw-x tbody tr:hover td:first-child{background:var(--bg-hover);}
+.sub-tw{background:var(--bg-input);border-radius:6px;overflow:hidden;}
+.sub-tw th{background:#101830;}
+</style>
+</head>
+<body>
+<!-- 筛选栏:统计时间(日期范围) + 查询/异常处理(按 live json) -->
+<div class="fb">
+  <div class="fi"><span class="fl">统计时间</span>
+    <input type="date" id="fStart" value="2026-07-02" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="openAbn()">异常处理</button>
+</div>
+
+<!-- 宽表:时间 + 20 块电表列 + 总当量 + 操作(横向滚动,首列固定) -->
+<div class="tw-x">
+  <table>
+    <thead><tr id="thead"></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- 异常处理弹窗 -->
+<div class="modal" id="dlgAbn">
+  <div class="dialog" style="width:640px">
+    <div class="dh"><span>异常处理</span><span class="dx" onclick="$modalClose('dlgAbn')">✕</span></div>
+    <div class="db">
+      <div class="sub-tw">
+        <table>
+          <thead><tr><th>电表编号</th><th>异常类型</th><th>发生时间</th><th>状态</th></tr></thead>
+          <tbody id="abnBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgAbn')">关 闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgAbn');$msg('已标记为已知晓')">已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 电表列表(与 live json 表头一致,共 20 块) ── */
+const METERS=[
+  '220413099863','220413099684','220415113551','220415113596','220415113437',
+  '220415113602','220415113343','220415114074','220415114089','220415114086',
+  '220415113590','220415113567','220415113552','220415113496','220415113491',
+  '220415113589','220415113396','220415113581','220415114121','220415114103'
+];
+
+/* 表头:线上电表编号折成两行显示(前8位 / 后4位+电表) */
+document.getElementById('thead').innerHTML=
+  '<th>时间</th>'+
+  METERS.map(m=>`<th>${m.slice(0,8)}<br>${m.slice(8)}电表</th>`).join('')+
+  '<th>总当量</th><th>操作</th>';
+
+/* ── 模拟读数:每块表基值不同,逐小时递增小数(确定性伪随机,查询日期作种子) ── */
+function seedRand(seed){          // 简易可复现伪随机
+  let s=seed%2147483647;if(s<=0)s+=2147483646;
+  return ()=>((s=s*16807%2147483647)-1)/2147483646;
+}
+function buildRows(dateStr){
+  const seed=[...dateStr].reduce((a,c)=>a+c.charCodeAt(0),0);
+  const rnd=seedRand(seed*7919);
+  // 每块表的起始读数与小时增量幅度
+  const base=METERS.map((m,i)=>1200+((i*137)%2500)+rnd()*0.9);
+  const rows=[];
+  for(let h=0;h<24;h++){
+    let sumDelta=0;
+    const cells=base.map((b,i)=>{
+      const delta=0.2+rnd()*2.3;          // 每小时用电 0.2~2.5 kWh
+      sumDelta+=delta;
+      base[i]=b+delta;                    // 读数递增
+      return base[i].toFixed(2);
+    });
+    rows.push({time:`${dateStr} ${String(h).padStart(2,'0')}:00`,cells,eq:sumDelta.toFixed(2)});
+  }
+  return rows;
+}
+
+/* ── 查询/渲染 ── */
+function doQuery(){
+  const s=document.getElementById('fStart').value||'2026-07-02';
+  const rows=buildRows(s);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
+    <tr>
+      <td>${r.time}</td>
+      ${r.cells.map(c=>`<td>${c}</td>`).join('')}
+      <td>${r.eq}</td>
+      <td><span class="op"><a onclick="openAbn()">异常处理</a></span></td>
+    </tr>`).join('')
+    :`<tr><td colspan="${METERS.length+3}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
+}
+
+/* ── 异常处理弹窗 ── */
+function openAbn(){
+  document.getElementById('abnBody').innerHTML=`
+    <tr><td>220415113343电表</td><td>读数回退</td><td>2026-07-02 08:00:00</td><td><span class="tag ter">未处理</span></td></tr>
+    <tr><td>220415114089电表</td><td>通讯中断</td><td>2026-07-02 03:00:00</td><td><span class="tag twn">处理中</span></td></tr>
+    <tr><td>220413099684电表</td><td>读数缺失</td><td>2026-07-01 22:00:00</td><td><span class="tag tok">已处理</span></td></tr>`;
+  $modal('dlgAbn');
+}
+
+doQuery();
+</script>
+</body>
+</html>

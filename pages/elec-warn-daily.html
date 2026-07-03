@@ -1,1 +1,231 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>异常每日盘点</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">异常每日盘点</div><div class="pa"><button class="btn">导出汇总</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">今日总用电(kWh)</div><div class="sc-v scc">6,240</div></div><div class="scd"><div class="sc-lb">预警数量</div><div class="sc-v scr">3</div></div><div class="scd"><div class="sc-lb">正常率</div><div class="sc-v scg">96.8%</div></div></div><div class="fb"><div class="fi"><div class="fl">日期</div><input type="date" style="width:130px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="date" style="width:130px"></div><div class="fi"><div class="fl">预警状态</div><select style="width:100px"><option value="">全部</option><option>有预警</option><option>无预警</option><option>全部</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>日期</th><th>总用电(kWh)</th><th>预警数</th><th>异常电表数</th><th>最高单表用电(kWh)</th><th>最低单表用电(kWh)</th><th>盘点状态</th><th>操作</th></tr></thead><tbody><tr><td>2026-06-10</td><td>6,240</td><td>3</td><td>2</td><td>304.2</td><td>18.4</td><td><span class="tag twn">有预警</span></td><td><div class="op"><a>详情</a><a>导出</a></div></td></tr><tr><td>2026-06-09</td><td>5,820</td><td>1</td><td>1</td><td>298.6</td><td>15.2</td><td><span class="tag twn">有预警</span></td><td><div class="op"><a>详情</a><a>导出</a></div></td></tr><tr><td>2026-06-08</td><td>5,960</td><td>0</td><td>0</td><td>310.1</td><td>14.8</td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>导出</a></div></td></tr><tr><td>2026-06-07</td><td>4,820</td><td>0</td><td>0</td><td>289.4</td><td>13.6</td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>导出</a></div></td></tr><tr><td>2026-06-06</td><td>4,560</td><td>2</td><td>1</td><td>295.2</td><td>12.0</td><td><span class="tag twn">有预警</span></td><td><div class="op"><a>详情</a><a>导出</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>异常每日盘点</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 顶部筛选:盘点日期范围 + 仅看新异常复选框 */
+.chk-box{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);font-size:13px;cursor:pointer;user-select:none;}
+/* 左右布局:左项目面板 + 右汇总与表格 */
+.layout{display:flex;gap:14px;align-items:stretch;}
+.proj-panel{width:280px;flex-shrink:0;background:var(--bg-panel);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;}
+.proj-item{padding:14px 10px;text-align:center;font-size:14px;color:var(--tx);background:var(--bg-panel-2);border-radius:6px;cursor:pointer;transition:all .15s;}
+.proj-item:hover{background:var(--bg-hover);}
+.proj-item.active{background:var(--bg-active);color:var(--txw);box-shadow:inset 0 0 0 1px var(--primary);}
+.proj-item .cnt{font-size:12px;color:var(--er);margin-left:6px;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+/* 汇总及筛选头 */
+.sum-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-panel);border-radius:var(--r) var(--r) 0 0;padding:14px 16px;cursor:pointer;user-select:none;}
+.sum-bar .st{font-size:14px;font-weight:600;color:var(--txw);}
+.sum-bar .si{font-size:14px;color:var(--txw);display:flex;align-items:center;gap:18px;}
+.sum-bar .arr{color:var(--ts);font-size:12px;transition:transform .15s;}
+.sum-bar.open .arr{transform:rotate(180deg);}
+/* 异常分类筛选 chips(展开后显示,数量>0 红色) */
+.chip-wrap{display:none;flex-wrap:wrap;gap:10px;background:var(--bg-panel);padding:0 16px 14px;}
+.sum-bar.open+.chip-wrap{display:flex;}
+.chip{padding:5px 12px;font-size:12px;color:var(--tx);background:var(--bg-input);border:1px solid var(--bd);border-radius:14px;cursor:pointer;transition:all .15s;user-select:none;}
+.chip:hover{border-color:var(--bd2);}
+.chip.active{border-color:var(--primary);color:#5a8dff;background:var(--primary-dim);}
+.chip .n{color:var(--er);}
+.chip .n0{color:var(--tw3);}
+/* 关键信息列左对齐限宽 */
+td.cell-key{max-width:420px;text-align:left;white-space:normal;line-height:1.5;padding:8px 10px;}
+/* 异常对象可点击查看详情 */
+.obj{color:var(--primary);cursor:pointer;}
+.obj:hover{color:var(--primary-hover);}
+/* 详情弹窗字段栅格 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+</style>
+</head>
+<body>
+<!-- 顶部:盘点日期范围 + 仅看此时间段新异常 -->
+<div class="fb">
+  <div class="fi"><span class="fl">盘点日期范围:</span>
+    <input type="date" id="fStart" value="2026-07-02" style="width:150px" onchange="doQuery()"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px" onchange="doQuery()">
+  </div>
+  <label class="chk-box"><input type="checkbox" id="fNew" onchange="doQuery()"> 仅看此时间段新异常</label>
+</div>
+
+<div class="layout">
+  <!-- 左侧:项目面板(全部项目 + 各项目) -->
+  <aside class="proj-panel" id="projPanel"></aside>
+
+  <!-- 右侧:汇总筛选 + 盘点表格 -->
+  <div class="main-col">
+    <div class="sum-bar" id="sumBar" onclick="toggleSum()">
+      <span class="st">异常盘点信息汇总及筛选</span>
+      <span class="si"><span id="sumInfo">当前项目, 总共 11034个主机, 9570个电表, 17780个外机系统</span><span class="arr">▼</span></span>
+    </div>
+    <!-- 异常分类 chips:点击按异常类型筛选 -->
+    <div class="chip-wrap" id="chipWrap"></div>
+
+    <div class="tw" style="border-radius:0 0 var(--r) var(--r)">
+      <table>
+        <thead><tr>
+          <th>项目</th><th>盘点日期</th><th>异常类型</th><th>异常对象</th><th>关键信息</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="pager"></div>
+  </div>
+</div>
+
+<!-- 异常详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>异常详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDetail')">关闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgDetail');$msg('已标记为已知晓')">已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 异常分类(与线上 chips 完全一致的 17 类) ── */
+const CATS=['主机异常','主机离线','存储空间不够','抄电表异常','由主机离线造成','由抄表失败造成','由电表离线造成',
+  '电表未绑外机','能抄到表','没抄到表','电表外机可能绑错','有电量没当量','有当量没电量','外机未绑电表',
+  '有用量','无用量','内机未绑定建筑物'];
+/* 异常类型 tag 配色:离线/异常类红,绑定类橙,量值核对类蓝 */
+const CAT_TAG={
+  '主机异常':'ter','主机离线':'ter','存储空间不够':'twn','抄电表异常':'ter',
+  '由主机离线造成':'ter','由抄表失败造成':'ter','由电表离线造成':'ter',
+  '电表未绑外机':'twn','能抄到表':'twn','没抄到表':'ter','电表外机可能绑错':'twn',
+  '有电量没当量':'thl','有当量没电量':'thl','外机未绑电表':'twn',
+  '有用量':'thl','无用量':'thl','内机未绑定建筑物':'twn'};
+
+/* ── 模拟数据:项目 × 盘点日期 × 异常类型(30+ 条,新异常带 isNew) ── */
+const ROWS=(()=>{
+  const rows=[];
+  const P='1861蔚蓝公寓B2',P2='1861蔚蓝公寓B1';
+  const add=(proj,date,cat,obj,info,isNew)=>rows.push({proj,date,cat,obj,info,isNew:!!isNew});
+  // 主机离线
+  add(P,'2026-07-02','主机离线','主机 86200945','主机 86200945 自 2026-07-01 22:14 起离线,持续 10 小时以上',1);
+  add(P,'2026-07-02','主机离线','主机 86200812','主机 86200812 自 2026-07-02 03:40 起离线,网关无响应',1);
+  add(P2,'2026-07-02','主机离线','主机 86201077','主机 86201077 间歇性离线 6 次,建议检查网络链路');
+  // 主机异常
+  add(P,'2026-07-02','主机异常','主机 86200945','主机 86200945 上报数据缺失,最近一次上报 2026-07-01 21:58',1);
+  add(P2,'2026-07-02','主机异常','主机 86201103','主机 86201103 时钟偏差超过 5 分钟,已自动校时');
+  // 存储空间不够
+  add(P,'2026-07-02','存储空间不够','主机 86200812','主机 86200812 剩余存储 3%,历史数据可能丢失');
+  // 抄电表异常
+  add(P,'2026-07-02','抄电表异常','电表 220415113551','电表 220415113551 连续 3 次抄表失败,最后读数 8,412.6',1);
+  add(P,'2026-07-02','抄电表异常','电表 220415113596','电表 220415113596 抄表超时,通讯质量差',1);
+  add(P,'2026-07-02','抄电表异常','电表 220415113437','电表 220415113437 抄表返回异常码 0x1F');
+  // 由主机离线造成 / 由抄表失败造成 / 由电表离线造成
+  add(P,'2026-07-02','由主机离线造成','电表 220415113602','电表 220415113602 缺失抄表记录,由主机 86200945 离线造成',1);
+  add(P,'2026-07-02','由主机离线造成','电表 220415113343','电表 220415113343 缺失抄表记录,由主机 86200945 离线造成');
+  add(P,'2026-07-02','由抄表失败造成','电表 220415114074','电表 220415114074 当日 4 个时段读数缺失,由抄表失败造成');
+  add(P,'2026-07-02','由电表离线造成','电表 220415114089','电表 220415114089 离线 5 小时,期间读数缺失',1);
+  // 电表未绑外机 / 外机未绑电表 / 电表外机可能绑错
+  add(P,'2026-07-02','电表未绑外机','电表 220415114086','电表 220415114086 未绑定任何外机,电量无法分摊');
+  add(P,'2026-07-02','电表未绑外机','电表 220415113590','电表 220415113590 未绑定任何外机,电量无法分摊');
+  add(P2,'2026-07-02','外机未绑电表','外机 1-2','外机系统 1-2 未绑定电表,能耗无法计量');
+  add(P2,'2026-07-02','外机未绑电表','外机 2-1','外机系统 2-1 未绑定电表,能耗无法计量');
+  add(P,'2026-07-02','电表外机可能绑错','电表 220415113567','电表 220415113567 与外机 1-3 电量当量走势相关性低,可能绑错');
+  // 能抄到表 / 没抄到表
+  add(P,'2026-07-02','能抄到表','电表 220415113712','电表 220415113712 恢复正常抄表,昨日缺失时段已补抄');
+  add(P,'2026-07-02','没抄到表','电表 220415113728','电表 220415113728 全天未抄到读数,请现场核查',1);
+  add(P,'2026-07-02','没抄到表','电表 220415113805','电表 220415113805 全天未抄到读数,请现场核查');
+  // 有电量没当量 / 有当量没电量
+  add(P,'2026-07-02','有电量没当量','电表 220415113811','电表 220415113811 当日电量 42.6kWh,对应外机无当量数据');
+  add(P,'2026-07-02','有当量没电量','外机 1-5','外机系统 1-5 当日有当量 386,对应电表电量为 0');
+  add(P2,'2026-07-02','有当量没电量','外机 2-3','外机系统 2-3 当日有当量 152,对应电表电量为 0');
+  // 有用量 / 无用量
+  add(P,'2026-07-02','无用量','电表 220415113954','电表 220415113954 连续 7 天读数无变化,疑似停用或故障');
+  add(P,'2026-07-02','有用量','电表 220415114012','电表 220415114012 不计费状态下产生用量 18.4kWh,请确认');
+  // 内机未绑定建筑物
+  add(P,'2026-07-02','内机未绑定建筑物','内机 1-1-25-3','内机 1-1-25-3 未绑定建筑物楼层房间,无法归属租户');
+  add(P,'2026-07-02','内机未绑定建筑物','内机 1-2-08-6','内机 1-2-08-6 未绑定建筑物楼层房间,无法归属租户');
+  // 前一日数据(切换日期范围可查)
+  add(P,'2026-07-01','主机离线','主机 86200945','主机 86200945 自 2026-07-01 22:14 起离线');
+  add(P,'2026-07-01','抄电表异常','电表 220415113551','电表 220415113551 连续 2 次抄表失败');
+  add(P,'2026-07-01','没抄到表','电表 220415113728','电表 220415113728 全天未抄到读数,请现场核查');
+  add(P,'2026-07-01','电表未绑外机','电表 220415114086','电表 220415114086 未绑定任何外机,电量无法分摊');
+  add(P2,'2026-07-01','外机未绑电表','外机 1-2','外机系统 1-2 未绑定电表,能耗无法计量');
+  add(P,'2026-07-01','有电量没当量','电表 220415113811','电表 220415113811 当日电量 39.2kWh,对应外机无当量数据');
+  return rows;
+})();
+
+/* ── 筛选状态 ── */
+let projSel='';      // 选中项目('' = 全部项目)
+let catSel='';       // 选中异常分类 chip
+let filtered=[];
+const pg={total:0,page:1,size:20,sizes:[10,20,30,50],onChange:()=>renderTable()};
+
+/* 日期 + 新异常过滤后的基础集(项目/分类计数用) */
+function baseRows(){
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  const onlyNew=document.getElementById('fNew').checked;
+  return ROWS.filter(r=>(!s||r.date>=s)&&(!e||r.date<=e)&&(!onlyNew||r.isNew));
+}
+function doQuery(){
+  const base=baseRows();
+  filtered=base.filter(r=>(!projSel||r.proj===projSel)&&(!catSel||r.cat===catSel));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);
+  renderPanel(base);renderChips(base);renderTable();
+}
+
+/* 左侧项目面板:全部项目 + 各项目(带异常数) */
+function renderPanel(base){
+  const projs=[...new Set(ROWS.map(r=>r.proj))];
+  const el=document.getElementById('projPanel');
+  el.innerHTML=`<div class="proj-item ${projSel===''?'active':''}" onclick="pickProj('')">全部项目</div>`+
+    projs.map(p=>{
+      const n=base.filter(r=>r.proj===p).length;
+      return `<div class="proj-item ${projSel===p?'active':''}" onclick="pickProj('${p}')">${p}${n?`<span class="cnt">${n}</span>`:''}</div>`;
+    }).join('');
+}
+function pickProj(p){projSel=p;doQuery();}
+
+/* 汇总栏展开/收起 + 分类 chips(数量随筛选联动) */
+function toggleSum(){document.getElementById('sumBar').classList.toggle('open');}
+function renderChips(base){
+  const scope=projSel?base.filter(r=>r.proj===projSel):base;
+  document.getElementById('chipWrap').innerHTML=CATS.map(c=>{
+    const n=scope.filter(r=>r.cat===c).length;
+    return `<span class="chip ${catSel===c?'active':''}" onclick="pickCat('${c}')">${c}（<span class="${n?'n':'n0'}">${n}</span>个）</span>`;
+  }).join('');
+}
+function pickCat(c){catSel=catSel===c?'':c;doQuery();}
+
+/* 盘点表格(5列) */
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${r.proj}</td>
+      <td>${r.date}</td>
+      <td><span class="tag ${CAT_TAG[r.cat]||'tin'}">${r.cat}</span></td>
+      <td><span class="obj" onclick="showDetail(${start+i})">${r.obj}</span></td>
+      <td class="cell-key">${r.info}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+/* 详情弹窗 */
+function showDetail(idx){
+  const r=filtered[idx];
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">项目:</span><span class="v">${r.proj}</span>
+    <span class="k">盘点日期:</span><span class="v">${r.date}</span>
+    <span class="k">异常类型:</span><span class="v"><span class="tag ${CAT_TAG[r.cat]||'tin'}">${r.cat}</span></span>
+    <span class="k">异常对象:</span><span class="v">${r.obj}</span>
+    <span class="k">关键信息:</span><span class="v">${r.info}</span>
+    <span class="k">是否新异常:</span><span class="v">${r.isNew?'<span class="text-er">是(此时间段新增)</span>':'否'}</span>`;
+  $modal('dlgDetail');
+}
+
+doQuery();
+</script>
+</body>
+</html>

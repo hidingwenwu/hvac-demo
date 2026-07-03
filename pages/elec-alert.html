@@ -1,1 +1,175 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>异常预警信息</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">异常预警信息</div><div class="pa"></div></div><div class="sc"><div class="scd"><div class="sc-lb">今日预警</div><div class="sc-v scr">5</div></div><div class="scd"><div class="sc-lb">本周预警</div><div class="sc-v scw">12</div></div><div class="scd"><div class="sc-lb">未处理</div><div class="sc-v scr">3</div></div></div><div class="fb"><div class="fi"><div class="fl">预警类型</div><select style="width:120px"><option value="">全部</option><option>用电超额</option><option>计费异常</option><option>抄表失败</option><option>设备离线</option></select></div><div class="fi"><div class="fl">时间范围</div><input type="date" style="width:130px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="date" style="width:130px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>未处理</option><option>已处理</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>预警时间</th><th>预警类型</th><th>涉及租户/设备</th><th>预警描述</th><th>严重程度</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>2026-06-10 14:20</td><td>用电超额</td><td>C品牌店</td><td>当月用电已超额度90%</td><td><span class="tag ter">高</span></td><td><span class="tag twn">未处理</span></td><td><div class="op"><a>处理</a><a>忽略</a></div></td></tr><tr><td>2026-06-10 10:05</td><td>抄表失败</td><td>MTR005-D餐厅</td><td>连续2次自动抄表失败</td><td><span class="tag twn">中</span></td><td><span class="tag twn">未处理</span></td><td><div class="op"><a>处理</a><a>忽略</a></div></td></tr><tr><td>2026-06-09 18:30</td><td>计费异常</td><td>B工作室</td><td>本期用电量较上期增幅超80%</td><td><span class="tag twn">中</span></td><td><span class="tag tok">已处理</span></td><td><div class="op"><a>查看</a></div></td></tr><tr><td>2026-06-09 08:00</td><td>设备离线</td><td>MTR004-电表</td><td>计费电表离线超2小时</td><td><span class="tag ter">高</span></td><td><span class="tag tok">已处理</span></td><td><div class="op"><a>查看</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共16条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>异常预警信息</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 内容列较长:左对齐并限宽省略 */
+td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 消息模版为英文代码串,弱化显示 */
+.tpl{font-size:12px;color:var(--ts);}
+/* 标题可点击查看详情 */
+.ttl{color:var(--primary);cursor:pointer;}
+.ttl:hover{color:var(--primary-hover);}
+/* 详情弹窗字段栅格 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+</style>
+</head>
+<body>
+<!-- 筛选栏(严格对照线上:预警类型 / 账户租户名称 / 创建时间 / 查询 / 重置) -->
+<div class="fb">
+  <div class="fi"><span class="fl">预警类型</span>
+    <select id="fType" style="width:170px">
+      <option value="">请选择预警类型</option>
+      <option>故障</option>
+      <option>提醒</option>
+      <option>通知</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">账户租户名称</span>
+    <input id="fTenant" placeholder="请输入账户租户名称" style="width:180px">
+  </div>
+  <div class="fi"><span class="fl">创建时间</span>
+    <input type="date" id="fStart" value="2026-07-02" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-03" style="width:145px">
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+</div>
+
+<!-- 预警信息表格(9列,列名与线上一致) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>序号</th><th>账户租户名称</th><th>预警类型</th><th>标题</th><th>内容</th>
+      <th>是否已读</th><th>消息模版</th><th>发送状态</th><th>发生时间</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 预警详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>预警详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDetail')">关闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgDetail');$msg('已标记为已知晓')">已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(形态贴线上:电表号 2204151135xx / 消息模版为英文代码) ── */
+const ALERTS=(()=>{
+  const rows=[];
+  // 线上示例:缺失抄表记录 × electricity_bill_allocation_status_day × 发送中
+  const meters=['220415113551','220415113596','220415113437','220415113602','220415113343',
+                '220415114074','220415114089','220415114086','220415113590','220415113567',
+                '220415113712','220415113728','220415113805','220415113811','220415113954',
+                '220415114012','220415114120','220415114133'];
+  meters.forEach((m,i)=>{
+    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'缺失抄表记录',
+      content:`电表 ${m} 缺失抄表记录`,read:'未读',
+      tpl:'electricity_bill_allocation_status_day',send:'发送中',
+      time:'2026-07-03 08:32:08'});
+  });
+  // 小时口径缺失抄表
+  ['220415113551','220415113596','220415113437','220415113602','220415113343','220415114074'].forEach((m,i)=>{
+    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'缺失抄表记录',
+      content:`电表 ${m} 缺失抄表记录`,read:i<2?'未读':'已读',
+      tpl:'electricity_bill_allocation_status_hour',send:'已发送',
+      time:'2026-07-02 20:0'+(i%6)+':11'});
+  });
+  // 电表离线故障
+  ['220415113712','220415113805','220415114012'].forEach((m,i)=>{
+    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'电表离线',
+      content:`电表 ${m} 通讯离线超过 2 小时,请检查供电与线路`,read:'未读',
+      tpl:'electricity_meter_offline',send:i===2?'发送失败':'发送中',
+      time:'2026-07-02 16:4'+i+':26'});
+  });
+  // 余额不足提醒
+  [['B2-1502 张女士','12.6'],['B2-0806 李先生','8.3'],['B2-2101 王先生','3.9'],['B2-1706 陈女士','15.2']].forEach(([t,v],i)=>{
+    rows.push({tenant:t,type:'提醒',title:'预付费余额不足',
+      content:`租户 ${t} 预付费余额仅剩 ${v} 元,请及时充值`,read:i%2?'已读':'未读',
+      tpl:'electricity_balance_warn',send:'已发送',
+      time:'2026-07-02 09:3'+i+':45'});
+  });
+  // 分摊完成通知
+  ['2026-07-01','2026-06-30','2026-06-29'].forEach((d,i)=>{
+    rows.push({tenant:'1861蔚蓝公寓B2',type:'通知',title:'电费分摊完成',
+      content:`${d} 日电费分摊任务执行完成,共处理电表 128 块`,read:'已读',
+      tpl:'electricity_bill_allocation_done',send:'已发送',
+      time:d+' 06:00:0'+i});
+  });
+  return rows;
+})();
+
+/* 预警类型彩色标签 */
+const TYPE_TAG={'故障':'ter','提醒':'twn','通知':'thl'};
+
+/* ── 查询 / 重置 / 分页 ── */
+let filtered=ALERTS.slice();
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const type=document.getElementById('fType').value;
+  const tenant=document.getElementById('fTenant').value.trim();
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  filtered=ALERTS.filter(r=>
+    (!type||r.type===type)&&
+    (!tenant||r.tenant.includes(tenant))&&
+    (!s||r.time>=s)&&(!e||r.time<=e+' 23:59:59')
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fType').value='';
+  document.getElementById('fTenant').value='';
+  document.getElementById('fStart').value='2026-07-02';
+  document.getElementById('fEnd').value='2026-07-03';
+  doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${start+i+1}</td>
+      <td>${r.tenant}</td>
+      <td><span class="tag ${TYPE_TAG[r.type]}">${r.type}</span></td>
+      <td><span class="ttl" onclick='showDetail(${JSON.stringify(JSON.stringify(r))})'>${r.title}</span></td>
+      <td class="cell-content tl" title="${r.content}">${r.content}</td>
+      <td>${r.read==='未读'?'<span class="text-wn">未读</span>':'已读'}</td>
+      <td><span class="tpl">${r.tpl}</span></td>
+      <td>${r.send==='发送失败'?'<span class="text-er">发送失败</span>':r.send}</td>
+      <td>${r.time}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+/* 详情弹窗 */
+function showDetail(json){
+  const r=JSON.parse(json);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">账户租户名称:</span><span class="v">${r.tenant}</span>
+    <span class="k">预警类型:</span><span class="v"><span class="tag ${TYPE_TAG[r.type]}">${r.type}</span></span>
+    <span class="k">标题:</span><span class="v">${r.title}</span>
+    <span class="k">内容:</span><span class="v">${r.content}</span>
+    <span class="k">是否已读:</span><span class="v">${r.read}</span>
+    <span class="k">消息模版:</span><span class="v tpl">${r.tpl}</span>
+    <span class="k">发送状态:</span><span class="v ${r.send==='发送失败'?'text-er':''}">${r.send}</span>
+    <span class="k">发生时间:</span><span class="v">${r.time}</span>`;
+  $modal('dlgDetail');
+}
+
+doQuery();
+</script>
+</body>
+</html>

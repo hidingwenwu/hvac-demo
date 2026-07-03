@@ -1,1 +1,199 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>异常预警</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">异常预警</div><div class="pa"></div></div><div class="sc"><div class="scd"><div class="sc-lb">活跃预警</div><div class="sc-v scr">3</div></div><div class="scd"><div class="sc-lb">今日触发</div><div class="sc-v scw">12</div></div><div class="scd"><div class="sc-lb">7日处理率</div><div class="sc-v scg">98.2%</div></div></div><div class="fb"><div class="fi"><div class="fl">预警级别</div><select style="width:100px"><option value="">全部</option><option>严重</option><option>警告</option><option>提示</option></select></div><div class="fi"><div class="fl">预警对象</div><input placeholder="请输入" style="width:130px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>未处理</option><option>已处理</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>预警时间</th><th>预警级别</th><th>预警对象</th><th>预警规则</th><th>触发值</th><th>阈值</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>2026-06-10 14:20</td><td><span class="tag ter">严重</span></td><td>C品牌店-MTR003</td><td>月用电超额90%</td><td>2,352kWh</td><td>2,600kWh</td><td><span class="tag twn">未处理</span></td><td><div class="op"><a>处理</a><a>设置</a></div></td></tr><tr><td>2026-06-10 10:05</td><td><span class="tag twn">警告</span></td><td>MTR005</td><td>连续抄表失败</td><td>连续2次</td><td>3次</td><td><span class="tag twn">未处理</span></td><td><div class="op"><a>处理</a><a>设置</a></div></td></tr><tr><td>2026-06-09 18:30</td><td><span class="tag twn">警告</span></td><td>B工作室</td><td>用电量骤增超80%</td><td>↑82%</td><td>80%</td><td><span class="tag tok">已处理</span></td><td><div class="op"><a>查看</a></div></td></tr><tr><td>2026-06-09 08:00</td><td><span class="tag ter">严重</span></td><td>MTR004</td><td>计费电表离线2h</td><td>2.1h</td><td>2h</td><td><span class="tag tok">已处理</span></td><td><div class="op"><a>查看</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共16条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>异常预警</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 筛选栏两行布局(与线上一致:第一行末尾时间范围,第二行末尾操作按钮) */
+.fb{margin-bottom:10px;}
+.fb .push{margin-left:auto;}
+/* 复杂统计表:表头两行(主列名 + 细分口径),允许换行 */
+th{white-space:normal;line-height:1.5;padding:6px 8px;}
+th .sub{display:block;font-size:12px;font-weight:600;}
+td{white-space:nowrap;}
+/* 项目名称可点击查看详情 */
+.pj{color:var(--primary);cursor:pointer;}
+.pj:hover{color:var(--primary-hover);}
+/* 详情弹窗字段栅格 */
+.detail-grid{display:grid;grid-template-columns:190px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+</style>
+</head>
+<body>
+<!-- 筛选栏第一行:项目切换 / 分摊 / 点表 / 设备 / 预付费 / 时间范围 -->
+<div class="fb">
+  <div class="fi"><select id="fProj" style="width:170px">
+    <option value="">项目切换</option>
+    <option>1861蔚蓝公寓B2</option><option>1861蔚蓝公寓B1</option>
+    <option>1723沈阳嘉里中心</option><option>0951武汉软件新城</option>
+  </select></div>
+  <div class="fi"><span class="fl">分摊:</span><select id="fShare" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi"><span class="fl">点表:</span><select id="fPoint" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi"><span class="fl">设备:</span><select id="fDev" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi"><span class="fl">预付费:</span><select id="fPre" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi push"><span class="fl">时间范围</span>
+    <input type="date" id="fStart" value="2026-07-02" style="width:140px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-03" style="width:140px">
+  </div>
+</div>
+<!-- 筛选栏第二行:整体计费情况 / 抄表 / 当量 / 容量 / 搜索 / 重置 / 手动生成 -->
+<div class="fb" style="margin-bottom:14px">
+  <div class="fi"><select id="fBill" style="width:170px">
+    <option value="">选择整体计费情况</option><option>正常</option><option>异常</option>
+  </select></div>
+  <div class="fi"><span class="fl">抄表:</span><select id="fRead" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi"><span class="fl">当量:</span><select id="fEq" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi"><span class="fl">容量:</span><select id="fCap" style="width:150px"><option value="">请选择</option><option>正常</option><option>异常</option></select></div>
+  <div class="fi push">
+    <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+    <button class="btn" onclick="doReset()">重置</button>
+    <button class="btn btnp" onclick="doGenerate()">手动生成</button>
+  </div>
+</div>
+
+<!-- 异常预警统计表(11列,长列名两行显示,列名严格照抄线上) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>项目名称</th>
+      <th>时间段</th>
+      <th>计费整体情况</th>
+      <th>电表读取<span class="sub">未下发-未获取-读数0</span></th>
+      <th>当量情况<span class="sub">总-未下发-未获取</span></th>
+      <th>分摊情况</th>
+      <th>未分摊电量</th>
+      <th>点表情况</th>
+      <th>主机相关<span class="sub">主机异常-电表异常</span></th>
+      <th>电表外机绑定<span class="sub">电表未绑-外机未绑</span></th>
+      <th>容量为0<span class="sub">总0-部分为0</span></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 单日异常统计详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span>异常预警详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDetail')">关闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgDetail');$msg('已标记为已知晓')">已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:每项目 × 每日一条统计(数值形态 a-b-c 与列口径对应) ── */
+const ROWS=(()=>{
+  const projects=['1861蔚蓝公寓B2','1861蔚蓝公寓B1','1723沈阳嘉里中心','0951武汉软件新城',
+                  '0872苏州中心广场','1102杭州云谷园区','1355成都环球汇','0788南京金鹰世界'];
+  const days=['2026-07-02','2026-07-01','2026-06-30','2026-06-29'];
+  const rows=[];
+  days.forEach((d,di)=>{
+    projects.forEach((p,pi)=>{
+      const bad=(di*4+pi)%3===0;            // 约 1/3 记录带异常
+      const half=(di*4+pi)%5===0;           // 少量部分异常
+      rows.push({
+        proj:p,day:d,
+        bill:bad?'异常':'正常',
+        read:bad?[2,1,3]:(half?[0,0,1]:[0,0,0]),          // 电表读取 未下发-未获取-读数0
+        eq:[156+pi*8,bad?4:0,bad?2:0],                    // 当量 总-未下发-未获取
+        share:bad?'异常':'正常',
+        unShared:bad?(120.5+di*3.2).toFixed(1):'0',       // 未分摊电量 kWh
+        point:half?'异常':'正常',
+        host:bad?[1,2]:[0,0],                             // 主机异常-电表异常
+        bind:half?[3,1]:[0,0],                            // 电表未绑-外机未绑
+        cap:half?[0,2]:[0,0]                              // 总0-部分为0
+      });
+    });
+  });
+  return rows;
+})();
+
+/* a-b-c 复合数值:非 0 项红色(严重)/橙色(次级)标注 */
+function fmt3(arr,warnIdx){
+  return arr.map((v,i)=>{
+    if(+v===0)return `<span>${v}</span>`;
+    if(i===0&&arr.length===3&&+arr[0]>10)return `<span>${v}</span>`; // 首位为"总数"时不标色
+    return `<span class="${(warnIdx||[]).includes(i)?'text-wn':'text-er'}">${v}</span>`;
+  }).join('<span class="text-sub">-</span>');
+}
+function stTag(v){return v==='异常'?'<span class="tag ter">异常</span>':'<span class="tag tok">正常</span>';}
+
+/* ── 查询 / 重置 / 分页 ── */
+let filtered=ROWS.slice();
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function val(id){return document.getElementById(id).value;}
+function doQuery(){
+  const proj=val('fProj'),bill=val('fBill'),share=val('fShare'),point=val('fPoint'),
+        read=val('fRead'),eq=val('fEq'),cap=val('fCap'),
+        s=val('fStart'),e=val('fEnd');
+  filtered=ROWS.filter(r=>
+    (!proj||r.proj===proj)&&
+    (!bill||r.bill===bill)&&
+    (!share||r.share===share)&&
+    (!point||r.point===point)&&
+    (!read||(read==='异常')===(r.read.some(v=>+v>0)))&&
+    (!eq||(eq==='异常')===(+r.eq[1]>0||+r.eq[2]>0))&&
+    (!cap||(cap==='异常')===(+r.cap[0]>0||+r.cap[1]>0))&&
+    (!s||r.day>=s)&&(!e||r.day<=e)
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['fProj','fBill','fShare','fPoint','fDev','fPre','fRead','fEq','fCap'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fStart').value='2026-07-02';
+  document.getElementById('fEnd').value='2026-07-03';
+  doQuery();
+}
+function doGenerate(){
+  $confirm('确定手动生成当前时间范围的异常统计数据?',()=>$msg('已提交生成任务,请稍后刷新查看'));
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td><span class="pj" onclick="showDetail(${start+i})">${r.proj}</span></td>
+      <td>${r.day}</td>
+      <td>${stTag(r.bill)}</td>
+      <td>${fmt3(r.read,[2])}</td>
+      <td>${fmt3(r.eq)}</td>
+      <td>${r.share==='异常'?'<span class="text-er">异常</span>':'正常'}</td>
+      <td>${+r.unShared>0?`<span class="text-wn">${r.unShared}</span>`:'0'}</td>
+      <td>${r.point==='异常'?'<span class="text-er">异常</span>':'正常'}</td>
+      <td>${fmt3(r.host)}</td>
+      <td>${fmt3(r.bind,[0,1])}</td>
+      <td>${fmt3(r.cap,[1])}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="11"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+/* 详情弹窗:按列口径逐项展示 */
+function showDetail(idx){
+  const r=filtered[idx];
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">项目名称:</span><span class="v">${r.proj}</span>
+    <span class="k">时间段:</span><span class="v">${r.day}</span>
+    <span class="k">计费整体情况:</span><span class="v">${stTag(r.bill)}</span>
+    <span class="k">电表读取(未下发-未获取-读数0):</span><span class="v">${fmt3(r.read,[2])}</span>
+    <span class="k">当量情况(总-未下发-未获取):</span><span class="v">${fmt3(r.eq)}</span>
+    <span class="k">分摊情况:</span><span class="v">${r.share==='异常'?'<span class="text-er">异常</span>':'正常'}</span>
+    <span class="k">未分摊电量:</span><span class="v">${+r.unShared>0?`<span class="text-wn">${r.unShared} kWh</span>`:'0 kWh'}</span>
+    <span class="k">点表情况:</span><span class="v">${r.point==='异常'?'<span class="text-er">异常</span>':'正常'}</span>
+    <span class="k">主机相关(主机异常-电表异常):</span><span class="v">${fmt3(r.host)}</span>
+    <span class="k">电表外机绑定(电表未绑-外机未绑):</span><span class="v">${fmt3(r.bind,[0,1])}</span>
+    <span class="k">容量为0(总0-部分为0):</span><span class="v">${fmt3(r.cap,[1])}</span>`;
+  $modal('dlgDetail');
+}
+
+doQuery();
+</script>
+</body>
+</html>

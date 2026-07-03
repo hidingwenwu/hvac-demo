@@ -1,1 +1,186 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>运行时间记录</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">运行时间记录</div><div class="pa"><button class="btn">导出</button></div></div><div class="fb"><div class="fi"><div class="fl">空调名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">日期</div><input type="date" style="width:130px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="date" style="width:130px"></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>空调名称</th><th>所在房间</th><th>日期</th><th>开机时间</th><th>关机时间</th><th>运行时长(h)</th><th>制冷时长(h)</th><th>制热时长(h)</th><th>操作</th></tr></thead><tbody><tr><td>1F-大厅-01</td><td>一楼大厅</td><td>2026-06-10</td><td>08:00</td><td>22:00</td><td>14.0</td><td>12.5</td><td>1.5</td><td><a style="color:var(--hl)">详情</a></td></tr><tr><td>1F-大厅-02</td><td>一楼大厅</td><td>2026-06-10</td><td>08:30</td><td>22:00</td><td>13.5</td><td>13.5</td><td>0.0</td><td><a style="color:var(--hl)">详情</a></td></tr><tr><td>2F-会议室-01</td><td>二楼大会议室</td><td>2026-06-10</td><td>09:00</td><td>18:00</td><td>9.0</td><td>9.0</td><td>0.0</td><td><a style="color:var(--hl)">详情</a></td></tr><tr><td>2F-办公区-01</td><td>二楼开放办公区</td><td>2026-06-10</td><td>08:00</td><td>20:00</td><td>12.0</td><td>10.0</td><td>2.0</td><td><a style="color:var(--hl)">详情</a></td></tr><tr><td>B1-餐饮-01</td><td>B1餐饮区</td><td>2026-06-10</td><td>10:00</td><td>22:00</td><td>12.0</td><td>12.0</td><td>0.0</td><td><a style="color:var(--hl)">详情</a></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>运行时间记录</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 页面专有样式:左树 + 右主区布局(照线上) ── */
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
+.side-tree{width:230px;min-height:100%;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- ── 左侧建筑物树(线上仅"1号楼",可勾选展开楼层) ── -->
+  <aside class="side-tree">
+    <div class="st-title">建筑物信息</div>
+    <div id="tree"></div>
+  </aside>
+
+  <!-- ── 右侧主区 ── -->
+  <div class="main-col">
+    <!-- 筛选栏 · 第一行(发生时间 / 使用时间 / 状态类型 / 统计方式) -->
+    <div class="fb">
+      <div class="fi"><span class="fl">发生时间</span>
+        <input type="date" id="fStart" value="2026-07-01" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
+      </div>
+      <div class="fi"><span class="fl">使用时间</span>
+        <select id="fUse" style="width:170px">
+          <option value="">请选择</option>
+          <option value="0">0分钟</option>
+          <option value="1-60">1 ~ 60分钟</option>
+          <option value="gt60">60分钟以上</option>
+        </select>
+      </div>
+      <div class="fi"><span class="fl">状态类型</span>
+        <select id="fStatus" style="width:170px">
+          <option value="">请选择</option>
+          <option>获取成功</option>
+          <option>获取失败</option>
+        </select>
+      </div>
+      <div class="fi"><span class="fl">统计方式</span>
+        <select id="fStat" style="width:150px">
+          <option>按天</option>
+          <option>按小时</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 筛选栏 · 第二行(操作按钮,照线上:查询/重置/导出/导出详情/手动获取) -->
+    <div class="fb">
+      <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+      <button class="btn" onclick="doReset()">重置</button>
+      <button class="btn btnp" onclick="$msg('导出成功,请在下载中心查看')">⬆ 导出</button>
+      <button class="btn btnp" onclick="$msg('导出详情成功,请在下载中心查看')">⬆ 导出详情</button>
+      <button class="btn btnp" onclick="$msg('已下发手动获取指令,请稍后查询最新数据')">手动获取</button>
+    </div>
+
+    <!-- ── 数据表格(9 列,与线上一致) ── -->
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>序号</th><th>发生时间</th><th>楼号</th><th>楼层</th><th>房间号</th>
+          <th>租户</th><th>使用时间(单位:分钟)</th><th>室内机地址</th><th>获取状态</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="pager"></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 固定种子伪随机:保证每次刷新数据一致 ── */
+let _s=20260702;
+function rnd(){_s=(_s*9301+49297)%233280;return _s/233280;}
+
+/* ── 模拟数据 ──
+   13 层首日 10 条严格取自线上首页(房间乱序、走廊租户为编号、用量多为 0.0);
+   14/15 层与次日数据按同形态生成,共 3 层 × 10 条 × 2 天 = 60 条 */
+const FIRST13=[   // [房间号, 租户, 使用时间, 室内机地址]
+  ['1301','1301','220','2-3-2-2'],
+  ['1306','1306','0.0','2-3-4-7'],
+  ['1307','1307','0.0','2-3-4-6'],
+  ['1305','1305','0.0','2-3-2-1'],
+  ['中走廊','31' ,'0.0','2-3-2-6'],
+  ['1302','1302','0.0','2-3-2-5'],
+  ['1304','1304','0.0','2-3-2-4'],
+  ['1303','1303','0.0','2-3-2-3'],
+  ['西走廊','32' ,'0.0','2-3-4-5'],
+  ['1308','1308','397','2-3-4-4']
+];
+const RECORDS=(()=>{
+  const rows=[];
+  const roomOrder=[1,6,7,5,-1,2,4,3,-2,8];          // 线上房间乱序模式(-1 中走廊 / -2 西走廊)
+  ['2026-07-02','2026-07-01'].forEach((d,di)=>{
+    [13,14,15].forEach(fl=>{
+      roomOrder.forEach((ro,i)=>{
+        let room,tenant,addr,use;
+        if(fl===13&&di===0){                          // 13 层首日:严格照线上
+          [room,tenant,use,addr]=FIRST13[i];
+        }else{
+          room=ro===-1?'中走廊':ro===-2?'西走廊':String(fl*100+ro);
+          tenant=ro===-1?String(fl*2+5):ro===-2?String(fl*2+6):room;
+          addr=`2-${fl-10}-${i<5?2:4}-${1+(i*3)%8}`;  // 室内机地址 2-3-2-2 式
+          use=rnd()<0.3?String(Math.round(rnd()*420+15)):'0.0';   // 多数 0.0,少数整数分钟
+        }
+        const fail=di===1&&i===7&&fl===14;            // 少量"获取失败"
+        rows.push({time:d,bld:'1号楼',fl:fl+'层',room,tenant,
+          use:fail?'--':use,addr,st:fail?'获取失败':'获取成功'});
+      });
+    });
+  });
+  return rows;
+})();
+
+/* ── 左侧建筑树(勾选楼栋 / 点击楼层过滤) ── */
+const TREE=[{lb:'1号楼',open:false,children:['13层','14层','15层']}];
+let treeSel='';
+function renderTree(){
+  const el=document.getElementById('tree');el.innerHTML='';
+  TREE.forEach(b=>{
+    const row=document.createElement('div');
+    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
+    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
+    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();doQuery();};
+    row.onclick=()=>{b.open=!b.open;renderTree();};
+    el.appendChild(row);
+    if(b.open){
+      const box=document.createElement('div');box.className='tree-children';
+      b.children.forEach(f=>{
+        const fr=document.createElement('div');
+        fr.className='tree-row'+(treeSel===f?' active':'');
+        fr.style.paddingLeft='30px';
+        fr.innerHTML=`<span>${f}</span>`;
+        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();doQuery();};
+        box.appendChild(fr);
+      });
+      el.appendChild(box);
+    }
+  });
+}
+
+/* ── 查询 / 重置 / 表格 / 分页 ── */
+let filtered=[];
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  const ur=document.getElementById('fUse').value;
+  const st=document.getElementById('fStatus').value;
+  filtered=RECORDS.filter(r=>{
+    const u=parseFloat(r.use);
+    return (!s||r.time>=s)&&(!e||r.time<=e)&&
+      (!ur||(ur==='0'?u===0:ur==='gt60'?u>60:u>=1&&u<=60))&&
+      (!st||r.st===st)&&
+      (!treeSel||treeSel==='1号楼'||r.fl===treeSel);
+  });
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fStart').value='2026-07-01';   // 重置为默认查询区间
+  document.getElementById('fEnd').value='2026-07-02';
+  ['fUse','fStatus'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fStat').value='按天';
+  treeSel='';renderTree();doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${start+i+1}</td><td>${r.time}</td><td>${r.bld}</td><td>${r.fl}</td>
+      <td>${r.room}</td><td>${r.tenant}</td><td>${r.use}</td><td>${r.addr}</td>
+      <td>${r.st==='获取成功'?r.st:`<span class="text-er">${r.st}</span>`}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+renderTree();doQuery();
+</script>
+</body>
+</html>

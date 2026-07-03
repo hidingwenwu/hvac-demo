@@ -1,16 +1,253 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>电价设定</title><link rel="stylesheet" href="_base.css"></head><body>
-<div class="ph"><div class="pt">电价设定</div><div class="pa"><button class="btn btnp">+ 新增电价方案</button></div></div>
-<div class="tw" style="margin-bottom:var(--gap)">
-<table><thead><tr><th>方案名称</th><th>适用项目</th><th>生效日期</th><th>失效日期</th><th>峰电价(元/kWh)</th><th>谷电价(元/kWh)</th><th>平电价(元/kWh)</th><th>状态</th><th>操作</th></tr></thead>
-<tbody>
-<tr><td>2026年标准电价</td><td>上海某商业广场</td><td>2026-01-01</td><td>2026-12-31</td><td>1.2</td><td>0.5</td><td>0.8</td><td><span class="tag tok">当前有效</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
-<tr><td>2025年标准电价</td><td>上海某商业广场</td><td>2025-01-01</td><td>2025-12-31</td><td>1.1</td><td>0.48</td><td>0.75</td><td><span class="tag tin">已过期</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
-<tr><td>北京分时电价</td><td>北京某写字楼</td><td>2026-01-01</td><td>2026-12-31</td><td>1.35</td><td>0.45</td><td>0.9</td><td><span class="tag tok">当前有效</span></td><td><div class="op"><a>编辑</a><a class="del">删除</a></div></td></tr>
-</tbody></table></div>
-<div class="panel"><div class="pnt">分时段电价设置（当前有效方案）</div>
-<div class="tw"><table><thead><tr><th>时段类型</th><th>时间段</th><th>电价(元/kWh)</th><th>说明</th></tr></thead>
-<tbody>
-<tr><td><span class="tag twn">峰时段</span></td><td>08:00–11:00 / 14:00–17:00</td><td>1.20</td><td>工作日高峰用电</td></tr>
-<tr><td><span class="tag tok">平时段</span></td><td>11:00–14:00 / 17:00–22:00</td><td>0.80</td><td>正常用电时段</td></tr>
-<tr><td><span class="tag tbl">谷时段</span></td><td>22:00–08:00（次日）</td><td>0.50</td><td>深夜低谷用电</td></tr>
-</tbody></table></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>电价设定</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.sec-title{font-size:17px;font-weight:600;color:var(--txw);margin-bottom:12px;}
+.desc{font-size:13px;color:var(--ts);line-height:1.9;margin-bottom:6px;}
+.desc b{color:var(--tx);font-weight:600;}
+.note{font-size:13px;color:var(--ts);margin-top:14px;}
+.tip{font-size:13px;color:var(--ts);margin:12px 0 14px;}
+.tip .link{cursor:default;}
+.price-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.unit{font-size:13px;color:var(--tx);}
+.dash{color:var(--ts);}
+/* 已设定电价 + 曲线 双栏 */
+.tou-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:14px;align-items:stretch;}
+@media(max-width:1100px){.tou-grid{grid-template-columns:1fr;}}
+.tou-box{background:var(--bg-panel-2);border-radius:var(--r);padding:16px;}
+.tou-box .bt{font-size:14px;font-weight:600;color:var(--txw);margin-bottom:12px;}
+.tou-box .tw{border:1px solid var(--bd);border-radius:4px;}
+.def-line{font-size:13px;color:var(--tx);margin-top:12px;}
+.axis-lb{font-size:12px;color:var(--ts);margin-bottom:4px;}
+#chart svg{display:block;width:100%;height:auto;}
+.seg-edit select{width:96px;height:26px;font-size:12px;padding:0 22px 0 8px;}
+.seg-edit input{width:80px;height:26px;font-size:12px;padding:0 8px;}
+</style>
+</head>
+<body>
+
+<!-- ── 默认电价设定 ── -->
+<div class="panel mb14">
+  <div class="sec-title">默认电价设定</div>
+  <div class="desc"><b>设定说明:</b> 当前功能可以为项目设置电价，用于电费分摊计算的依据，请务必仔细确认后输入电价并提交</div>
+  <div class="price-row">
+    <input id="defInput" placeholder="请输入电价" value="0.918" style="width:250px">
+    <span class="unit">元/度</span>
+    <button class="btn btnp" onclick="submitDefault()">提交</button>
+    <button class="btn" onclick="resetDefault()">↻ 重置</button>
+    <button class="btn" onclick="$modal('dlgDate')">指定日期电价设定</button>
+  </div>
+  <div class="note">(若未单独设定某时段电价，则默认为此电价)</div>
+</div>
+
+<!-- ── 峰谷电价设定 ── -->
+<div class="panel">
+  <div class="sec-title">峰谷电价设定</div>
+  <div class="desc"><b>设定说明:</b> 当前功能可以为不同时间段(整点)设置计费费率，第一个选择框选择开始时间值，第二个选择框<br>
+    选择截止时间值，第三个输入框输入电费的价格。<br>
+    <b>例子:</b> 开始时间10:00-结束时间14:00，电费价格1.1;即10点0分开始(包含)至14点59分59秒的时间，电费以<br>
+    1.1元每度计算。</div>
+  <div class="price-row" style="margin-top:10px">
+    <select id="selStart" style="width:180px"></select>
+    <span class="dash">—</span>
+    <select id="selEnd" style="width:180px"></select>
+    <input id="segPrice" placeholder="输入电费价格" style="width:150px">
+    <span class="unit">元/度</span>
+    <button class="btn btnp" onclick="addSeg()">添加</button>
+  </div>
+  <div class="tip"><b style="color:var(--tx)">提示:</b> 如果全天统一电费价格，只需要设定 <span class="link">默认其它时间段电价</span></div>
+
+  <div class="tou-grid">
+    <!-- 已设定电价 -->
+    <div class="tou-box">
+      <div class="bt">已设定电价</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th class="tl" style="padding-left:14px">时段</th><th>电价</th><th>操作</th></tr></thead>
+          <tbody id="segBody"></tbody>
+        </table>
+      </div>
+      <div class="def-line">默认其它时间段电价：<span id="defShow"></span>元/度</div>
+    </div>
+    <!-- 24小时电价曲线 -->
+    <div class="tou-box">
+      <div class="bt">24小时电价曲线</div>
+      <div class="axis-lb">电价(元/度)</div>
+      <div id="chart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 指定日期电价设定弹窗 -->
+<div class="modal" id="dlgDate">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>指定日期电价设定</span><span class="dx" onclick="$modalClose('dlgDate')">✕</span></div>
+    <div class="db">
+      <div class="form-row" style="margin-bottom:14px">
+        <span class="fl"><span class="req">*</span>指定日期</span>
+        <input type="date" id="dDate" style="flex:1">
+      </div>
+      <div class="form-row">
+        <span class="fl"><span class="req">*</span>电价(元/度)</span>
+        <input id="dPrice" placeholder="请输入电价" style="flex:1">
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDate')">取 消</button>
+      <button class="btn btnp" onclick="submitDate()">提 交</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 状态 ── */
+let DEF=0.918;                                   // 默认电价(线上值)
+let SEGS=[                                       // 分时电价时段(对齐线上截图)
+  {s:0,e:5,p:0.8},{s:5,e:9,p:1},{s:9,e:10,p:0.85},{s:10,e:13,p:0.35},
+  {s:14,e:15,p:0.5},{s:16,e:20,p:2},{s:20,e:23,p:1.5},{s:23,e:24,p:0.5}
+];
+let editIdx=-1;
+const hh=h=>String(h).padStart(2,'0')+':00';
+const fmtP=p=>String(+(+p).toFixed(4));
+
+/* ── 时间下拉 ── */
+function fillTimeSel(el,from,to,ph){
+  el.innerHTML=`<option value="">${ph}</option>`+
+    Array.from({length:to-from+1},(_,i)=>`<option value="${from+i}">${hh(from+i)}</option>`).join('');
+}
+fillTimeSel(document.getElementById('selStart'),0,23,'请选择开始时间');
+fillTimeSel(document.getElementById('selEnd'),1,24,'请选择结束时间');
+
+/* ── 校验 ── */
+function overlap(s,e,skip){return SEGS.some((g,i)=>i!==skip&&s<g.e&&e>g.s);}
+function checkSeg(s,e,p,skip){
+  if(isNaN(s)||isNaN(e)){$msg('请选择开始和结束时间','warning');return false;}
+  if(s>=e){$msg('结束时间必须大于开始时间','warning');return false;}
+  if(!(p>0)){$msg('请输入正确的电费价格','warning');return false;}
+  if(overlap(s,e,skip)){$msg('该时段与已设定时段重叠','error');return false;}
+  return true;
+}
+
+/* ── 添加时段 ── */
+function addSeg(){
+  const s=parseInt(document.getElementById('selStart').value,10);
+  const e=parseInt(document.getElementById('selEnd').value,10);
+  const p=parseFloat(document.getElementById('segPrice').value);
+  if(!checkSeg(s,e,p,-1))return;
+  SEGS.push({s,e,p});
+  SEGS.sort((a,b)=>a.s-b.s);
+  document.getElementById('selStart').value='';
+  document.getElementById('selEnd').value='';
+  document.getElementById('segPrice').value='';
+  editIdx=-1;renderAll();$msg('添加成功');
+}
+
+/* ── 时段表(行内编辑/删除) ── */
+function renderSegs(){
+  const tb=document.getElementById('segBody');
+  tb.innerHTML=SEGS.length?SEGS.map((g,i)=>{
+    if(i===editIdx){
+      const so=Array.from({length:24},(_,h)=>`<option value="${h}"${h===g.s?' selected':''}>${hh(h)}</option>`).join('');
+      const eo=Array.from({length:24},(_,h)=>`<option value="${h+1}"${h+1===g.e?' selected':''}>${hh(h+1)}</option>`).join('');
+      return `<tr class="seg-edit">
+        <td class="tl" style="padding-left:14px;white-space:nowrap">
+          <select id="es">${so}</select> - <select id="ee">${eo}</select></td>
+        <td><input id="ep" value="${fmtP(g.p)}"> 元/度</td>
+        <td><span class="op" style="gap:6px">
+          <button class="btn btnp btn-mini" onclick="saveSeg(${i})">保存</button>
+          <button class="btn btn-mini" onclick="editIdx=-1;renderSegs()">取消</button></span></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td class="tl" style="padding-left:14px">${hh(g.s)} - ${hh(g.e)}</td>
+      <td>${fmtP(g.p)}元/度</td>
+      <td><span class="op" style="gap:6px">
+        <button class="btn btnp btn-mini" onclick="editSeg(${i})">修改</button>
+        <button class="btn btnd btn-mini" onclick="delSeg(${i})">删除</button></span></td>
+    </tr>`;
+  }).join('')
+  :'<tr><td colspan="3"><div class="empty" style="padding:30px"><span class="et">暂无已设定电价</span></div></td></tr>';
+}
+function editSeg(i){editIdx=i;renderSegs();}
+function saveSeg(i){
+  const s=parseInt(document.getElementById('es').value,10);
+  const e=parseInt(document.getElementById('ee').value,10);
+  const p=parseFloat(document.getElementById('ep').value);
+  if(!checkSeg(s,e,p,i))return;
+  SEGS[i]={s,e,p};SEGS.sort((a,b)=>a.s-b.s);
+  editIdx=-1;renderAll();$msg('修改成功');
+}
+function delSeg(i){
+  $confirm(`确定删除时段 ${hh(SEGS[i].s)} - ${hh(SEGS[i].e)} 的电价设定?`,()=>{
+    SEGS.splice(i,1);editIdx=-1;renderAll();$msg('删除成功');
+  });
+}
+
+/* ── 24小时电价曲线(内联 SVG 阶梯面积图,随编辑实时重绘) ── */
+function renderChart(){
+  const prices=Array.from({length:24},(_,h)=>{
+    const g=SEGS.find(g=>h>=g.s&&h<g.e);
+    return g?g.p:DEF;
+  });
+  const W=900,H=340,L=48,R=14,T=16,B=36;
+  const iw=W-L-R,ih=H-T-B;
+  const ymax=Math.max(.5,Math.ceil(Math.max(...prices)*2)/2);
+  const x=h=>L+iw*h/24, y=v=>T+ih*(1-v/ymax);
+  /* 阶梯路径 */
+  let d=`M${x(0)} ${y(prices[0])}`;
+  for(let h=0;h<24;h++){
+    d+=` L${x(h)} ${y(prices[h])} L${x(h+1)} ${y(prices[h])}`;
+  }
+  const area=d+` L${x(24)} ${y(0)} L${x(0)} ${y(0)} Z`;
+  /* Y 轴刻度(步长0.5) */
+  let grid='',ylbs='';
+  for(let v=0;v<=ymax+1e-9;v+=.5){
+    grid+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="rgba(255,255,255,.12)" stroke-dasharray="4 4"/>`;
+    ylbs+=`<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#a0aec0">${v%1?v:v}</text>`;
+  }
+  /* X 轴刻度(每小时) */
+  let xlbs='';
+  for(let h=0;h<=24;h++){
+    xlbs+=`<text x="${x(h)}" y="${H-B+18}" text-anchor="middle" font-size="9" fill="#a0aec0">${hh(h)}</text>`;
+  }
+  document.getElementById('chart').innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f65ff" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#1f65ff" stop-opacity=".1"/>
+    </linearGradient></defs>
+    ${grid}${ylbs}${xlbs}
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${d}" fill="none" stroke="#4080ff" stroke-width="1.6"/>
+  </svg>`;
+}
+
+/* ── 默认电价 ── */
+function submitDefault(){
+  const v=parseFloat(document.getElementById('defInput').value);
+  if(!(v>0)){$msg('请输入正确的电价','warning');return;}
+  DEF=v;renderAll();$msg('默认电价提交成功');
+}
+function resetDefault(){document.getElementById('defInput').value=DEF;}
+
+/* ── 指定日期电价设定 ── */
+function submitDate(){
+  const d=document.getElementById('dDate').value;
+  const p=parseFloat(document.getElementById('dPrice').value);
+  if(!d){$msg('请选择指定日期','warning');return;}
+  if(!(p>0)){$msg('请输入正确的电价','warning');return;}
+  $modalClose('dlgDate');$msg(`${d} 电价已设定为 ${fmtP(p)}元/度`);
+}
+
+function renderAll(){
+  document.getElementById('defShow').textContent=fmtP(DEF);
+  renderSegs();renderChart();
+}
+renderAll();
+</script>
+</body>
+</html>
