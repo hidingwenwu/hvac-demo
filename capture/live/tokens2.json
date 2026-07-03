@@ -1,0 +1,198 @@
+{
+  "contentLayers": [
+    {
+      "cls": "el-table el-table--fit el-table--striped el-table--enable-ro",
+      "bg": "rgb(26, 34, 51)",
+      "radius": "0px",
+      "pad": "0px"
+    },
+    {
+      "cls": "main-container",
+      "bg": "rgb(10, 16, 34)",
+      "radius": "0px",
+      "pad": "0px"
+    },
+    {
+      "cls": "app-wrapper openSidebar",
+      "bg": "rgb(10, 15, 34)",
+      "radius": "0px",
+      "pad": "0px"
+    }
+  ],
+  "appMainBg": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "color": "rgb(0, 0, 0)",
+    "border-color": "rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "font-size": "16px",
+    "height": "1030px",
+    "padding": "0px",
+    "border": "0px none rgb(0, 0, 0)",
+    "box-shadow": "none",
+    "margin": "0px"
+  },
+  "wrapper": null,
+  "tableTd": null,
+  "tableRow": null,
+  "tableStripeRow": null,
+  "pagBtn": {
+    "background-color": "rgb(31, 101, 255)",
+    "color": "rgb(255, 255, 255)",
+    "border-color": "rgb(255, 255, 255)",
+    "border-radius": "2px",
+    "font-size": "13px",
+    "height": "28px",
+    "padding": "0px 4px",
+    "border": "0px none rgb(255, 255, 255)",
+    "box-shadow": "none",
+    "margin": "0px 5px"
+  },
+  "pagActive": {
+    "background-color": "rgb(31, 101, 255)",
+    "color": "rgb(255, 255, 255)",
+    "border-color": "rgb(255, 255, 255)",
+    "border-radius": "2px",
+    "font-size": "13px",
+    "height": "28px",
+    "padding": "0px 4px",
+    "border": "0px none rgb(255, 255, 255)",
+    "box-shadow": "none",
+    "margin": "0px 5px"
+  },
+  "pagTotal": {
+    "background-color": "rgba(0, 0, 0, 0)",
+    "color": "rgb(209, 211, 216)",
+    "border-color": "rgb(209, 211, 216)",
+    "border-radius": "0px",
+    "font-size": "13px",
+    "height": "28px",
+    "padding": "0px",
+    "border": "0px none rgb(209, 211, 216)",
+    "box-shadow": "none",
+    "margin": "0px 10px 0px 0px"
+  },
+  "tag": null,
+  "selectInput": {
+    "background-color": "rgb(11, 20, 38)",
+    "color": "rgb(209, 211, 216)",
+    "border-color": "rgba(255, 255, 255, 0.2)",
+    "border-radius": "4px",
+    "font-size": "14px",
+    "height": "36px",
+    "padding": "0px 30px 0px 15px",
+    "border": "1px solid rgba(255, 255, 255, 0.2)",
+    "box-shadow": "none",
+    "margin": "0px"
+  },
+  "datePicker": {
+    "background-color": "rgb(11, 20, 38)",
+    "color": "rgb(209, 211, 216)",
+    "border-color": "rgba(255, 255, 255, 0.2)",
+    "border-radius": "4px",
+    "font-size": "16px",
+    "height": "32px",
+    "padding": "3px 10px",
+    "border": "1px solid rgba(255, 255, 255, 0.2)",
+    "box-shadow": "none",
+    "margin": "0px"
+  },
+  "formLabel": null,
+  "btnAll": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button el-button--primary el-button--mini",
+      "bg": "rgb(31, 101, 255)",
+      "color": "rgb(255, 255, 255)",
+      "border": "1px solid rgb(31, 101, 255)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "5px 10px"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button el-button--default el-button--small",
+      "bg": "rgb(43, 53, 79)",
+      "color": "rgb(209, 211, 216)",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button el-button--primary el-button--small",
+      "bg": "rgb(31, 101, 255)",
+      "color": "rgb(255, 255, 255)",
+      "border": "1px solid rgb(31, 101, 255)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button el-button--default el-button--small",
+      "bg": "rgb(43, 53, 79)",
+      "color": "rgb(209, 211, 216)",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button el-button--primary el-button--small",
+      "bg": "rgb(31, 101, 255)",
+      "color": "rgb(255, 255, 255)",
+      "border": "1px solid rgb(31, 101, 255)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "重置",
+      "cls": "el-button el-button--default el-button--small",
+      "bg": "rgb(43, 53, 79)",
+      "color": "rgb(209, 211, 216)",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button el-button--primary el-button--small",
+      "bg": "rgb(31, 101, 255)",
+      "color": "rgb(255, 255, 255)",
+      "border": "1px solid rgb(31, 101, 255)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button el-button--default el-button--small",
+      "bg": "rgb(43, 53, 79)",
+      "color": "rgb(209, 211, 216)",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "radius": "3px",
+      "fontSize": "12px",
+      "padding": "9px 15px"
+    }
+  ],
+  "bodyBg": "rgba(0, 0, 0, 0)",
+  "appWrapperBg": {
+    "background-color": "rgb(10, 15, 34)",
+    "color": "rgb(0, 0, 0)",
+    "border-color": "rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "font-size": "16px",
+    "height": "1080px",
+    "padding": "0px",
+    "border": "0px none rgb(0, 0, 0)",
+    "box-shadow": "none",
+    "margin": "0px"
+  },
+  "htmlCls": " ",
+  "bodyCls": "",
+  "dataTheme": "dark"
+}

@@ -1,0 +1,79 @@
+{
+  "breadcrumb": [
+    "电费相关/",
+    "电费相关",
+    "新计费功能/",
+    "新计费功能",
+    "异常处理操作记录/",
+    "异常处理操作记录"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "统计时间"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "",
+      "val": ""
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "开始时间",
+        "结束时间",
+        "分配总电量",
+        "电量分摊方式",
+        "租户每天电量分配方式",
+        "执行状态",
+        "执行时间",
+        "执行人",
+        "操作"
+      ],
+      "rows": []
+    }
+  ],
+  "pagination": [],
+  "cardTitles": [],
+  "_route": "/chargeManagement/operationHistory",
+  "_label": "异常处理操作记录",
+  "_finalUrl": "https://m.achelp.cn/chargeManagement/operationHistory"
+}

@@ -1,0 +1,775 @@
+{
+  "breadcrumb": [
+    "项目及设备管理/",
+    "项目及设备管理",
+    "项目管理/",
+    "项目管理"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "项目名称",
+    "项目类型",
+    "抄表单位",
+    "计费方式",
+    "损耗分摊方式",
+    "功能类型",
+    "系统来源",
+    "项目地址",
+    "项目经销商",
+    "创建时间"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请输入项目名称",
+      "val": ""
+    },
+    {
+      "ph": "请选择项目类型",
+      "val": ""
+    },
+    {
+      "ph": "请选择抄表单位",
+      "val": ""
+    },
+    {
+      "ph": "请选择计费方式",
+      "val": ""
+    },
+    {
+      "ph": "请选择损耗分摊方式",
+      "val": ""
+    },
+    {
+      "ph": "请选择功能类型",
+      "val": ""
+    },
+    {
+      "ph": "请选择系统来源",
+      "val": ""
+    },
+    {
+      "ph": "请选择省市区",
+      "val": ""
+    },
+    {
+      "ph": "请选择项目经销商",
+      "val": ""
+    },
+    {
+      "ph": "",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "10条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "重置",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "添加",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "异常通知设定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "用户管理",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "更多",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--warning"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "序号",
+        "项目名称",
+        "项目类型",
+        "抄表单位",
+        "计费方式",
+        "损耗分摊方式",
+        "功能类型",
+        "系统来源",
+        "项目经销商",
+        "项目实施人",
+        "创建时间",
+        "创建人",
+        "操作",
+        "序号",
+        "项目名称",
+        "项目类型",
+        "抄表单位",
+        "计费方式",
+        "损耗分摊方式",
+        "功能类型",
+        "系统来源",
+        "项目经销商",
+        "项目实施人",
+        "创建时间",
+        "创建人",
+        "操作"
+      ],
+      "rows": [
+        [
+          "1",
+          "W二期功能-质量部测试",
+          "不计费",
+          "按天",
+          "--",
+          "",
+          "--",
+          "集控计费",
+          "青岛中弘数字技术有限公司",
+          "",
+          "2025-11-24 15:50:16",
+          "",
+          "查看编辑用户管理更多 确定删除？ 取消 确定 删除"
+        ],
+        [
+          "2",
+          "上海巴黎春天",
+          "不计费",
+          "按天",
+          "--",
+          "",
+          "--",
+          "集控计费",
+          "青岛中弘数字技术有限公司",
+          "",
+          "2025-11-19 18:17:55",
+          "",
+          "查看编辑用户管理更多 确定删除？ 取消 确定 删除"
+        ],
+        [
+          "3",
+          "上海新锦江酒店",
+          "不计费",
+          "按天",
+          "--",
+          "",
+          "--",
+          "集控计费",
+          "青岛中弘数字技术有限公司",
+          "",
+          "2025-11-12 13:47:31",
+          "",
+          "查看编辑用户管理更多 确定删除？ 取消 确定 删除"
+        ]
+      ]
+    }
+  ],
+  "pagination": [
+    "共 1304 条10条/页20条/页30条/页50条/页123456131前往页"
+  ],
+  "cardTitles": [],
+  "_route": "/project/index",
+  "_label": "项目管理",
+  "_finalUrl": "https://m.achelp.cn/project/index"
+}

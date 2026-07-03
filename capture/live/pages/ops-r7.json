@@ -1,0 +1,184 @@
+{
+  "breadcrumb": [
+    "智慧运维/",
+    "智慧运维",
+    "R7参数/",
+    "R7参数"
+  ],
+  "tabs": [
+    "历史参数",
+    "参数曲线",
+    "参数筛选",
+    "预警列表"
+  ],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请输入",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": ""
+    },
+    {
+      "ph": "请选择日期",
+      "val": ""
+    },
+    {
+      "ph": "",
+      "val": ""
+    },
+    {
+      "ph": "请选择内外机列表",
+      "val": ""
+    },
+    {
+      "ph": "请选择内外机参数",
+      "val": ""
+    },
+    {
+      "ph": "",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": ""
+    },
+    {
+      "ph": "请选择参数名称",
+      "val": "全部"
+    },
+    {
+      "ph": "",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "10条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "读取",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "拉取设定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "前1包",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "后1包",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "参数筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "空调地址",
+        "参数名称",
+        "参数范围",
+        "实际值",
+        "预警内容",
+        "创建时间",
+        "更新时间",
+        "是否首次预警"
+      ],
+      "rows": []
+    }
+  ],
+  "pagination": [
+    "共 0 条10条/页20条/页30条/页50条/页1前往页"
+  ],
+  "cardTitles": [
+    "内外机参数信息"
+  ],
+  "_route": "/smartOperations/inOutUnitR7Params/index",
+  "_label": "R7参数",
+  "_finalUrl": "https://m.achelp.cn/smartOperations/inOutUnitR7Params/index"
+}

@@ -1,0 +1,384 @@
+{
+  "breadcrumb": [
+    "系统管理/",
+    "系统管理",
+    "操作指引管理/",
+    "操作指引管理"
+  ],
+  "tabs": [
+    "视频列表",
+    "类别列表"
+  ],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "新增视频",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "复制链接",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "保 存",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "序号",
+        "类别",
+        "标题",
+        "简介",
+        "视频链接",
+        "操作"
+      ],
+      "rows": [
+        [
+          "",
+          "1",
+          "常用集控操作",
+          "平台访问与登录",
+          "介绍平台登录方式，包括账号密码登录和手机号登录，以及首次登录的操作步骤。",
+          "https://oss2.feiyikj.cn/sv/3baa3721-19ed36cad49/3baa3721-19e",
+          "复制链接编辑删除"
+        ],
+        [
+          "",
+          "2",
+          "常用集控操作",
+          "查看项目综合监控大屏",
+          "展示大屏各模块关键数据，包含空调运行状态统计、项目总览、能耗趋势及日使用详情等。",
+          "https://oss2.feiyikj.cn/sv/5c68801-19ed3550ada/5c68801-19ed3",
+          "复制链接编辑删除"
+        ],
+        [
+          "",
+          "3",
+          "常用集控操作",
+          "查看空调详细状态",
+          "演示如何进入空调详情页，查看单台空调的运行参数、温度设定、模式及风速等状态信息。",
+          "https://oss2.feiyikj.cn/sv/62b4bbdd-19ed38bf975/62b4bbdd-19e",
+          "复制链接编辑删除"
+        ]
+      ]
+    }
+  ],
+  "pagination": [],
+  "cardTitles": [],
+  "_route": "/system/guide/manage",
+  "_label": "操作指引管理",
+  "_finalUrl": "https://m.achelp.cn/system/guide/manage"
+}

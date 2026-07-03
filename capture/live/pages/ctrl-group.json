@@ -1,0 +1,120 @@
+{
+  "breadcrumb": [
+    "集中控制/",
+    "集中控制",
+    "群组控制/",
+    "群组控制"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "群组名称",
+    "锁定",
+    "锁定",
+    "制冷",
+    "制热"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请输入群组名称",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "10条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "添加",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "生效",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "一键解锁",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "生效",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "禁止启动",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "禁止关机",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [],
+  "pagination": [
+    "共 1 条10条/页20条/页30条/页50条/页1前往页"
+  ],
+  "cardTitles": [],
+  "_route": "/building/group",
+  "_label": "群组控制",
+  "_finalUrl": "https://m.achelp.cn/building/group"
+}

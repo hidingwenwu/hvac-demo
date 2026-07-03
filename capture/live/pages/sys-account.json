@@ -1,0 +1,460 @@
+{
+  "breadcrumb": [
+    "系统管理/",
+    "系统管理",
+    "账号管理/",
+    "账号管理"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "登录账号",
+    "姓名",
+    "手机号码",
+    "部门"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请输入登录账号",
+      "val": ""
+    },
+    {
+      "ph": "请输入姓名",
+      "val": ""
+    },
+    {
+      "ph": "请输入手机号",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "20条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "搜索",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "重置",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "添加新用户",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "查看",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重置密码",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改信息",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "添加时间",
+        "登录名称",
+        "姓名",
+        "手机号",
+        "性别",
+        "所属部门",
+        "状态",
+        "操作"
+      ],
+      "rows": [
+        [
+          "2026-07-03 09:05:55",
+          "haierceshi",
+          "海尔R7专项测试",
+          "12433452332",
+          "男",
+          "",
+          "启用",
+          "查看重置密码修改信息删除"
+        ],
+        [
+          "2026-07-02 16:42:00",
+          "tjhq",
+          "天津红桥万通尚都嘉园焕新模块项目",
+          "17866665665",
+          "男",
+          "",
+          "启用",
+          "查看重置密码修改信息删除"
+        ],
+        [
+          "2026-07-02 16:20:46",
+          "R7SY",
+          "浩瑞通R7试用",
+          "12356567767",
+          "男",
+          "",
+          "启用",
+          "查看重置密码修改信息删除"
+        ]
+      ]
+    }
+  ],
+  "pagination": [
+    "共 1796 条10条/页20条/页30条/页50条/页12345690前往页"
+  ],
+  "cardTitles": [],
+  "_route": "/use",
+  "_label": "账号管理",
+  "_finalUrl": "https://m.achelp.cn/use"
+}

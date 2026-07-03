@@ -1,0 +1,84 @@
+{
+  "breadcrumb": [
+    "电费相关/",
+    "电费相关",
+    "新计费功能/",
+    "新计费功能",
+    "异常查询/",
+    "异常查询"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "计费类型",
+    "选择项目",
+    "计费时间"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请选择",
+      "val": "天计费"
+    },
+    {
+      "ph": "选择项目",
+      "val": ""
+    },
+    {
+      "ph": "请选择日期",
+      "val": "2026-07-02"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "项目",
+        "租户",
+        "时间",
+        "异常"
+      ],
+      "rows": []
+    }
+  ],
+  "pagination": [],
+  "cardTitles": [],
+  "_route": "/chargeManagement/exceptionDetail",
+  "_label": "异常查询",
+  "_finalUrl": "https://m.achelp.cn/chargeManagement/exceptionDetail"
+}

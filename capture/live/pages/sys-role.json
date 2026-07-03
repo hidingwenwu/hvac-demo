@@ -1,0 +1,157 @@
+{
+  "breadcrumb": [
+    "系统管理/",
+    "系统管理",
+    "角色管理/",
+    "角色管理"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "角色代码"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请输入角色代码",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "10条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "重置",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "添加",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "权限分配",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "权限分配",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "权限分配",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "重 置",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "序号",
+        "角色代码",
+        "角色名称",
+        "角色描述",
+        "操作"
+      ],
+      "rows": [
+        [
+          "1",
+          "gccrAdmin",
+          "机房群控管理员",
+          "",
+          "修改权限分配删除"
+        ],
+        [
+          "2",
+          "gatewayShippingRecord",
+          "出货记录",
+          "",
+          "修改权限分配删除"
+        ],
+        [
+          "3",
+          "guest",
+          "登录权限",
+          "",
+          "修改权限分配删除"
+        ]
+      ]
+    }
+  ],
+  "pagination": [
+    "共 3 条10条/页20条/页30条/页50条/页1前往页"
+  ],
+  "cardTitles": [],
+  "_route": "/role",
+  "_label": "角色管理",
+  "_finalUrl": "https://m.achelp.cn/role"
+}

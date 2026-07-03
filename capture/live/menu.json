@@ -1,0 +1,71 @@
+[
+  { "type": "item", "label": "项目总览大屏", "route": "/bigScreen/index", "icon": "icon-menu-xiangmuzonglan", "page": "overview-big" },
+  { "type": "item", "label": "综合监控大屏", "route": "/largeScreen/index", "icon": "icon-menu-zonghejiankong", "page": "monitor-big" },
+  { "type": "group", "label": "集中控制", "icon": "icon-menu-jizhongkongzhi", "children": [
+    { "type": "item", "label": "空调控制", "route": "/indoorUnit/routerView", "page": "ctrl-ac" },
+    { "type": "item", "label": "环境感知监测", "route": "/envSensorDevice/routerView", "page": "ctrl-env" },
+    { "type": "item", "label": "群组控制", "route": "/building/group", "page": "ctrl-group" },
+    { "type": "item", "label": "日程管理", "route": "/task/index", "page": "ctrl-schedule" },
+    { "type": "item", "label": "故障记录", "route": "/indoorUnit/indoorUnit/faulty", "page": "ctrl-fault" },
+    { "type": "item", "label": "开关机记录", "route": "/building/onOffList", "page": "ctrl-onoff" }
+  ]},
+  { "type": "group", "label": "节能策略", "icon": "icon-menu-jienengcelue", "children": [
+    { "type": "item", "label": "环境感知联动", "route": "/loadControl/perceptionLinkage/index", "page": "strategy-env" },
+    { "type": "item", "label": "风水联动", "route": "/loadControl/geomancyLinkage/index", "page": "strategy-wind" },
+    { "type": "item", "label": "负荷调控", "route": "/loadControl/task/index", "page": "strategy-load" }
+  ]},
+  { "type": "group", "label": "项目及设备管理", "icon": "icon-menu-xiangmushebei", "children": [
+    { "type": "item", "label": "项目管理", "route": "/project/index", "page": "device-project" },
+    { "type": "item", "label": "子账号列表", "route": "/subAccount/index", "page": "device-sub" },
+    { "type": "item", "label": "空调与房间关系", "route": "/project/indoorUnit/manage", "page": "device-ac-room" },
+    { "type": "item", "label": "控制器管理", "route": "/project/controller", "page": "device-controller" },
+    { "type": "item", "label": "节点管理", "route": "/node/index", "page": "device-node" },
+    { "type": "item", "label": "电表管理", "route": "/electricMeter/list", "page": "device-meter" },
+    { "type": "item", "label": "环境感知设备管理", "route": "/envSensorDeviceMgr/routerView", "page": "device-env" }
+  ]},
+  { "type": "group", "label": "电费相关", "icon": "icon-menu-dianfeixiangguan", "children": [
+    { "type": "item", "label": "电费查询", "route": "/priceManage/priceSearchList", "page": "elec-query" },
+    { "type": "group", "label": "记录查询", "children": [
+      { "type": "item", "label": "当量记录", "route": "/priceManage/dataInfo/equivalentHourList", "page": "elec-eq" },
+      { "type": "item", "label": "抄表记录", "route": "/priceManage/dataInfo/copyMeterList", "page": "elec-meter-rec" },
+      { "type": "item", "label": "运行时间记录", "route": "/priceManage/dataInfo/runtimeList", "page": "elec-runtime" },
+      { "type": "item", "label": "日使用情况", "route": "/building/priceSearchListHour", "page": "elec-daily" }
+    ]},
+    { "type": "group", "label": "分摊规则设置", "children": [
+      { "type": "item", "label": "租户管理", "route": "/priceManage/setting/account", "page": "elec-tenant" },
+      { "type": "item", "label": "电价设定", "route": "/priceManage/setting/rateset", "page": "elec-price" }
+    ]},
+    { "type": "item", "label": "异常预警信息", "route": "/priceManage/warn/messageRemind", "page": "elec-alert" },
+    { "type": "group", "label": "新计费功能", "children": [
+      { "type": "item", "label": "租户管理", "route": "/chargeManagement/capitalFlow", "page": "elec-nb-tenant" },
+      { "type": "item", "label": "电费查询", "route": "/chargeManagement/statistic", "page": "elec-nb-query" },
+      { "type": "item", "label": "用电量统计", "route": "/electricity/statistic", "page": "elec-nb-stat" },
+      { "type": "item", "label": "分摊异常处理", "route": "/chargeManagement/exceptionDeal", "page": "elec-nb-abnormal" },
+      { "type": "item", "label": "异常处理操作记录", "route": "/chargeManagement/operationHistory", "page": "elec-nb-abnormal-log" },
+      { "type": "item", "label": "异常查询", "route": "/chargeManagement/exceptionDetail", "page": "elec-nb-abnormal-query" },
+      { "type": "item", "label": "当量数据查询", "route": "/chargeManagement/equivalentDataView", "page": "elec-nb-eq" }
+    ]},
+    { "type": "item", "label": "异常预警", "route": "/abnormalAtatistics/index", "page": "elec-warn" },
+    { "type": "item", "label": "异常预警小时", "route": "/abnormalAtatistics/indexHour", "page": "elec-warn-hour" },
+    { "type": "item", "label": "异常每日盘点", "route": "/abnormalInventory/index", "page": "elec-warn-daily" }
+  ]},
+  { "type": "group", "label": "智慧运维", "icon": "icon-menu-zhihuiyunwei", "children": [
+    { "type": "item", "label": "空调参数", "route": "/smartOperations/index", "page": "ops-ac" },
+    { "type": "item", "label": "R7参数", "route": "/smartOperations/inOutUnitR7Params/index", "page": "ops-r7" }
+  ]},
+  { "type": "group", "label": "系统管理", "icon": "icon-menu-xitongguanli", "children": [
+    { "type": "item", "label": "账号管理", "route": "/use", "page": "sys-account" },
+    { "type": "item", "label": "组织管理", "route": "/system/organization/index", "page": "sys-org" },
+    { "type": "item", "label": "角色管理", "route": "/role", "page": "sys-role" },
+    { "type": "item", "label": "菜单按钮", "route": "/menuButton", "page": "sys-menu" },
+    { "type": "item", "label": "日志入口", "route": "/system/logEntry/index", "page": "sys-log" },
+    { "type": "item", "label": "对接平台管理", "route": "/system/dockingPlatform", "page": "sys-platform" },
+    { "type": "item", "label": "第三方设备注册", "route": "/system/splitMachineRegister", "page": "sys-3rd" },
+    { "type": "item", "label": "计费网关列表", "route": "/system/billingGatewayList", "page": "sys-bill-gw" },
+    { "type": "item", "label": "物联网卡片", "route": "/system/iotCard", "page": "sys-iot-card" },
+    { "type": "item", "label": "项目偏好设置", "route": "/system/project/preference/settings", "page": "sys-pref" },
+    { "type": "item", "label": "x2000下发配置", "route": "/system/x2000Config/index", "page": "sys-x2000" },
+    { "type": "item", "label": "公告管理", "route": "/system/bulletin/manage", "page": "sys-announce" },
+    { "type": "item", "label": "操作指引管理", "route": "/system/guide/manage", "page": "sys-guide" }
+  ]}
+]

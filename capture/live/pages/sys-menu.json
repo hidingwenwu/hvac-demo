@@ -1,0 +1,1926 @@
+{
+  "breadcrumb": [
+    "系统管理/",
+    "系统管理",
+    "菜单按钮/",
+    "菜单按钮"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "添加",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "修改",
+      "cls": "el-button--text"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--text"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "菜单按钮",
+        "描述",
+        "菜单url",
+        "按钮Id",
+        "排序",
+        "menuButtonId",
+        "类型",
+        "状态",
+        "全局",
+        "操作"
+      ],
+      "rows": [
+        [
+          "gccr-系统运维",
+          "",
+          "/gccr/system/mantiance",
+          "gccr:system:mantiance",
+          "2",
+          "318200815695298560",
+          "菜单",
+          "正常",
+          "否",
+          "修改删除"
+        ],
+        [
+          "空调经销商-系统首页",
+          "",
+          "ac/dealer",
+          "ac:dealer",
+          "51",
+          "236988705749991424",
+          "菜单",
+          "正常",
+          "否",
+          "修改删除"
+        ],
+        [
+          "系统首页",
+          "",
+          "ac/dealer/home",
+          "ac:dealer:home",
+          "2",
+          "236991696301457408",
+          "菜单",
+          "正常",
+          "否",
+          "修改删除"
+        ]
+      ]
+    }
+  ],
+  "pagination": [],
+  "cardTitles": [],
+  "_route": "/menuButton",
+  "_label": "菜单按钮",
+  "_finalUrl": "https://m.achelp.cn/menuButton"
+}

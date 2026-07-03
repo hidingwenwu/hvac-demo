@@ -1,81 +1,417 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>环境感知联动</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>环境感知联动</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.split{display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;}
-.left-panel{width:240px;min-width:240px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
-.right-area{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--gap);}
-.strat-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;}
-.strat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.strat-title{font-size:13px;font-weight:600;color:var(--tx);}
-.cond-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px solid rgba(30,58,110,.3);margin-bottom:6px;font-size:12px;color:var(--ts);}
-.cond-row .tag{flex-shrink:0;}
-.arr-ic{color:var(--ts);font-size:14px;}
-.tree-item{padding:7px 10px;border-radius:4px;font-size:12px;color:var(--ts);cursor:pointer;}
-.tree-item:hover{background:rgba(255,255,255,.04);color:var(--tx);}
-.tree-item.active{background:rgba(0,229,255,.08);color:var(--hl);border-left:2px solid var(--hl);}
-.tree-grp{font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;padding:8px 4px 4px;border-top:1px solid rgba(30,58,110,.3);margin-top:6px;}
-</style></head><body>
+body{padding:16px 18px;}
+.ph{margin-bottom:12px;}
+.fb{align-items:flex-end;padding:11px 14px;margin-bottom:10px;}
+.fi.wide input{width:210px}.fi select{min-width:170px}.time-range{display:flex;align-items:center;gap:8px}
+.time-range input{width:145px}.bar-actions{display:flex;gap:8px;margin-left:0}
+.tw{height:calc(100vh - 155px);display:flex;flex-direction:column;}
+.tw table{table-layout:fixed}
+.tw th,.tw td{text-align:center}.tw th:nth-child(1),.tw td:nth-child(1){text-align:left;width:17%}
+.tw th:nth-child(4),.tw td:nth-child(4){width:15%}.tw th:nth-child(7),.tw td:nth-child(7){width:18%}
+.op{justify-content:center;gap:4px;white-space:nowrap}.op a{padding:2px 4px}
+.switch-mini{position:relative;display:inline-block;width:34px;height:18px;margin-left:8px;vertical-align:middle}
+.switch-mini input{opacity:0;width:0;height:0}
+.switch-mini span{position:absolute;inset:0;background:#25324d;border-radius:18px;cursor:pointer;transition:.2s}
+.switch-mini span:before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:#d8e4ff;border-radius:50%;transition:.2s}
+.switch-mini input:checked+span{background:#206dff}.switch-mini input:checked+span:before{transform:translateX(16px);background:#fff}
+.modal{position:fixed;inset:0;background:rgba(0,5,16,.72);display:none;align-items:center;justify-content:center;z-index:20;padding:24px}
+.modal.show{display:flex}.dialog{width:min(1280px,calc(100vw - 48px));height:min(840px,calc(100vh - 48px));background:#08152e;border:1px solid rgba(0,229,255,.28);border-radius:8px;box-shadow:0 20px 80px rgba(0,0,0,.45);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(30,58,110,.65);background:rgba(12,28,66,.85)}
+.dh-title{font-weight:700;font-size:15px}.xbtn{width:30px;height:30px;border-radius:4px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--ts);cursor:pointer}
+.db{display:grid;grid-template-columns:278px 1fr;min-height:0}.room-pane{border-right:1px solid rgba(30,58,110,.65);padding:14px;background:rgba(3,11,28,.4);overflow:auto}
+.config-pane{padding:14px 16px;overflow:auto}.search{width:100%;margin-bottom:10px}.tree-sec{margin-top:10px}.tree-title{font-size:11px;color:var(--ts);font-weight:700;letter-spacing:.06em;margin:12px 0 6px}
+.tree-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:4px;color:#c8d8f0;font-size:12px;cursor:pointer}
+.tree-row:hover{background:rgba(255,255,255,.04)}.tree-row.active{background:rgba(0,229,255,.1);color:var(--hl);box-shadow:inset 2px 0 0 var(--hl)}
+.tree-row input{width:auto}.selected-box{margin-top:12px;border:1px solid rgba(30,58,110,.7);border-radius:6px;padding:10px;background:rgba(255,255,255,.025)}
+.selected-box b{display:block;font-size:12px;color:var(--ts);margin-bottom:8px}.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:11px;color:var(--hl);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:999px;padding:3px 8px}
+.section{border:1px solid rgba(30,58,110,.75);border-radius:7px;background:rgba(255,255,255,.025);padding:14px;margin-bottom:12px}
+.section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:12px;color:#e9f2ff}.section-title:before{content:'';width:3px;height:14px;background:linear-gradient(#00e5ff,#2979ff);border-radius:2px}
+.form-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.form-line.two{grid-template-columns:1fr 1fr}.form-item{min-width:0}
+.form-item label{font-size:12px;color:var(--ts);display:block;margin-bottom:5px}.form-item input,.form-item select{width:100%}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}.qbtn{padding:4px 10px;border:1px solid var(--bd);border-radius:4px;background:rgba(255,255,255,.035);color:var(--ts);font-size:12px;cursor:pointer}.qbtn:hover{border-color:var(--gw);color:var(--hl)}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{border:1px solid var(--bd);border-radius:4px;padding:8px 4px;text-align:center;font-size:12px;color:var(--ts);cursor:pointer}.day.on{background:var(--pd);border-color:var(--gw);color:var(--hl)}
+.rule-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--hl);background:rgba(0,229,255,.065);border:1px solid rgba(0,229,255,.22);border-radius:5px;padding:8px 10px;margin-bottom:12px}
+.condition-list,.action-list{display:flex;flex-direction:column;gap:12px}
+.condition-card{border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.045);border-radius:7px;padding:12px}
+.action-card{border:1px solid rgba(0,230,118,.22);background:rgba(0,230,118,.04);border-radius:7px;padding:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;color:#dce9ff;font-size:13px;font-weight:700}
+.icon-btn{width:26px;height:26px;border-radius:4px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--ts);cursor:pointer}
+.icon-btn:hover{border-color:var(--er);color:var(--er);background:rgba(255,77,79,.1)}
+.icon-btn:disabled{opacity:.45;cursor:not-allowed;color:#64708a;border-color:#243451;background:rgba(255,255,255,.025)}
+.radio-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px}
+.radio-row label,.check-row label{display:flex;align-items:center;gap:6px;color:#c8d8f0;font-size:13px}
+.radio-row input,.check-row input{width:auto}
+.sub-fields{margin-top:10px}
+.count-line{display:flex;align-items:center;justify-content:space-between;margin-top:12px;color:var(--ts);font-size:12px}
+.duration-row{display:grid;grid-template-columns:220px 180px 1fr;gap:12px;align-items:end}
+.check-row{display:flex;align-items:center;min-height:36px}
+.muted{font-size:12px;color:var(--ts);line-height:1.65}
+.action-type{max-width:220px}
+.error-box{display:none;border:1px solid rgba(255,77,79,.5);background:rgba(255,77,79,.08);color:#ff9a9b;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.65}
+.error-box.show{display:block}
+.disabled-tip{opacity:.55;cursor:not-allowed}
+.hint{font-size:12px;color:var(--ts);line-height:1.7;background:rgba(0,229,255,.055);border:1px solid rgba(0,229,255,.16);border-radius:5px;padding:8px 10px;margin-top:10px}
+.action-state{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}.action-state .form-item{margin:0}.df{padding:12px 18px;border-top:1px solid rgba(30,58,110,.65);display:flex;justify-content:flex-end;gap:10px;background:rgba(12,28,66,.75)}
+.log-panel{display:none;position:fixed;right:26px;top:78px;width:520px;max-width:calc(100vw - 52px);background:#08152e;border:1px solid rgba(0,229,255,.28);border-radius:8px;z-index:22;box-shadow:0 18px 70px rgba(0,0,0,.48);overflow:hidden}.log-panel.show{display:block}
+.log-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bd);background:rgba(12,28,66,.9)}.log-body{padding:12px}.log-row{display:grid;grid-template-columns:145px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#c8d8f0}.log-row:last-child{border-bottom:0}
+@media(max-width:1100px){.dialog{height:calc(100vh - 32px)}.db{grid-template-columns:1fr}.room-pane{border-right:0;border-bottom:1px solid var(--bd);max-height:230px}.form-line,.form-line.two,.action-state{grid-template-columns:1fr 1fr}.source-tabs{grid-template-columns:1fr 1fr}.tw{height:auto;overflow-x:auto}}
+</style>
+</head>
+<body>
 <div class="ph">
   <div class="pt">环境感知联动</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <button class="btn btnp" onclick="alert('新增策略')">+ 新增策略</button>
+  <div class="pa"><span class="tag thl">节能策略</span><span class="tag tin">按感知状态自动控制空调</span></div>
+</div>
+
+<div class="fb">
+  <div class="fi wide"><div class="fl">任务名称</div><input id="filterName" placeholder="请输入任务名称"></div>
+  <div class="fi"><div class="fl">任务时间</div><div class="time-range"><input type="date" value="2026-06-01"><span>至</span><input type="date" value="2026-12-31"></div></div>
+  <div class="fi"><div class="fl">联动策略</div><select><option>请选择联动策略</option><option>人走关空调</option><option>人来开空调</option><option>门窗开时关空调</option><option>门窗关时开空调</option><option>温度感知</option><option>组合联动</option></select></div>
+  <div class="fi"><div class="fl">任务状态</div><select><option>请选择任务状态</option><option>启用</option><option>停用</option></select></div>
+  <div class="bar-actions"><button class="btn btnp">搜索</button><button class="btn">重置</button><button class="btn btnp" onclick="openTask()">+ 新建任务</button></div>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>任务名称</th><th>起始时间</th><th>结束时间</th><th>联动策略</th><th>创建时间</th><th>任务状态</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>环境感知测试2</td><td>2026-06-02</td><td>2026-06-02</td><td><span class="tag tbl">人走关空调</span></td><td>2026-06-02 17:01:33</td><td><span class="tag tin">停用</span><label class="switch-mini"><input type="checkbox"><span></span></label></td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
+<tr><td>环境感知测试</td><td>2026-06-02</td><td>2026-06-02</td><td><span class="tag tbl">人来开空调</span></td><td>2026-06-02 16:58:57</td><td><span class="tag tin">停用</span><label class="switch-mini"><input type="checkbox"><span></span></label></td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
+<tr><td>产品部门感知测试</td><td>2026-02-27</td><td>2026-12-31</td><td><span class="tag twn">门窗开时关空调</span></td><td>2026-02-12 08:51:56</td><td><span class="tag tok">启用</span><label class="switch-mini"><input type="checkbox" checked><span></span></label></td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
+<tr><td>会议室人体联动测试</td><td>2026-02-27</td><td>2026-12-31</td><td><span class="tag thl">组合联动</span></td><td>2026-01-26 13:07:19</td><td><span class="tag tok">启用</span><label class="switch-mini"><input type="checkbox" checked><span></span></label></td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
+</tbody>
+</table>
+<div class="pg"><div class="pg-info">共 4 条</div><div class="pgr"><span class="pgb">‹</span><span class="pgb pga">1</span><span class="pgb">›</span><span style="margin-left:12px">前往</span><input value="1" style="width:46px;text-align:center"><span>页</span></div></div>
+</div>
+
+<div class="modal" id="taskModal">
+  <div class="dialog">
+    <div class="dh"><div class="dh-title" id="modalTitle">新建环境感知联动任务</div><button class="xbtn" onclick="closeTask()">×</button></div>
+    <div class="db">
+      <aside class="room-pane">
+        <input class="search" placeholder="搜索楼栋、楼层、房间">
+        <div class="tree-sec">
+          <div class="tree-title">选择房间</div>
+          <label class="tree-row active"><input type="checkbox" checked> 青岛飞奕科技 / 1号楼 / 3层</label>
+          <label class="tree-row"><input type="checkbox" checked> 301会议室</label>
+          <label class="tree-row"><input type="checkbox" checked> 302办公室</label>
+          <label class="tree-row"><input type="checkbox"> 303办公室</label>
+          <label class="tree-row"><input type="checkbox"> 走廊东区</label>
+          <div class="tree-title">常用分组</div>
+          <label class="tree-row"><input type="checkbox"> 产品部办公区</label>
+          <label class="tree-row"><input type="checkbox"> 会议室群组</label>
+          <label class="tree-row"><input type="checkbox"> 公共走廊</label>
+        </div>
+        <div class="selected-box">
+          <b>已选范围</b>
+          <div class="chips"><span class="chip">301会议室</span><span class="chip">302办公室</span><span class="chip">1号楼3层</span></div>
+        </div>
+      </aside>
+      <main class="config-pane">
+        <section class="section">
+          <div class="section-title">基础信息</div>
+          <div class="form-line">
+            <div class="form-item"><label>任务名称</label><input value="会议室环境感知联动"></div>
+            <div class="form-item"><label>执行开始日期</label><input type="date" value="2026-07-01"></div>
+            <div class="form-item"><label>执行结束日期</label><input type="date" value="2026-12-31"></div>
+            <div class="form-item"><label>任务状态</label><select><option>启用</option><option>停用</option></select></div>
+          </div>
+          <div class="form-line two" style="margin-top:12px">
+            <div class="form-item"><label>每日执行时间</label><div class="time-range"><input type="time" value="08:30"><span>至</span><input type="time" value="20:00"></div></div>
+            <div class="form-item"><label>周运行时间</label><div class="quick"><button class="qbtn" onclick="setWeek('workday')">工作日</button><button class="qbtn" onclick="setWeek('weekend')">周末</button><button class="qbtn" onclick="setWeek('all')">全选</button><button class="qbtn" onclick="setWeek('none')">取消</button></div><div class="week-grid" id="weekGrid"><div class="day on">周一</div><div class="day on">周二</div><div class="day on">周三</div><div class="day on">周四</div><div class="day on">周五</div><div class="day">周六</div><div class="day">周日</div></div></div>
+          </div>
+        </section>
+        <div class="error-box" id="formErrors"></div>
+        <section class="section">
+          <div class="section-title">触发条件配置</div>
+          <div class="rule-note">✓ 所有条件需同时满足。每个任务最多配置 4 个条件，温度、湿度、人在状态、门窗状态各最多出现 1 次。</div>
+          <div class="condition-list" id="conditionList"></div>
+          <div class="count-line">
+            <button class="btn btnp" id="addConditionBtn" onclick="addCondition()">+ 且满足条件</button>
+            <span id="conditionCount">当前：1/4 个条件</span>
+          </div>
+        </section>
+        <section class="section">
+          <div class="section-title">持续满足条件时长（可选）</div>
+          <div class="duration-row">
+            <div class="check-row"><label><input type="checkbox" id="delayEnable" onchange="toggleDelayConfirm()"> 启用延时确认</label></div>
+            <div class="form-item"><label>延时时长（分钟）</label><input id="delayMinutes" type="number" min="1" max="60" step="1" value="10" disabled></div>
+            <div class="muted">未启用时，条件满足立即执行。启用后采用快照检查：T0 满足后开始计时，到 T0+N 只读取一次最新状态，满足则执行，不满足则放弃本次触发。</div>
+          </div>
+        </section>
+        <section class="section">
+          <div class="section-title">执行动作序列</div>
+          <div class="action-list" id="actionList"></div>
+          <div class="count-line">
+            <button class="btn btnp" id="addActionBtn" onclick="addAction()">+ 新增动作</button>
+            <span id="actionCount">当前：1/16 个动作</span>
+          </div>
+          <div class="hint">动作按从上到下的顺序串联执行。动作类型必须交替排列，不能连续两个空调控制或连续两个延时，最后一个动作必须是空调控制。</div>
+        </section>
+      </main>
+    </div>
+    <div class="df"><button class="btn" onclick="closeTask()">取消</button><button class="btn">保存草稿</button><button class="btn btnp" onclick="validateRule()">确认</button></div>
   </div>
 </div>
-<div class="split">
-<div class="left-panel">
-  <div style="font-size:12px;color:var(--ts);font-weight:600;margin-bottom:4px;">策略列表</div>
-  <div class="tree-item active" onclick="selS(this)">人员感知节能策略</div>
-  <div class="tree-item" onclick="selS(this)">CO2浓度联动策略</div>
-  <div class="tree-item" onclick="selS(this)">温湿度自适应策略</div>
-  <div class="tree-item" onclick="selS(this)">门窗开关联动策略</div>
-  <div class="tree-grp">已停用</div>
-  <div class="tree-item" onclick="selS(this)" style="opacity:.55;">夜间防冻策略（停用）</div>
-</div>
-<div class="right-area">
-  <div class="strat-card">
-    <div class="strat-head">
-      <div class="strat-title" id="st">人员感知节能策略</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <span class="tag tok">启用中</span>
-        <button class="btn" onclick="alert('编辑策略')">编辑</button>
-        <button class="btn btnd" onclick="alert('停用策略')">停用</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);">
-      <div>
-        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">触发条件</div>
-        <div class="cond-row"><span class="tag thl">感知设备</span><span>楼层内人感传感器</span></div>
-        <div class="cond-row"><span class="tag twn">触发条件</span><span>持续无人 ≥ 15 分钟</span></div>
-        <div class="cond-row"><span class="tag tin">有效时段</span><span>09:00 ~ 22:00（工作日）</span></div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">执行动作</div>
-        <div class="cond-row"><span class="tag tbl">控制对象</span><span>当前楼层全部空调</span></div>
-        <div class="cond-row"><span class="tag tok">无人动作</span><span>升温至 28℃ / 低风速</span></div>
-        <div class="cond-row"><span class="tag tok">有人恢复</span><span>恢复 26℃ / 自动风速</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="strat-card">
-    <div class="strat-head"><div style="font-size:12px;font-weight:600;color:var(--ts);letter-spacing:.06em;">策略执行记录</div>
-      <button class="btn">导出</button>
-    </div>
-    <div class="tw" style="margin:0;">
-      <table><thead><tr><th>执行时间</th><th>触发设备</th><th>触发值</th><th>控制对象</th><th>执行动作</th><th>执行结果</th></tr></thead>
-      <tbody>
-        <tr><td>2026-06-11 14:20</td><td>2F-人感-02</td><td>持续无人 18min</td><td>二楼会议群组</td><td>升温至 28℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 13:05</td><td>2F-人感-02</td><td>检测到有人</td><td>二楼会议群组</td><td>恢复 26℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 11:30</td><td>3F-人感-03</td><td>持续无人 25min</td><td>三楼办公B区</td><td>升温至 28℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 09:45</td><td>1F-人感-03</td><td>持续无人 20min</td><td>一楼展示区</td><td>关机</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 09:02</td><td>1F-人感-03</td><td>检测到有人</td><td>一楼展示区</td><td>开机 / 26℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-10 16:50</td><td>2F-人感-05</td><td>持续无人 30min</td><td>二楼走廊空调</td><td>升温至 28℃</td><td><span class="tag twn">部分失败</span></td></tr>
-      </tbody></table>
-      <div class="pg"><div class="pg-info">共 48 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">›</span></div></div>
-    </div>
+
+<div class="log-panel" id="logPanel">
+  <div class="log-head"><b>任务执行日志</b><button class="xbtn" onclick="closeLog()">×</button></div>
+  <div class="log-body">
+    <div class="log-row"><span>2026-06-02 17:05:22</span><span>检测到 301会议室 无人持续 5 分钟，执行关空调</span><span class="tag tok">成功</span></div>
+    <div class="log-row"><span>2026-06-02 16:59:10</span><span>检测到 302办公室 有人，执行开机制冷 26℃</span><span class="tag tok">成功</span></div>
+    <div class="log-row"><span>2026-06-02 16:42:08</span><span>门窗打开持续 60 秒，执行关闭空调</span><span class="tag twn">部分失败</span></div>
   </div>
 </div>
-</div>
+
 <script>
-function selS(el){el.closest('div').querySelectorAll('.tree-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('st').textContent=el.textContent;}
+let conditionSeq = 1;
+let actionSeq = 1;
+let conditions = [];
+let actions = [];
+const conditionLabels = {temperature:'温度',humidity:'湿度',presence:'人在状态',door:'门窗状态'};
+
+function openTask(mode){
+  document.getElementById('modalTitle').textContent = mode === 'edit' ? '编辑环境感知联动任务' : mode === 'copy' ? '复制环境感知联动任务' : '新建环境感知联动任务';
+  resetRuleEditor(mode);
+  document.getElementById('taskModal').classList.add('show');
+}
+function closeTask(){document.getElementById('taskModal').classList.remove('show')}
+function viewTask(){openTask('edit')}
+function openLog(){document.getElementById('logPanel').classList.add('show')}
+function closeLog(){document.getElementById('logPanel').classList.remove('show')}
+function deleteTask(el){
+  if(!confirm('确定删除该任务吗？')) return;
+  const row = el.closest('tr');
+  if(row) row.remove();
+  updateTaskCount();
+}
+function updateTaskCount(){
+  const count = document.querySelectorAll('.tw tbody tr').length;
+  const info = document.querySelector('.pg-info');
+  if(info) info.textContent = `共 ${count} 条`;
+}
+function setWeek(type){
+  const days=[...document.querySelectorAll('#weekGrid .day')];
+  days.forEach((d,i)=>{
+    d.classList.toggle('on', type==='all' || (type==='workday' && i<5) || (type==='weekend' && i>4));
+    if(type==='none') d.classList.remove('on');
+  });
+}
+function resetRuleEditor(mode){
+  conditionSeq = 1;
+  actionSeq = 1;
+  document.getElementById('formErrors').classList.remove('show');
+  document.getElementById('delayEnable').checked = false;
+  document.getElementById('delayMinutes').disabled = true;
+  document.getElementById('delayMinutes').value = '10';
+  conditions = [{id: conditionSeq++, type: '', operator: '>', value: '', state: ''}];
+  actions = [{id: actionSeq++, type: 'ac', power: 'none', mode: 'none', temperature: '', fan: 'none', duration: 10}];
+  if(mode === 'edit' || mode === 'copy'){
+    conditions = [
+      {id: conditionSeq++, type: 'temperature', operator: '>', value: '28', state: ''},
+      {id: conditionSeq++, type: 'presence', operator: '>', value: '', state: '有人'}
+    ];
+    actions = [
+      {id: actionSeq++, type: 'ac', power: 'on', mode: 'cool', temperature: '26', fan: 'none', duration: 10},
+      {id: actionSeq++, type: 'delay', power: 'none', mode: 'none', temperature: '', fan: 'none', duration: 20},
+      {id: actionSeq++, type: 'ac', power: 'none', mode: 'none', temperature: '27', fan: 'none', duration: 10}
+    ];
+  }
+  renderConditions();
+  renderActions();
+}
+function selectedConditionTypes(exceptId){
+  return conditions.filter(c=>c.id!==exceptId && c.type).map(c=>c.type);
+}
+function addCondition(){
+  if(conditions.length >= 4) return;
+  conditions.push({id: conditionSeq++, type: '', operator: '>', value: '', state: ''});
+  renderConditions();
+}
+function deleteCondition(id){
+  if(conditions.length <= 1){ alert('至少需要 1 个条件'); return; }
+  if(confirm('确定删除该条件吗？')){
+    conditions = conditions.filter(c=>c.id!==id);
+    renderConditions();
+  }
+}
+function updateCondition(id, key, value){
+  const item = conditions.find(c=>c.id===id);
+  if(!item) return;
+  if(key === 'type'){
+    item.type = value;
+    item.operator = '>';
+    item.value = '';
+    item.state = '';
+  }else{
+    item[key] = value;
+  }
+  renderConditions();
+}
+function conditionFields(c){
+  if(!c.type) return '';
+  if(c.type === 'temperature'){
+    return `<div class="sub-fields form-line two">
+      <div class="form-item"><label>温度判断</label><div class="radio-row">${operatorRadios(c, 'temperature')}</div></div>
+      <div class="form-item"><label>温度阈值（-10~50℃）</label><input type="number" min="-10" max="50" step="0.1" value="${c.value}" onchange="updateCondition(${c.id},'value',this.value)" placeholder="28"></div>
+    </div>`;
+  }
+  if(c.type === 'humidity'){
+    return `<div class="sub-fields form-line two">
+      <div class="form-item"><label>湿度判断</label><div class="radio-row">${operatorRadios(c, 'humidity')}</div></div>
+      <div class="form-item"><label>湿度阈值（1~99%）</label><input type="number" min="1" max="99" step="1" value="${c.value}" onchange="updateCondition(${c.id},'value',this.value)" placeholder="60"></div>
+    </div>`;
+  }
+  if(c.type === 'presence'){
+    return `<div class="sub-fields form-item"><label>人在状态</label><div class="radio-row">
+      <label><input type="radio" name="presence-${c.id}" ${c.state==='有人'?'checked':''} onchange="updateCondition(${c.id},'state','有人')"> 有人</label>
+      <label><input type="radio" name="presence-${c.id}" ${c.state==='无人'?'checked':''} onchange="updateCondition(${c.id},'state','无人')"> 无人</label>
+    </div></div>`;
+  }
+  return `<div class="sub-fields form-item"><label>门窗状态</label><div class="radio-row">
+    <label><input type="radio" name="door-${c.id}" ${c.state==='开启'?'checked':''} onchange="updateCondition(${c.id},'state','开启')"> 开启</label>
+    <label><input type="radio" name="door-${c.id}" ${c.state==='关闭'?'checked':''} onchange="updateCondition(${c.id},'state','关闭')"> 关闭</label>
+  </div></div>`;
+}
+function operatorRadios(c, group){
+  const ops = [['>','高于（＞）'],['<','低于（＜）'],['>=','升高到（≥）'],['<=','降低到（≤）']];
+  return ops.map(([value,label])=>`<label><input type="radio" name="${group}-${c.id}" ${c.operator===value?'checked':''} onchange="updateCondition(${c.id},'operator','${value}')"> ${label}</label>`).join('');
+}
+function renderConditions(){
+  const list = document.getElementById('conditionList');
+  list.innerHTML = conditions.map((c, idx)=>{
+    const used = selectedConditionTypes(c.id);
+    const options = ['', 'temperature','humidity','presence','door'].map(type=>{
+      if(type==='') return `<option value="" ${c.type===''?'selected':''}>请选择</option>`;
+      const disabled = used.includes(type) ? 'disabled' : '';
+      return `<option value="${type}" ${c.type===type?'selected':''} ${disabled}>${conditionLabels[type]}</option>`;
+    }).join('');
+    const delDisabled = conditions.length <= 1 ? 'disabled title="至少需要 1 个条件"' : '';
+    return `<div class="condition-card">
+      <div class="card-head"><span>条件 #${idx+1}${c.type ? ' · '+conditionLabels[c.type] : ''}</span><button class="icon-btn" ${delDisabled} onclick="deleteCondition(${c.id})">×</button></div>
+      <div class="form-line two">
+        <div class="form-item"><label>条件类型</label><select onchange="updateCondition(${c.id},'type',this.value)">${options}</select></div>
+      </div>
+      ${conditionFields(c)}
+    </div>`;
+  }).join('');
+  document.getElementById('conditionCount').textContent = `当前：${conditions.length}/4 个条件`;
+  document.getElementById('addConditionBtn').disabled = conditions.length >= 4;
+}
+function toggleDelayConfirm(){
+  document.getElementById('delayMinutes').disabled = !document.getElementById('delayEnable').checked;
+}
+function addAction(){
+  if(actions.length >= 16) return;
+  const lastType = actions[actions.length-1]?.type;
+  actions.push({id: actionSeq++, type: lastType === 'ac' ? 'delay' : 'ac', power: 'none', mode: 'none', temperature: '', fan: 'none', duration: 10});
+  renderActions();
+}
+function deleteAction(id){
+  if(actions.length <= 1) return;
+  actions = actions.filter(a=>a.id!==id);
+  renderActions();
+}
+function updateAction(id, key, value){
+  const item = actions.find(a=>a.id===id);
+  if(!item) return;
+  if(key === 'type'){
+    item.type = value;
+    item.power = 'none';
+    item.mode = 'none';
+    item.temperature = '';
+    item.fan = 'none';
+    item.duration = 10;
+  }else{
+    item[key] = value;
+  }
+  renderActions();
+}
+function actionFields(a){
+  if(a.type === 'delay'){
+    return `<div class="form-line">
+      <div class="form-item"><label>延时时长（1-240 分钟）</label><input type="number" min="1" max="240" step="1" value="${a.duration}" onchange="updateAction(${a.id},'duration',this.value)"></div>
+    </div>`;
+  }
+  return `<div class="action-state">
+    <div class="form-item"><label>开关</label><select onchange="updateAction(${a.id},'power',this.value)"><option value="none" ${a.power==='none'?'selected':''}>不控制</option><option value="on" ${a.power==='on'?'selected':''}>开机</option><option value="off" ${a.power==='off'?'selected':''}>关机</option></select></div>
+    <div class="form-item"><label>模式</label><select onchange="updateAction(${a.id},'mode',this.value)"><option value="none" ${a.mode==='none'?'selected':''}>不控制</option><option value="cool" ${a.mode==='cool'?'selected':''}>制冷</option><option value="heat" ${a.mode==='heat'?'selected':''}>制热</option><option value="fan" ${a.mode==='fan'?'selected':''}>送风</option><option value="dry" ${a.mode==='dry'?'selected':''}>除湿</option></select></div>
+    <div class="form-item"><label>温度（16-30℃）</label><input type="number" min="16" max="30" step="0.1" value="${a.temperature}" onchange="updateAction(${a.id},'temperature',this.value)" placeholder="不控制"></div>
+    <div class="form-item"><label>风速</label><select onchange="updateAction(${a.id},'fan',this.value)"><option value="none" ${a.fan==='none'?'selected':''}>不控制</option><option value="high" ${a.fan==='high'?'selected':''}>高</option><option value="middle" ${a.fan==='middle'?'selected':''}>中</option><option value="low" ${a.fan==='low'?'selected':''}>低</option></select></div>
+  </div>`;
+}
+function renderActions(){
+  const list = document.getElementById('actionList');
+  list.innerHTML = actions.map((a, idx)=>{
+    const delDisabled = actions.length <= 1 ? 'disabled title="至少保留 1 个执行动作"' : '';
+    return `<div class="action-card">
+      <div class="card-head"><span>动作 #${idx+1} 【${a.type==='ac'?'空调控制':'延时'}】</span><button class="icon-btn" ${delDisabled} onclick="deleteAction(${a.id})">×</button></div>
+      <div class="form-item action-type"><label>动作类型</label><select onchange="updateAction(${a.id},'type',this.value)"><option value="ac" ${a.type==='ac'?'selected':''}>空调控制</option><option value="delay" ${a.type==='delay'?'selected':''}>延时</option></select></div>
+      ${actionFields(a)}
+    </div>`;
+  }).join('');
+  document.getElementById('actionCount').textContent = `当前：${actions.length}/16 个动作`;
+  document.getElementById('addActionBtn').disabled = actions.length >= 16;
+}
+function numberInRange(value, min, max, decimals){
+  if(value === '' || value === null || value === undefined) return false;
+  const text = String(value);
+  if(decimals === 0 && !/^-?\d+$/.test(text)) return false;
+  if(decimals === 1 && !/^-?\d+(\.\d)?$/.test(text)) return false;
+  const n = Number(text);
+  return Number.isFinite(n) && n >= min && n <= max;
+}
+function validateRule(){
+  const errors = [];
+  const selected = conditions.filter(c=>c.type);
+  if(selected.length < 1) errors.push('请至少配置 1 个触发条件');
+  const types = selected.map(c=>c.type);
+  if(new Set(types).size !== types.length) errors.push('条件类型不能重复选择');
+  conditions.forEach((c, idx)=>{
+    const label = `条件 #${idx+1}`;
+    if(!c.type){
+      errors.push(`${label}：请选择条件类型`);
+      return;
+    }
+    if(c.type === 'temperature' && !numberInRange(c.value, -10, 50, 1)) errors.push(`${label}：请输入 -10~50℃ 范围内的值，最多保留 1 位小数`);
+    if(c.type === 'humidity' && !numberInRange(c.value, 1, 99, 0)) errors.push(`${label}：请输入 1~99% 范围内的整数`);
+    if((c.type === 'presence' || c.type === 'door') && !c.state) errors.push(`${label}：请选择状态`);
+  });
+  if(document.getElementById('delayEnable').checked && !numberInRange(document.getElementById('delayMinutes').value, 1, 60, 0)) errors.push('请输入 1-60 分钟的延时确认时长');
+  if(actions.length < 1) errors.push('请至少配置 1 个执行动作');
+  if(actions.length > 16) errors.push('执行动作数已达上限（16 个）');
+  actions.forEach((a, idx)=>{
+    if(a.type === 'ac'){
+      const hasParam = a.power !== 'none' || a.mode !== 'none' || a.fan !== 'none' || a.temperature !== '';
+      if(!hasParam) errors.push(`动作 #${idx+1}：请至少选择一个控制参数（开关、模式、温度、风速）`);
+      if(a.temperature !== '' && !numberInRange(a.temperature, 16, 30, 1)) errors.push(`动作 #${idx+1}：温度请输入 16-30℃，最多保留 1 位小数`);
+    }else if(!numberInRange(a.duration, 1, 240, 0)){
+      errors.push(`动作 #${idx+1}：请输入 1-240 分钟的延时时长`);
+    }
+    if(idx > 0 && actions[idx-1].type === a.type) errors.push(`动作 #${idx} 与 #${idx+1} 相邻，不能都是${a.type==='ac'?'空调控制':'延时'}`);
+  });
+  if(actions[actions.length-1]?.type === 'delay') errors.push('最后一个执行动作不能是延时');
+  const box = document.getElementById('formErrors');
+  if(errors.length){
+    box.innerHTML = `⚠️ 表单校验失败，请修正以下问题：<br>${errors.map(e=>'• '+e).join('<br>')}`;
+    box.classList.add('show');
+    box.scrollIntoView({block:'nearest'});
+    return false;
+  }
+  box.classList.remove('show');
+  alert('任务保存成功');
+  closeTask();
+  return true;
+}
+document.querySelectorAll('#weekGrid .day').forEach(d=>d.onclick=()=>d.classList.toggle('on'));
+document.getElementById('taskModal').addEventListener('click',e=>{if(e.target.id==='taskModal')closeTask()});
+resetRuleEditor();
 </script>
-</body></html>
+</body>
+</html>

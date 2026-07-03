@@ -1,0 +1,335 @@
+{
+  "breadcrumb": [
+    "项目及设备管理/",
+    "项目及设备管理",
+    "电表管理/",
+    "电表管理",
+    "电表管理/",
+    "电表管理"
+  ],
+  "tabs": [],
+  "labels": [
+    "当前查看项目为：",
+    "不计费",
+    "后付费",
+    "预付费",
+    "仅抄表",
+    "机房群控",
+    "按天",
+    "按小时",
+    "氟机",
+    "直膨机",
+    "温控器",
+    "水机",
+    "主机信息列表",
+    "电表状态"
+  ],
+  "inputs": [
+    {
+      "ph": "请选择",
+      "val": "1861蔚蓝公寓B2"
+    },
+    {
+      "ph": "请选择主机",
+      "val": ""
+    },
+    {
+      "ph": "请选择电表状态",
+      "val": ""
+    },
+    {
+      "ph": "请选择",
+      "val": "10条/页"
+    },
+    {
+      "ph": "",
+      "val": "1"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "重置筛选",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "关闭",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "绑定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "已知晓",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "查询",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "重置",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "添加电表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "下发电表地址",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "设置上报频率",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "删除",
+      "cls": "el-button--danger"
+    },
+    {
+      "text": "导出",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "立即抄表",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "编辑",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "系统绑定(1)",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取 消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确 定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--primary"
+    },
+    {
+      "text": "取消",
+      "cls": "el-button--default"
+    },
+    {
+      "text": "确定",
+      "cls": "el-button--primary"
+    }
+  ],
+  "tables": [],
+  "pagination": [
+    "共 92 条10条/页20条/页30条/页50条/页12345610前往页"
+  ],
+  "cardTitles": [],
+  "_route": "/electricMeter/list",
+  "_label": "电表管理",
+  "_finalUrl": "https://m.achelp.cn/electricMeter/list"
+}

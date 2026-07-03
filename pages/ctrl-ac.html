@@ -4,6 +4,17 @@
 .fl-tab.active{background:rgba(41,121,255,.2);border-color:var(--bl);color:var(--tx);}
 .vt-btn{padding:5px 14px;font-size:12px;color:var(--ts);cursor:pointer;background:transparent;border:none;}
 .vt-btn.active{background:rgba(41,121,255,.2);color:var(--tx);}
+.ac-layout{display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;}
+.building-card{width:210px;min-width:210px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;overflow-y:auto;flex-shrink:0;}
+.building-title{font-size:12px;font-weight:700;color:#e9f2ff;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.building-title:before{content:'';width:3px;height:13px;background:linear-gradient(#00e5ff,#2979ff);border-radius:2px}
+.building-search{width:100%;margin-bottom:12px}
+.building-tree{display:flex;flex-direction:column;gap:2px}
+.bt-row{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:4px;color:#c8d8f0;font-size:12px;cursor:pointer}
+.bt-row:hover{background:rgba(255,255,255,.04);color:var(--tx)}
+.bt-row.active{background:rgba(0,229,255,.1);color:var(--hl);box-shadow:inset 2px 0 0 var(--hl)}
+.bt-row input{width:auto}.bt-bld{font-weight:700;color:#e9f2ff;margin-top:4px}.bt-floor{padding-left:22px}.bt-room{padding-left:44px;color:#b8c8e3}
+.bt-meta{margin-left:auto;font-size:10px;color:var(--ts)}
 .ac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;}
 .ac-card{background:linear-gradient(160deg,#0d1f44,#091530);border:1px solid #1e3a6e;border-radius:8px;padding:10px 8px 8px;cursor:pointer;text-align:center;transition:border-color .15s,box-shadow .15s;position:relative;}
 .ac-card:hover{border-color:rgba(0,229,255,.5);box-shadow:0 0 8px rgba(0,229,255,.15);}
@@ -48,7 +59,33 @@
     </div>
   </div>
 </div>
-<div style="display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;">
+<div class="ac-layout">
+<aside class="building-card">
+  <div class="building-title">建筑名称</div>
+  <input class="building-search" placeholder="请输入房间号">
+  <div class="building-tree">
+    <label class="bt-row bt-bld active"><input type="checkbox" checked> A2栋 <span class="bt-meta">4层 / 16间</span></label>
+    <label class="bt-row bt-floor active" onclick="treeFl('2F')"><input type="checkbox" checked> 2层 <span class="bt-meta">8间</span></label>
+    <label class="bt-row bt-room" onclick="selAC('2F-会议-01')"><input type="checkbox" checked> 201会议室</label>
+    <label class="bt-row bt-room" onclick="selAC('2F-办公-01')"><input type="checkbox" checked> 203办公室</label>
+    <label class="bt-row bt-room" onclick="selAC('2F-开放-01')"><input type="checkbox" checked> 205开放办公区</label>
+    <label class="bt-row bt-room" onclick="selAC('2F-会议-03')"><input type="checkbox" checked> 208会议室</label>
+    <label class="bt-row bt-floor" onclick="treeFl('3F')"><input type="checkbox"> 3层 <span class="bt-meta">4间</span></label>
+    <label class="bt-row bt-room" onclick="selAC('3F-办公-01')"><input type="checkbox"> 301办公室</label>
+    <label class="bt-row bt-room" onclick="selAC('3F-办公-02')"><input type="checkbox"> 303办公室</label>
+    <label class="bt-row bt-bld"><input type="checkbox"> A1栋 <span class="bt-meta">3层 / 12间</span></label>
+    <label class="bt-row bt-floor" onclick="treeFl('1F')"><input type="checkbox"> 1层</label>
+    <label class="bt-row bt-room" onclick="selAC('1F-大厅-01')"><input type="checkbox"> 101大厅</label>
+    <label class="bt-row bt-room" onclick="selAC('1F-展示-01')"><input type="checkbox"> 103展厅</label>
+    <label class="bt-row bt-bld"><input type="checkbox"> B栋 <span class="bt-meta">2层 / 8间</span></label>
+    <label class="bt-row bt-floor" onclick="treeFl('B1')"><input type="checkbox"> B1层</label>
+    <label class="bt-row bt-room" onclick="selAC('B1-餐饮-01')"><input type="checkbox"> B101餐饮区</label>
+    <label class="bt-row bt-room" onclick="selAC('B1-通道-01')"><input type="checkbox"> B102通道</label>
+    <label class="bt-row bt-bld"><input type="checkbox"> C栋 <span class="bt-meta">2层 / 10间</span></label>
+    <label class="bt-row bt-floor" onclick="treeFl('3F')"><input type="checkbox"> 3层</label>
+    <label class="bt-row bt-room" onclick="selAC('3F-展览-01')"><input type="checkbox"> C-303展览室</label>
+  </div>
+</aside>
 <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
   <div style="display:flex;gap:6px;margin-bottom:12px;flex-shrink:0;align-items:center;">
     <div class="fl-tab active" onclick="flSel(this,'')">全部</div>
@@ -194,6 +231,19 @@ function setView(v){
   document.getElementById('vt-card').classList.toggle('active',v==='card');
 }
 function flSel(el,f){curFltr=f;el.closest('div').querySelectorAll('.fl-tab').forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function treeFl(f){
+  curFltr=f;
+  document.querySelectorAll('.bt-floor').forEach(e=>e.classList.remove('active'));
+  const floor=[...document.querySelectorAll('.bt-floor')].find(e=>e.textContent.includes(f.replace('F','层')));
+  if(f==='B1'){
+    const b1=[...document.querySelectorAll('.bt-floor')].find(e=>e.textContent.includes('B1'));
+    if(b1) b1.classList.add('active');
+  }else if(floor){
+    floor.classList.add('active');
+  }
+  document.querySelectorAll('.fl-tab').forEach(e=>e.classList.toggle('active',e.textContent===f));
+  render();
+}
 function rpFl(el){el.closest('div').querySelectorAll('.fl-tab').forEach(e=>e.classList.remove('active'));el.classList.add('active');}
 function selAC(n){alert('选中空调: '+n);}
 </script>
