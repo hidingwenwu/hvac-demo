@@ -3,176 +3,196 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>飞奕集控计费平台 — 演示入口</title>
+<title>空调管理 — 原型演示</title>
 <style>
 :root{
-  --bg-body:#030b1c;--bg-header:linear-gradient(to bottom,#0d1f44,rgba(3,11,28,.97));
-  --bg-sidebar:#061228;--bg-sidebar-hover:rgba(0,229,255,.06);--bg-sidebar-active:rgba(0,229,255,.08);
-  --border-panel:#1e3a6e;--border-glow:rgba(0,229,255,.35);
-  --text-main:#fff;--text-sub:#8fa4c9;--text-highlight:#00e5ff;
-  --color-primary-dim:rgba(0,229,255,.12);
-  --font-base:'PingFang SC','Microsoft YaHei',sans-serif;
-  --font-num:'Roboto Mono',monospace;
-  --header-h:50px;--sidebar-w:200px;--sidebar-col:48px;
-  --glow-cyan:0 0 10px rgba(0,229,255,.4);
+  --bg:#0a0f22;--bg-sidebar:#060b26;--bg-active:#1a1f37;--bg-hover:rgba(255,255,255,.04);
+  --primary:#1f65ff;--tx:#d1d3d8;--ts:#a0aec0;--tw3:#6b7a99;--txw:#fff;
+  --bd:rgba(255,255,255,.1);--bd2:rgba(255,255,255,.2);
+  --font:'Helvetica Neue',Helvetica,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',Arial,sans-serif;
+  --header-h:50px;--sidebar-w:210px;--sidebar-col:54px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:var(--font-base);background:var(--bg-body);color:var(--text-main);font-size:14px;}
-#shell{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
-.hd{height:var(--header-h);min-height:var(--header-h);background:var(--bg-header);border-bottom:1px solid var(--border-panel);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100;backdrop-filter:blur(10px);}
-.hd-logo{display:flex;align-items:center;gap:10px;}
-.hd-icon{width:28px;height:28px;background:linear-gradient(135deg,#00e5ff,#2979ff);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#030b1c;box-shadow:var(--glow-cyan);}
-.hd-name{font-size:15px;font-weight:700;letter-spacing:.04em;}
-.hd-sub{font-size:11px;color:var(--text-sub);}
-.hd-tag{font-size:11px;padding:2px 8px;border-radius:2px;border:1px solid var(--border-glow);color:var(--text-highlight);background:var(--color-primary-dim);font-family:var(--font-num);}
-.hd-right{display:flex;align-items:center;gap:16px;}
-.hd-acts{display:flex;align-items:center;gap:10px;}
-.hd-act{width:30px;height:30px;border:1px solid var(--border-panel);border-radius:5px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-sub);transition:all .15s;position:relative;}
-.hd-act:hover{border-color:var(--border-glow);color:var(--text-highlight);}
-.hd-act .bdg{position:absolute;top:-3px;right:-3px;width:7px;height:7px;background:#ff4d4f;border-radius:50%;border:1px solid var(--bg-header);}
-.hd-user{display:flex;align-items:center;gap:8px;cursor:pointer;}
-.hd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e3a6e,#2979ff);display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid var(--border-glow);}
-/* 操作指引入口按钮 */
-.hd-guide-btn{
-  width:30px;height:30px;border:1px solid var(--border-glow);border-radius:50%;
-  background:rgba(0,229,255,.06);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;color:var(--text-highlight);font-size:15px;font-weight:700;
-  transition:all .2s;position:relative;user-select:none;
-  animation:guidePulse 2.8s ease-in-out infinite;
-}
-.hd-guide-btn:hover{background:rgba(0,229,255,.18);border-color:var(--text-highlight);animation:none;transform:scale(1.1);}
-@keyframes guidePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.0)}50%{box-shadow:0 0 0 5px rgba(0,229,255,.18)}}
-.hd-guide-btn .hd-guide-tip{
-  position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:#071833;border:1px solid var(--border-glow);color:var(--text-highlight);
-  font-size:11.5px;padding:4px 10px;border-radius:4px;white-space:nowrap;
-  pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;font-weight:400;
-}
-.hd-guide-btn:hover .hd-guide-tip{opacity:1;}
-/* 公告跑马灯 */
-.hd-ann{
-  display:none;align-items:center;gap:6px;max-width:300px;min-width:0;
-  position:relative;cursor:default;
-}
-.hd-ann-icon{font-size:13px;opacity:.8;flex-shrink:0;}
-.hd-ann-track{
-  flex:1;min-width:0;overflow:hidden;
-  mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
-  -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
-}
-.hd-ann-text{display:inline-block;white-space:nowrap;font-size:12px;color:#9ab8d4;animation:annScroll linear infinite;}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--tx);font-size:14px;overflow:hidden;}
+#shell{display:flex;height:100vh;}
+
+/* ═══ 侧边栏 ═══ */
+.sb{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg-sidebar);display:flex;flex-direction:column;transition:width .25s,min-width .25s;overflow:hidden;}
+.sb.col{width:var(--sidebar-col);min-width:var(--sidebar-col);}
+.logo-container{height:55px;min-height:55px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;}
+.logo-icon{width:26px;height:26px;flex-shrink:0;}
+.logo-text{font-size:18px;font-weight:700;color:var(--txw);letter-spacing:1px;white-space:nowrap;font-style:italic;}
+.sb.col .logo-text{display:none;}
+.logo-line{height:1px;background:rgba(255,255,255,.08);margin:0 14px 6px;}
+.sb-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 8px 20px;}
+.sb-menu::-webkit-scrollbar{width:4px;}
+.sb-menu::-webkit-scrollbar-thumb{background:#2b354f;border-radius:2px;}
+
+.mi{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;font-size:14px;color:var(--tx);cursor:pointer;border-radius:12px;white-space:nowrap;transition:background .15s,color .15s;user-select:none;margin:2px 0;}
+.mi:hover{background:var(--bg-hover);color:var(--txw);}
+.mi.active{background:var(--bg-active);color:var(--txw);box-shadow:0 0 10px rgba(0,0,0,.05);}
+.mi .ni{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.mi .ni svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.mi .lb{flex:1;overflow:hidden;text-overflow:ellipsis;}
+.mi .arr{font-size:10px;color:var(--ts);transition:transform .2s;flex-shrink:0;}
+.mi.open .arr{transform:rotate(180deg);}
+.sb.col .mi .lb,.sb.col .mi .arr{display:none;}
+.sb.col .mi{justify-content:center;padding:0;}
+.mg-body{overflow:hidden;transition:max-height .25s ease;}
+.sb.col .mg-body{display:none;}
+.mi.sub{padding-left:40px;font-size:13px;height:38px;border-radius:10px;}
+.mi.sub2{padding-left:56px;font-size:13px;height:36px;border-radius:10px;color:var(--ts);}
+.mi.sub2:hover{color:var(--txw);}
+.mi.st{padding-left:40px;font-size:13px;height:38px;border-radius:10px;}
+
+/* ═══ 右侧主体 ═══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.hd{height:var(--header-h);min-height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 1px 4px rgba(0,21,41,.28);position:relative;z-index:10;}
+.hd-left{display:flex;align-items:center;gap:14px;min-width:0;}
+.hamburger{width:20px;height:20px;cursor:pointer;color:var(--tx);flex-shrink:0;}
+.hamburger:hover{color:var(--txw);}
+.hamburger svg{width:20px;height:20px;fill:currentColor;}
+.bc{display:flex;align-items:center;gap:8px;font-size:14px;white-space:nowrap;overflow:hidden;}
+.bc .bi{color:var(--ts);}
+.bc .sep{color:var(--tw3);font-size:12px;}
+.bc .cur{color:var(--txw);}
+.hd-right{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.proj-sel{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);white-space:nowrap;}
+.proj-sel select{width:270px;height:34px;padding:0 28px 0 12px;border:1px solid var(--bd2);border-radius:4px;background:#0b1426;color:var(--tx);font-size:14px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23a0aec0' stroke-width='1.4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.proj-sel select:focus{border-color:var(--primary);}
+.proj-sel select option{background:#1a2233;}
+.hd-act{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx);position:relative;border-radius:4px;}
+.hd-act:hover{color:var(--txw);background:var(--bg-hover);}
+.hd-act svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.hd-act .bdg{position:absolute;top:2px;right:3px;width:7px;height:7px;background:#f56c6c;border-radius:50%;border:1px solid var(--bg);}
+.hd-user{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;color:var(--tx);position:relative;padding:4px 2px;}
+.hd-user:hover{color:var(--txw);}
+.hd-user svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.user-menu{position:absolute;top:calc(100% + 6px);right:0;width:130px;background:#1a2233;border:1px solid var(--bd);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;overflow:hidden;z-index:100;}
+.user-menu.show{display:block;}
+.user-menu div{padding:10px 14px;font-size:13px;color:var(--tx);cursor:pointer;}
+.user-menu div:hover{background:#232d48;color:var(--txw);}
+
+/* 公告跑马灯(公告管理原型联动) */
+.hd-ann{display:none;align-items:center;gap:6px;max-width:280px;min-width:0;}
+.hd-ann-track{flex:1;min-width:0;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+.hd-ann-text{display:inline-block;white-space:nowrap;font-size:12px;color:var(--ts);animation:annScroll linear infinite;}
 @keyframes annScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .hd-ann:hover .hd-ann-text{animation-play-state:paused;}
-/* 公告详情弹出卡 */
-.hd-ann-popup{
-  position:fixed;z-index:9000;width:300px;
-  background:rgba(4,9,26,.94);backdrop-filter:blur(52px) saturate(240%);
-  border:1px solid rgba(255,255,255,.09);border-radius:16px;
-  box-shadow:0 36px 90px rgba(0,0,0,.78),0 10px 28px rgba(0,0,0,.48);
-  overflow:hidden;opacity:0;pointer-events:none;
-  transform:translateY(-10px) scale(.96);transition:opacity .22s ease,transform .30s cubic-bezier(.34,1.52,.64,1);
-}
-.hd-ann-popup.show{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.hd-ann-popup{position:fixed;z-index:9000;width:300px;background:#1a2233;border:1px solid var(--bd);border-radius:8px;box-shadow:0 16px 48px rgba(0,0,0,.6);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .18s,transform .22s;}
+.hd-ann-popup.show{opacity:1;pointer-events:all;transform:none;}
 .hd-ann-popup-bar{height:3px;width:100%;}
 .hd-ann-popup-inner{padding:12px 15px 15px;display:flex;flex-direction:column;gap:6px;}
-.hd-ann-popup-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;letter-spacing:.4px;}
-.hd-ann-popup-title{font-size:13.5px;font-weight:700;color:#f0f8ff;line-height:1.4;}
-.hd-ann-popup-body{font-size:12px;color:#a8c8e8;line-height:1.7;}
-.bd{display:flex;flex:1;overflow:hidden;}
-.sb{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border-panel);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:width .2s,min-width .2s;}
-.sb.col{width:var(--sidebar-col);min-width:var(--sidebar-col);}
-.sb-toggle{padding:9px 12px;display:flex;justify-content:flex-end;cursor:pointer;color:var(--text-sub);font-size:13px;border-bottom:1px solid rgba(30,58,110,.3);flex-shrink:0;}
-.sb-toggle:hover{color:var(--text-highlight);}
-.nav-direct{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
-.nav-direct:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
-.nav-direct.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
-.nav-direct .ni{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
-.nav-gt{display:flex;align-items:center;padding:10px 16px;font-size:12px;color:var(--text-sub);cursor:pointer;user-select:none;transition:color .15s;white-space:nowrap;}
-.nav-gt:hover{color:var(--text-highlight);}
-.nav-gt .ni{font-size:13px;width:16px;text-align:center;flex-shrink:0;margin-right:8px;}
-.nav-gt .arr{font-size:9px;margin-left:auto;transition:transform .2s;flex-shrink:0;}
-.nav-gt.open .arr{transform:rotate(90deg);}
-.nav-gb{overflow:hidden;transition:max-height .25s ease;}
-.nav-item{padding:8px 16px 8px 40px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
-.nav-item:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
-.nav-item.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
-.nav-st{display:flex;align-items:center;padding:8px 16px 8px 40px;font-size:12px;color:var(--text-sub);cursor:pointer;user-select:none;white-space:nowrap;}
-.nav-st:hover{color:var(--text-main);}
-.nav-st .arr{font-size:9px;margin-left:auto;transition:transform .2s;}
-.nav-st.open .arr{transform:rotate(90deg);}
-.nav-sb{overflow:hidden;transition:max-height .2s ease;}
-.nav-leaf{padding:7px 16px 7px 56px;font-size:12px;color:var(--text-sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;}
-.nav-leaf:hover{background:var(--bg-sidebar-hover);color:var(--text-main);}
-.nav-leaf.active{background:var(--bg-sidebar-active);color:var(--text-highlight);border-left:2px solid var(--text-highlight);}
-.sb.col .nav-gt span:not(.ni),.sb.col .nav-gt .arr,.sb.col .nav-gb,.sb.col .nav-direct span:not(.ni){display:none;}
-.sb.col .nav-gt{justify-content:center;padding:10px;}
-.sb.col .nav-direct{justify-content:center;padding:10px;}
-.content{flex:1;overflow:hidden;background:var(--bg-body);}
+.hd-ann-popup-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;}
+.hd-ann-popup-title{font-size:13.5px;font-weight:700;color:var(--txw);line-height:1.4;}
+.hd-ann-popup-body{font-size:12px;color:var(--ts);line-height:1.7;}
+
+.content{flex:1;overflow:hidden;background:var(--bg);}
 .content iframe{width:100%;height:100%;border:none;display:block;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#1e3a6e;border-radius:2px;} ::-webkit-scrollbar-thumb:hover{background:#2979ff;}
 </style>
 </head>
 <body>
 <div id="shell">
-  <header class="hd">
-    <div class="hd-logo">
-      <div class="hd-icon">飞</div>
-      <div><div class="hd-name">飞奕集控计费平台</div><div class="hd-sub">空调节能监控系统</div></div>
+  <!-- ═══ 侧边栏 ═══ -->
+  <aside class="sb" id="sb">
+    <div class="logo-container">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none"><path d="M12 2L3.5 5.5v6c0 5 3.6 8.9 8.5 10.5 4.9-1.6 8.5-5.5 8.5-10.5v-6L12 2z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 12l2.4 2.4L15.6 9.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="logo-text">空调管理</span>
     </div>
-    <div class="hd-right">
-      <span class="hd-tag" id="projTag">青岛飞奕科技</span>
-      <!-- 公告跑马灯（由JS控制显示） -->
-      <div class="hd-ann" id="hdAnn" onmouseenter="showAnnPopup(this)" onmouseleave="hideAnnPopup()">
-        <span class="hd-ann-icon">📢</span>
-        <div class="hd-ann-track">
-          <span class="hd-ann-text" id="hdAnnText"></span>
+    <div class="logo-line"></div>
+    <nav class="sb-menu" id="nav"></nav>
+  </aside>
+
+  <!-- ═══ 主体 ═══ -->
+  <div class="main">
+    <header class="hd">
+      <div class="hd-left">
+        <span class="hamburger" id="hamburger" title="折叠菜单">
+          <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zM3 11h12v2H3zM3 17h18v2H3z"/></svg>
+        </span>
+        <div class="bc" id="bc"></div>
+      </div>
+      <div class="hd-right">
+        <!-- 公告跑马灯(由公告管理原型驱动) -->
+        <div class="hd-ann" id="hdAnn" onmouseenter="showAnnPopup(this)" onmouseleave="hideAnnPopup()">
+          <span style="font-size:13px">📢</span>
+          <div class="hd-ann-track"><span class="hd-ann-text" id="hdAnnText"></span></div>
+        </div>
+        <div class="proj-sel">
+          <span>当前查看项目为:</span>
+          <select id="projSel">
+            <option>1861蔚蓝公寓B2</option>
+            <option>烟台开发区智慧园区</option>
+            <option>青岛云飞科技大厦</option>
+            <option>1861蔚蓝公寓A1</option>
+          </select>
+        </div>
+        <div class="hd-act" title="操作指引" onclick="nav('guide-view')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.8.3-1 .9-1 1.8"/><circle cx="12" cy="16.6" r=".4" fill="currentColor"/></svg>
+        </div>
+        <div class="hd-act" title="预警通知" onclick="$msgTop('暂无新的预警通知')">
+          <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>
+          <span class="bdg"></span>
+        </div>
+        <div class="hd-act" title="全屏" onclick="toggleFS()">
+          <svg viewBox="0 0 24 24"><path d="M8 3.5H3.5V8M16 3.5h4.5V8M8 20.5H3.5V16M16 20.5h4.5V16"/></svg>
+        </div>
+        <div class="hd-user" id="hdUser">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+          <span>丁文武</span>
+          <div class="user-menu" id="userMenu">
+            <div onclick="$msgTop('原型演示:修改密码')">修改密码</div>
+            <div onclick="$msgTop('原型演示:退出登录')">退出登录</div>
+          </div>
         </div>
       </div>
-      <!-- 操作指引入口 -->
-      <div class="hd-guide-btn" title="平台操作指引" onclick="nav('guide-view')">
-        <svg viewBox="0 0 1024 1024" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 99.072a412.928 412.928 0 1 0 0 825.856A412.928 412.928 0 0 0 512 99.072z m-5.312 577.408a52.48 52.48 0 0 1 36.992 13.888c9.28 9.28 14.592 21.12 14.592 35.712a48.32 48.32 0 0 1-15.232 36.288 50.944 50.944 0 0 1-36.352 13.888 51.456 51.456 0 0 1-36.288-14.528 46.336 46.336 0 0 1-14.528-35.648c0-14.592 4.608-26.432 14.528-35.712a50.944 50.944 0 0 1 36.288-13.888z m11.904-381.184c42.944 0 77.952 11.264 104.384 35.008 26.432 23.168 39.68 54.848 39.68 95.168 0 33.024-8.64 60.16-24.448 81.28-5.952 6.592-25.152 24.384-56.832 52.16a102.4 102.4 0 0 0-26.432 33.024 93.376 93.376 0 0 0-9.92 42.944v9.28H469.12V634.88c0-25.088 3.968-46.912 13.184-64.768 8.64-17.792 34.368-45.568 77.312-83.84l7.936-9.28c11.904-14.528 17.856-30.4 17.856-46.912 0-21.76-6.592-38.976-18.56-51.52-12.48-12.544-30.336-18.56-52.8-18.56-29.056 0-49.536 8.64-62.08 27.136-11.264 15.168-16.512 36.992-16.512 64.768H360.064c0-48.896 13.888-87.232 42.88-114.944 28.48-27.776 66.752-41.6 115.648-41.6z" fill="currentColor"/></svg>
-        <span class="hd-guide-tip">平台操作指引</span>
+      <!-- 公告弹出卡 -->
+      <div class="hd-ann-popup" id="hdAnnPopup">
+        <div class="hd-ann-popup-bar" id="hdAnnPopupBar"></div>
+        <div class="hd-ann-popup-inner">
+          <span class="hd-ann-popup-badge" id="hdAnnPopupBadge">系统更新</span>
+          <div class="hd-ann-popup-title" id="hdAnnPopupTitle"></div>
+          <div class="hd-ann-popup-body" id="hdAnnPopupBody"></div>
+        </div>
       </div>
-      <div class="hd-acts">
-        <div class="hd-act" title="预警通知">🔔<span class="bdg"></span></div>
-        <div class="hd-act" title="全屏" onclick="toggleFS()">⛶</div>
-      </div>
-      <div class="hd-user"><div class="hd-avatar">👤</div><span style="font-size:13px;color:var(--text-sub)">飞奕科技</span></div>
-    </div>
-    <!-- 公告弹出卡（fixed定位，脱离topbar堆叠） -->
-    <div class="hd-ann-popup" id="hdAnnPopup">
-      <div class="hd-ann-popup-bar" id="hdAnnPopupBar"></div>
-      <div class="hd-ann-popup-inner">
-        <span class="hd-ann-popup-badge" id="hdAnnPopupBadge">系统更新</span>
-        <div class="hd-ann-popup-title" id="hdAnnPopupTitle"></div>
-        <div class="hd-ann-popup-body" id="hdAnnPopupBody"></div>
-      </div>
-    </div>
-  </header>
-  <div class="bd">
-    <aside class="sb" id="sb"><div class="sb-toggle" id="sbt">◀</div><nav id="nav"></nav></aside>
+    </header>
     <main class="content"><iframe id="fr" src="pages/overview-big.html"></iframe></main>
   </div>
 </div>
+
 <script>
+/* ── 图标库(线描风,对应线上左侧菜单) ── */
+const ICONS={
+  overview:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4M7 12l3-3 2.5 2.5L17 8"/></svg>',
+  monitor:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4M7 10.5h2l1.5-3 2 5 1.5-2h3"/></svg>',
+  ctrl:'<svg viewBox="0 0 24 24"><path d="M5 4v6M5 14v6M12 4v10M12 18v2M19 4v2M19 10v10"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="16" r="2"/><circle cx="19" cy="8" r="2"/></svg>',
+  strategy:'<svg viewBox="0 0 24 24"><path d="M13 3L5 13.5h5.5L10 21l8-10.5h-5.5L13 3z"/></svg>',
+  device:'<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>',
+  elec:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M8 3v4M16 3v4M12.5 9.5l-3 4h5l-3 4"/></svg>',
+  ops:'<svg viewBox="0 0 24 24"><path d="M14.5 6.5a4.5 4.5 0 0 0-6 5.7L4 16.7a1.8 1.8 0 0 0 2.5 2.6l4.6-4.5a4.5 4.5 0 0 0 5.8-5.9l-2.7 2.7-2.4-.7-.7-2.4 2.7-2.7z"/></svg>',
+  sys:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.14-1.4l2-1.55-2-3.46-2.36.95a7 7 0 0 0-2.42-1.4L13.7 2.6h-3.4l-.38 2.54a7 7 0 0 0-2.42 1.4l-2.36-.95-2 3.46 2 1.55a7 7 0 0 0 0 2.8l-2 1.55 2 3.46 2.36-.95a7 7 0 0 0 2.42 1.4l.38 2.54h3.4l.38-2.54a7 7 0 0 0 2.42-1.4l2.36.95 2-3.46-2-1.55c.1-.45.14-.92.14-1.4z"/></svg>'
+};
+
+/* ── 菜单树(与线上 capture/live/menu.json 对齐;极致节能为演示保留项) ── */
 const MENU=[
-  {t:'d',id:'overview-big',ic:'⊞',lb:'项目总览大屏'},
-  {t:'d',id:'monitor-big',ic:'▣',lb:'综合监控大屏'},
-  {t:'g',ic:'❄',lb:'集中控制',ch:[
+  {t:'d',id:'overview-big',ic:'overview',lb:'项目总览大屏'},
+  {t:'d',id:'monitor-big',ic:'monitor',lb:'综合监控大屏'},
+  {t:'g',ic:'ctrl',lb:'集中控制',ch:[
     {id:'ctrl-ac',lb:'空调控制'},
+    {id:'ctrl-env',lb:'环境感知监测'},
     {id:'ctrl-group',lb:'群组控制'},
     {id:'ctrl-schedule',lb:'日程管理'},
-    {id:'ctrl-env',lb:'环境感知监测'},
     {id:'ctrl-fault',lb:'故障记录'},
     {id:'ctrl-onoff',lb:'开关机记录'},
   ]},
-  {t:'g',ic:'⚡',lb:'节能策略',ch:[
+  {t:'g',ic:'strategy',lb:'节能策略',ch:[
     {id:'strategy-env',lb:'环境感知联动'},
     {id:'strategy-ultimate',lb:'极致节能'},
     {id:'strategy-wind',lb:'风水联动'},
     {id:'strategy-load',lb:'负荷调控'},
   ]},
-  {t:'g',ic:'⚙',lb:'项目及设备管理',ch:[
+  {t:'g',ic:'device',lb:'项目及设备管理',ch:[
     {id:'device-project',lb:'项目管理'},
     {id:'device-sub',lb:'子账号列表'},
     {id:'device-ac-room',lb:'空调与房间关系'},
@@ -181,7 +201,7 @@ const MENU=[
     {id:'device-meter',lb:'电表管理'},
     {id:'device-env',lb:'环境感知设备管理'},
   ]},
-  {t:'g',ic:'💰',lb:'电费相关',ch:[
+  {t:'g',ic:'elec',lb:'电费相关',ch:[
     {id:'elec-query',lb:'电费查询'},
     {lb:'记录查询',sub:[
       {id:'elec-eq',lb:'当量记录'},
@@ -207,11 +227,11 @@ const MENU=[
     {id:'elec-warn-hour',lb:'异常预警小时'},
     {id:'elec-warn-daily',lb:'异常每日盘点'},
   ]},
-  {t:'g',ic:'🔧',lb:'智慧运维',ch:[
+  {t:'g',ic:'ops',lb:'智慧运维',ch:[
     {id:'ops-ac',lb:'空调参数'},
     {id:'ops-r7',lb:'R7参数'},
   ]},
-  {t:'g',ic:'🔒',lb:'系统管理',ch:[
+  {t:'g',ic:'sys',lb:'系统管理',ch:[
     {id:'sys-account',lb:'账号管理'},
     {id:'sys-org',lb:'组织管理'},
     {id:'sys-role',lb:'角色管理'},
@@ -219,75 +239,120 @@ const MENU=[
     {id:'sys-log',lb:'日志入口'},
     {id:'sys-platform',lb:'对接平台管理'},
     {id:'sys-3rd',lb:'第三方设备注册'},
-    {id:'sys-iot-card',lb:'物联网卡管理'},
-    {id:'sys-gateway-auth',lb:'网关授权'},
     {id:'sys-bill-gw',lb:'计费网关列表'},
+    {id:'sys-iot-card',lb:'物联网卡片'},
     {id:'sys-pref',lb:'项目偏好设置'},
     {id:'sys-x2000',lb:'x2000下发配置'},
-    {id:'sys-guide',lb:'操作指引管理'},
     {id:'sys-announce',lb:'公告管理'},
+    {id:'sys-guide',lb:'操作指引管理'},
   ]},
 ];
+/* 面包屑路径映射(菜单外可达页面) */
+const EXTRA_PATH={
+  'guide-view':['帮助','操作指引'],
+  'device-sub-create':['项目及设备管理','子账号列表','新增子账号'],
+  'ctrl-env-human':['集中控制','环境感知监测'],
+  'ctrl-env-door':['集中控制','环境感知监测'],
+};
+
 let aid='overview-big';
 const fr=document.getElementById('fr');
-function nav(id){aid=id;fr.src='pages/'+id+'.html';render();}
+
+function findPath(id){
+  for(const m of MENU){
+    if(m.t==='d'&&m.id===id)return[m.lb];
+    if(m.ch){
+      for(const c of m.ch){
+        if(c.id===id)return[m.lb,c.lb];
+        if(c.sub){for(const s of c.sub){if(s.id===id)return[m.lb,c.lb,s.lb];}}
+      }
+    }
+  }
+  return EXTRA_PATH[id]||null;
+}
+function renderBC(){
+  const p=findPath(aid)||['—'];
+  const el=document.getElementById('bc');
+  el.innerHTML=p.map((s,i)=>{
+    const cls=i===p.length-1?'cur':'bi';
+    return `<span class="${cls}">${s}</span>`+(i<p.length-1?'<span class="sep">/</span>':'');
+  }).join('');
+}
+function nav(id){aid=id;fr.src='pages/'+id+'.html';render();renderBC();}
 function hasA(ch){return ch.some(c=>c.id===aid||(c.sub&&c.sub.some(s=>s.id===aid)));}
+
 function render(){
   const el=document.getElementById('nav');el.innerHTML='';
   MENU.forEach(m=>{
     if(m.t==='d'){
       const d=document.createElement('div');
-      d.className='nav-direct'+(aid===m.id?' active':'');
-      d.innerHTML=`<span class="ni">${m.ic}</span><span>${m.lb}</span>`;
+      d.className='mi'+(aid===m.id?' active':'');
+      d.innerHTML=`<span class="ni">${ICONS[m.ic]}</span><span class="lb">${m.lb}</span>`;
       d.onclick=()=>nav(m.id);el.appendChild(d);
-    } else {
-      const g=document.createElement('div');
+    }else{
       const open=hasA(m.ch);
       const gt=document.createElement('div');
-      gt.className='nav-gt'+(open?' open':'');
+      gt.className='mi'+(open?' open':'');
       gt.dataset.o=open?'1':'0';
-      gt.innerHTML=`<span class="ni">${m.ic}</span><span>${m.lb}</span><span class="arr">▶</span>`;
+      gt.innerHTML=`<span class="ni">${ICONS[m.ic]}</span><span class="lb">${m.lb}</span><span class="arr">▾</span>`;
       const gb=document.createElement('div');
-      gb.className='nav-gb';gb.style.maxHeight=open?'1000px':'0';
-      gt.onclick=()=>{const o=gt.dataset.o==='1';gt.dataset.o=o?'0':'1';gt.classList.toggle('open',!o);gb.style.maxHeight=o?'0':'1000px';};
+      gb.className='mg-body';gb.style.maxHeight=open?'1200px':'0';
+      gt.onclick=()=>{const o=gt.dataset.o==='1';gt.dataset.o=o?'0':'1';gt.classList.toggle('open',!o);gb.style.maxHeight=o?'0':'1200px';};
       m.ch.forEach(c=>{
         if(c.sub){
           const sa=c.sub.some(s=>s.id===aid);
           const st=document.createElement('div');
-          st.className='nav-st'+(sa?' open':'');st.dataset.o=sa?'1':'0';
-          st.innerHTML=`<span>${c.lb}</span><span class="arr">▶</span>`;
+          st.className='mi st'+(sa?' open':'');st.dataset.o=sa?'1':'0';
+          st.innerHTML=`<span class="lb">${c.lb}</span><span class="arr">▾</span>`;
           const sb2=document.createElement('div');
-          sb2.className='nav-sb';sb2.style.maxHeight=sa?'400px':'0';
-          st.onclick=()=>{const o=st.dataset.o==='1';st.dataset.o=o?'0':'1';st.classList.toggle('open',!o);sb2.style.maxHeight=o?'0':'400px';};
+          sb2.className='mg-body';sb2.style.maxHeight=sa?'500px':'0';
+          st.onclick=()=>{const o=st.dataset.o==='1';st.dataset.o=o?'0':'1';st.classList.toggle('open',!o);sb2.style.maxHeight=o?'0':'500px';};
           c.sub.forEach(lf=>{
             const l=document.createElement('div');
-            l.className='nav-leaf'+(aid===lf.id?' active':'');
-            l.textContent=lf.lb;l.onclick=()=>nav(lf.id);sb2.appendChild(l);
+            l.className='mi sub2'+(aid===lf.id?' active':'');
+            l.innerHTML=`<span class="lb">${lf.lb}</span>`;
+            l.onclick=()=>nav(lf.id);sb2.appendChild(l);
           });
           gb.appendChild(st);gb.appendChild(sb2);
-        } else {
+        }else{
           const ni=document.createElement('div');
-          ni.className='nav-item'+(aid===c.id?' active':'');
-          ni.textContent=c.lb;ni.onclick=()=>nav(c.id);gb.appendChild(ni);
+          ni.className='mi sub'+(aid===c.id?' active':'');
+          ni.innerHTML=`<span class="lb">${c.lb}</span>`;
+          ni.onclick=()=>nav(c.id);gb.appendChild(ni);
         }
       });
+      const g=document.createElement('div');
       g.appendChild(gt);g.appendChild(gb);el.appendChild(g);
     }
   });
 }
-const sb=document.getElementById('sb');
-document.getElementById('sbt').onclick=()=>{
-  const c=sb.classList.toggle('col');
-  document.getElementById('sbt').textContent=c?'▶':'◀';
-};
-function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
 
-// ── 公告跑马灯 ──
+/* 折叠侧栏 */
+document.getElementById('hamburger').onclick=()=>document.getElementById('sb').classList.toggle('col');
+/* 全屏 */
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+/* 用户菜单 */
+const hdUser=document.getElementById('hdUser');
+hdUser.onclick=e=>{document.getElementById('userMenu').classList.toggle('show');e.stopPropagation();};
+document.addEventListener('click',()=>document.getElementById('userMenu').classList.remove('show'));
+/* 顶部轻提示 */
+function $msgTop(t){
+  let w=document.querySelector('.msg-wrap');
+  if(!w){w=document.createElement('div');w.className='msg-wrap';w.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:5000;';document.body.appendChild(w);}
+  const m=document.createElement('div');
+  m.style.cssText='background:#1a2233;border:1px solid rgba(255,255,255,.2);color:#d1d3d8;padding:9px 18px;border-radius:4px;font-size:13px;margin-top:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);';
+  m.textContent=t;w.appendChild(m);
+  setTimeout(()=>m.remove(),2000);
+}
+/* 项目切换提示 */
+document.getElementById('projSel').onchange=function(){$msgTop('已切换到项目:'+this.value);fr.contentWindow.location.reload();};
+
+/* ── 公告跑马灯(读取公告管理原型的 localStorage 配置) ── */
 const ANN_KEY='announcement_config';
 const ANN_TYPE_MAP={
-  update: {label:'系统更新',barBg:'linear-gradient(90deg,#1a6fff,#5ab8ff)',badgeBg:'rgba(77,174,255,.12)',badgeBd:'rgba(77,174,255,.30)',badgeClr:'#5ab8ff'},
+  update:{label:'系统更新',barBg:'linear-gradient(90deg,#1f65ff,#5ab8ff)',badgeBg:'rgba(77,174,255,.12)',badgeBd:'rgba(77,174,255,.30)',badgeClr:'#5ab8ff'},
   feature:{label:'新功能上线',barBg:'linear-gradient(90deg,#00b870,#00f0a0)',badgeBg:'rgba(0,232,152,.09)',badgeBd:'rgba(0,232,152,.28)',badgeClr:'#00f0a0'},
-  promo:  {label:'活动推广',barBg:'linear-gradient(90deg,#c87d00,#ffc030)',badgeBg:'rgba(255,181,32,.09)',badgeBd:'rgba(255,181,32,.28)',badgeClr:'#ffc030'},
+  promo:{label:'活动推广',barBg:'linear-gradient(90deg,#c87d00,#ffc030)',badgeBg:'rgba(255,181,32,.09)',badgeBd:'rgba(255,181,32,.28)',badgeClr:'#ffc030'},
 };
 function initAnnouncement(){
   try{
@@ -300,16 +365,14 @@ function initAnnouncement(){
     const snippet=(cfg.body||'').slice(0,24)+((cfg.body||'').length>24?'…':'');
     const text=(cfg.title||'')+(snippet?'　·　'+snippet:'');
     const full=text+'　　　'+text;
-    const dur=Math.max(8,text.length*0.55);
     const m=document.getElementById('hdAnnText');
-    m.textContent=full;m.style.animationDuration=dur+'s';
+    m.textContent=full;m.style.animationDuration=Math.max(8,text.length*0.55)+'s';
     document.getElementById('hdAnn').style.display='flex';
-    // 填充弹出卡
     const info=ANN_TYPE_MAP[cfg.type]||ANN_TYPE_MAP.update;
     document.getElementById('hdAnnPopupBar').style.background=info.barBg;
     const badge=document.getElementById('hdAnnPopupBadge');
     badge.textContent=info.label;
-    badge.style.cssText=`background:${info.badgeBg};border:1px solid ${info.badgeBd};color:${info.badgeClr};font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;display:inline-block;`;
+    badge.style.cssText=`background:${info.badgeBg};border:1px solid ${info.badgeBd};color:${info.badgeClr};font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;`;
     document.getElementById('hdAnnPopupTitle').textContent=cfg.title||'';
     document.getElementById('hdAnnPopupBody').textContent=cfg.body||'';
   }catch(err){}
@@ -318,13 +381,13 @@ function showAnnPopup(el){
   const rect=el.getBoundingClientRect();
   const popup=document.getElementById('hdAnnPopup');
   popup.style.top=(rect.bottom+6)+'px';
-  popup.style.left=Math.max(8,rect.left-260+rect.width/2)+'px';
+  popup.style.left=Math.max(8,rect.left-150+rect.width/2)+'px';
   popup.classList.add('show');
 }
 function hideAnnPopup(){document.getElementById('hdAnnPopup').classList.remove('show');}
 initAnnouncement();
 
-render();
+render();renderBC();
 </script>
 </body>
 </html>

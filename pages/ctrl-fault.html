@@ -1,1 +1,174 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>故障记录</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">故障记录</div><div class="pa"><button class="btn">导出</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">当前故障</div><div class="sc-v scr">3</div></div><div class="scd"><div class="sc-lb">本月故障</div><div class="sc-v scw">12</div></div><div class="scd"><div class="sc-lb">7日正常率</div><div class="sc-v scg">98.8%</div></div></div><div class="fb"><div class="fi"><div class="fl">所属项目</div><select style="width:160px"><option value="">全部</option><option>上海某商业广场</option><option>北京某写字楼</option></select></div><div class="fi"><div class="fl">空调/位置</div><input placeholder="请输入" style="width:130px"></div><div class="fi"><div class="fl">故障类型</div><select style="width:120px"><option value="">全部</option><option>通信故障</option><option>传感器故障</option><option>压缩机故障</option><option>其他</option></select></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>活跃</option><option>已恢复</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>序号</th><th>空调名称</th><th>安装位置</th><th>控制器</th><th>通道</th><th>品牌</th><th>型号</th><th>设定温度(℃)</th><th>回风温度(℃)</th><th>故障描述</th><th>上报时间</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td>1F-大厅-03</td><td>一楼大厅</td><td>CTR001</td><td>CH03</td><td>大金</td><td>FTXS35K2V1B</td><td>26</td><td>—</td><td>E3:通信故障</td><td>2026-06-10 11:20</td><td><span class="tag ter">故障</span></td></tr><tr><td>2</td><td>3F-储藏-01</td><td>三楼储藏室</td><td>CTR003</td><td>CH01</td><td>美的</td><td>KFR-35GW</td><td>—</td><td>—</td><td>E6:传感器异常</td><td>2026-06-09 15:44</td><td><span class="tag twn">待确认</span></td></tr><tr><td>3</td><td>B1-餐饮-02</td><td>B1餐饮区</td><td>CTR005</td><td>CH04</td><td>格力</td><td>KFR-72LW</td><td>24</td><td>32.1</td><td>F1:过热保护</td><td>2026-06-09 08:30</td><td><span class="tag ter">故障</span></td></tr></tbody></table><div class="pg"><div class="pg-info">共12条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故障记录</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
+.side-tree{min-height:100%;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.fault-code{color:var(--primary);cursor:pointer;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- 左侧建筑物树 -->
+  <aside class="side-tree">
+    <div class="st-title">建筑物信息</div>
+    <div id="tree"></div>
+  </aside>
+
+  <!-- 右侧主区 -->
+  <div class="main-col">
+    <div class="fb">
+      <div class="fi"><span class="fl">内机全地址</span><input id="fAddr" placeholder="请输入内机全地址" style="width:180px"></div>
+      <div class="fi"><span class="fl">故障类型</span>
+        <select id="fType" style="width:170px">
+          <option value="">请选择故障类型</option>
+          <option>内机故障</option>
+          <option>外机故障</option>
+          <option>通讯故障</option>
+        </select>
+      </div>
+      <div class="fi"><span class="fl">创建时间</span>
+        <input type="date" id="fStart" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:150px">
+      </div>
+      <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+      <button class="btn" onclick="doReset()">重置</button>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>序号</th><th>楼栋</th><th>楼层</th><th>房间</th><th>租户</th><th>内机全地址</th>
+          <th>故障类型</th><th>故障代码</th><th>设备时间</th><th>创建时间</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="pager"></div>
+  </div>
+</div>
+
+<!-- 故障详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>故障详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgDetail')">关闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgDetail');$msg('已标记为已知晓')">已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(与线上数据形态一致) ── */
+const FAULTS=(()=>{
+  const rows=[];
+  const floors=[[7,[707,713,714,715,716,717,718,719]],[14,[1404,1408,1412]],[23,[2302,2305]],[9,[903,909]],[3,[303,308]]];
+  const times=['2026-06-09 11:10:01','2026-05-19 16:07:58','2026-05-19 16:07:47','2026-05-13 15:42:11','2026-04-28 09:31:26','2026-04-17 14:05:40','2026-03-26 19:00:13'];
+  let i=0;
+  floors.forEach(([fl,rooms])=>{
+    rooms.forEach(rm=>{
+      for(let k=0;k<(fl===7?4:3);k++){
+        const t=times[(i+k)%times.length];
+        const t2=t.slice(0,-2)+String(Math.min(59,+t.slice(-2)+((i+k)%7))).padStart(2,'0');
+        rows.push({bld:'1号楼',fl:fl+'层',flNum:fl,room:rm,tenant:rm,
+          addr:`${1+(i%2)}-${1+(i%3)}-${fl<10?fl:fl+16}-${1+(i+k)%8}`,
+          type:['内机故障','内机故障','内机故障','通讯故障'][(i+k)%4],
+          code:'LOST',devTime:t,crtTime:t2});
+        i++;
+      }
+    });
+  });
+  return rows;
+})();
+
+/* ── 建筑树 ── */
+const TREE=[{lb:'1号楼',open:false,children:['3层','7层','9层','14层','23层']}];
+let treeSel='';
+function renderTree(){
+  const el=document.getElementById('tree');el.innerHTML='';
+  TREE.forEach(b=>{
+    const row=document.createElement('div');
+    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
+    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
+    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();doQuery();};
+    row.onclick=()=>{b.open=!b.open;renderTree();};
+    el.appendChild(row);
+    if(b.open){
+      const box=document.createElement('div');box.className='tree-children';
+      b.children.forEach(f=>{
+        const fr=document.createElement('div');
+        fr.className='tree-row'+(treeSel===f?' active':'');
+        fr.style.paddingLeft='30px';
+        fr.innerHTML=`<span>${f}</span>`;
+        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();doQuery();};
+        box.appendChild(fr);
+      });
+      el.appendChild(box);
+    }
+  });
+}
+
+/* ── 查询/表格/分页 ── */
+let filtered=FAULTS.slice();
+const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
+function doQuery(){
+  const addr=document.getElementById('fAddr').value.trim();
+  const type=document.getElementById('fType').value;
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  filtered=FAULTS.filter(r=>
+    (!addr||r.addr.includes(addr))&&
+    (!type||r.type===type)&&
+    (!s||r.crtTime>=s)&&(!e||r.crtTime<=e+' 23:59:59')&&
+    (!treeSel||treeSel==='1号楼'||r.fl===treeSel)
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['fAddr','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fType').value='';treeSel='';renderTree();doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${start+i+1}</td><td>${r.bld}</td><td>${r.fl}</td><td>${r.room}</td><td>${r.tenant}</td>
+      <td>${r.addr}</td><td>${r.type}</td>
+      <td><span class="fault-code" onclick='showDetail(${JSON.stringify(JSON.stringify(r))})'>${r.code}</span></td>
+      <td>${r.devTime}</td><td>${r.crtTime}</td>
+      <td><span class="op"><a onclick='showDetail(${JSON.stringify(JSON.stringify(r))})'>查看</a></span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="11"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function showDetail(json){
+  const r=JSON.parse(json);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">楼栋:</span><span class="v">${r.bld}</span>
+    <span class="k">楼层:</span><span class="v">${r.fl}</span>
+    <span class="k">房间:</span><span class="v">${r.room}</span>
+    <span class="k">租户:</span><span class="v">${r.tenant}</span>
+    <span class="k">内机全地址:</span><span class="v">${r.addr}</span>
+    <span class="k">故障类型:</span><span class="v">${r.type}</span>
+    <span class="k">故障代码:</span><span class="v text-er">${r.code}</span>
+    <span class="k">故障描述:</span><span class="v">内机与网关通讯中断,请检查设备供电与线路连接</span>
+    <span class="k">设备时间:</span><span class="v">${r.devTime}</span>
+    <span class="k">创建时间:</span><span class="v">${r.crtTime}</span>`;
+  $modal('dlgDetail');
+}
+
+renderTree();doQuery();
+</script>
+</body>
+</html>
