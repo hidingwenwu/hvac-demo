@@ -1,1 +1,269 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>账号管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">账号管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">总账号</div><div class="sc-v scc">128</div></div><div class="scd"><div class="sc-lb">启用中</div><div class="sc-v scg">116</div></div><div class="scd"><div class="sc-lb">已禁用</div><div class="sc-v scr">12</div></div></div><div class="fb"><div class="fi"><div class="fl">账号名称</div><input placeholder="账号/姓名" style="width:140px"></div><div class="fi"><div class="fl">角色</div><select style="width:120px"><option value="">全部</option><option>管理员</option><option>操作员</option><option>查看员</option></select></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>启用</option><option>禁用</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>账号名称</th><th>真实姓名</th><th>角色</th><th>所属组织</th><th>手机号</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>admin</td><td>张三</td><td>超级管理员</td><td>总部</td><td>138****0001</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">停用</a></div></td></tr><tr><td>op_user1</td><td>李四</td><td>操作员</td><td>上海分部</td><td>139****0002</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">停用</a></div></td></tr><tr><td>viewer1</td><td>王五</td><td>查看员</td><td>上海分部</td><td>137****0003</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">停用</a></div></td></tr><tr><td>op_user2</td><td>赵六</td><td>操作员</td><td>北京分部</td><td>136****0004</td><td><span class="tag ter">禁用</span></td><td><div class="op"><a class="">编辑</a><a class="">启用</a></div></td></tr><tr><td>manager1</td><td>钱七</td><td>项目经理</td><td>广州分部</td><td>135****0005</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">停用</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>账号管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 性别/状态:线上为实心小方块标签(男绿/女红、启用绿) */
+.stag{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:22px;padding:0 8px;border-radius:3px;font-size:12px;color:#fff;}
+.stag.ok{background:var(--ok);}
+.stag.er{background:var(--er);}
+.stag.info{background:var(--info);}
+.stag.click{cursor:pointer;user-select:none;}
+/* 查看详情栅格 */
+.detail-grid{display:grid;grid-template-columns:100px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+/* 弹窗表单:label 右对齐单列 */
+.uform .form-row{margin-bottom:14px;}
+.uform .form-row .fl{width:90px;}
+.uform input,.uform select{flex:1;}
+.uform .radio-group{display:flex;align-items:center;gap:16px;font-size:13px;}
+.uform .radio-group label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- 筛选栏:登录账号/姓名/手机号码/部门 + 搜索/重置/添加新用户(与线上一致) -->
+<div class="fb">
+  <div class="fi"><span class="fl">登录账号</span><input id="fAcc" placeholder="请输入登录账号" style="width:180px"></div>
+  <div class="fi"><span class="fl">姓名</span><input id="fName" placeholder="请输入姓名" style="width:180px"></div>
+  <div class="fi"><span class="fl">手机号码</span><input id="fPhone" placeholder="请输入手机号" style="width:180px"></div>
+  <div class="fi"><span class="fl">部门</span>
+    <select id="fDept" style="width:170px">
+      <option value="">请选择</option>
+      <option>石家庄邸德</option>
+      <option>上海铭万</option>
+      <option>新奥能源</option>
+      <option>平台项目展示</option>
+    </select>
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openAdd()">＋ 添加新用户</button>
+</div>
+
+<!-- 用户表格 -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>添加时间</th><th>登录名称</th><th>姓名</th><th>手机号</th>
+      <th>性别</th><th>所属部门</th><th>状态</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 查看详情弹窗 -->
+<div class="modal" id="dlgView">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>查看用户</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="viewGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgView')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 添加/修改用户弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span id="dlgEditTitle">添加新用户</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db uform">
+      <div class="form-row"><span class="fl"><span class="req">*</span>登录账号</span><input id="eAcc" placeholder="请输入登录账号"></div>
+      <div class="form-row" id="rowPwd"><span class="fl"><span class="req">*</span>密码</span><input id="ePwd" type="password" placeholder="请输入密码"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>姓名</span><input id="eName" placeholder="请输入姓名"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>手机号码</span><input id="ePhone" placeholder="请输入手机号"></div>
+      <div class="form-row"><span class="fl">性别</span>
+        <div class="radio-group">
+          <label><input type="radio" name="eSex" value="男" checked>男</label>
+          <label><input type="radio" name="eSex" value="女">女</label>
+        </div>
+      </div>
+      <div class="form-row"><span class="fl">部门</span>
+        <select id="eDept">
+          <option value="">请选择</option>
+          <option>石家庄邸德</option>
+          <option>上海铭万</option>
+          <option>新奥能源</option>
+          <option>平台项目展示</option>
+        </select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveUser()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:前 20 条与线上截图逐条一致,其余程序生成(共 1796 条,同线上总数) ── */
+const SEED=[
+  ['2026-07-03 09:05:55','haierceshi','海尔R7专项测试','12433452332','男',''],
+  ['2026-07-02 16:42:00','tjhq','天津红桥万通尚都嘉园焕新模块项目','17866665665','男',''],
+  ['2026-07-02 16:20:46','R7SY','浩瑞通R7试用','12356567767','男',''],
+  ['2026-07-02 16:19:41','hmgj','恒茂国际都会焕新模块项目','17654387666','男',''],
+  ['2026-07-02 14:00:03','hbffcl','湖北反腐倡廉教育基地','19867787888','男',''],
+  ['2026-07-01 14:41:14','sxjfz','时兴经济发展','12334432423','男',''],
+  ['2026-07-01 13:56:50','mdzxce','美的R7专项测试','15908936722','男',''],
+  ['2026-07-01 13:54:19','f17gtest2','f17gtest2','19358964478','男',''],
+  ['2026-07-01 13:51:23','f17gtest_main','f17gtest_main','18951247415','男',''],
+  ['2026-07-01 12:48:21','12345678900','123','12347656777','男',''],
+  ['2026-07-01 11:21:14','shijian_sub','shijian_sub','17878917891','男',''],
+  ['2026-07-01 10:23:38','yanshi_kj','演示_孔建','18765908742','男',''],
+  ['2026-06-30 14:33:55','mdceshi','R7','16769774777','男',''],
+  ['2026-06-30 13:24:32','djkf','梁','13816542595','男',''],
+  ['2026-06-30 12:10:14','zrjt','中瑞集团','18765423657','男',''],
+  ['2026-06-29 17:25:19','Ultratak_ADMHR_01','邓淑萍','13794981508','女',''],
+  ['2026-06-29 17:19:19','qdkjy','启迪科技园E座','13423445345','男',''],
+  ['2026-06-29 16:51:31','ldlhds','绿地蓝海大厦','17792090302','男',''],
+  ['2026-06-29 15:08:26','432311269908021248','南京新工泰融产业聚集区','18675646566','男',''],
+  ['2026-06-29 15:03:06','njxgrtr','南京新工泰融产业聚集区','12378658787','男','']
+];
+const USERS=(()=>{
+  const rows=SEED.map(r=>({time:r[0],acc:r[1],name:r[2],phone:r[3],sex:r[4],dept:r[5],on:true}));
+  /* 追加生成数据,贴近线上账号形态(拼音简写/公司项目名/时间倒序) */
+  const accs=['sjzdide','fulinshaokao','zhoujia','zhxzds','zizhuwangqiu','hygyl','KTR7','bjwyn','jnejc','scxn','hzxg','LCXXGJ','wdgg2_2005','hzhhwy','jzdlj','18nan','shjfh'];
+  const names=['石家庄邸德','郭总','周佳','珠海香洲大厦','王','宏运公园里','空调焕新R7','宝鸡维也纳酒店R7','济南二机床集团','四川烯南碳素科技有限公司','杭州校果能源管理技术有限公司','杭州市西溪国际商务中心B座项目','长沙市开福区万达公馆2栋2005','杭州美达丽阳国际商务中心','家装多联机集控项目','铭海','上海隽芳华养老院'];
+  const depts=['','','','石家庄邸德','','上海铭万','','','新奥能源',''];
+  let d=new Date('2026-06-29 14:00:00').getTime();
+  for(let i=0;rows.length<1796;i++){
+    d-=(37+i%13)*60*1000*7;                       /* 时间递减,保持倒序 */
+    const dt=new Date(d),p=n=>String(n).padStart(2,'0');
+    rows.push({
+      time:`${dt.getFullYear()}-${p(dt.getMonth()+1)}-${p(dt.getDate())} ${p(dt.getHours())}:${p(dt.getMinutes())}:${p(dt.getSeconds())}`,
+      acc:accs[i%accs.length]+(i>=accs.length?'_'+Math.floor(i/accs.length):''),
+      name:names[i%names.length],
+      phone:'1'+String(2345678901+i*7919).slice(0,10),
+      sex:i%23===11?'女':'男',
+      dept:depts[i%depts.length],
+      on:i%41!==17});                              /* 少量禁用账号 */
+  }
+  return rows;
+})();
+
+/* ── 查询 / 重置 / 分页(线上默认 20 条/页,可选 10/20/30/50) ── */
+let filtered=USERS.slice();
+const pg={total:USERS.length,page:1,size:20,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const acc=document.getElementById('fAcc').value.trim();
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const dept=document.getElementById('fDept').value;
+  filtered=USERS.filter(r=>
+    (!acc||r.acc.toLowerCase().includes(acc.toLowerCase()))&&
+    (!name||r.name.includes(name))&&
+    (!phone||r.phone.includes(phone))&&
+    (!dept||r.dept===dept));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['fAcc','fName','fPhone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDept').value='';doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>{
+    const idx=USERS.indexOf(r);
+    return `<tr>
+      <td>${r.time}</td><td>${r.acc}</td><td>${r.name}</td><td>${r.phone}</td>
+      <td><span class="stag ${r.sex==='女'?'er':'ok'}">${r.sex}</span></td>
+      <td>${r.dept||''}</td>
+      <td><span class="stag click ${r.on?'ok':'info'}" onclick="toggleOn(${idx})">${r.on?'启用':'禁用'}</span></td>
+      <td><span class="op">
+        <a onclick="viewUser(${idx})">查看</a>
+        <a onclick="resetPwd(${idx})">重置密码</a>
+        <a onclick="openEdit(${idx})">修改信息</a>
+        <a class="danger" onclick="delUser(${idx})">删除</a>
+      </span></td>
+    </tr>`;}).join('')
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 启用/禁用切换 ── */
+function toggleOn(idx){
+  const r=USERS[idx];
+  $confirm(`确定要${r.on?'禁用':'启用'}账号「${r.acc}」吗?`,()=>{
+    r.on=!r.on;renderTable();$msg((r.on?'启用':'禁用')+'成功');
+  });
+}
+
+/* ── 查看 ── */
+function viewUser(idx){
+  const r=USERS[idx];
+  document.getElementById('viewGrid').innerHTML=`
+    <span class="k">登录账号:</span><span class="v">${r.acc}</span>
+    <span class="k">姓名:</span><span class="v">${r.name}</span>
+    <span class="k">手机号:</span><span class="v">${r.phone}</span>
+    <span class="k">性别:</span><span class="v">${r.sex}</span>
+    <span class="k">所属部门:</span><span class="v">${r.dept||'—'}</span>
+    <span class="k">状态:</span><span class="v ${r.on?'text-ok':'text-sub'}">${r.on?'启用':'禁用'}</span>
+    <span class="k">添加时间:</span><span class="v">${r.time}</span>`;
+  $modal('dlgView');
+}
+
+/* ── 重置密码 ── */
+function resetPwd(idx){
+  $confirm(`确定重置账号「${USERS[idx].acc}」的密码吗?`,()=>$msg('密码已重置'));
+}
+
+/* ── 添加 / 修改 ── */
+let editIdx=-1;
+function openAdd(){
+  editIdx=-1;
+  document.getElementById('dlgEditTitle').textContent='添加新用户';
+  document.getElementById('rowPwd').style.display='';
+  ['eAcc','ePwd','eName','ePhone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('eAcc').disabled=false;
+  document.getElementById('eDept').value='';
+  document.querySelector('input[name=eSex][value=男]').checked=true;
+  $modal('dlgEdit');
+}
+function openEdit(idx){
+  editIdx=idx;const r=USERS[idx];
+  document.getElementById('dlgEditTitle').textContent='修改信息';
+  document.getElementById('rowPwd').style.display='none';   /* 修改时不展示密码项 */
+  document.getElementById('eAcc').value=r.acc;
+  document.getElementById('eAcc').disabled=true;            /* 登录账号不可改 */
+  document.getElementById('eName').value=r.name;
+  document.getElementById('ePhone').value=r.phone;
+  document.getElementById('eDept').value=r.dept;
+  document.querySelector(`input[name=eSex][value=${r.sex}]`).checked=true;
+  $modal('dlgEdit');
+}
+function saveUser(){
+  const acc=document.getElementById('eAcc').value.trim();
+  const name=document.getElementById('eName').value.trim();
+  const phone=document.getElementById('ePhone').value.trim();
+  if(!acc)return $msg('请输入登录账号','warning');
+  if(editIdx<0&&!document.getElementById('ePwd').value)return $msg('请输入密码','warning');
+  if(!name)return $msg('请输入姓名','warning');
+  if(!phone)return $msg('请输入手机号','warning');
+  const sex=document.querySelector('input[name=eSex]:checked').value;
+  const dept=document.getElementById('eDept').value;
+  if(editIdx<0){
+    const p=n=>String(n).padStart(2,'0'),d=new Date();
+    USERS.unshift({time:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,
+      acc,name,phone,sex,dept,on:true});
+    $msg('添加成功');
+  }else{
+    Object.assign(USERS[editIdx],{name,phone,sex,dept});
+    $msg('修改成功');
+  }
+  $modalClose('dlgEdit');doQuery();
+}
+
+/* ── 删除 ── */
+function delUser(idx){
+  $confirm(`确定删除账号「${USERS[idx].acc}」吗?`,()=>{
+    USERS.splice(idx,1);doQuery();$msg('删除成功');
+  });
+}
+
+$pager('pager',pg);renderTable();
+</script>
+</body>
+</html>

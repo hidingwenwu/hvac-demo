@@ -1,1 +1,226 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>组织管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">组织管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">组织名称</div><input placeholder="请输入" style="width:140px"></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>组织名称</th><th>组织编码</th><th>上级组织</th><th>负责人</th><th>账号数</th><th>创建时间</th><th>操作</th></tr></thead><tbody><tr><td>飞奕科技总部</td><td>ORG001</td><td>—</td><td>张总</td><td>28</td><td>2024-01-10</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>上海分公司</td><td>ORG002</td><td>飞奕科技总部</td><td>李总</td><td>12</td><td>2024-02-15</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>北京分公司</td><td>ORG003</td><td>飞奕科技总部</td><td>王总</td><td>9</td><td>2024-03-01</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>广州分公司</td><td>ORG004</td><td>飞奕科技总部</td><td>赵总</td><td>7</td><td>2024-04-20</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>深圳办事处</td><td>ORG005</td><td>广州分公司</td><td>钱经理</td><td>3</td><td>2024-05-10</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>组织管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 组织类型复选组(新增/修改弹窗) */
+.chk-group{display:flex;align-items:center;gap:18px;font-size:13px;flex-wrap:wrap;}
+.chk-group label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+/* 弹窗表单 */
+.oform .form-row{margin-bottom:14px;}
+.oform .form-row .fl{width:80px;}
+.oform input{flex:1;}
+/* 配置项目弹窗:项目复选列表 */
+.proj-list{max-height:320px;overflow-y:auto;border:1px solid var(--bd);border-radius:4px;padding:6px 0;}
+.proj-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:13px;cursor:pointer;}
+.proj-item:hover{background:var(--bg-hover);}
+</style>
+</head>
+<body>
+<!-- 筛选栏:组织类型/组织名称 + 查询/重置/新增(与线上一致) -->
+<div class="fb">
+  <div class="fi"><span class="fl">组织类型</span>
+    <select id="fType" style="width:190px">
+      <option value="">请选择组织类型</option>
+      <option>空调经销商及服务商</option>
+      <option>网关渠道商</option>
+      <option>平台</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">组织名称</span><input id="fName" placeholder="请输入组织名称" style="width:190px"></div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openAdd()">＋ 新增</button>
+</div>
+
+<!-- 组织表格(线上无分页,全部渲染) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>组织类型</th><th>组织名称</th><th>创建时间</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- 新增/修改组织弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span id="dlgEditTitle">新增</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db oform">
+      <div class="form-row"><span class="fl"><span class="req">*</span>组织类型</span>
+        <div class="chk-group" id="eTypes">
+          <label><input type="checkbox" value="空调经销商及服务商">空调经销商及服务商</label>
+          <label><input type="checkbox" value="网关渠道商">网关渠道商</label>
+          <label><input type="checkbox" value="平台">平台</label>
+        </div>
+      </div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>组织名称</span><input id="eName" placeholder="请输入组织名称"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取消</button>
+      <button class="btn btnp" onclick="saveOrg()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 配置项目弹窗:勾选组织可见项目 -->
+<div class="modal" id="dlgProj">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>配置项目</span><span class="dx" onclick="$modalClose('dlgProj')">✕</span></div>
+    <div class="db">
+      <div class="fb" style="margin-bottom:10px">
+        <input id="pKw" placeholder="请输入项目名称" style="width:220px" oninput="renderProj()">
+      </div>
+      <div class="proj-list" id="projList"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgProj')">取消</button>
+      <button class="btn btnp" onclick="saveProj()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:与线上截图逐条一致(类型/名称/创建时间) ── */
+const GW='网关渠道商,平台';
+const ORGS=[
+  [GW,'彭程项目','2026-07-02 13:56:47'],
+  [GW,'上海铭万','2026-06-30 18:09:23'],
+  [GW,'新奥能源','2026-06-18 10:28:57'],
+  [GW,'蓝达聪','2026-06-16 09:14:58'],
+  [GW,'上海摩润','2026-06-15 13:14:07'],
+  [GW,'平台项目展示','2026-06-11 12:37:44'],
+  [GW,'杭州菱尊机电设备有限公司','2026-06-09 16:47:37'],
+  [GW,'石家庄邸德','2026-06-09 10:40:28'],
+  [GW,'中能数碳综合能源服务(湖北)有限公司','2026-06-05 16:50:45'],
+  [GW,'江苏金邦电气工程有限公司','2026-05-27 13:27:28'],
+  [GW,'温州冠菱机电设备有限公司','2026-05-26 13:02:21'],
+  [GW,'青岛联盛创能源科技有限公司','2026-05-19 08:53:38'],
+  [GW,'河南祥和节能技术有限公司','2026-05-15 17:10:48'],
+  [GW,'安徽中科碳数科技有限公司','2026-04-18 18:35:43'],
+  [GW,'深圳华维暖通设备有限公司','2026-04-01 11:03:45'],
+  [GW,'四川中峻','2026-03-27 14:33:11'],
+  [GW,'南京天溯自动化控制系统有限公司','2026-03-17 11:37:57'],
+  [GW,'中能数碳综合能源服务(湖北) 有限公司','2026-03-16 15:45:33'],
+  [GW,'九度新','2026-03-13 09:52:16'],
+  [GW,'森岛电气','2026-03-12 17:41:07'],
+  [GW,'浙江耀格','2026-03-06 15:44:24'],
+  [GW,'上海邦茜暖通设备工程有限公司','2026-03-05 11:27:19'],
+  ['空调经销商及服务商,网关渠道商,平台','上海邦茜暖通设备工程有限公司','2026-02-28 16:18:37'],
+  [GW,'厦门星纵物联科技有限公司','2026-02-25 09:26:17'],
+  [GW,'北京熙联得节能科技股份有限公司','2026-02-10 22:28:03'],
+  [GW,'上海大金','2026-02-10 09:52:38'],
+  [GW,'江苏亿麦冷暖设备工程有限公司','2026-02-09 17:23:56'],
+  [GW,'杭州拓生智能科技有限公司','2026-02-09 13:07:30'],
+  [GW,'成都锦标机电设备有限公司','2026-02-06 13:19:14'],
+  [GW,'火凤云计算有限公司','2026-02-05 11:14:02'],
+  [GW,'庄怀秋','2026-02-05 08:50:51'],
+  [GW,'张本松','2026-02-04 11:39:21'],
+  [GW,'沧州丰擎冷暖设备有限公司','2026-02-04 09:15:08'],
+  [GW,'广州翔龙机电有限公司','2026-02-04 09:13:05'],
+  [GW,'宁夏京普爱威尔商贸有限公司','2026-01-29 12:14:15']
+].map(r=>({type:r[0],name:r[1],time:r[2],projs:[]}));
+
+/* 可配置的项目列表(配置项目弹窗用,项目名形态贴线上) */
+const PROJECTS=['1861蔚蓝公寓B2','平台产品测试-预付费','平台产品测试-后付费','杭州市西溪国际商务中心B座项目','长沙市开福区万达公馆2栋2005','珠海香洲大厦','绿地蓝海大厦','启迪科技园E座','南京新工泰融产业聚集区','宏运公园里','济南二机床集团','宝鸡维也纳酒店R7'];
+
+/* ── 查询 / 重置(线上本页无分页,直接全量渲染) ── */
+let filtered=ORGS.slice();
+function doQuery(){
+  const type=document.getElementById('fType').value;
+  const name=document.getElementById('fName').value.trim();
+  filtered=ORGS.filter(r=>
+    (!type||r.type.split(',').includes(type))&&
+    (!name||r.name.includes(name)));
+  renderTable();
+}
+function doReset(){
+  document.getElementById('fType').value='';
+  document.getElementById('fName').value='';doQuery();
+}
+function renderTable(){
+  document.getElementById('tbody').innerHTML=filtered.length?filtered.map(r=>{
+    const idx=ORGS.indexOf(r);
+    return `<tr>
+      <td>${r.type}</td><td>${r.name}</td><td>${r.time}</td>
+      <td><span class="op">
+        <a onclick="openEdit(${idx})">修改</a>
+        <a onclick="openProj(${idx})">配置项目</a>
+        <a class="danger" onclick="delOrg(${idx})">删除</a>
+      </span></td>
+    </tr>`;}).join('')
+    :'<tr><td colspan="4"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 新增 / 修改 ── */
+let editIdx=-1;
+function setTypes(types){
+  document.querySelectorAll('#eTypes input').forEach(c=>c.checked=types.includes(c.value));
+}
+function openAdd(){
+  editIdx=-1;
+  document.getElementById('dlgEditTitle').textContent='新增';
+  document.getElementById('eName').value='';
+  setTypes([]);
+  $modal('dlgEdit');
+}
+function openEdit(idx){
+  editIdx=idx;const r=ORGS[idx];
+  document.getElementById('dlgEditTitle').textContent='修改';
+  document.getElementById('eName').value=r.name;
+  setTypes(r.type.split(','));
+  $modal('dlgEdit');
+}
+function saveOrg(){
+  const types=[...document.querySelectorAll('#eTypes input:checked')].map(c=>c.value);
+  const name=document.getElementById('eName').value.trim();
+  if(!types.length)return $msg('请选择组织类型','warning');
+  if(!name)return $msg('请输入组织名称','warning');
+  if(editIdx<0){
+    const p=n=>String(n).padStart(2,'0'),d=new Date();
+    ORGS.unshift({type:types.join(','),name,
+      time:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,
+      projs:[]});
+    $msg('新增成功');
+  }else{
+    ORGS[editIdx].type=types.join(',');ORGS[editIdx].name=name;
+    $msg('修改成功');
+  }
+  $modalClose('dlgEdit');doQuery();
+}
+
+/* ── 配置项目 ── */
+let projIdx=-1,projSel=[];
+function openProj(idx){
+  projIdx=idx;projSel=ORGS[idx].projs.slice();
+  document.getElementById('pKw').value='';
+  renderProj();$modal('dlgProj');
+}
+function renderProj(){
+  const kw=document.getElementById('pKw').value.trim();
+  document.getElementById('projList').innerHTML=PROJECTS
+    .filter(p=>!kw||p.includes(kw))
+    .map(p=>`<label class="proj-item"><input type="checkbox" value="${p}" ${projSel.includes(p)?'checked':''}
+      onchange="this.checked?projSel.push(this.value):projSel.splice(projSel.indexOf(this.value),1)">${p}</label>`).join('')
+    ||'<div class="empty" style="padding:30px"><span class="et">暂无数据</span></div>';
+}
+function saveProj(){
+  ORGS[projIdx].projs=projSel.slice();
+  $modalClose('dlgProj');$msg('保存成功');
+}
+
+/* ── 删除 ── */
+function delOrg(idx){
+  $confirm(`确定删除组织「${ORGS[idx].name}」吗?`,()=>{
+    ORGS.splice(idx,1);doQuery();$msg('删除成功');
+  });
+}
+
+doQuery();
+</script>
+</body>
+</html>

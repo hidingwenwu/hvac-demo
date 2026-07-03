@@ -1,27 +1,123 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>日志入口</title><link rel="stylesheet" href="_base.css"></head><body>
-<div class="ph"><div class="pt">日志入口</div><div class="pa"></div></div>
-<div class="fb">
-  <div class="fi"><div class="fl">操作员</div><input placeholder="请输入" style="width:120px"></div>
-  <div class="fi"><div class="fl">操作</div><input placeholder="请输入" style="width:140px"></div>
-  <div class="fi"><div class="fl">时间范围</div><input type="date" style="width:130px"> <span style="color:var(--ts);font-size:12px">至</span> <input type="date" style="width:130px"></div>
-  <button class="btn btnp">查询</button><button class="btn">重置</button>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>日志入口</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 日志入口:分组卡片墙(与线上一致:左右两栏,设备相关在左栏下方) ── */
+.log-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch;}
+.lg-panel{background:var(--bg-panel);border-radius:var(--r);padding:18px 20px 20px;display:flex;flex-direction:column;}
+.lg-title{font-size:16px;font-weight:600;color:var(--txw);margin-bottom:8px;}
+.lg-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);align-content:space-evenly;}
+.lg-card{height:138px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:8px;cursor:pointer;transition:background .15s;user-select:none;}
+.lg-card:hover{background:var(--bg-hover);}
+.lg-ic{font-size:30px;line-height:1;opacity:.85;}
+.lg-nm{font-size:14px;color:var(--tx);}
+.lg-card:hover .lg-nm{color:var(--txw);}
+/* 弹窗内日志表格 */
+#dlgLog .tw{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="log-wrap">
+  <!-- 空调相关 -->
+  <div class="lg-panel"><div class="lg-title">空调相关</div><div class="lg-grid" id="gridAc"></div></div>
+  <!-- 计费相关 -->
+  <div class="lg-panel"><div class="lg-title">计费相关</div><div class="lg-grid" id="gridBill"></div></div>
+  <!-- 设备相关(位于左栏下方) -->
+  <div class="lg-panel" style="grid-column:1"><div class="lg-title">设备相关</div><div class="lg-grid" id="gridDev"></div></div>
 </div>
-<div class="tw">
-  <table>
-    <thead><tr><th>序号</th><th>操作员</th><th>操作</th><th>操作对象</th><th>操作时间</th><th>操作结果</th></tr></thead>
-    <tbody>
-      <tr><td>1</td><td>admin</td><td>批量下发温度指令</td><td>2楼全部空调（8台）</td><td>2026-06-10 14:32:15</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>2</td><td>op_user1</td><td>新增租户</td><td>C科技公司</td><td>2026-06-10 13:15:44</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>3</td><td>manager1</td><td>导出电费报表</td><td>2026-05 账单报表</td><td>2026-06-10 11:08:22</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>4</td><td>admin</td><td>删除账号</td><td>test_user</td><td>2026-06-10 09:55:01</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>5</td><td>viewer1</td><td>用户登录</td><td>系统登录</td><td>2026-06-09 17:30:11</td><td><span class="tag ter">失败</span></td></tr>
-      <tr><td>6</td><td>admin</td><td>启用节能策略</td><td>峰时段功率削减策略</td><td>2026-06-09 09:12:05</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>7</td><td>op_user1</td><td>修改电价</td><td>峰时电价设定</td><td>2026-06-08 16:44:30</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>8</td><td>admin</td><td>新增控制器</td><td>CTR-B1-02</td><td>2026-06-08 10:30:50</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>9</td><td>admin</td><td>修改角色权限</td><td>运维工程师</td><td>2026-06-07 15:22:18</td><td><span class="tag tok">成功</span></td></tr>
-      <tr><td>10</td><td>op_user2</td><td>重启控制器</td><td>CTR-3F-01</td><td>2026-06-07 11:05:33</td><td><span class="tag tok">成功</span></td></tr>
-    </tbody>
-  </table>
-  <div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div>
+
+<!-- 通用日志列表弹窗:点击卡片弹出 -->
+<div class="modal" id="dlgLog">
+  <div class="dialog" style="width:780px">
+    <div class="dh"><span id="logTitle">日志</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
+    <div class="db">
+      <div class="tw">
+        <table>
+          <thead><tr><th style="width:180px">时间</th><th style="width:130px">操作人</th><th class="tl">内容</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+      <div id="logPager"></div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgLog')">关闭</button></div>
+  </div>
 </div>
-</body></html>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 卡片分组(名称逐一对照线上截图) ── */
+const GROUPS={
+  gridAc:[
+    ['空调列表','📋'],['空调命令','📤'],['空调故障','⚠️'],
+    ['定时任务命令','⏱️'],['定时任务命令比对','🔀'],['极致节能任务命令','🌿'],
+    ['极致节能任务比对命令','🔁']
+  ],
+  gridBill:[
+    ['计费命令表','🧾'],['计费告警表','🔔'],['电费日使用情况','⚡']
+  ],
+  gridDev:[
+    ['主机状态','🖥️'],['主机命令','📤'],['主机故障','⚠️'],
+    ['节点状态','📶'],['节点命令','📤'],['节点故障','⚠️'],
+    ['电表状态','🔌'],['电表命令','📤']
+  ]
+};
+
+/* ── 渲染卡片墙 ── */
+Object.keys(GROUPS).forEach(gid=>{
+  const box=document.getElementById(gid);
+  GROUPS[gid].forEach(([nm,ic])=>{
+    const c=document.createElement('div');
+    c.className='lg-card';
+    c.innerHTML=`<span class="lg-ic">${ic}</span><span class="lg-nm">${nm}</span>`;
+    c.onclick=()=>openLog(nm);
+    box.appendChild(c);
+  });
+});
+
+/* ── 通用日志数据生成(时间/操作人/内容,形态贴线上) ── */
+const OPERATORS=['chuhuojilu','丁文武','系统','admin'];
+function pad(n){return String(n).padStart(2,'0');}
+function logRows(name){
+  // 按卡片名称确定条数(17~30 条),内容按名称类型套模板
+  const total=17+(name.length*7)%14;
+  const rows=[];
+  let t=new Date('2026-07-03T10:19:34');
+  for(let i=0;i<total;i++){
+    t=new Date(t.getTime()-(37+i*53)*60000); // 逐条向前推时间
+    const ts=`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+    const addr=`1-${1+i%3}-${3+i%25}-${1+i%8}`;
+    let content;
+    if(name.includes('比对'))      content=`${name}执行完成:比对 ${30+i%20} 条命令,一致 ${28+i%20-i%3} 条,差异 ${i%3} 条`;
+    else if(name.includes('故障')) content=`${name.replace('故障','')} ${addr} 上报故障代码 ${['LOST','E5','H7','P1'][i%4]},已生成告警记录`;
+    else if(name.includes('状态')) content=`${name.replace('状态','')} ${addr} 状态刷新:${i%6?'在线':'离线'},信号强度 ${18+i%12},数据${i%6?'正常上报':'中断'}`;
+    else if(name==='空调列表')     content=`同步空调列表:更新 ${40+i%30} 台内机档案,新增 ${i%4} 台`;
+    else if(name==='计费告警表')   content=`生成计费告警:租户 ${1401+i%20} 预付费余额不足,已推送催缴通知`;
+    else if(name==='电费日使用情况')content=`统计 ${ts.slice(0,10)} 电费日使用:用电 ${(120+i*3.7).toFixed(1)}kWh,电费 ${(98+i*2.9).toFixed(2)}元`;
+    else if(name==='计费命令表')   content=`下发计费命令:租户 ${1401+i%20} ${['充值同步','余额查询','断电保护','恢复供电'][i%4]},执行成功`;
+    else                            content=`下发${name}:目标 ${addr} ${['开机/制冷/24℃','关机','风速调至高风','温度设定 26℃'][i%4]},执行${i%9?'成功':'超时,已重试'}`;
+    rows.push({ts,op:OPERATORS[i%OPERATORS.length],content});
+  }
+  return rows;
+}
+
+/* ── 弹窗渲染 + 分页 ── */
+let curRows=[];
+const pgLog={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderLog()};
+function openLog(name){
+  document.getElementById('logTitle').textContent=name;
+  curRows=logRows(name);
+  pgLog.page=1;pgLog.total=curRows.length;
+  $pager('logPager',pgLog);renderLog();
+  $modal('dlgLog');
+}
+function renderLog(){
+  const s=(pgLog.page-1)*pgLog.size;
+  document.getElementById('logBody').innerHTML=curRows.slice(s,s+pgLog.size).map(r=>`
+    <tr><td>${r.ts}</td><td>${r.op}</td><td class="tl">${r.content}</td></tr>`).join('');
+}
+</script>
+</body>
+</html>

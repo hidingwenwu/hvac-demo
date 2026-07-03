@@ -1,72 +1,266 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>空调参数</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>空调参数</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.fb{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--gap);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
-.fi{display:flex;flex-direction:column;}
-.fl{font-size:12px;color:var(--ts);margin-bottom:4px;}
-.ac-param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--gap);}
-.apc{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;transition:border-color .15s;}
-.apc:hover{border-color:var(--gw);}
-.apc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.4);}
-.apc-name{font-size:13px;font-weight:600;color:var(--tx);}
-.apc-loc{font-size:11px;color:var(--ts);margin-top:2px;}
-.param-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
-.param-row:last-child{border-bottom:none;}
-.param-key{color:var(--ts);}
-.param-val{color:var(--tx);font-family:'Roboto Mono',monospace;font-size:12px;}
-.param-val.hl{color:var(--hl);}
-.param-val.ok{color:var(--ok);}
-.param-val.er{color:var(--er);}
-.param-val.wn{color:var(--wn);}
-.apc-ops{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(30,58,110,.3);}
-</style></head><body>
-<div class="ph">
-  <div class="pt">空调参数</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <button class="btn">导出</button>
+/* ── 布局:左侧建筑树 + 右侧上下两个参数分区(对齐线上截图) ── */
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
+.side-tree{width:240px;min-height:100%;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;}
+/* 树面板里的第二个分组标题(其它未绑定) */
+.st-sub{font-size:14px;font-weight:600;color:var(--txw);padding:18px 6px 12px;}
+/* ── 分区:头部(标题 | 地址 | 参数时间+同步) + 参数表 ── */
+.sec{background:var(--bg-panel);border-radius:var(--r);overflow:hidden;}
+.sec-hd{display:flex;align-items:center;gap:18px;padding:12px 16px;}
+.sec-tt{font-size:15px;font-weight:600;color:var(--txw);white-space:nowrap;}
+.sec-mid{flex:1;display:flex;align-items:center;justify-content:center;gap:24px;}
+.sec-mid .fi{gap:6px;}
+.sec-rt{display:flex;align-items:center;gap:10px;white-space:nowrap;}
+.time-val{font-size:13px;color:var(--ts);min-width:10px;}
+/* 同步右侧的刷新圈图标 */
+.refresh{color:var(--primary);font-size:18px;cursor:pointer;line-height:1;user-select:none;}
+.refresh:hover{color:var(--primary-hover);}
+/* 参数表:线上无斑马纹,行底色统一 */
+.ptw{background:var(--bg-panel-2);}
+.ptw tbody tr:nth-child(even) td{background:transparent;}
+.ptw tbody tr:hover td{background:var(--bg-hover);}
+.ptw td.val{color:var(--txw);}
+.ptw td.rng{color:var(--ts);font-size:12px;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- 左侧建筑物树:所有的 / 其它未绑定 -->
+  <aside class="side-tree">
+    <div class="st-title">所有的</div>
+    <div id="treeAll"></div>
+    <div class="st-sub">其它未绑定</div>
+    <div id="treeUnbind"></div>
+  </aside>
+
+  <!-- 右侧主区 -->
+  <div class="main-col">
+    <!-- 内机参数分区 -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-tt">内机参数</div>
+        <div class="sec-mid">
+          <div class="fi"><span class="fl">地址:</span>
+            <select id="inAddr" style="width:180px" onchange="loadIn(true)"><option value=""></option></select>
+          </div>
+        </div>
+        <div class="sec-rt">
+          <span class="fl">参数时间:</span><span class="time-val" id="inTime"></span>
+          <button class="btn btnp" onclick="syncIn()">同步</button>
+          <span class="refresh" title="刷新" onclick="refreshIn()">⟳</span>
+        </div>
+      </div>
+      <div class="tw ptw">
+        <table>
+          <colgroup><col style="width:30%"><col style="width:20%"><col style="width:30%"><col style="width:20%"></colgroup>
+          <thead><tr><th>参数名称</th><th>值</th><th>参数名称</th><th>值</th></tr></thead>
+          <tbody id="inBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 外机参数分区 -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-tt">外机参数</div>
+        <div class="sec-mid">
+          <div class="fi"><span class="fl">地址:</span>
+            <select id="outAddr" style="width:170px" onchange="outLoaded=false;loadOut()">
+              <option>主0</option><option>主1</option><option>副1</option>
+            </select>
+          </div>
+          <div class="fi"><span class="fl">型号:</span><span class="time-val" id="outModel"></span></div>
+        </div>
+        <div class="sec-rt">
+          <span class="fl">参数时间:</span><span class="time-val" id="outTime"></span>
+          <button class="btn btnp" onclick="syncOut()">同步</button>
+          <span class="refresh" title="刷新" onclick="refreshOut()">⟳</span>
+        </div>
+      </div>
+      <div class="tw ptw">
+        <table>
+          <colgroup><col style="width:22%"><col style="width:11%"><col style="width:17%"><col style="width:22%"><col style="width:11%"><col style="width:17%"></colgroup>
+          <thead><tr><th>参数名称</th><th>值</th><th>参考范围</th><th>参数名称</th><th>值</th><th>参考范围</th></tr></thead>
+          <tbody id="outBody"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>
-<div class="fb">
-  <div class="fi"><div class="fl">楼层</div><select style="width:100px"><option value="">全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div>
-  <div class="fi"><div class="fl">品牌</div><select style="width:100px"><option value="">全部</option><option>大金</option><option>格力</option><option>美的</option><option>海信</option></select></div>
-  <div class="fi"><div class="fl">空调名称</div><input placeholder="请输入" style="width:140px"></div>
-  <div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>在线</option><option>离线</option><option>故障</option></select></div>
-  <button class="btn btnp">查询</button><button class="btn">重置</button>
-</div>
-<div class="ac-param-grid" id="apg"></div>
+
+<script src="_ui.js"></script>
 <script>
-const ACS=[
-  {n:'1F-大厅-01',loc:'一楼大厅',ctrl:'CTR001',ch:'CH01',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'01',fw:'V2.3.1',t:25,set:26,mode:'制冷',wind:'自动',s:'on'},
-  {n:'1F-大厅-02',loc:'一楼大厅',ctrl:'CTR001',ch:'CH02',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'02',fw:'V2.3.1',t:24,set:26,mode:'制冷',wind:'低速',s:'on'},
-  {n:'1F-大厅-03',loc:'一楼大厅',ctrl:'CTR001',ch:'CH03',brand:'大金',model:'FTXS35K2V1B',ip:'192.168.1.10',port:'8080',addr:'03',fw:'V2.3.0',t:null,set:26,mode:'制冷',wind:'自动',s:'fault'},
-  {n:'2F-会议-01',loc:'二楼大会议室',ctrl:'CTR002',ch:'CH01',brand:'格力',model:'KFR-72LW/NhBa3BG',ip:'192.168.1.11',port:'8080',addr:'01',fw:'V3.1.2',t:22,set:22,mode:'制冷',wind:'中速',s:'on'},
-  {n:'2F-会议-02',loc:'二楼小会议室',ctrl:'CTR002',ch:'CH02',brand:'格力',model:'KFR-50LW/NhBa3BG',ip:'192.168.1.11',port:'8080',addr:'02',fw:'V3.1.2',t:null,set:26,mode:'制冷',wind:'自动',s:'off'},
-  {n:'2F-办公-01',loc:'二楼开放办公',ctrl:'CTR002',ch:'CH03',brand:'美的',model:'KFR-35GW/BP3DN8Y-IA400',ip:'192.168.1.11',port:'8080',addr:'03',fw:'V1.8.5',t:26,set:26,mode:'制冷',wind:'自动',s:'on'},
-  {n:'3F-储藏-01',loc:'三楼储藏室',ctrl:'CTR003',ch:'CH01',brand:'美的',model:'KFR-35GW/BP3DN8Y-IA400',ip:'192.168.1.12',port:'8080',addr:'01',fw:'V1.8.4',t:null,set:28,mode:'制冷',wind:'低速',s:'fault'},
-  {n:'B1-餐饮-01',loc:'B1餐饮区',ctrl:'CTR005',ch:'CH01',brand:'海信',model:'KFR-72LW/H3FDBp-A3',ip:'192.168.1.14',port:'8080',addr:'01',fw:'V2.0.6',t:23,set:24,mode:'制冷',wind:'高速',s:'on'},
+/* ══ 参数字典(名称严格照抄线上截图) ══ */
+/* 内机参数:两列成对 */
+const IN_PAIRS=[
+  ['开关','模式'],['设定温度','风档'],['回风温度','液管温度'],['气管温度','电子阀开度'],
+  ['容量','故障代码'],['模式冲突','冷热选择权'],['集控地址','温控开关']
 ];
-document.getElementById('apg').innerHTML=ACS.map(a=>{
-  const stc=a.s==='on'?'ok':a.s==='fault'?'er':'';
-  const sl=a.s==='on'?'在线':a.s==='fault'?'故障':'待机';
-  const tc=a.t!=null?a.t+'℃':'—';
-  return`<div class="apc">
-    <div class="apc-head">
-      <div><div class="apc-name">${a.n}</div><div class="apc-loc">${a.loc} / ${a.ctrl} ${a.ch}</div></div>
-      <span class="tag ${a.s==='on'?'tok':a.s==='fault'?'ter':'tin'}">${sl}</span>
-    </div>
-    <div class="param-row"><span class="param-key">品牌型号</span><span class="param-val">${a.brand} ${a.model}</span></div>
-    <div class="param-row"><span class="param-key">通信地址</span><span class="param-val hl">${a.ip}:${a.port} / 地址${a.addr}</span></div>
-    <div class="param-row"><span class="param-key">固件版本</span><span class="param-val">${a.fw}</span></div>
-    <div class="param-row"><span class="param-key">当前回风温度</span><span class="param-val ${stc}">${tc}</span></div>
-    <div class="param-row"><span class="param-key">设定温度</span><span class="param-val">${a.set}℃</span></div>
-    <div class="param-row"><span class="param-key">运行模式</span><span class="param-val">${a.mode}</span></div>
-    <div class="param-row"><span class="param-key">风速</span><span class="param-val">${a.wind}</span></div>
-    <div class="apc-ops">
-      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('查看详情')">详情</button>
-      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('修改参数')">修改</button>
-      <button class="btn" style="flex:1;font-size:11px;" onclick="alert('下发指令')">下发</button>
-    </div>
-  </div>`;
-}).join('');
+/* 外机参数:[名1,参考范围1,名2,参考范围2] */
+const OUT_ROWS=[
+  ['主辅类型','','空调类型',''],
+  ['容量','','故障代码',''],
+  ['工作模式','','除霜',''],
+  ['压缩机总目标运转频率(Hz)','0~120','试运转',''],
+  ['压缩机1实际运转频率(Hz)','0~120','压缩机2实际运转频率(Hz)','0~120'],
+  ['压缩机1电流(A)','0~25','压缩机2电流(A)','0~25'],
+  ['压缩机1排气温度(℃)','≤115','压缩机2排气温度(℃)','≤115'],
+  ['压缩机1过热度(℃)','3~15','压缩机2过热度(C)','3~15'],
+  ['热交换器温度(℃)','-20~65','环境温度(℃)','-20~50'],
+  ['高压压力(Mpa)','0.5~4.0','低压压力(Mpa)','0.2~2.5'],
+  ['电子膨胀阀开度(pls/%)','0~480','风机风速(lev/rps)','0~8'],
+];
+
+/* ══ 模拟数据(参数名/参数值/单位/时间戳,形态贴线上) ══ */
+function seedOf(str){let s=0;for(const c of str)s=(s*31+c.charCodeAt(0))%997;return s;}
+/* 内机某地址的参数值 */
+function inVals(addr){
+  const s=seedOf(addr);
+  return {
+    '开关':s%3?'开':'关','模式':['制冷','制热','送风'][s%3],
+    '设定温度':(24+s%4)+'℃','风档':['自动','低风','中风','高风'][s%4],
+    '回风温度':(25+s%5+(s%10)/10).toFixed(1)+'℃','液管温度':(10+s%6+(s%7)/10).toFixed(1)+'℃',
+    '气管温度':(8+s%5+(s%9)/10).toFixed(1)+'℃','电子阀开度':String(380+s%100),
+    '容量':(2.2+(s%5)*0.6).toFixed(1)+'kW','故障代码':'正常',
+    '模式冲突':'无冲突','冷热选择权':s%2?'有':'无',
+    '集控地址':String(s%16),'温控开关':s%2?'开':'关'
+  };
+}
+/* 外机某地址的参数值 */
+function outVals(addr){
+  const s=seedOf(addr);
+  return {
+    '主辅类型':addr.startsWith('主')?'主机':'辅机','空调类型':'氟机',
+    '容量':(40+(s%4)*5)+'kW','故障代码':'正常',
+    '工作模式':['制冷','制热'][s%2],'除霜':'否',
+    '压缩机总目标运转频率(Hz)':String(56+s%20),'试运转':'否',
+    '压缩机1实际运转频率(Hz)':String(54+s%18),'压缩机2实际运转频率(Hz)':String(52+s%16),
+    '压缩机1电流(A)':(10+s%8+(s%10)/10).toFixed(1),'压缩机2电流(A)':(9+s%8+(s%7)/10).toFixed(1),
+    '压缩机1排气温度(℃)':(72+s%12+(s%10)/10).toFixed(1),'压缩机2排气温度(℃)':(70+s%12+(s%9)/10).toFixed(1),
+    '压缩机1过热度(℃)':(5+s%8+(s%10)/10).toFixed(1),'压缩机2过热度(C)':(5+s%7+(s%8)/10).toFixed(1),
+    '热交换器温度(℃)':(42+s%8+(s%10)/10).toFixed(1),'环境温度(℃)':(30+s%6+(s%10)/10).toFixed(1),
+    '高压压力(Mpa)':(2.3+(s%8)/10).toFixed(2),'低压压力(Mpa)':(0.7+(s%5)/10).toFixed(2),
+    '电子膨胀阀开度(pls/%)':String(400+s%80),'风机风速(lev/rps)':String(4+s%4)
+  };
+}
+function now(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/* ══ 左侧树:1号楼 → 楼层 → 内机地址;其它未绑定 ══ */
+const FLOORS=[
+  {lb:'3层',units:['1-1-3-1','1-1-3-2']},
+  {lb:'7层',units:['1-1-7-1','1-1-7-2','1-1-7-3']},
+  {lb:'9层',units:['1-2-9-1','1-2-9-2']},
+  {lb:'14层',units:['1-2-14-1','1-2-14-2']},
+  {lb:'23层',units:['1-3-23-1','1-3-23-2']},
+];
+const UNBIND=['9-1-0-1','9-1-0-2','9-1-0-3'];
+const treeState={bld:false,floors:{},unbind:false};
+let inSel='';                      /* 当前选中内机地址 */
+
+/* 内机地址下拉:全部内机 */
+const ALL_UNITS=FLOORS.flatMap(f=>f.units);
+document.getElementById('inAddr').innerHTML='<option value=""></option>'+ALL_UNITS.map(u=>`<option>${u}</option>`).join('');
+
+function renderTree(){
+  /* 所有的 → 1号楼 */
+  const el=document.getElementById('treeAll');el.innerHTML='';
+  const bld=document.createElement('div');
+  bld.className='tree-row'+(treeState.bld?' open':'');
+  bld.innerHTML='<span class="arr">▶</span><span>1号楼</span>';
+  bld.onclick=()=>{treeState.bld=!treeState.bld;renderTree();};
+  el.appendChild(bld);
+  if(treeState.bld){
+    FLOORS.forEach(f=>{
+      const fr=document.createElement('div');
+      fr.className='tree-row'+(treeState.floors[f.lb]?' open':'');
+      fr.style.paddingLeft='22px';
+      fr.innerHTML='<span class="arr">▶</span><span>'+f.lb+'</span>';
+      fr.onclick=()=>{treeState.floors[f.lb]=!treeState.floors[f.lb];renderTree();};
+      el.appendChild(fr);
+      if(treeState.floors[f.lb]){
+        f.units.forEach(u=>{
+          const ur=document.createElement('div');
+          ur.className='tree-row'+(inSel===u?' active':'');
+          ur.style.paddingLeft='44px';
+          ur.innerHTML='<span>'+u+'</span>';
+          ur.onclick=()=>{inSel=u;document.getElementById('inAddr').value=u;renderTree();loadIn(true);};
+          el.appendChild(ur);
+        });
+      }
+    });
+  }
+  /* 其它未绑定 → 未绑定房间内机 */
+  const el2=document.getElementById('treeUnbind');el2.innerHTML='';
+  const ub=document.createElement('div');
+  ub.className='tree-row'+(treeState.unbind?' open':'');
+  ub.innerHTML='<span class="arr">▶</span><span>未绑定房间内机</span>';
+  ub.onclick=()=>{treeState.unbind=!treeState.unbind;renderTree();};
+  el2.appendChild(ub);
+  if(treeState.unbind){
+    UNBIND.forEach(u=>{
+      const ur=document.createElement('div');
+      ur.className='tree-row';ur.style.paddingLeft='22px';
+      ur.innerHTML='<span>'+u+'</span>';
+      ur.onclick=()=>$msg('该内机未绑定房间,暂无参数','warning');
+      el2.appendChild(ur);
+    });
+  }
+}
+
+/* ══ 内机参数表 ══ */
+let inLoaded=false;
+function loadIn(withData){
+  const addr=document.getElementById('inAddr').value;
+  inSel=addr;renderTree();
+  inLoaded=withData&&!!addr;
+  const v=inLoaded?inVals(addr):{};
+  document.getElementById('inTime').textContent=inLoaded?now():'';
+  document.getElementById('inBody').innerHTML=IN_PAIRS.map(([a,b])=>`
+    <tr><td>${a}</td><td class="val">${v[a]??''}</td><td>${b}</td><td class="val">${v[b]??''}</td></tr>`).join('');
+}
+function syncIn(){
+  const addr=document.getElementById('inAddr').value;
+  if(!addr)return $msg('请先选择内机地址','warning');
+  $confirm('确认向内机 '+addr+' 下发参数同步指令?',()=>{loadIn(true);$msg('同步指令已下发,参数已更新');});
+}
+function refreshIn(){
+  const addr=document.getElementById('inAddr').value;
+  if(!addr)return $msg('请先选择内机地址','warning');
+  loadIn(true);$msg('内机参数已刷新','info');
+}
+
+/* ══ 外机参数表 ══ */
+let outLoaded=false;
+function loadOut(){
+  const addr=document.getElementById('outAddr').value;
+  const v=outLoaded?outVals(addr):{};
+  document.getElementById('outModel').textContent=outLoaded?'V6-450WV2GN1':'';
+  document.getElementById('outTime').textContent=outLoaded?now():'';
+  document.getElementById('outBody').innerHTML=OUT_ROWS.map(([a,ra,b,rb])=>`
+    <tr><td>${a}</td><td class="val">${v[a]??''}</td><td class="rng">${outLoaded?ra:''}</td>
+        <td>${b}</td><td class="val">${v[b]??''}</td><td class="rng">${outLoaded?rb:''}</td></tr>`).join('');
+}
+function syncOut(){
+  const addr=document.getElementById('outAddr').value;
+  $confirm('确认向外机 '+addr+' 下发参数同步指令?',()=>{outLoaded=true;loadOut();$msg('同步指令已下发,参数已更新');});
+}
+function refreshOut(){
+  if(!outLoaded)return $msg('请先点击同步读取外机参数','warning');
+  loadOut();$msg('外机参数已刷新','info');
+}
+
+/* 初始:与线上一致,值为空;树默认收起 */
+renderTree();loadIn(false);loadOut();
 </script>
-</body></html>
+</body>
+</html>

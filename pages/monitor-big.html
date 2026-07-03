@@ -1,146 +1,381 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>中央空调综合监控大屏</title>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>综合监控大屏</title>
 <style>
+/* ============ 中央空调综合监控大屏(1:1 复刻线上) ============ */
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:#020d1f;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:13px;overflow:hidden;}
-.shell{display:flex;flex-direction:column;height:100vh;}
-.hd{height:44px;display:flex;align-items:center;justify-content:center;background:linear-gradient(to bottom,#081c3a,transparent);border-bottom:1px solid rgba(0,229,255,.15);flex-shrink:0;position:relative;}
-.hd-title{font-size:17px;font-weight:700;letter-spacing:.1em;background:linear-gradient(to right,#00e5ff,#fff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hd-side{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,229,255,.7);font-family:monospace;}
-.hd-side.l{left:16px;display:flex;gap:12px;}
-.hd-side.r{right:16px;}
-.bd{flex:1;overflow:hidden;padding:10px;display:grid;grid-template-rows:auto 1fr auto;gap:10px;}
-.row1{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:10px;}
-.row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;height:140px;}
-.box{background:rgba(0,30,70,.55);border:1px solid rgba(0,229,255,.18);border-radius:6px;padding:12px;}
-.box-title{font-size:10px;color:rgba(0,229,255,.75);letter-spacing:.08em;margin-bottom:8px;font-weight:600;}
-.big-num{font-size:32px;font-weight:700;font-family:'Roboto Mono',monospace;color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,.5);line-height:1.1;}
-.big-unit{font-size:12px;color:rgba(255,255,255,.5);margin-left:4px;}
-.sub-txt{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
-.gauge-wrap{display:flex;align-items:center;gap:8px;}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.stat-item{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:6px 8px;text-align:center;}
-.stat-item .lbl{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;}
-.stat-item .val{font-size:16px;font-weight:700;font-family:monospace;}
-.stat-item .val.ok{color:#00e676;}
-.stat-item .val.er{color:#ff4d4f;}
-.stat-item .val.wn{color:#ffb300;}
-.stat-item .val.hl{color:#00e5ff;}
-.alert-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:100%;}
-.alert-row{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 6px;border-radius:3px;background:rgba(255,255,255,.03);}
-.alert-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+html,body{height:100%;overflow:hidden;font-family:'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;color:#fff;}
+body{
+  background:#0a0f22;
+  background-image:
+    radial-gradient(ellipse 55% 40% at 50% 0%,rgba(28,74,190,.4),transparent 70%),
+    radial-gradient(ellipse 80% 70% at 50% 55%,rgba(16,40,110,.35),transparent 75%);
+}
+.wrap{display:flex;flex-direction:column;height:100vh;padding:6px 20px 14px;}
+
+/* ── 顶部:日期天气 + 居中大标题(带光束) ── */
+.hd{position:relative;height:92px;flex-shrink:0;}
+.hd-date{font-size:13px;color:#8ea3c9;padding-top:4px;}
+.hd-temp{font-size:26px;font-weight:600;color:#fff;margin-top:2px;}
+.hd-temp .wx{font-size:14px;font-weight:400;color:#c6d4f0;margin-left:12px;letter-spacing:4px;}
+.hd-title{position:absolute;left:50%;top:28px;transform:translateX(-50%);white-space:nowrap;
+  font-size:34px;font-weight:700;letter-spacing:3px;color:#fff;
+  text-shadow:0 0 16px rgba(64,128,255,.95),0 0 44px rgba(31,101,255,.65);}
+/* 标题上方光束 */
+.hd-title::before{content:'';position:absolute;left:50%;bottom:100%;transform:translateX(-50%);
+  width:56px;height:64px;z-index:-1;
+  background:linear-gradient(to top,rgba(120,190,255,.85),rgba(60,130,255,.25) 65%,transparent);
+  clip-path:polygon(48% 100%,52% 100%,72% 0,28% 0);filter:blur(1px);}
+.hd-title::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:-1;
+  width:140%;height:220%;background:radial-gradient(ellipse 50% 55% at 50% 40%,rgba(35,90,220,.5),transparent 70%);}
+
+/* ── 主体网格:左右两大列 ── */
+.bd{flex:1;display:grid;grid-template-columns:725fr 937fr;gap:14px;min-height:0;}
+.colL{display:grid;grid-template-rows:235fr 185fr 180fr 267fr;gap:14px;min-height:0;}
+.colR{display:grid;grid-template-rows:103fr 250fr 253fr 273fr;gap:14px;min-height:0;}
+.rowTemp{display:grid;grid-template-columns:2.2fr 1fr;gap:14px;min-height:0;}
+.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;min-height:0;}
+
+/* ── 通用面板 ── */
+.panel{background:linear-gradient(165deg,rgba(26,42,86,.6),rgba(12,19,42,.85));
+  border:1px solid rgba(58,94,168,.32);border-radius:10px;
+  display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;
+  box-shadow:inset 0 0 36px rgba(24,58,150,.14);}
+.p-hd{display:flex;align-items:center;gap:12px;padding:12px 16px 2px;flex-shrink:0;}
+.p-title{font-size:16px;font-weight:600;color:#fff;white-space:nowrap;}
+.ctl{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:nowrap;}
+.ctl-lb{font-size:12px;color:#c6d4f0;white-space:nowrap;}
+.ctl-box{height:28px;display:inline-flex;align-items:center;padding:0 10px;font-size:12px;color:#d1d9ec;
+  background:rgba(11,20,44,.9);border:1px solid rgba(78,110,180,.45);border-radius:4px;white-space:nowrap;}
+.ctl-box.dim{color:#5f6f92;}
+.ctl-box .arr{margin-left:8px;font-size:9px;color:#8ea3c9;}
+/* 单选(房间/租户) */
+.radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#c6d4f0;white-space:nowrap;}
+.radio i{width:13px;height:13px;border-radius:50%;border:1px solid #5f6f92;display:inline-block;position:relative;}
+.radio.on i{border-color:#1f65ff;background:#1f65ff;}
+.radio.on i::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#fff;}
+
+/* ── 当前温度:双仪表盘 ── */
+.gauges{flex:1;display:flex;min-height:0;}
+.gauges>div{flex:1;min-width:0;}
+
+/* ── 运行数环形图 + 中心文字 + 底部图例 ── */
+.run-body{flex:1;position:relative;min-height:0;}
+#runPie{position:absolute;inset:0;}
+.run-center{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.run-center .n{font-size:34px;font-weight:700;color:#fff;line-height:1.05;}
+.run-center .t{font-size:13px;color:#c6d4f0;margin-top:2px;}
+.run-legend{display:flex;justify-content:center;gap:12px;padding:0 4px 10px;flex-shrink:0;}
+.run-legend span{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#c6d4f0;white-space:nowrap;}
+.run-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+/* ── 右上三张能耗卡片 ── */
+.card{background:linear-gradient(165deg,rgba(26,42,86,.6),rgba(12,19,42,.85));
+  border:1px solid rgba(58,94,168,.32);border-radius:10px;padding:12px 14px;
+  display:flex;min-width:0;min-height:0;overflow:hidden;}
+.card .info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;}
+.card .lb{font-size:13px;color:#cfd8ea;white-space:nowrap;}
+.card .v{font-size:30px;font-weight:700;color:#fff;white-space:nowrap;
+  font-family:'DIN Alternate','Bahnschrift','Helvetica Neue',Arial,sans-serif;}
+.card .v .u{font-size:13px;font-weight:400;color:#8ea3c9;margin-left:4px;}
+.card .spark{width:96px;flex-shrink:0;align-self:stretch;}
+
+/* ── 空调状态总览 / 项目情况总览:图标统计条 ── */
+.stat-row{flex:1;display:flex;padding:6px 16px 0;min-height:0;}
+.st{flex:1;min-width:0;}
+.st .l{display:flex;align-items:center;gap:7px;font-size:13px;color:#cfd8ea;white-space:nowrap;}
+.st .ic{width:24px;height:24px;border-radius:6px;flex-shrink:0;font-size:12px;color:#fff;
+  background:linear-gradient(135deg,#3d8bff,#1547b8);display:flex;align-items:center;justify-content:center;}
+.st .ic.err{background:linear-gradient(135deg,#f56c6c,#b8272f);}
+.st .n{font-size:30px;font-weight:700;color:#fff;margin-top:8px;
+  font-family:'DIN Alternate','Bahnschrift','Helvetica Neue',Arial,sans-serif;}
+.st .n.err{color:#f5493d;}
+.p-foot{display:flex;align-items:center;font-size:13px;color:#c6d4f0;
+  border-top:1px solid rgba(255,255,255,.08);margin:0 16px;padding:10px 0;flex-shrink:0;gap:24px;}
+.p-foot .rt{margin-left:auto;}
+
+/* ── 系统设备故障告警表格 ── */
+.tbl-hd{display:flex;font-size:13px;color:#8ea3c9;background:rgba(255,255,255,.05);
+  margin:8px 16px 0;padding:9px 12px;border-radius:4px;flex-shrink:0;}
+.tbl-hd .c1{width:80px;}
+.tbl-hd .c2{flex:1;}
+.tbl-hd .c3{width:150px;text-align:right;}
+.tbl-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#5f6f92;font-size:13px;}
+.hd-ops{display:flex;align-items:center;gap:14px;margin-left:auto;font-size:12px;color:#c6d4f0;}
+.hd-ops .op-a{display:inline-flex;align-items:center;gap:4px;}
+.hd-ops .op-a b{font-style:normal;font-weight:700;color:#e8a23c;font-size:13px;}
+
+/* ── 图表容器 ── */
+.chart{flex:1;min-height:0;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head><body>
-<div class="shell">
+<div class="wrap">
+  <!-- 顶部 -->
   <div class="hd">
-    <div class="hd-side l">
-      <span>27°C 晴</span>
-      <span id="clk"></span>
-    </div>
+    <div class="hd-date" id="dateTxt"></div>
+    <div class="hd-temp">28℃<span class="wx">雾&nbsp;烟台</span></div>
     <div class="hd-title">中央空调综合监控大屏</div>
-    <div class="hd-side r">上海某商业广场 &nbsp;|&nbsp; 飞奕智控</div>
   </div>
+
   <div class="bd">
-    <div class="row1">
-      <div class="box">
-        <div class="box-title">室外温度</div>
-        <div class="big-num">27<span class="big-unit">℃</span></div>
-        <div id="outGauge" style="height:60px;"></div>
-      </div>
-      <div class="box">
-        <div class="box-title">室内平均温度</div>
-        <div class="big-num">27.6<span class="big-unit">℃</span></div>
-        <div class="sub-txt">设定 26℃ &nbsp;|&nbsp; 偏差 +1.6℃</div>
-        <div id="inGauge" style="height:44px;"></div>
-      </div>
-      <div class="box" style="grid-column:span 2;">
-        <div class="box-title">空调状态统计</div>
-        <div class="stat-grid">
-          <div class="stat-item"><div class="lbl">制冷运行</div><div class="val ok">9</div></div>
-          <div class="stat-item"><div class="lbl">待机</div><div class="val" style="color:#556677">0</div></div>
-          <div class="stat-item"><div class="lbl">故障</div><div class="val er">0</div></div>
-          <div class="stat-item"><div class="lbl">离线</div><div class="val wn">9</div></div>
+    <!-- ===== 左列 ===== -->
+    <div class="colL">
+      <!-- 行1:当前温度 + 运行数 -->
+      <div class="rowTemp">
+        <div class="panel">
+          <div class="p-hd"><div class="p-title">当前温度</div></div>
+          <div class="gauges"><div id="gaugeSet"></div><div id="gaugeIn"></div></div>
+        </div>
+        <div class="panel">
+          <div class="run-body">
+            <div id="runPie"></div>
+            <div class="run-center"><div class="n">30</div><div class="t">运行数</div></div>
+          </div>
+          <div class="run-legend">
+            <span><i style="background:#2f7bf5"></i>制冷</span>
+            <span><i style="background:#f25b4c"></i>制热</span>
+            <span><i style="background:#3ad08a"></i>送风</span>
+            <span><i style="background:#f2a24c"></i>除湿</span>
+          </div>
         </div>
       </div>
-      <div class="box" style="grid-column:span 2;">
-        <div class="box-title">CLH等状态统计</div>
-        <div class="stat-grid">
-          <div class="stat-item"><div class="lbl">主机</div><div class="val ok">2</div></div>
-          <div class="stat-item"><div class="lbl">水泵</div><div class="val ok">2</div></div>
-          <div class="stat-item"><div class="lbl">冷却塔</div><div class="val ok">0</div></div>
-          <div class="stat-item"><div class="lbl">告警</div><div class="val er">0</div></div>
+
+      <!-- 行2:空调状态总览 -->
+      <div class="panel">
+        <div class="p-hd"><div class="p-title">空调状态总览</div></div>
+        <div class="stat-row">
+          <div class="st"><div class="l"><span class="ic">◉</span>总数</div><div class="n">620</div></div>
+          <div class="st"><div class="l"><span class="ic">➤</span>运行数</div><div class="n">30</div></div>
+          <div class="st"><div class="l"><span class="ic">⬢</span>锁定数</div><div class="n">587</div></div>
+          <div class="st"><div class="l"><span class="ic">◷</span>定时任务数</div><div class="n">1</div></div>
+          <div class="st"><div class="l"><span class="ic err">▲</span>故障数</div><div class="n err">1</div></div>
         </div>
+        <div class="p-foot"><span>品牌:海信</span><span>类型:多联机</span><span class="rt">空调系统数量:92</span></div>
+      </div>
+
+      <!-- 行3:项目情况总览 -->
+      <div class="panel">
+        <div class="p-hd"><div class="p-title">项目情况总览</div></div>
+        <div class="stat-row" style="align-items:center;">
+          <div class="st"><div class="l"><span class="ic">⌂</span>房间数</div><div class="n">618</div></div>
+          <div class="st"><div class="l"><span class="ic">▦</span>控制器数量</div><div class="n">7</div></div>
+          <div class="st"><div class="l"><span class="ic">◨</span>电表数量</div><div class="n">92</div></div>
+          <div class="st"><div class="l"><span class="ic">⊞</span>群组数量</div><div class="n">1</div></div>
+          <div class="st"><div class="l"><span class="ic">◐</span>子账户数量</div><div class="n">0</div></div>
+        </div>
+      </div>
+
+      <!-- 行4:系统设备故障告警 -->
+      <div class="panel">
+        <div class="p-hd">
+          <div class="p-title">系统设备故障告警</div>
+          <div class="hd-ops"><span class="op-a"><b>A</b>自动</span><span class="op-a">◉ 隐藏</span></div>
+        </div>
+        <div class="tbl-hd"><span class="c1">序号</span><span class="c2">告警信息</span><span class="c3">发生时间</span></div>
+        <div class="tbl-empty">暂无数据</div>
       </div>
     </div>
-    <div class="row2">
-      <div class="box" style="display:flex;flex-direction:column;gap:8px;">
-        <div class="box-title">实时功率</div>
-        <div class="big-num" style="font-size:36px;">1.5<span class="big-unit">kW/台</span></div>
-        <div id="powerLine" style="flex:1;min-height:0;"></div>
-      </div>
-      <div class="box" style="display:flex;flex-direction:column;gap:8px;">
-        <div class="box-title">今日累计用电</div>
-        <div class="big-num" style="font-size:30px;">1284.85<span class="big-unit">kWh</span></div>
-        <div id="energyBar" style="flex:1;min-height:0;"></div>
-      </div>
-      <div class="box">
-        <div class="box-title">实时告警</div>
-        <div class="alert-list">
-          <div class="alert-row"><div class="alert-dot" style="background:#ff4d4f;box-shadow:0 0 4px #ff4d4f;animation:blink 1s infinite;"></div><span style="color:rgba(255,255,255,.7);">1F-大厅-03 通信故障</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">14:32</span></div>
-          <div class="alert-row"><div class="alert-dot" style="background:#ff4d4f;box-shadow:0 0 4px #ff4d4f;animation:blink 1s infinite;"></div><span style="color:rgba(255,255,255,.7);">3F-储藏-01 传感器异常</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">10:15</span></div>
-          <div class="alert-row"><div class="alert-dot" style="background:#ffb300;"></div><span style="color:rgba(255,255,255,.55);">2F-开放-03 回风温度偏高</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">09:48</span></div>
-          <div class="alert-row"><div class="alert-dot" style="background:#ffb300;"></div><span style="color:rgba(255,255,255,.55);">CTR004 离线超30分钟</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">08:20</span></div>
-          <div class="alert-row"><div class="alert-dot" style="background:#556677;"></div><span style="color:rgba(255,255,255,.4);">B1-餐饮-02 正常恢复</span><span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:10px;">08:05</span></div>
+
+    <!-- ===== 右列 ===== -->
+    <div class="colR">
+      <!-- 行1:三张能耗卡片 -->
+      <div class="cards">
+        <div class="card">
+          <div class="info"><div class="lb">今日累计能耗</div><div class="v">392.1<span class="u">kWh</span></div></div>
+          <div class="spark" id="spark1"></div>
+        </div>
+        <div class="card">
+          <div class="info"><div class="lb">本月累计能耗</div><div class="v">1509.14<span class="u">kWh</span></div></div>
+          <div class="spark" id="spark2"></div>
+        </div>
+        <div class="card">
+          <div class="info"><div class="lb">空调实时负荷</div><div class="v">--<span class="u">kW</span></div></div>
+          <div class="spark" id="spark3"></div>
         </div>
       </div>
-    </div>
-    <div class="row3">
-      <div class="box"><div class="box-title">各楼层用电占比</div><div id="floorPie" style="height:100px;"></div></div>
-      <div class="box"><div class="box-title">近24h功率趋势</div><div id="hrLine" style="height:100px;"></div></div>
-      <div class="box"><div class="box-title">本周节能率趋势</div><div id="saveLine" style="height:100px;"></div></div>
-      <div class="box">
-        <div class="box-title">设备在线率</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">空调</span><span style="color:#00e676;font-family:monospace;">88.5%</span></div>
-          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:88.5%;height:100%;border-radius:3px;background:#00e676;"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">控制器</span><span style="color:#00e5ff;font-family:monospace;">80.0%</span></div>
-          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:80%;height:100%;border-radius:3px;background:#00e5ff;"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">电表</span><span style="color:#2979ff;font-family:monospace;">94.4%</span></div>
-          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:94.4%;height:100%;border-radius:3px;background:#2979ff;"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:rgba(255,255,255,.6)">传感器</span><span style="color:#ffb300;font-family:monospace;">90.5%</span></div>
-          <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);"><div style="width:90.5%;height:100%;border-radius:3px;background:#ffb300;"></div></div>
+
+      <!-- 行2:能耗趋势 -->
+      <div class="panel">
+        <div class="p-hd">
+          <div class="p-title">能耗趋势</div>
+          <div class="ctl">
+            <span class="ctl-lb">按天统计</span><span class="ctl-box" id="dayRange"></span>
+            <span class="ctl-lb">按月统计</span><span class="ctl-box dim">开始月份&nbsp;—&nbsp;结束月份</span>
+          </div>
         </div>
+        <div class="chart" id="trendBar"></div>
+      </div>
+
+      <!-- 行3:能耗排行 -->
+      <div class="panel">
+        <div class="p-hd">
+          <div class="p-title">能耗排行</div>
+          <div class="ctl">
+            <span class="ctl-lb">按月统计</span><span class="ctl-box" id="monthBox"></span>
+            <span class="radio on"><i></i>房间</span><span class="ctl-box">自定义房间<span class="arr">▼</span></span>
+            <span class="radio"><i></i>租户</span><span class="ctl-box dim">自定义租户<span class="arr">▼</span></span>
+          </div>
+        </div>
+        <div class="chart" id="rankBar"></div>
+      </div>
+
+      <!-- 行4:日使用详情 -->
+      <div class="panel">
+        <div class="p-hd">
+          <div class="p-title">日使用详情</div>
+          <div class="ctl"><span class="ctl-lb">日期</span><span class="ctl-box" id="dateBox"></span></div>
+        </div>
+        <div class="chart" id="dayLine"></div>
       </div>
     </div>
   </div>
 </div>
-<style>@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}</style>
+
 <script>
-function tick(){document.getElementById('clk').textContent=new Date().toLocaleString('zh-CN',{hour12:false});}
+/* ============ 真实时钟(日期,每秒刷新) ============ */
+function pad(n){return n<10?'0'+n:''+n;}
+function fmtD(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function tick(){
+  var d=new Date();
+  document.getElementById('dateTxt').textContent=
+    '星期'+'日一二三四五六'[d.getDay()]+' '+d.getFullYear()+'年'+pad(d.getMonth()+1)+'月'+pad(d.getDate())+'日';
+}
 tick();setInterval(tick,1000);
+/* 各面板日期控件文案 */
+(function(){
+  var now=new Date();
+  var e=new Date();e.setDate(e.getDate()-1);
+  var s=new Date();s.setDate(s.getDate()-7);
+  document.getElementById('dayRange').textContent=fmtD(s)+' — '+fmtD(e);
+  document.getElementById('monthBox').textContent=now.getFullYear()+'-'+pad(now.getMonth()+1);
+  document.getElementById('dateBox').textContent=fmtD(now);
+})();
 
-const powerLine=echarts.init(document.getElementById('powerLine'));
-const hrs=Array.from({length:12},(_,i)=>(8+i)+':00');
-const pv=[1.2,1.4,1.6,1.8,1.5,1.3,1.7,1.9,1.6,1.4,1.5,1.5];
-powerLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:32,right:8},xAxis:{type:'category',data:hrs,axisLabel:{fontSize:9,color:'#8fa4c9',interval:1},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:pv,smooth:true,symbol:'none',lineStyle:{color:'#00e5ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,229,255,.3)'},{offset:1,color:'rgba(0,229,255,0)'}]}}}]});
+/* ============ 模拟数据常量 ============ */
+var TREND_DAYS=['26日','27日','28日','29日','30日','01日','02日'];         // 能耗趋势 X 轴
+var TREND_VALS=[650,702,828,598,576,556,988];                                // 能耗趋势数值
+var RANK_NAMES=['909','1712','1910','1313','1903','411','1422','1711','1625','1904',
+                '1216','2103','1408','1325','1118','2005','1125','1722','914','1124']; // 能耗排行房间号
+var RANK_VALS=[38,31,27,25,24,24,24,24,23,23,22,22,21,20,19,18,17,16,14,14];
+/* 日使用详情:00:00-08:00 每15分钟一个点 */
+var DAY_TIMES=[],SET_TEMPS=[],IN_TEMPS=[];
+for(var i=0;i<=32;i++){
+  var h=Math.floor(i/4),m=(i%4)*15;
+  DAY_TIMES.push(pad(h)+':'+pad(m));
+  SET_TEMPS.push(+(24.2+Math.sin(i/6)*.25).toFixed(1));       // 平均设定温度 ≈24.3
+  IN_TEMPS.push(+(27.4+Math.sin(i/4)*.5+Math.random()*.3).toFixed(1)); // 平均室内温度 ≈27.9
+}
 
-const energyBar=echarts.init(document.getElementById('energyBar'));
-const hrs2=Array.from({length:8},(_,i)=>(8+i*2)+':00');
-const ev=[85,102,118,134,148,160,145,133];
-energyBar.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:36,right:8},xAxis:{type:'category',data:hrs2,axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'bar',data:ev,itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#2979ff'},{offset:1,color:'#0a2040'}]}},barMaxWidth:16}]});
+var charts=[];
+function mk(id){var c=echarts.init(document.getElementById(id));charts.push(c);return c;}
 
-const floorPie=echarts.init(document.getElementById('floorPie'));
-floorPie.setOption({backgroundColor:'transparent',legend:{show:false},series:[{type:'pie',radius:['35%','65%'],data:[{value:35,name:'1F',itemStyle:{color:'#2979ff'}},{value:28,name:'2F',itemStyle:{color:'#00e5ff'}},{value:18,name:'3F',itemStyle:{color:'#00e676'}},{value:19,name:'B1',itemStyle:{color:'#ffb300'}}],label:{fontSize:9,color:'#8fa4c9',formatter:'{b} {d}%'}}]});
+/* ============ 当前温度:双环形仪表盘 ============ */
+function gaugeOpt(val,label,c1,c2){
+  return {
+    backgroundColor:'transparent',
+    series:[{
+      type:'gauge',startAngle:230,endAngle:-50,min:0,max:50,radius:'78%',center:['50%','48%'],
+      pointer:{show:false},
+      progress:{show:true,width:13,roundCap:true,
+        itemStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:1,colorStops:[{offset:0,color:c1},{offset:1,color:c2}]},
+          shadowColor:c2,shadowBlur:8}},
+      axisLine:{lineStyle:{width:13,color:[[1,'rgba(255,255,255,.08)']]}},
+      axisTick:{distance:6,length:4,lineStyle:{color:'rgba(160,190,240,.35)',width:1}},
+      splitLine:{show:false},axisLabel:{show:false},
+      title:{offsetCenter:[0,'88%'],color:'#c6d4f0',fontSize:13},
+      detail:{offsetCenter:[0,'-2%'],
+        formatter:function(v){return '{v|'+v+'}{u|℃}';},
+        rich:{v:{color:'#fff',fontSize:30,fontWeight:700},u:{color:'#c6d4f0',fontSize:13,padding:[10,0,0,2]}}},
+      data:[{value:val,name:label}]
+    }]
+  };
+}
+mk('gaugeSet').setOption(gaugeOpt(24.3,'平均设定温度','#3ee6c0','#2fd06f'));
+mk('gaugeIn').setOption(gaugeOpt(27.9,'平均室内温度','#4da0ff','#1f65ff'));
 
-const hrLine=echarts.init(document.getElementById('hrLine'));
-const h24=Array.from({length:13},(_,i)=>i*2+':00');
-const hp=[0.2,0.1,0.1,0.2,0.4,1.2,1.8,1.6,1.4,1.9,1.7,1.5,1.5];
-hrLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:32,right:8},xAxis:{type:'category',data:h24,axisLabel:{fontSize:8,color:'#8fa4c9',interval:1},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:hp,smooth:true,symbol:'none',lineStyle:{color:'#2979ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(41,121,255,.3)'},{offset:1,color:'rgba(41,121,255,0)'}]}}}]});
+/* ============ 运行数环形图(制冷/制热/送风/除湿) ============ */
+mk('runPie').setOption({
+  backgroundColor:'transparent',
+  series:[{
+    type:'pie',radius:['68%','84%'],center:['50%','46%'],startAngle:100,
+    label:{show:false},labelLine:{show:false},
+    itemStyle:{borderColor:'#0d1531',borderWidth:2},
+    data:[
+      {name:'制冷',value:28,itemStyle:{color:'#2f7bf5'}},
+      {name:'除湿',value:2,itemStyle:{color:'#f2a24c'}},
+      {name:'制热',value:0,itemStyle:{color:'#f25b4c'}},
+      {name:'送风',value:0,itemStyle:{color:'#3ad08a'}}
+    ]
+  }]
+});
 
-const saveLine=echarts.init(document.getElementById('saveLine'));
-saveLine.setOption({backgroundColor:'transparent',grid:{top:4,bottom:18,left:36,right:8},xAxis:{type:'category',data:['6/5','6/6','6/7','6/8','6/9','6/10','6/11'],axisLabel:{fontSize:9,color:'#8fa4c9'},axisLine:{lineStyle:{color:'#1e3a6e'}}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#8fa4c9',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(30,58,110,.3)'}}},series:[{type:'line',data:[16.2,17.8,18.1,17.5,18.9,19.2,18.4],smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#00e676',width:2},itemStyle:{color:'#00e676'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,230,118,.25)'},{offset:1,color:'rgba(0,230,118,0)'}]}}}]});
+/* ============ 右上三卡片迷你趋势线 ============ */
+function sparkOpt(color,data){
+  return {
+    backgroundColor:'transparent',grid:{left:0,right:0,top:6,bottom:2},
+    xAxis:{type:'category',show:false,data:data.map(function(_,i){return i;})},
+    yAxis:{type:'value',show:false},
+    series:[{type:'line',data:data,symbol:'none',smooth:false,
+      lineStyle:{color:color,width:1.5,shadowColor:color,shadowBlur:6}}]
+  };
+}
+function wave(n,base,amp){var a=[];for(var i=0;i<n;i++)a.push(base+Math.sin(i*1.7)*amp+Math.random()*amp);return a;}
+mk('spark1').setOption(sparkOpt('#4da6ff',wave(28,10,4)));
+mk('spark2').setOption(sparkOpt('#3ad08a',wave(28,10,4)));
+mk('spark3').setOption(sparkOpt('#f2a24c',wave(28,10,4)));
 
-window.addEventListener('resize',()=>{powerLine.resize();energyBar.resize();floorPie.resize();hrLine.resize();saveLine.resize();});
+/* ============ 能耗趋势:蓝色渐变柱状图 ============ */
+var barColor={type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+  {offset:0,color:'#9fd4ff'},{offset:.35,color:'#4d94f5'},{offset:1,color:'#1b4fd0'}]};
+mk('trendBar').setOption({
+  backgroundColor:'transparent',
+  grid:{left:56,right:24,top:18,bottom:30},
+  xAxis:{type:'category',data:TREND_DAYS,axisTick:{show:false},
+    axisLabel:{color:'#a9bad9',fontSize:12},axisLine:{lineStyle:{color:'rgba(90,120,180,.4)'}}},
+  yAxis:{type:'value',max:1000,interval:200,
+    axisLabel:{color:'#a9bad9',fontSize:12,formatter:function(v){return v.toLocaleString();}},
+    splitLine:{lineStyle:{color:'rgba(90,120,180,.18)'}}},
+  series:[{type:'bar',data:TREND_VALS,barWidth:26,itemStyle:{color:barColor,borderRadius:[2,2,0,0]}}]
+});
+
+/* ============ 能耗排行:蓝色渐变柱状图(20 个房间) ============ */
+mk('rankBar').setOption({
+  backgroundColor:'transparent',
+  grid:{left:44,right:16,top:16,bottom:38},
+  xAxis:{type:'category',data:RANK_NAMES,axisTick:{show:false},
+    axisLabel:{color:'#a9bad9',fontSize:11,rotate:40},axisLine:{lineStyle:{color:'rgba(90,120,180,.4)'}}},
+  yAxis:{type:'value',max:40,interval:10,
+    axisLabel:{color:'#a9bad9',fontSize:12},
+    splitLine:{lineStyle:{color:'rgba(90,120,180,.18)'}}},
+  series:[{type:'bar',data:RANK_VALS,barWidth:14,itemStyle:{color:barColor,borderRadius:[2,2,0,0]}}]
+});
+
+/* ============ 日使用详情:温度曲线(设定/室内/实际负荷) ============ */
+var areaBlue={type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+  {offset:0,color:'rgba(47,123,245,.55)'},{offset:1,color:'rgba(47,123,245,.15)'}]};
+mk('dayLine').setOption({
+  backgroundColor:'transparent',
+  legend:{bottom:2,left:'center',icon:'circle',itemWidth:8,itemHeight:8,itemGap:24,
+    textStyle:{color:'#c6d4f0',fontSize:12},data:['平均设定温度','平均室内温度','实际负荷']},
+  grid:{left:52,right:24,top:34,bottom:52},
+  xAxis:{type:'category',data:DAY_TIMES,boundaryGap:false,axisTick:{show:false},
+    axisLabel:{color:'#a9bad9',fontSize:12,interval:function(i){return i%4===0;}},
+    axisLine:{lineStyle:{color:'rgba(90,120,180,.4)'}}},
+  yAxis:{type:'value',name:'温度',max:35,interval:7,
+    nameTextStyle:{color:'#a9bad9',fontSize:12,padding:[0,26,0,0]},
+    axisLabel:{color:'#a9bad9',fontSize:12},
+    splitLine:{lineStyle:{color:'rgba(90,120,180,.18)'}}},
+  series:[
+    {name:'平均设定温度',type:'line',data:SET_TEMPS,symbol:'none',smooth:true,
+      itemStyle:{color:'#2f7bf5'},lineStyle:{color:'#2f7bf5',width:2},areaStyle:{color:areaBlue}},
+    {name:'平均室内温度',type:'line',data:IN_TEMPS,symbol:'none',smooth:true,
+      itemStyle:{color:'#54c8f5'},lineStyle:{color:'#54c8f5',width:2},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+        {offset:0,color:'rgba(84,200,245,.35)'},{offset:1,color:'rgba(84,200,245,.05)'}]}}},
+    {name:'实际负荷',type:'line',data:[],symbol:'none',lineStyle:{color:'#9aa6bf',width:2},itemStyle:{color:'#9aa6bf'}}
+  ]
+});
+
+/* 窗口自适应 */
+window.addEventListener('resize',function(){charts.forEach(function(c){c.resize();});});
 </script>
 </body></html>

@@ -1,1 +1,181 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>对接平台管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">对接平台管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">平台名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">状态</div><select style="width:120px"><option value="">全部</option><option>已对接</option><option>未对接</option><option>异常</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>平台名称</th><th>对接类型</th><th>AppKey</th><th>接入状态</th><th>最后同步</th><th>操作</th></tr></thead><tbody><tr><td>BACnet网关</td><td>BACnet/IP</td><td>bac_key_****</td><td>已对接</td><td>2026-06-10 14:30</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>KNX系统</td><td>KNX/IP</td><td>knx_key_****</td><td>已对接</td><td>2026-06-10 10:15</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>Modbus网关01</td><td>Modbus TCP</td><td>mod_key_****</td><td>已对接</td><td>2026-06-10 14:28</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>第三方EMS</td><td>HTTP API</td><td>ems_key_****</td><td><span class="tag twn">连接异常</span></td><td>2026-06-09 08:00</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>天气服务</td><td>REST API</td><td>wthr_key_****</td><td>已对接</td><td>2026-06-10 14:00</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>对接平台管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 接入应用名称:蓝色可点击链接(线上形态) */
+.app-name{color:var(--primary);cursor:pointer;}
+.app-name:hover{color:var(--primary-hover);}
+/* 详情弹窗键值对 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+/* 权限复选组 */
+.perm-group{display:flex;gap:20px;align-items:center;height:32px;}
+.perm-group label{display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- 顶部操作:线上仅一个「新增接入应用」主按钮,无筛选栏 -->
+<div class="mb14"><button class="btn btnp" onclick="openEdit(-1)">＋ 新增接入应用</button></div>
+
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>接入应用</th><th>数据范围</th><th>权限</th><th>白名单IP</th><th>最近访问IP</th><th>最近访问时间</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 新增/编辑接入应用弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span id="editTitle">新增接入应用</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="form-row"><span class="fl"><span class="req">*</span>接入应用</span><input id="eName" placeholder="请输入接入应用名称" style="flex:1"></div>
+        <div class="form-row"><span class="fl"><span class="req">*</span>数据范围</span><input id="eScope" placeholder="请输入数据范围(项目名称)" style="flex:1"></div>
+        <div class="form-row"><span class="fl"><span class="req">*</span>权限</span>
+          <div class="perm-group">
+            <label><input type="checkbox" id="ePermCtrl">集中控制</label>
+            <label><input type="checkbox" id="ePermBill">计费管理</label>
+          </div>
+        </div>
+        <div class="form-row"><span class="fl">白名单IP</span><input id="eIp" placeholder="多个IP以英文逗号分隔,留空不限制" style="flex:1"></div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveEdit()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 接入应用详情弹窗(点击应用名称) -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>接入应用详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:前13条取自线上截图,其余按同形态生成,共92条(与线上分页一致) ── */
+const APPS=(()=>{
+  const real=[
+    ['南京新工泰融产业聚集区','集中控制','2026-06-29 15:08:26'],
+    ['郑州希尔顿','集中控制，计费管理','2026-06-16 17:28:25'],
+    ['火凤四新科创中心','集中控制，计费管理','2026-06-15 16:31:34'],
+    ['萧县政务服务中心','集中控制，计费管理','2026-06-08 18:38:56'],
+    ['上海董家渡地块','集中控制，计费管理','2026-06-03 17:31:59'],
+    ['江苏南京通信管理局','集中控制，计费管理','2026-05-27 18:20:43'],
+    ['青啤博物馆','集中控制，计费管理','2026-05-25 15:45:24'],
+    ['厦门大学嘉庚学院','集中控制，计费管理','2026-05-19 09:10:14'],
+    ['成都茂业JW万豪酒店','集中控制，计费管理','2026-04-24 15:22:40'],
+    ['南京叨叨信息科技有限公司','集中控制，计费管理','2026-04-21 14:36:49'],
+    ['祥生中心1','集中控制，计费管理','2026-04-08 10:56:49'],
+    ['祥生中心','集中控制，计费管理','2026-04-08 10:56:20'],
+    ['揽湖誉道','集中控制，计费管理','2026-04-02 18:46:08']
+  ];
+  const rows=real.map(([name,perm,time])=>({name,scope:name,perm,ip:'',lastIp:'',time}));
+  // 生成剩余数据至92条
+  const cities=['杭州','苏州','武汉','长沙','合肥','西安','宁波','无锡','佛山','珠海','昆明','贵阳','南昌','徐州','温州','常州'];
+  const kinds=['万象城','科技园','产业园','智慧大厦','国际中心','绿地中心','商务广场','创新港','数据中心','人才公寓'];
+  let t=new Date('2026-03-28T17:12:05').getTime();
+  for(let i=0;rows.length<92;i++){
+    const name=cities[i%cities.length]+kinds[Math.floor(i/cities.length)%kinds.length];
+    t-=(31+i%17)*3600000; // 时间逐条前推
+    const d=new Date(t),p=n=>String(n).padStart(2,'0');
+    rows.push({name,scope:name,
+      perm:i%5===0?'集中控制':(i%7===0?'计费管理':'集中控制，计费管理'),
+      ip:'',lastIp:'',
+      time:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`});
+  }
+  return rows;
+})();
+
+/* ── 表格 + 分页 ── */
+const pg={total:APPS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function renderTable(){
+  const s=(pg.page-1)*pg.size;
+  document.getElementById('tbody').innerHTML=APPS.slice(s,s+pg.size).map((r,i)=>`
+    <tr>
+      <td><span class="app-name" onclick="showDetail(${s+i})">${r.name}</span></td>
+      <td>${r.scope}</td><td>${r.perm}</td><td>${r.ip}</td><td>${r.lastIp}</td><td>${r.time}</td>
+      <td><span class="op"><a onclick="openEdit(${s+i})">编辑</a><a class="danger" onclick="delApp(${s+i})">删除</a></span></td>
+    </tr>`).join('')
+    ||'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 详情 ── */
+function showDetail(idx){
+  const r=APPS[idx];
+  // AppKey/AppSecret 由名称生成的模拟值
+  const key='ak_'+Array.from(r.name).reduce((a,c)=>a+c.charCodeAt(0),7).toString(16).padStart(8,'0')+'f3c1';
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">接入应用:</span><span class="v">${r.name}</span>
+    <span class="k">AppKey:</span><span class="v">${key}</span>
+    <span class="k">AppSecret:</span><span class="v">************(已隐藏)</span>
+    <span class="k">数据范围:</span><span class="v">${r.scope}</span>
+    <span class="k">权限:</span><span class="v">${r.perm}</span>
+    <span class="k">白名单IP:</span><span class="v">${r.ip||'-'}</span>
+    <span class="k">最近访问IP:</span><span class="v">${r.lastIp||'-'}</span>
+    <span class="k">最近访问时间:</span><span class="v">${r.time||'-'}</span>`;
+  $modal('dlgDetail');
+}
+
+/* ── 新增/编辑 ── */
+let editIdx=-1;
+function openEdit(idx){
+  editIdx=idx;
+  const r=idx>=0?APPS[idx]:{name:'',scope:'',perm:'',ip:''};
+  document.getElementById('editTitle').textContent=idx>=0?'编辑接入应用':'新增接入应用';
+  document.getElementById('eName').value=r.name;
+  document.getElementById('eScope').value=r.scope;
+  document.getElementById('ePermCtrl').checked=r.perm.includes('集中控制');
+  document.getElementById('ePermBill').checked=r.perm.includes('计费管理');
+  document.getElementById('eIp').value=r.ip;
+  $modal('dlgEdit');
+}
+function saveEdit(){
+  const name=document.getElementById('eName').value.trim();
+  const scope=document.getElementById('eScope').value.trim();
+  const perms=[];
+  if(document.getElementById('ePermCtrl').checked)perms.push('集中控制');
+  if(document.getElementById('ePermBill').checked)perms.push('计费管理');
+  if(!name)return $msg('请输入接入应用名称','warning');
+  if(!scope)return $msg('请输入数据范围','warning');
+  if(!perms.length)return $msg('请至少勾选一项权限','warning');
+  const ip=document.getElementById('eIp').value.trim();
+  if(editIdx>=0){
+    Object.assign(APPS[editIdx],{name,scope,perm:perms.join('，'),ip});
+    $msg('修改成功');
+  }else{
+    APPS.unshift({name,scope,perm:perms.join('，'),ip,lastIp:'',time:''});
+    pg.total=APPS.length;pg.page=1;
+    $msg('新增成功');
+  }
+  $modalClose('dlgEdit');$pager('pager',pg);renderTable();
+}
+
+/* ── 删除(红色确认) ── */
+function delApp(idx){
+  $confirm(`确定删除接入应用「${APPS[idx].name}」吗?删除后该应用将无法访问平台接口。`,()=>{
+    APPS.splice(idx,1);
+    pg.total=APPS.length;
+    if((pg.page-1)*pg.size>=APPS.length&&pg.page>1)pg.page--;
+    $pager('pager',pg);renderTable();
+    $msg('删除成功');
+  });
+}
+
+$pager('pager',pg);renderTable();
+</script>
+</body>
+</html>

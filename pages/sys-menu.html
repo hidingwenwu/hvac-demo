@@ -1,1 +1,292 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>菜单按钮</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">菜单按钮</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">菜单名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>启用</option><option>禁用</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>菜单名称</th><th>路由</th><th>图标</th><th>排序</th><th>权限标识</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>集中控制</td><td>/ctrl</td><td>❄</td><td>2</td><td>ctrl:view</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>空调控制</td><td>/ctrl/ac</td><td>—</td><td>1</td><td>ctrl:ac:view</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>节能策略</td><td>/strategy</td><td>⚡</td><td>3</td><td>strategy:view</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>电费相关</td><td>/elec</td><td>💰</td><td>4</td><td>elec:view</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>系统管理</td><td>/sys</td><td>🔒</td><td>7</td><td>sys:manage</td><td><span class="tag tok">启用</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>菜单按钮</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 顶部只有一个"添加"按钮(与线上一致) */
+.top-bar{margin-bottom:14px;}
+/* 树形首列:左对齐 + 展开箭头 */
+td.tree-cell{text-align:left;}
+.tree-cell .arr{display:inline-block;width:16px;font-size:10px;color:var(--ts);cursor:pointer;transition:transform .15s;text-align:center;user-select:none;}
+.tree-cell .arr.open{transform:rotate(90deg);}
+.tree-cell .arr.blank{visibility:hidden;cursor:default;}
+/* 表头排序图标 */
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable .sort-ico{font-size:10px;color:var(--tw3);margin-left:2px;}
+th.sortable.on .sort-ico{color:var(--primary);}
+/* 实心小标签:菜单蓝 / 按钮青绿 / 正常绿 / 否绿 / 是蓝 */
+.stag{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:22px;padding:0 8px;border-radius:3px;font-size:12px;color:#fff;}
+.stag.menu{background:var(--primary);}
+.stag.btn2{background:#13ce66;}
+.stag.ok{background:var(--ok);}
+.stag.no{background:var(--ok);}
+.stag.yes{background:var(--primary);}
+.stag.stop{background:var(--info);}
+/* 弹窗表单 */
+.mform .form-row{margin-bottom:14px;}
+.mform .form-row .fl{width:90px;}
+.mform input,.mform select{flex:1;}
+.mform .radio-group{display:flex;align-items:center;gap:16px;font-size:13px;}
+.mform .radio-group label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- 顶部操作:添加(线上本页无筛选栏) -->
+<div class="top-bar">
+  <button class="btn btnp" onclick="openAdd()">＋ 添加</button>
+</div>
+
+<!-- 菜单按钮树表 -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th class="tl sortable" id="thSort" onclick="toggleSort()">菜单按钮 <span class="sort-ico">⇅</span></th>
+      <th>描述</th><th>菜单url</th><th>按钮Id</th><th>排序</th><th>menuButtonId</th>
+      <th>类型</th><th>状态</th><th>全局</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- 添加/修改弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span id="dlgEditTitle">添加</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db mform">
+      <div class="form-row"><span class="fl">上级菜单</span>
+        <select id="eParent"><option value="">顶级菜单</option></select>
+      </div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>菜单按钮</span><input id="eName" placeholder="请输入菜单按钮名称"></div>
+      <div class="form-row"><span class="fl">描述</span><input id="eDesc" placeholder="请输入描述"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>菜单url</span><input id="eUrl" placeholder="请输入菜单url"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>按钮Id</span><input id="eBtnId" placeholder="请输入按钮Id"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>排序</span><input id="eSort" type="number" placeholder="请输入排序号"></div>
+      <div class="form-row"><span class="fl">类型</span>
+        <div class="radio-group">
+          <label><input type="radio" name="eType" value="菜单" checked>菜单</label>
+          <label><input type="radio" name="eType" value="按钮">按钮</label>
+        </div>
+      </div>
+      <div class="form-row"><span class="fl">状态</span>
+        <div class="radio-group">
+          <label><input type="radio" name="eStatus" value="正常" checked>正常</label>
+          <label><input type="radio" name="eStatus" value="停用">停用</label>
+        </div>
+      </div>
+      <div class="form-row"><span class="fl">全局</span>
+        <div class="radio-group">
+          <label><input type="radio" name="eGlobal" value="否" checked>否</label>
+          <label><input type="radio" name="eGlobal" value="是">是</label>
+        </div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveNode()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:顶级 22 条与线上截图逐条一致(名称/url/按钮Id/排序/menuButtonId);
+      子级按线上树形结构补齐(菜单+按钮权限项) ── */
+function N(lb,desc,url,btnId,sort,id,type,children){
+  return {lb,desc:desc||'',url,btnId,sort,id,type:type||'菜单',status:'正常',global:'否',open:false,children:children||null};
+}
+const TREE=[
+  N('gccr-系统运维','','/gccr/system/mantiance','gccr:system:mantiance',2,'318200815695298560'),
+  N('空调经销商-系统首页','','ac/dealer','ac:dealer',51,'236988705749991424','菜单',[
+    N('系统首页','','ac/dealer/home','ac:dealer:home',2,'236991696301457408')
+  ]),
+  N('风冷控制','','airCooledUnit/mgr','airCooledUnit:mgr',12,'148861044843085824','菜单',[
+    N('查询','','airCooledUnit/mgr','airCooledUnit:mgr:query',1,'148861320240310272','按钮'),
+    N('参数设置','','airCooledUnit/mgr','airCooledUnit:mgr:setting',2,'148861480244477952','按钮')
+  ]),
+  N('空调经销商-数据监测','','data/monitoring','data:monitoring',54,'236988965637586944','菜单',[
+    N('数据监测','','data/monitoring/index','data:monitoring:index',1,'236992013973717120')
+  ]),
+  N('直膨机控制管理','','directExpansion/mgr','directExpansion:mgr',13,'231824726383788032','菜单',[
+    N('查询','','directExpansion/mgr','directExpansion:mgr:query',1,'231825108224126976','按钮'),
+    N('控制下发','','directExpansion/mgr','directExpansion:mgr:ctrl',2,'231825350316198912','按钮')
+  ]),
+  N('E01','','e01/mgr','e01:mgr',2,'248223614187601920'),
+  N('电费相关','','electricity/mgr','electricityMgr',31,'22821930646372352','菜单',[
+    N('电费查询','','electricity/query','electricity:query',1,'22822130426381824'),
+    N('记录查询','','electricity/record','electricity:record',2,'22822350458291200'),
+    N('分摊规则设置','','electricity/share','electricity:share',3,'22822570368121344')
+  ]),
+  N('节能策略','','energy/saving/strategy','energySavingStrategy',56,'310564971371167744','菜单',[
+    N('极致节能','','energy/saving/extreme','energySaving:extreme',1,'310565270248312832'),
+    N('环境感知联动','','energy/saving/envLink','energySaving:envLink',2,'310565480267138048')
+  ]),
+  N('环境感知设备管理','','esdm','esdm',57,'311281317444714496','菜单',[
+    N('环境感知设备列表','','esdm/list','esdm:list',1,'311281570224378880')
+  ]),
+  N('gccr-设备管理','','gccr/device/mgr','gccr:device:mgr',2,'262945527350689792','菜单',[
+    N('添加设备','','gccr/device/mgr','gccr:device:mgr:add',1,'262945750217638912','按钮'),
+    N('删除设备','','gccr/device/mgr','gccr:device:mgr:del',2,'262945980357550080','按钮')
+  ]),
+  N('gccr-设备档案','','gccr/device/profile','gccr:device:profile',2,'262948920764923904'),
+  N('gccr-事件记录','','gccr/event/log','gccr:event:log',2,'262948323139518464'),
+  N('gccr-首页','','gccr/home','gccr:home',2,'265916823000711168'),
+  N('gccr-逻辑配置','','gccr/logical/conf','gccr:logical:conf',2,'262947718627065856'),
+  N('gccr-参数总览','','gccr/param/overview','gccr:param:overview',2,'262947993018433536'),
+  N('gccr-系统设置','','gccr/system/settings','gccr:system:settings',2,'262949233072799744'),
+  N('全局','','global','global',97,'1054347986672549888','按钮',[
+    N('导出','','global','global:export',1,'1054348230242150400','按钮'),
+    N('批量删除','','global','global:batchDel',2,'1054348570367201280','按钮')
+  ]),
+  N('空调诊断','','indoorUnit/diagnosis','indoorUnitDiagnosis',2,'44477302188539904'),
+  N('集中控制','','indoorUnit/mgr','indoorUnit:mgr',11,'1032205791395971072','菜单',[
+    N('空调控制','','indoorUnit/control','indoorUnit:control',1,'1032206130247516160'),
+    N('群组控制','','group/mgr','group:mgr',2,'1032206350268121088'),
+    N('日程管理','','schedule/mgr','schedule:mgr',3,'1032206570242170880'),
+    N('开关机记录','','onoff/log','onoff:log',4,'1032206790368112640'),
+    N('故障记录','','fault/log','fault:log',5,'1032206990217650176')
+  ]),
+  N('空调经销商-空调状态','','indoorUnit/status','indoorUnit:status',53,'236988888781160448','菜单',[
+    N('空调状态','','indoorUnit/status/index','indoorUnit:status:index',1,'236992230357616640')
+  ]),
+  N('大屏','','large/screen','LargeScreen',1,'159826225202855936'),
+  N('操作日志','','operationLog/index','operationLog',98,'973511987260686337','菜单',[
+    N('查询','','operationLog/index','operationLog:query',1,'973512230242150400','按钮'),
+    N('导出','','operationLog/index','operationLog:export',2,'973512570367201280','按钮')
+  ])
+];
+
+/* ── 渲染树表(可展开/收起;首列缩进) ── */
+let sortAsc=null;   /* null=原始顺序 true=升序 false=降序 */
+function typeTag(t){return `<span class="stag ${t==='按钮'?'btn2':'menu'}">${t}</span>`;}
+function renderTable(){
+  const html=[];
+  let list=TREE.slice();
+  if(sortAsc!==null)list.sort((a,b)=>sortAsc?a.lb.localeCompare(b.lb,'zh'):b.lb.localeCompare(a.lb,'zh'));
+  const walk=(nodes,depth,path)=>nodes.forEach((n,i)=>{
+    const has=!!(n.children&&n.children.length);
+    const p=path.concat(i);
+    html.push(`<tr>
+      <td class="tree-cell" style="padding-left:${10+depth*22}px">
+        <span class="arr${has?(n.open?' open':''):' blank'}" onclick="toggleOpen('${n.id}')">▶</span>${n.lb}
+      </td>
+      <td>${n.desc||''}</td><td>${n.url}</td><td>${n.btnId}</td><td>${n.sort}</td><td>${n.id}</td>
+      <td>${typeTag(n.type)}</td>
+      <td><span class="stag ${n.status==='正常'?'ok':'stop'}">${n.status}</span></td>
+      <td><span class="stag ${n.global==='是'?'yes':'no'}">${n.global}</span></td>
+      <td><span class="op">
+        <a onclick="openEdit('${n.id}')">修改</a>
+        <a class="danger" onclick="delNode('${n.id}')">删除</a>
+      </span></td>
+    </tr>`);
+    if(has&&n.open)walk(n.children,depth+1,p);
+  });
+  walk(list,0,[]);
+  document.getElementById('tbody').innerHTML=html.join('')
+    ||'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function findNode(id,nodes,parent){
+  nodes=nodes||TREE;
+  for(const n of nodes){
+    if(n.id===id)return {node:n,parent:parent||null,list:nodes};
+    if(n.children){const r=findNode(id,n.children,n);if(r)return r;}
+  }
+  return null;
+}
+function toggleOpen(id){
+  const r=findNode(id);
+  if(r&&r.node.children){r.node.open=!r.node.open;renderTable();}
+}
+/* 表头排序:按菜单按钮名称升/降序切换 */
+function toggleSort(){
+  sortAsc=sortAsc===null?true:(sortAsc?false:null);
+  const th=document.getElementById('thSort');
+  th.classList.toggle('on',sortAsc!==null);
+  th.querySelector('.sort-ico').textContent=sortAsc===null?'⇅':(sortAsc?'↑':'↓');
+  renderTable();
+}
+
+/* ── 添加 / 修改 ── */
+let editId=null;
+function fillParentSelect(excludeId){
+  const sel=document.getElementById('eParent');
+  sel.innerHTML='<option value="">顶级菜单</option>'+
+    TREE.filter(n=>n.id!==excludeId).map(n=>`<option value="${n.id}">${n.lb}</option>`).join('');
+}
+function openAdd(){
+  editId=null;
+  document.getElementById('dlgEditTitle').textContent='添加';
+  fillParentSelect();
+  ['eName','eDesc','eUrl','eBtnId','eSort'].forEach(id=>document.getElementById(id).value='');
+  document.querySelector('input[name=eType][value=菜单]').checked=true;
+  document.querySelector('input[name=eStatus][value=正常]').checked=true;
+  document.querySelector('input[name=eGlobal][value=否]').checked=true;
+  $modal('dlgEdit');
+}
+function openEdit(id){
+  const r=findNode(id);if(!r)return;
+  editId=id;const n=r.node;
+  document.getElementById('dlgEditTitle').textContent='修改';
+  fillParentSelect(id);
+  document.getElementById('eParent').value=r.parent?r.parent.id:'';
+  document.getElementById('eName').value=n.lb;
+  document.getElementById('eDesc').value=n.desc;
+  document.getElementById('eUrl').value=n.url;
+  document.getElementById('eBtnId').value=n.btnId;
+  document.getElementById('eSort').value=n.sort;
+  document.querySelector(`input[name=eType][value=${n.type}]`).checked=true;
+  document.querySelector(`input[name=eStatus][value=${n.status}]`).checked=true;
+  document.querySelector(`input[name=eGlobal][value=${n.global}]`).checked=true;
+  $modal('dlgEdit');
+}
+/* 生成 18~19 位雪花 Id(与线上 menuButtonId 形态一致) */
+function snowId(){return String(Math.floor(2e17+Math.random()*9e17));}
+function saveNode(){
+  const lb=document.getElementById('eName').value.trim();
+  const url=document.getElementById('eUrl').value.trim();
+  const btnId=document.getElementById('eBtnId').value.trim();
+  const sort=+document.getElementById('eSort').value;
+  if(!lb)return $msg('请输入菜单按钮名称','warning');
+  if(!url)return $msg('请输入菜单url','warning');
+  if(!btnId)return $msg('请输入按钮Id','warning');
+  if(!document.getElementById('eSort').value)return $msg('请输入排序号','warning');
+  const desc=document.getElementById('eDesc').value.trim();
+  const type=document.querySelector('input[name=eType]:checked').value;
+  const status=document.querySelector('input[name=eStatus]:checked').value;
+  const global=document.querySelector('input[name=eGlobal]:checked').value;
+  const pid=document.getElementById('eParent').value;
+  if(editId){
+    const r=findNode(editId),n=r.node;
+    Object.assign(n,{lb,desc,url,btnId,sort,type,status,global});
+    /* 上级变化则移动节点 */
+    const newPid=pid,oldPid=r.parent?r.parent.id:'';
+    if(newPid!==oldPid){
+      r.list.splice(r.list.indexOf(n),1);
+      if(newPid){const p=findNode(newPid).node;p.children=p.children||[];p.children.push(n);}
+      else TREE.push(n);
+    }
+    $msg('修改成功');
+  }else{
+    const node=N(lb,desc,url,btnId,sort,snowId(),type);
+    node.status=status;node.global=global;
+    if(pid){const p=findNode(pid).node;p.children=p.children||[];p.children.push(node);p.open=true;}
+    else TREE.push(node);
+    $msg('添加成功');
+  }
+  $modalClose('dlgEdit');renderTable();
+}
+
+/* ── 删除 ── */
+function delNode(id){
+  const r=findNode(id);if(!r)return;
+  $confirm(`确定删除「${r.node.lb}」${r.node.children&&r.node.children.length?'及其子项':''}吗?`,()=>{
+    r.list.splice(r.list.indexOf(r.node),1);
+    renderTable();$msg('删除成功');
+  });
+}
+
+renderTable();
+</script>
+</body>
+</html>

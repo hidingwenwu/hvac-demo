@@ -1,1 +1,256 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>角色管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">角色管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">角色名称</div><input placeholder="请输入" style="width:140px"></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>角色名称</th><th>角色描述</th><th>账号数</th><th>菜单权限数</th><th>创建时间</th><th>操作</th></tr></thead><tbody><tr><td>超级管理员</td><td>拥有所有权限</td><td>3</td><td>全部</td><td>2024-01-10</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>项目管理员</td><td>可管理所属项目及设备</td><td>12</td><td>42</td><td>2024-01-15</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>操作员</td><td>可进行控制操作</td><td>28</td><td>28</td><td>2024-02-01</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>查看员</td><td>仅可查看数据</td><td>45</td><td>15</td><td>2024-02-15</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>计费专员</td><td>电费相关功能权限</td><td>8</td><td>20</td><td>2024-03-10</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>角色管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 弹窗表单 */
+.rform .form-row{margin-bottom:14px;}
+.rform .form-row .fl{width:80px;}
+.rform input,.rform textarea{flex:1;}
+/* 权限分配:菜单树复选 */
+.perm-tree{max-height:380px;overflow-y:auto;border:1px solid var(--bd);border-radius:4px;padding:6px 4px;}
+.pt-row{display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:13px;border-radius:4px;cursor:pointer;user-select:none;}
+.pt-row:hover{background:var(--bg-hover);}
+.pt-row .arr{width:14px;font-size:10px;color:var(--ts);transition:transform .15s;flex-shrink:0;text-align:center;}
+.pt-row.open .arr{transform:rotate(90deg);}
+.pt-row .arr.blank{visibility:hidden;}
+.pt-tag{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:2px;font-size:11px;margin-left:4px;
+  background:var(--primary-dim);border:1px solid rgba(31,101,255,.35);color:#5a8dff;}
+</style>
+</head>
+<body>
+<!-- 筛选栏:角色代码 + 查询/重置/添加(与线上一致) -->
+<div class="fb">
+  <div class="fi"><span class="fl">角色代码</span><input id="fCode" placeholder="请输入角色代码" style="width:190px"></div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openAdd()">＋ 添加</button>
+</div>
+
+<!-- 角色表格 -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>序号</th><th>角色代码</th><th>角色名称</th><th>角色描述</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 添加/修改角色弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span id="dlgEditTitle">添加</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db rform">
+      <div class="form-row"><span class="fl"><span class="req">*</span>角色代码</span><input id="eCode" placeholder="请输入角色代码"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>角色名称</span><input id="eName" placeholder="请输入角色名称"></div>
+      <div class="form-row" style="align-items:flex-start"><span class="fl" style="padding-top:7px">角色描述</span><textarea id="eDesc" rows="3" placeholder="请输入角色描述"></textarea></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveRole()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 权限分配弹窗:菜单树复选(与线上 重 置/确 定 按钮一致) -->
+<div class="modal" id="dlgPerm">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>权限分配</span><span class="dx" onclick="$modalClose('dlgPerm')">✕</span></div>
+    <div class="db">
+      <div class="text-sub" style="font-size:13px;margin-bottom:10px">角色:<span id="permRole" style="color:var(--tx)"></span></div>
+      <div class="perm-tree" id="permTree"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="resetPerm()">重 置</button>
+      <button class="btn btnp" onclick="savePerm()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:与线上一致(共 3 条,角色代码为驼峰英文形态) ── */
+const ROLES=[
+  {code:'gccrAdmin',name:'机房群控管理员',desc:'',perms:[]},
+  {code:'gatewayShippingRecord',name:'出货记录',desc:'',perms:[]},
+  {code:'guest',name:'登录权限',desc:'',perms:[]}
+];
+
+/* ── 权限菜单树(菜单+按钮,与平台侧边栏/菜单按钮页形态一致) ── */
+const MENUS=[
+  {id:'largeScreen',lb:'项目总览大屏'},
+  {id:'monitorScreen',lb:'综合监控大屏'},
+  {id:'indoorUnit:mgr',lb:'集中控制',children:[
+    {id:'ac:control',lb:'空调控制'},
+    {id:'group:control',lb:'群组控制'},
+    {id:'schedule:mgr',lb:'日程管理'},
+    {id:'onoff:record',lb:'开关机记录'},
+    {id:'fault:record',lb:'故障记录'},
+    {id:'env:monitor',lb:'环境感知监测'}
+  ]},
+  {id:'energySavingStrategy',lb:'节能策略',children:[
+    {id:'strategy:extreme',lb:'极致节能'},
+    {id:'strategy:envLink',lb:'环境感知联动'}
+  ]},
+  {id:'project:device:mgr',lb:'项目及设备管理',children:[
+    {id:'project:mgr',lb:'项目管理'},
+    {id:'device:node',lb:'设备管理'},
+    {id:'sub:account',lb:'子账号列表'}
+  ]},
+  {id:'electricityMgr',lb:'电费相关',children:[
+    {id:'elec:query',lb:'电费查询'},
+    {id:'elec:record',lb:'记录查询'},
+    {id:'elec:share',lb:'分摊规则设置'}
+  ]},
+  {id:'smartOps',lb:'智慧运维'},
+  {id:'system:mgr',lb:'系统管理',children:[
+    {id:'sys:account',lb:'账号管理',children:[
+      {id:'sys:account:add',lb:'添加新用户',btn:true},
+      {id:'sys:account:resetPwd',lb:'重置密码',btn:true},
+      {id:'sys:account:del',lb:'删除',btn:true}
+    ]},
+    {id:'sys:org',lb:'组织管理',children:[
+      {id:'sys:org:add',lb:'新增',btn:true},
+      {id:'sys:org:conf',lb:'配置项目',btn:true},
+      {id:'sys:org:del',lb:'删除',btn:true}
+    ]},
+    {id:'sys:role',lb:'角色管理',children:[
+      {id:'sys:role:add',lb:'添加',btn:true},
+      {id:'sys:role:perm',lb:'权限分配',btn:true},
+      {id:'sys:role:del',lb:'删除',btn:true}
+    ]},
+    {id:'sys:menuButton',lb:'菜单按钮'},
+    {id:'sys:log',lb:'日志入口'},
+    {id:'sys:platform',lb:'对接平台管理'},
+    {id:'sys:thirdDevice',lb:'第三方设备注册'},
+    {id:'sys:gateway',lb:'计费网关列表'},
+    {id:'sys:iotCard',lb:'物联网卡片'},
+    {id:'sys:preference',lb:'项目偏好设置'},
+    {id:'sys:x2000',lb:'x2000下发配置'},
+    {id:'sys:notice',lb:'公告管理'},
+    {id:'sys:guide',lb:'操作指引管理'}
+  ]}
+];
+
+/* ── 查询 / 重置 / 分页(线上默认 10 条/页,可选 10/20/30/50) ── */
+let filtered=ROLES.slice();
+const pg={total:ROLES.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const code=document.getElementById('fCode').value.trim();
+  filtered=ROLES.filter(r=>!code||r.code.toLowerCase().includes(code.toLowerCase()));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){document.getElementById('fCode').value='';doQuery();}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>{
+    const idx=ROLES.indexOf(r);
+    return `<tr>
+      <td>${start+i+1}</td><td>${r.code}</td><td>${r.name}</td><td>${r.desc||''}</td>
+      <td><span class="op">
+        <a onclick="openEdit(${idx})">修改</a>
+        <a onclick="openPerm(${idx})">权限分配</a>
+        <a class="danger" onclick="delRole(${idx})">删除</a>
+      </span></td>
+    </tr>`;}).join('')
+    :'<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 添加 / 修改 ── */
+let editIdx=-1;
+function openAdd(){
+  editIdx=-1;
+  document.getElementById('dlgEditTitle').textContent='添加';
+  ['eCode','eName','eDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('eCode').disabled=false;
+  $modal('dlgEdit');
+}
+function openEdit(idx){
+  editIdx=idx;const r=ROLES[idx];
+  document.getElementById('dlgEditTitle').textContent='修改';
+  document.getElementById('eCode').value=r.code;
+  document.getElementById('eCode').disabled=true;   /* 角色代码不可改 */
+  document.getElementById('eName').value=r.name;
+  document.getElementById('eDesc').value=r.desc;
+  $modal('dlgEdit');
+}
+function saveRole(){
+  const code=document.getElementById('eCode').value.trim();
+  const name=document.getElementById('eName').value.trim();
+  const desc=document.getElementById('eDesc').value.trim();
+  if(!code)return $msg('请输入角色代码','warning');
+  if(!name)return $msg('请输入角色名称','warning');
+  if(editIdx<0){ROLES.push({code,name,desc,perms:[]});$msg('添加成功');}
+  else{Object.assign(ROLES[editIdx],{name,desc});$msg('修改成功');}
+  $modalClose('dlgEdit');doQuery();
+}
+
+/* ── 权限分配:菜单树复选(父子级联) ── */
+let permIdx=-1,permSel=new Set(),permOpen=new Set();
+function eachNode(nodes,fn,parent){nodes.forEach(n=>{fn(n,parent);if(n.children)eachNode(n.children,fn,n);});}
+function openPerm(idx){
+  permIdx=idx;
+  permSel=new Set(ROLES[idx].perms);
+  permOpen=new Set(MENUS.filter(m=>m.children).map(m=>m.id)); /* 默认展开一级 */
+  document.getElementById('permRole').textContent=ROLES[idx].name+'('+ROLES[idx].code+')';
+  renderPerm();$modal('dlgPerm');
+}
+function renderPerm(){
+  const html=[];
+  const walk=(nodes,depth)=>nodes.forEach(n=>{
+    const has=!!n.children;
+    html.push(`<div class="pt-row${permOpen.has(n.id)?' open':''}" style="padding-left:${8+depth*22}px" onclick="togglePermOpen('${n.id}')">
+      <span class="arr${has?'':' blank'}">▶</span>
+      <input type="checkbox" ${permSel.has(n.id)?'checked':''} onclick="event.stopPropagation();togglePermChk('${n.id}',this.checked)">
+      <span>${n.lb}</span>${n.btn?'<span class="pt-tag">按钮</span>':''}
+    </div>`);
+    if(has&&permOpen.has(n.id))walk(n.children,depth+1);
+  });
+  walk(MENUS,0);
+  document.getElementById('permTree').innerHTML=html.join('');
+}
+function togglePermOpen(id){
+  let node=null;eachNode(MENUS,n=>{if(n.id===id)node=n;});
+  if(!node||!node.children)return;
+  permOpen.has(id)?permOpen.delete(id):permOpen.add(id);renderPerm();
+}
+function togglePermChk(id,on){
+  let node=null;eachNode(MENUS,n=>{if(n.id===id)node=n;});
+  /* 勾选/取消自身及全部子节点 */
+  const apply=n=>{on?permSel.add(n.id):permSel.delete(n.id);(n.children||[]).forEach(apply);};
+  if(node)apply(node);
+  /* 勾选子节点时联动勾选父链 */
+  if(on){
+    const chain=[];
+    const find=(nodes,path)=>nodes.some(n=>{
+      if(n.id===id){chain.push(...path);return true;}
+      return n.children?find(n.children,path.concat(n)):false;
+    });
+    find(MENUS,[]);
+    chain.forEach(p=>permSel.add(p.id));
+  }
+  renderPerm();
+}
+function resetPerm(){permSel=new Set(ROLES[permIdx].perms);renderPerm();}
+function savePerm(){
+  ROLES[permIdx].perms=[...permSel];
+  $modalClose('dlgPerm');$msg('权限分配成功');
+}
+
+/* ── 删除 ── */
+function delRole(idx){
+  $confirm(`确定删除角色「${ROLES[idx].code}」吗?`,()=>{
+    ROLES.splice(idx,1);doQuery();$msg('删除成功');
+  });
+}
+
+$pager('pager',pg);renderTable();
+</script>
+</body>
+</html>

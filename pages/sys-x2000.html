@@ -1,1 +1,188 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>x2000下发配置</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">x2000下发配置</div><div class="pa"></div></div><div class="fb"><div class="fi"><div class="fl">下发对象</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">状态</div><select style="width:120px"><option value="">全部</option><option>待下发</option><option>已下发</option><option>下发失败</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>下发对象</th><th>配置项</th><th>当前值</th><th>目标值</th><th>状态</th><th>操作时间</th><th>操作</th></tr></thead><tbody><tr><td>1F-大厅-01</td><td>目标温度</td><td>26℃</td><td>25℃</td><td><span class="tag tok">已下发</span></td><td>2026-06-10 14:20</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>2F-办公区</td><td>运行模式</td><td>制冷</td><td>节能制冷</td><td><span class="tag tok">已下发</span></td><td>2026-06-10 14:18</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>3F-会议室-01</td><td>风速</td><td>自动</td><td>低速</td><td><span class="tag twn">待下发</span></td><td>—</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>B1-餐饮区</td><td>目标温度</td><td>24℃</td><td>26℃</td><td><span class="tag ter">下发失败</span></td><td>2026-06-10 13:05</td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共16条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>x2000下发配置</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 本页专有样式:x2000 配置列表(线上初始为空:暂无数据 + 共0条) ── */
+/* 空状态:线上为左上角一行灰字「暂无数据」 */
+.no-data{font-size:13px;color:var(--ts);padding:6px 2px 0;}
+/* 线上分页器贴页面底部居中 */
+body{display:flex;flex-direction:column;}
+#pager{margin-top:auto;}
+/* 配置卡片(新增后展示) */
+.cfg-list{display:flex;flex-direction:column;gap:14px;margin-top:14px;}
+.cfg-card{background:var(--bg-panel);border:1px solid var(--bd);border-radius:var(--r);padding:14px 18px;}
+.cfg-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cfg-head .cn{font-size:14px;font-weight:600;color:var(--txw);}
+.cfg-head .ops{margin-left:auto;display:flex;gap:8px;}
+.cfg-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px 20px;font-size:13px;}
+.cfg-meta .k{color:var(--ts);margin-right:6px;}
+/* 目标主机多选列表(弹窗内) */
+.host-box{border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);max-height:170px;overflow-y:auto;padding:4px 0;}
+.host-row{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;cursor:pointer;}
+.host-row:hover{background:var(--bg-hover);}
+.host-row .hs{margin-left:auto;font-size:12px;}
+</style>
+</head>
+<body>
+<!-- 顶部操作:新增配置(线上左上角唯一按钮) -->
+<div class="mb14">
+  <button class="btn btnp" onclick="openAdd()">＋ 新增配置</button>
+</div>
+
+<!-- 配置列表(初始为空,与线上一致) -->
+<div id="listBox"></div>
+<div id="pager"></div>
+
+<!-- 新增/编辑配置弹窗:配置表单 + 目标主机选择(取 消 / 确 定) -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span id="dlgTitle">新增配置</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-row mb14"><span class="fl"><span class="req">*</span>配置名称</span><input id="eName" placeholder="请输入配置名称" style="flex:1"></div>
+      <div class="form-row mb14"><span class="fl"><span class="req">*</span>配置类型</span>
+        <select id="eType" style="flex:1">
+          <option>参数下发</option><option>固件升级</option><option>采集策略</option>
+        </select>
+      </div>
+      <div class="form-row mb14"><span class="fl">上报周期(秒)</span><input id="ePeriod" value="60" style="width:120px"></div>
+      <div class="form-row mb14"><span class="fl">采集间隔(秒)</span><input id="eInterval" value="30" style="width:120px"></div>
+      <div class="form-row mb14" style="align-items:flex-start"><span class="fl" style="padding-top:8px"><span class="req">*</span>目标主机</span>
+        <div style="flex:1">
+          <!-- 目标 x2000 主机多选 -->
+          <div class="host-box" id="hostBox"></div>
+          <div class="text-sub" style="font-size:12px;margin-top:6px">已选 <span id="hostCnt">0</span> 台主机</div>
+        </div>
+      </div>
+      <div class="form-row" style="align-items:flex-start"><span class="fl" style="padding-top:8px">备注</span>
+        <textarea id="eRemark" rows="2" placeholder="请输入备注" style="flex:1"></textarea>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveCfg()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ══ 目标 x2000 主机(模拟,形态贴线上网关设备编码) ══ */
+const HOSTS=[
+  {id:'X2000-8f3a21c6',name:'1861蔚蓝公寓B2 · 1号机房主机',online:true},
+  {id:'X2000-4b9e07d2',name:'1861蔚蓝公寓B2 · 2号机房主机',online:true},
+  {id:'X2000-c25d1ea9',name:'福田保税区项目 · 楼宇主机A',online:true},
+  {id:'X2000-77f04b3e',name:'恒茂国际都会 · 焕新模块主机',online:false},
+  {id:'X2000-19ac52f8',name:'浩瑞通R7试用 · 测试主机',online:true},
+];
+
+/* 配置列表:线上初始为空(暂无数据/共0条),新增后入列 */
+let CFGS=[];
+let editIdx=-1;                              // -1=新增,否则为编辑下标
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderList()};
+
+/* ══ 列表渲染 ══ */
+function renderList(){
+  const box=document.getElementById('listBox');
+  if(!CFGS.length){box.innerHTML='<div class="no-data">暂无数据</div>';}
+  else{
+    const start=(pg.page-1)*pg.size;
+    box.innerHTML='<div class="cfg-list">'+CFGS.slice(start,start+pg.size).map((c,i)=>`
+      <div class="cfg-card">
+        <div class="cfg-head">
+          <span class="cn">${c.name}</span>
+          <span class="tag thl">${c.type}</span>
+          ${c.sent?'<span class="tag tok">已下发</span>':'<span class="tag twn">待下发</span>'}
+          <span class="ops">
+            <button class="btn btn-mini btnp" onclick="doSend(${start+i})">下发</button>
+            <button class="btn btn-mini" onclick="openEdit(${start+i})">编辑</button>
+            <button class="btn btn-mini" onclick="doDel(${start+i})">删除</button>
+          </span>
+        </div>
+        <div class="cfg-meta">
+          <span><span class="k">目标主机:</span>${c.hosts.length} 台(${c.hosts.map(h=>h.split(' ')[0]).join('、')})</span>
+          <span><span class="k">上报周期:</span>${c.period}s</span>
+          <span><span class="k">采集间隔:</span>${c.interval}s</span>
+          <span><span class="k">创建时间:</span>${c.time}</span>
+          ${c.remark?`<span><span class="k">备注:</span>${c.remark}</span>`:''}
+        </div>
+      </div>`).join('')+'</div>';
+  }
+  pg.total=CFGS.length;
+  $pager('pager',pg);
+}
+
+/* ══ 目标主机多选 ══ */
+let hostSel=new Set();
+function renderHosts(){
+  document.getElementById('hostBox').innerHTML=HOSTS.map((h,i)=>`
+    <label class="host-row">
+      <input type="checkbox" ${hostSel.has(i)?'checked':''} onchange="pickHost(${i},this.checked)">
+      <span>${h.name}</span><span class="text-sub" style="font-size:12px">${h.id}</span>
+      <span class="hs ${h.online?'text-ok':'text-sub'}"><span class="dot ${h.online?'don':'dof'}"></span>${h.online?'在线':'离线'}</span>
+    </label>`).join('');
+  document.getElementById('hostCnt').textContent=hostSel.size;
+}
+function pickHost(i,on){on?hostSel.add(i):hostSel.delete(i);document.getElementById('hostCnt').textContent=hostSel.size;}
+
+/* ══ 新增/编辑 ══ */
+function openAdd(){
+  editIdx=-1;hostSel=new Set();
+  document.getElementById('dlgTitle').textContent='新增配置';
+  document.getElementById('eName').value='';
+  document.getElementById('eType').value='参数下发';
+  document.getElementById('ePeriod').value='60';
+  document.getElementById('eInterval').value='30';
+  document.getElementById('eRemark').value='';
+  renderHosts();$modal('dlgEdit');
+}
+function openEdit(i){
+  editIdx=i;const c=CFGS[i];
+  hostSel=new Set(c.hostIdx);
+  document.getElementById('dlgTitle').textContent='编辑配置';
+  document.getElementById('eName').value=c.name;
+  document.getElementById('eType').value=c.type;
+  document.getElementById('ePeriod').value=c.period;
+  document.getElementById('eInterval').value=c.interval;
+  document.getElementById('eRemark').value=c.remark;
+  renderHosts();$modal('dlgEdit');
+}
+function saveCfg(){
+  const name=document.getElementById('eName').value.trim();
+  if(!name)return $msg('请输入配置名称','warning');
+  if(!hostSel.size)return $msg('请选择目标主机','warning');
+  const now=new Date(),p=n=>String(n).padStart(2,'0');
+  const cfg={
+    name,type:document.getElementById('eType').value,
+    period:+document.getElementById('ePeriod').value||60,
+    interval:+document.getElementById('eInterval').value||30,
+    hostIdx:[...hostSel],hosts:[...hostSel].map(i=>HOSTS[i].name),
+    remark:document.getElementById('eRemark').value.trim(),
+    sent:false,
+    time:`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`
+  };
+  if(editIdx<0){CFGS.unshift(cfg);$msg('新增配置成功');}
+  else{cfg.sent=CFGS[editIdx].sent;CFGS[editIdx]=cfg;$msg('配置已更新');}
+  $modalClose('dlgEdit');pg.page=1;renderList();
+}
+
+/* ══ 下发 / 删除 ══ */
+function doSend(i){
+  const c=CFGS[i];
+  $confirm(`确认向 ${c.hosts.length} 台目标主机下发配置「${c.name}」？`,()=>{
+    c.sent=true;renderList();
+    $msg('下发指令已发送,请等待主机回执','success');
+  });
+}
+function doDel(i){
+  $confirm(`确定删除配置「${CFGS[i].name}」？`,()=>{
+    CFGS.splice(i,1);renderList();$msg('删除成功');
+  });
+}
+
+renderList();
+</script>
+</body>
+</html>

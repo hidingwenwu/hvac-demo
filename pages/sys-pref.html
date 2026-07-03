@@ -1,1 +1,133 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>项目偏好设置</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">项目偏好设置</div><div class="pa"></div></div><div class="fb"><div class="fi"><div class="fl">项目</div><select style="width:180px"><option value="">全部</option><option>上海某商业广场</option><option>北京写字楼</option><option>广州购物中心</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>项目名称</th><th>默认策略</th><th>温度上限</th><th>温度下限</th><th>告警间隔</th><th>数据保留天数</th><th>操作</th></tr></thead><tbody><tr><td>上海某商业广场</td><td>节能模式</td><td>28℃</td><td>20℃</td><td>30分钟</td><td>365天</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>北京写字楼</td><td>舒适模式</td><td>26℃</td><td>18℃</td><td>15分钟</td><td>180天</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>广州购物中心</td><td>节能模式</td><td>28℃</td><td>22℃</td><td>30分钟</td><td>365天</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>深圳科技园</td><td>自定义</td><td>27℃</td><td>21℃</td><td>60分钟</td><td>90天</td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共16条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>项目偏好设置</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 本页专有样式:偏好开关矩阵(行=项目,列=偏好项,单元格=开关) ── */
+/* 线上单元格为 Element Switch,开关居中 */
+.sw-cell{display:inline-flex;align-items:center;justify-content:center;}
+/* 线上关闭态开关:深色轨道 + 白色圆点在左(见截图,页1全部关闭) */
+#tbody .switch{background:#2b354f;}
+#tbody .switch.on{background:var(--primary);}
+/* 项目名称列稍宽 */
+th:first-child,td:first-child{min-width:220px;}
+/* 线上分页器贴页面底部居中 */
+body{display:flex;flex-direction:column;}
+#pager{margin-top:auto;}
+</style>
+</head>
+<body>
+<!-- 筛选栏:项目名称 + 5 个偏好项下拉(全部/开启/关闭) + 搜索/重置,与线上一致 -->
+<div class="fb">
+  <div class="fi"><span class="fl">项目名称</span><input id="fName" placeholder="请输入项目名称" style="width:180px"></div>
+  <div class="fi"><span class="fl">自动模式</span><select id="fAuto" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><span class="fl">风水联动</span><select id="fLink" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><span class="fl">环境感知检测</span><select id="fEnv" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><span class="fl">模式锁定增强</span><select id="fLock" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><span class="fl">极致节能</span><select id="fEco" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <button class="btn btnp" onclick="doQuery()">搜索</button>
+  <button class="btn" onclick="doReset()">重置</button>
+</div>
+
+<!-- 项目 × 偏好项 配置矩阵(列与线上一致:表头为「环境感知监测」) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>项目名称</th><th>创建时间</th>
+      <th>自动模式</th><th>风水联动</th><th>环境感知监测</th>
+      <th>模式锁定增强</th><th>极致节能</th><th>状态变化转发</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<script src="_ui.js"></script>
+<script>
+/* ══ 模拟数据:共 1304 个项目(与线上一致),页1项目名/创建时间照抄线上截图 ══ */
+/* 偏好项字段:auto自动模式 link风水联动 env环境感知监测 lock模式锁定增强 eco极致节能 fwd状态变化转发 */
+const KEYS=['auto','link','env','lock','eco','fwd'];
+const KEY_LABELS={auto:'自动模式',link:'风水联动',env:'环境感知监测',lock:'模式锁定增强',eco:'极致节能',fwd:'状态变化转发'};
+
+/* 页1数据(照抄线上截图:全部开关为关闭态) */
+const PAGE1=[
+  ['海尔R7专项测试','2026-07-03 09:05:15'],
+  ['天津红桥万通尚都嘉园焕新模块项目','2026-07-02 16:41:29'],
+  ['浩瑞通R7试用','2026-07-02 16:20:22'],
+  ['恒茂国际都会焕新模块项目','2026-07-02 16:19:13'],
+  ['湖北反腐倡廉教育基地','2026-07-02 13:59:26'],
+  ['福田保税区项目','2026-07-02 13:57:44'],
+  ['永康市妇女儿童保健院','2026-07-01 18:10:25'],
+  ['时兴经济发展','2026-07-01 14:40:50'],
+  ['美的R7专项测试','2026-07-01 13:55:31'],
+  ['F17G测试项目','2026-07-01 13:49:59'],
+];
+const CITY=['杭州','苏州','天津','武汉','成都','长沙','西安','佛山','青岛','厦门'];
+const KIND=['商业广场','写字楼','公寓','产业园','医院','学校','酒店','数据机房'];
+function pad(n){return String(n).padStart(2,'0');}
+
+const ROWS=[];
+for(let i=0;i<1304;i++){
+  let name,time;
+  if(i<PAGE1.length){[name,time]=PAGE1[i];}
+  else{
+    name=CITY[i%CITY.length]+KIND[i%KIND.length]+'项目'+(i-9);
+    /* 创建时间自 2026-06-30 起按序递减,形态贴线上 */
+    const d=new Date(2026,5,30,18,0,0);d.setMinutes(d.getMinutes()-(i-10)*47);
+    time=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  const r={name,time};
+  /* 页1全部关闭(照抄截图);后续页少量开启,形态更真实 */
+  KEYS.forEach((k,ki)=>{r[k]=i>=10&&(i*7+ki*3)%11===0;});
+  ROWS.push(r);
+}
+
+/* ══ 查询/表格/分页 ══ */
+let filtered=ROWS.slice();
+const pg={total:ROWS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+
+function doQuery(){
+  const name=document.getElementById('fName').value.trim();
+  const conds={auto:'fAuto',link:'fLink',env:'fEnv',lock:'fLock',eco:'fEco'};
+  filtered=ROWS.filter(r=>{
+    if(name&&!r.name.includes(name))return false;
+    for(const k in conds){
+      const v=document.getElementById(conds[k]).value;
+      if(v!==''&&r[k]!==(v==='1'))return false;
+    }
+    return true;
+  });
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fName').value='';
+  ['fAuto','fLink','fEnv','fLock','fEco'].forEach(id=>document.getElementById(id).value='');
+  doQuery();
+}
+
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${r.name}</td><td>${r.time}</td>
+      ${KEYS.map(k=>`<td><span class="sw-cell"><span class="switch ${r[k]?'on':''}" onclick="toggle(${start+i},'${k}',this)"></span></span></td>`).join('')}
+    </tr>`).join('')
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* 点击开关切换偏好并提示 */
+function toggle(idx,key,el){
+  const r=filtered[idx];
+  r[key]=!r[key];
+  el.classList.toggle('on',r[key]);
+  $msg(`「${r.name}」${KEY_LABELS[key]}已${r[key]?'开启':'关闭'}`,'success');
+}
+
+$pager('pager',pg);renderTable();
+</script>
+</body>
+</html>

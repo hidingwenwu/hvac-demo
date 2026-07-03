@@ -2,71 +2,283 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>物联网卡管理</title>
+<title>物联网卡片</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-.warn-strip{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:var(--gap);margin-bottom:var(--gap)}
-.warn-card{border:1px solid var(--bd);border-radius:var(--r);background:linear-gradient(135deg,rgba(12,28,66,.86),rgba(4,12,31,.72));padding:16px 18px;position:relative;overflow:hidden}
-.warn-card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--hl),transparent)}
-.warn-title{font-size:12px;color:var(--ts);margin-bottom:8px}
-.warn-num{font-family:'Roboto Mono',monospace;font-size:28px;font-weight:700}
-.warn-meta{font-size:12px;color:var(--ts);margin-top:8px;line-height:1.6}
-.usage{min-width:150px}
-.bar{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-top:5px}
-.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#00e5ff,#00e676)}
-.fill.warn{background:linear-gradient(90deg,#ffb300,#ff4d4f)}
-.iccid{font-family:'Roboto Mono',monospace;color:#dbeaff}
+/* ── 本页专有样式(对齐线上:红色预警横幅 + 卡列表 + 使用情况进度条) ── */
+/* 顶部红色告警横幅 */
+.warn-banner{display:flex;align-items:center;gap:10px;background:rgba(245,108,108,.12);
+  border:1px solid rgba(245,108,108,.35);border-radius:4px;padding:9px 14px;margin-bottom:14px;}
+.warn-banner .wi{color:var(--er);font-size:15px;flex-shrink:0;}
+.warn-banner .wt{color:var(--er);font-size:13px;}
+.warn-chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:3px;
+  font-size:12px;cursor:pointer;user-select:none;transition:all .15s;}
+.warn-chip.over{background:rgba(245,108,108,.18);border:1px solid var(--er);color:var(--er);}
+.warn-chip.expire{background:rgba(230,162,60,.18);border:1px solid var(--wn);color:var(--wn);}
+.warn-chip:hover,.warn-chip.on{filter:brightness(1.25);box-shadow:0 0 0 1px currentColor inset;}
+.warn-banner .wx{margin-left:auto;color:var(--ts);cursor:pointer;font-size:15px;padding:0 4px;}
+.warn-banner .wx:hover{color:var(--tx);}
+/* 列表标题行 */
+.list-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.list-head .lt{font-size:16px;font-weight:600;color:var(--txw);}
+.count-chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border:1px solid var(--bd2);
+  border-radius:3px;font-size:12px;color:var(--ts);background:var(--bg-panel);}
+/* 运营商小标签 */
+.isp-tag{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:3px;font-size:12px;
+  background:var(--primary-dim);border:1px solid rgba(31,101,255,.4);color:#5a8dff;}
+/* 使用情况单元格:两行 + 进度条 */
+.usage{min-width:170px;cursor:pointer;text-align:left;}
+.usage .u1{font-size:12px;color:var(--tx);margin-bottom:5px;white-space:nowrap;}
+.usage .bar{height:6px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;}
+.usage .fill{height:100%;border-radius:999px;background:var(--primary);}
+.usage .fill.er{background:var(--er);}
+.usage .fill.wn{background:var(--wn);}
+.usage .u2{font-size:12px;color:var(--ts);margin-top:5px;white-space:nowrap;}
+.usage .u2.er{color:var(--er);}
+td.mono{font-family:Consolas,Menlo,monospace;font-size:12px;}
+/* 使用行加高(线上使用情况两行导致行高更大) */
+#tbody td{height:66px;}
+/* 快捷输入弹层 */
+.quick-wrap{position:relative;display:inline-flex;}
+.quick-link{color:var(--primary);font-size:12px;cursor:pointer;white-space:nowrap;}
+.quick-link:hover{color:var(--primary-hover);}
+.quick-pop{position:absolute;top:26px;left:-60px;z-index:100;background:var(--bg-panel-2);border:1px solid var(--bd2);
+  border-radius:4px;padding:10px;display:none;gap:6px;flex-wrap:wrap;width:280px;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+.quick-pop.show{display:flex;}
+/* 详情弹窗内的统计块 */
+.stat-grid{display:grid;grid-template-columns:130px 1fr;gap:9px 14px;font-size:13px;margin-bottom:14px;}
+.stat-grid .k{color:var(--ts);text-align:right;}
 </style>
 </head>
 <body>
-<div class="ph">
-  <div class="pt">物联网卡管理</div>
-  <div class="pa">
-    <button class="btn">刷新数据</button>
-    <button class="btn">预警设置</button>
-    <button class="btn btnp">导出Excel</button>
-  </div>
-</div>
-
-<div class="warn-strip">
-  <div class="warn-card">
-    <div class="warn-title">当前触发预警卡数</div>
-    <div class="warn-num scr">3</div>
-    <div class="warn-meta">流量超额 2 张，到期预警 1 张</div>
-  </div>
-  <div class="warn-card">
-    <div class="warn-title">已接入物联网卡</div>
-    <div class="warn-num scc">28</div>
-    <div class="warn-meta">覆盖网关、控制器与环境感知设备</div>
-  </div>
-  <div class="warn-card">
-    <div class="warn-title">平均剩余流量</div>
-    <div class="warn-num scg">61%</div>
-    <div class="warn-meta">低于 20% 自动进入重点跟踪</div>
-  </div>
-</div>
-
+<!-- 筛选栏(两行:基本条件 + 时间/用量条件),字段与线上一致 -->
 <div class="fb">
-  <div class="fi"><div class="fl">设备编码</div><input placeholder="请输入设备编码" style="width:170px"></div>
-  <div class="fi"><div class="fl">物联网卡号(ICCID)</div><input placeholder="请输入ICCID" style="width:190px"></div>
-  <div class="fi"><div class="fl">项目名称</div><select style="width:160px"><option>全部项目</option><option>智慧园区项目</option><option>工业控制项目</option><option>环境监测项目</option></select></div>
-  <div class="fi"><div class="fl">当月已使用比例</div><select style="width:140px"><option>全部</option><option>0%-20%</option><option>21%-40%</option><option>41%-60%</option><option>61%-80%</option><option>81%-100%</option></select></div>
-  <div class="fi"><div class="fl">运营商</div><select style="width:120px"><option>全部</option><option>中国移动</option><option>中国联通</option><option>中国电信</option></select></div>
-  <button class="btn btnp">筛选</button><button class="btn">重置</button>
+  <div class="fi"><span class="fl">项目名称</span>
+    <select id="fProj" style="width:170px"><option value="">全部项目</option></select>
+  </div>
+  <div class="fi"><span class="fl">设备编码</span><input id="fDev" placeholder="请输入设备编码" style="width:180px"></div>
+  <div class="fi"><span class="fl">物联网卡号(ICCID)</span><input id="fIccid" placeholder="请输入ICCID号" style="width:180px"></div>
+  <div class="fi"><span class="fl">运营商名称</span>
+    <select id="fIsp" style="width:150px"><option value="">全部运营商</option><option>移动</option><option>联通</option><option>电信</option></select>
+  </div>
+  <div class="fi"><span class="fl">物联网卡供方名称</span>
+    <select id="fVendor" style="width:140px"><option value="">全部供方</option><option>度云</option><option>中移物联</option><option>联通雁飞</option></select>
+  </div>
+  <div class="fi"><span class="fl">套餐激活时间</span>
+    <input type="date" id="fActS" style="width:140px"><span class="text-sub">至</span><input type="date" id="fActE" style="width:140px">
+  </div>
+  <div class="fi"><span class="fl">套餐到期时间</span>
+    <input type="date" id="fExpS" style="width:140px"><span class="text-sub">至</span><input type="date" id="fExpE" style="width:140px">
+  </div>
+  <div class="fi"><span class="fl">当月已使用</span>
+    <input id="fMin" placeholder="最小值" style="width:80px"><span class="text-sub">%</span>
+    <span class="text-sub">-</span>
+    <input id="fMax" placeholder="最大值" style="width:80px"><span class="text-sub">%</span>
+    <!-- 快捷输入:线上为文字按钮,点开选择比例区间 -->
+    <span class="quick-wrap">
+      <span class="quick-link" onclick="toggleQuick(event)">快捷输入</span>
+      <span class="quick-pop" id="quickPop">
+        <button class="btn btn-mini btnp" onclick="setQuick('','')">全部</button>
+        <button class="btn btn-mini" onclick="setQuick(0,20)">0%-20%</button>
+        <button class="btn btn-mini" onclick="setQuick(21,40)">21%-40%</button>
+        <button class="btn btn-mini" onclick="setQuick(41,60)">41%-60%</button>
+        <button class="btn btn-mini" onclick="setQuick(61,80)">61%-80%</button>
+        <button class="btn btn-mini" onclick="setQuick(81,100)">81%-100%</button>
+      </span>
+    </span>
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 筛选</button>
+  <button class="btn" onclick="doReset()">⟳ 重置</button>
 </div>
 
-<div class="tw">
-<table>
-<thead><tr><th>项目名称</th><th>设备编码</th><th>物联网卡号(ICCID)</th><th>运营商</th><th>套餐类型</th><th>激活时间</th><th>到期时间</th><th>使用情况</th><th>状态</th><th>操作</th></tr></thead>
-<tbody>
-<tr><td>智慧园区项目</td><td>GW-a8f57c9d</td><td class="iccid">8986061916000012345</td><td>中国移动</td><td>移动流量500M</td><td>2026-05-12</td><td>2027-05-11</td><td class="usage">0.48GB / 0.5GB<div class="bar"><div class="fill warn" style="width:98%"></div></div></td><td><span class="tag ter">流量超额</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
-<tr><td>智能安防项目</td><td>GW-b9e68d0e</td><td class="iccid">8986001916000067890</td><td>中国联通</td><td>移动小流量5GB</td><td>2026-06-18</td><td>2027-06-17</td><td class="usage">2.3GB / 5GB<div class="bar"><div class="fill" style="width:46%"></div></div></td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
-<tr><td>环境监测项目</td><td>SN-c0f79e1f</td><td class="iccid">8986031916000123456</td><td>中国电信</td><td>电信通用2GB月包</td><td>2026-07-22</td><td>2026-07-30</td><td class="usage">0.8GB / 2GB<div class="bar"><div class="fill" style="width:40%"></div></div></td><td><span class="tag twn">即将到期</span></td><td><div class="op"><a>详情</a><a>续费</a></div></td></tr>
-<tr><td>工业控制项目</td><td>GW-d1g80f2g</td><td class="iccid">8986011916000234567</td><td>中国移动</td><td>移动流量15GB</td><td>2026-08-05</td><td>2027-08-04</td><td class="usage">6.7GB / 15GB<div class="bar"><div class="fill" style="width:45%"></div></div></td><td><span class="tag tok">正常</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
-<tr><td>智慧园区项目</td><td>SN-e2h91g3h</td><td class="iccid">8986021916000345678</td><td>中国联通</td><td>电信流量8GB</td><td>2026-09-11</td><td>2027-09-10</td><td class="usage">7.9GB / 8GB<div class="bar"><div class="fill warn" style="width:99%"></div></div></td><td><span class="tag ter">流量超额</span></td><td><div class="op"><a>详情</a><a>刷新</a></div></td></tr>
-</tbody>
-</table>
-<div class="pg"><div class="pg-info">显示 1-5 条，共 28 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+<!-- 红色预警横幅(线上:当前有91张物联网卡触发预警 + 两个可点预警标签 + 关闭) -->
+<div class="warn-banner" id="warnBanner">
+  <span class="wi">❗</span>
+  <span class="wt">当前有91张物联网卡触发预警</span>
+  <span class="warn-chip over" id="chipOver" onclick="toggleWarn('over')">流量超额预警(25张)</span>
+  <span class="warn-chip expire" id="chipExpire" onclick="toggleWarn('expire')">套餐到期预警(66张)</span>
+  <span class="wx" onclick="document.getElementById('warnBanner').style.display='none'">✕</span>
 </div>
+
+<!-- 列表标题 + 右侧操作按钮 -->
+<div class="list-head">
+  <span class="lt">物联网卡列表</span>
+  <span class="count-chip" id="countChip">共 8466 张物联网卡</span>
+  <span style="margin-left:auto;display:flex;gap:10px">
+    <button class="btn btnp" onclick="$msg('Excel 导出任务已创建','success')">⬇ 导出Excel</button>
+    <button class="btn" onclick="doQuery();$msg('数据已刷新','success')">⟳ 刷新数据</button>
+    <button class="btn" onclick="$modal('dlgWarnSet')">⚙ 预警设置</button>
+  </span>
+</div>
+
+<!-- 卡片列表表格(列照抄线上) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th class="tl">项目名称</th><th class="tl">设备编码</th><th class="tl">物联网卡号(ICCID)</th>
+      <th class="tl">运营商</th><th class="tl">卡供方名称</th><th class="tl">套餐类型</th>
+      <th class="tl">激活时间</th><th class="tl">到期时间</th><th class="tl">使用情况</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 流量使用统计详情弹窗(线上点击使用情况弹出,底部「关 闭」) -->
+<div class="modal" id="dlgUsage">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>流量使用统计详情</span><span class="dx" onclick="$modalClose('dlgUsage')">✕</span></div>
+    <div class="db" id="usageBody"></div>
+    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgUsage')">关 闭</button></div>
+  </div>
+</div>
+
+<!-- 预警设置弹窗(取消/保存设置) -->
+<div class="modal" id="dlgWarnSet">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>预警设置</span><span class="dx" onclick="$modalClose('dlgWarnSet')">✕</span></div>
+    <div class="db">
+      <div class="form-row mb14"><span class="fl">流量超额预警阈值</span><input id="wsPct" value="90" style="width:100px"><span class="text-sub">%(当月已使用超过该比例时预警)</span></div>
+      <div class="form-row mb14"><span class="fl">套餐到期预警</span><span class="text-sub">提前</span><input id="wsDay" value="30" style="width:80px"><span class="text-sub">天提醒</span></div>
+      <div class="form-row"><span class="fl">预警通知</span><span class="switch on" onclick="this.classList.toggle('on')"></span><span class="text-sub">开启后向管理员推送预警消息</span></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgWarnSet')">取 消</button>
+      <button class="btn btnp" onclick="$modalClose('dlgWarnSet');$msg('预警设置已保存')">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ══ 模拟数据:8466 张物联网卡,与线上形态一致 ══
+   线上页1特征:项目名称为 "--"、设备编码为32位hex、ICCID 898608531025D00xxxxx、
+   运营商=移动(蓝色标签)、供方=度云、套餐=100M/月、激活/到期=--、使用 0MB/100MB(0%) */
+const TOTAL=8466;
+const PROJECTS=['1861蔚蓝公寓B2','海尔R7专项测试','天津红桥万通尚都嘉园焕新模块项目','浩瑞通R7试用','恒茂国际都会焕新模块项目','福田保税区项目'];
+/* 简易可复现随机数(按卡序号取种子,保证翻页数据稳定) */
+function rnd(seed){let t=seed+0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;}
+function hex32(i){let s='';for(let k=0;k<32;k++)s+='0123456789abcdef'[Math.floor(rnd(i*37+k)*16)];return s;}
+function pad(n,w){return String(n).padStart(w,'0');}
+
+const CARDS=[];
+for(let i=0;i<TOTAL;i++){
+  const over=i>=4000&&i<4025;              // 25 张流量超额
+  const expire=i>=4100&&i<4166;            // 66 张套餐到期预警
+  const bound=over||expire||i%97===50;     // 少量卡已绑定项目(线上页1全为 --,故避开前几页)
+  const used=over?100+Math.floor(rnd(i)*80):(bound?Math.floor(rnd(i*3)*95):0);
+  CARDS.push({
+    proj:bound?PROJECTS[i%PROJECTS.length]:'',
+    dev:hex32(i),
+    iccid:'898608531025D00'+pad(21979-i*2,5),
+    isp:bound&&i%5===0?(i%2?'联通':'电信'):'移动',
+    vendor:bound&&i%7===0?'中移物联':'度云',
+    plan:'100M/月',
+    act:bound?`2026-0${1+i%6}-${pad(1+i%28,2)}`:'',
+    exp:expire?`2026-07-${pad(4+i%28,2)}`:(bound?`2027-0${1+i%6}-${pad(1+i%28,2)}`:''),
+    used,over,expire
+  });
+}
+
+/* ══ 筛选 ══ */
+let filtered=CARDS.slice();
+let warnFilter='';                           // ''|'over'|'expire' 预警横幅标签筛选
+const pg={total:TOTAL,page:1,size:10,sizes:[10,20,50,100],onChange:()=>renderTable()};
+
+/* 项目下拉选项 */
+(function(){const sel=document.getElementById('fProj');PROJECTS.forEach(p=>{const o=document.createElement('option');o.textContent=p;sel.appendChild(o);});})();
+
+function doQuery(){
+  const v=id=>document.getElementById(id).value.trim();
+  const proj=v('fProj'),dev=v('fDev'),iccid=v('fIccid'),isp=v('fIsp'),vendor=v('fVendor');
+  const actS=v('fActS'),actE=v('fActE'),expS=v('fExpS'),expE=v('fExpE');
+  const min=v('fMin')===''?-1:+v('fMin'),max=v('fMax')===''?101:+v('fMax');
+  filtered=CARDS.filter(r=>
+    (!proj||r.proj===proj)&&
+    (!dev||r.dev.includes(dev))&&
+    (!iccid||r.iccid.includes(iccid))&&
+    (!isp||r.isp===isp)&&
+    (!vendor||r.vendor===vendor)&&
+    (!actS||(r.act&&r.act>=actS))&&(!actE||(r.act&&r.act<=actE))&&
+    (!expS||(r.exp&&r.exp>=expS))&&(!expE||(r.exp&&r.exp<=expE))&&
+    (Math.min(r.used,100)>=min)&&(Math.min(r.used,100)<=max)&&
+    (!warnFilter||(warnFilter==='over'?r.over:r.expire))
+  );
+  pg.page=1;pg.total=filtered.length;
+  document.getElementById('countChip').textContent=`共 ${filtered.length} 张物联网卡`;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['fDev','fIccid','fActS','fActE','fExpS','fExpE','fMin','fMax'].forEach(id=>document.getElementById(id).value='');
+  ['fProj','fIsp','fVendor'].forEach(id=>document.getElementById(id).value='');
+  warnFilter='';syncChips();doQuery();
+}
+
+/* 预警标签筛选(再点一次取消) */
+function toggleWarn(t){warnFilter=warnFilter===t?'':t;syncChips();doQuery();}
+function syncChips(){
+  document.getElementById('chipOver').classList.toggle('on',warnFilter==='over');
+  document.getElementById('chipExpire').classList.toggle('on',warnFilter==='expire');
+}
+
+/* 快捷输入弹层 */
+function toggleQuick(e){e.stopPropagation();document.getElementById('quickPop').classList.toggle('show');}
+function setQuick(a,b){
+  document.getElementById('fMin').value=a;document.getElementById('fMax').value=b;
+  document.getElementById('quickPop').classList.remove('show');doQuery();
+}
+document.addEventListener('click',()=>document.getElementById('quickPop').classList.remove('show'));
+
+/* ══ 表格渲染 ══ */
+function usageCell(r,idx){
+  const pct=r.used,total=100,left=Math.max(0,total-pct);
+  const cls=pct>=100?'er':(pct>=80?'wn':'');
+  return `<td class="usage" onclick="showUsage(${idx})" title="点击查看流量使用统计详情">
+    <div class="u1">${pct}MB / ${total}MB (${pct}%)</div>
+    <div class="bar"><div class="fill ${cls}" style="width:${Math.min(100,pct)}%"></div></div>
+    <div class="u2 ${pct>=100?'er':''}">剩余: ${left}MB</div></td>`;
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td class="tl">${r.proj||'--'}</td>
+      <td class="tl mono">${r.dev}</td>
+      <td class="tl mono">${r.iccid}</td>
+      <td class="tl"><span class="isp-tag">${r.isp}</span></td>
+      <td class="tl">${r.vendor}</td>
+      <td class="tl">${r.plan}</td>
+      <td class="tl">${r.act||'--'}</td>
+      <td class="tl">${r.exp||'--'}</td>
+      ${usageCell(r,start+i)}
+    </tr>`).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* 流量使用统计详情弹窗 */
+function showUsage(idx){
+  const r=filtered[idx];if(!r)return;
+  const left=Math.max(0,100-r.used);
+  /* 最近7日用量(按卡号可复现) */
+  let days='';
+  for(let d=0;d<7;d++){
+    const mb=r.used===0?0:+(rnd(idx*11+d)*r.used/5).toFixed(1);
+    days+=`<tr><td>2026-06-${pad(27+d>30?d-4:27+d,2)}</td><td>${mb}MB</td></tr>`;
+  }
+  document.getElementById('usageBody').innerHTML=`
+    <div class="stat-grid">
+      <span class="k">物联网卡号(ICCID):</span><span class="mono">${r.iccid}</span>
+      <span class="k">套餐类型:</span><span>${r.plan}</span>
+      <span class="k">当月已使用:</span><span class="${r.over?'text-er':''}">${r.used}MB (${r.used}%)</span>
+      <span class="k">剩余流量:</span><span class="${left===0?'text-er':'text-ok'}">${left}MB</span>
+      <span class="k">预警状态:</span><span>${r.over?'<span class="tag ter">流量超额</span>':r.expire?'<span class="tag twn">套餐即将到期</span>':'<span class="tag tok">正常</span>'}</span>
+    </div>
+    <div class="tw"><table><thead><tr><th>日期</th><th>当日用量</th></tr></thead><tbody>${days}</tbody></table></div>`;
+  $modal('dlgUsage');
+}
+
+$pager('pager',pg);renderTable();
+</script>
 </body>
 </html>

@@ -3,412 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <title>操作指引管理</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-:root{
-  --bg-base:#030b1c;
-  --bg-sidebar:rgba(8,20,50,.90);
-  --glass-mid:rgba(10,22,52,.82);
-  --glass-thick:rgba(8,18,44,.92);
-  --glass-solid:rgba(6,14,36,.97);
-  --border:rgba(255,255,255,.14);
-  --border-mid:rgba(255,255,255,.22);
-  --accent:#5ab8ff;
-  --accent-glow:rgba(90,184,255,.35);
-  --text-primary:#f0f8ff;
-  --text-secondary:#a8c8e8;
-  --text-muted:#6888aa;
-  --text-label:#7a9bbe;
-  --green:#00f0a0;
-  --green-dim:rgba(0,240,160,.12);
-  --red:#ff6b6b;
-  --red-dim:rgba(255,107,107,.12);
-  --amber:#ffc030;
-  --amber-dim:rgba(255,192,48,.12);
-  --radius-xs:4px;
-  --radius-sm:8px;
-  --radius:13px;
-  --radius-lg:18px;
-  --transition:.18s cubic-bezier(.4,0,.2,1);
-  --spring:.38s cubic-bezier(.34,1.56,.64,1);
-  --shadow-card:0 8px 32px rgba(0,0,0,.50),0 2px 6px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.07);
-  --shadow-btn:0 4px 16px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09);
-  --shadow-modal:0 40px 90px rgba(0,0,0,.80),0 8px 32px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.10);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;background:var(--bg-base);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text-primary);-webkit-font-smoothing:antialiased;}
-body{background:radial-gradient(ellipse at 25% 12%,rgba(22,55,140,.55) 0%,transparent 55%),radial-gradient(ellipse at 80% 85%,rgba(10,28,88,.45) 0%,transparent 50%),var(--bg-base);}
-button{font-family:inherit;}
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.20);}
+/* ── 页面头(面包屑) ── */
+.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px;}
 
-/* 页面布局 */
-#shell{display:flex;flex-direction:column;height:100vh;}
+/* ── 布局:左设置菜单 + 右内容面板 ── */
+.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 92px);}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 
-/* 面包屑栏 */
-.bc-bar{
-  height:40px;flex-shrink:0;
-  background:rgba(6,14,36,.88);
-  border-bottom:1px solid var(--border-mid);
-  display:flex;align-items:center;padding:0 20px;gap:10px;
-}
-.bc-title{font-size:14px;font-weight:700;color:var(--text-primary);}
-.bc-hint{font-size:12px;color:var(--text-muted);}
+/* ── 左侧功能设置菜单(复用侧树面板风格) ── */
+.side-menu{width:190px;flex-shrink:0;background:var(--bg-panel);border-radius:var(--r);padding:14px 10px;}
+.side-menu .sm-title{font-size:14px;font-weight:600;color:var(--txw);padding:0 6px 12px;}
+.sm-item{display:flex;align-items:center;gap:8px;padding:9px 10px;font-size:13px;color:var(--tx);cursor:pointer;border-radius:4px;border-left:3px solid transparent;transition:all .15s;user-select:none;}
+.sm-item:hover{background:var(--bg-hover);}
+.sm-item.active{background:var(--bg-active);border-left-color:var(--primary);color:var(--txw);font-weight:500;}
+.sm-item-icon{font-size:15px;flex-shrink:0;}
 
-/* 主体 */
-.adm-body{flex:1;display:flex;overflow:hidden;}
+/* ── 内容面板切换 ── */
+.adm-pane{display:none;flex:1;min-width:0;}
+.adm-pane.active{display:block;}
 
-/* 左侧设置菜单 */
-.adm-settings-menu{
-  width:180px;min-width:180px;
-  background:var(--bg-sidebar);backdrop-filter:blur(28px) saturate(180%);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;height:100%;overflow:hidden;
-}
-.adm-settings-hd{
-  padding:16px 14px 14px;border-bottom:1px solid var(--border-mid);
-  font-size:11px;font-weight:700;color:var(--text-label);letter-spacing:1.4px;text-transform:uppercase;
-  display:flex;align-items:center;gap:7px;flex-shrink:0;background:rgba(255,255,255,.02);
-}
-.adm-settings-nav{flex:1;overflow-y:auto;padding:6px 0;}
-.adm-settings-item{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 14px;font-size:13px;color:var(--text-muted);
-  cursor:pointer;border-left:3px solid transparent;
-  transition:background var(--transition),color var(--transition),border-color var(--transition);
-  user-select:none;line-height:1.4;
-}
-.adm-settings-item:hover{background:rgba(255,255,255,.06);color:var(--text-secondary);}
-.adm-settings-item.active{background:rgba(90,184,255,.10);border-left-color:var(--accent);color:#c8e8ff;font-weight:600;}
-.adm-settings-item-icon{font-size:15px;flex-shrink:0;}
+/* ── 面板工具行(标题 + 添加按钮) ── */
+.pane-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.pane-hd-title{font-size:14px;font-weight:600;color:var(--txw);display:flex;align-items:center;gap:8px;}
+.pane-hd-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
 
-/* 内容面板 */
-.adm-pane{display:none;flex-direction:column;flex:1;min-width:0;overflow:hidden;}
-.adm-pane.active{display:flex;}
-#admAnnPane.active{display:block;overflow-y:auto;}
+/* ── 表格单元格 ── */
+td.td-file{font-family:'Roboto Mono',Consolas,monospace;font-size:12px;color:var(--ts);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+td.td-title{color:var(--txw);}
 
-/* 面板头部 */
-.adm-pane-hd{
-  padding:11px 20px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:12px;flex-shrink:0;
-  background:var(--glass-mid);backdrop-filter:blur(20px);
-}
-.adm-pane-title{
-  flex:1;font-size:14px;font-weight:600;color:var(--text-label);
-  display:flex;align-items:center;gap:8px;
-}
-.adm-pane-title::before{
-  content:'';display:inline-block;width:3px;height:13px;
-  background:var(--accent);border-radius:2px;box-shadow:0 0 8px rgba(77,174,255,.5);flex-shrink:0;
-}
-.adm-pane-actions{display:flex;gap:8px;align-items:center;}
+/* ── 公告管理面板:配置分区 ── */
+.ann-wrap{max-width:560px;}
+.sec{border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px;}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--txw);margin-bottom:12px;}
+.sec-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--bd);margin-bottom:12px;}
+.toggle-label{font-size:13px;color:var(--tx);font-weight:500;}
+.toggle-sub{font-size:12px;color:var(--ts);margin-top:2px;}
+.frm-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.frm-row:last-child{margin-bottom:0;}
+.frm-label{font-size:13px;color:var(--tx);}
+.frm-label .req{color:var(--er);margin-left:2px;}
+.frm-row input,.frm-row select,.frm-row textarea{width:100%;}
+.frm-row textarea{min-height:72px;line-height:1.55;}
+.frm-hint{font-size:12px;color:var(--ts);line-height:1.5;}
+.frm-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.char-count{font-size:12px;color:var(--tw3);text-align:right;}
+.action-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
 
-/* 内部 Tab */
-.adm-inner-tabs{
-  flex-shrink:0;display:flex;align-items:stretch;border-bottom:1px solid var(--border);
-  padding:0 20px;gap:0;height:42px;background:rgba(255,255,255,.015);
-}
-.adm-inner-tab{
-  display:flex;align-items:center;gap:6px;padding:0 16px;font-size:13px;color:var(--text-muted);
-  cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;
-  transition:color var(--transition),border-color var(--transition),background var(--transition);user-select:none;
-}
-.adm-inner-tab:hover{color:var(--text-secondary);background:rgba(255,255,255,.04);}
-.adm-inner-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-
-/* 添加按钮 */
-.adm-add-btn{
-  padding:6px 14px;font-size:12.5px;border-radius:var(--radius-sm);cursor:pointer;
-  display:inline-flex;align-items:center;gap:5px;transition:all var(--transition);
-  backdrop-filter:blur(12px);box-shadow:var(--shadow-btn);
-}
-.adm-add-btn:hover{transform:translateY(-1.5px);}
-.adm-add-btn-blue{background:rgba(77,174,255,.08);border:1px solid rgba(77,174,255,.22);color:#76b4f2;}
-.adm-add-btn-blue:hover{background:rgba(77,174,255,.18);box-shadow:0 0 16px rgba(77,174,255,.22),var(--shadow-btn);color:#b0d8ff;}
-.adm-add-btn-green{background:var(--green-dim);border:1px solid rgba(0,232,152,.20);color:var(--green);}
-.adm-add-btn-green:hover{background:rgba(0,232,152,.16);box-shadow:0 0 16px rgba(0,232,152,.18),var(--shadow-btn);color:#60ffc8;}
-
-/* 表格 */
-.adm-table-wrap{flex:1;overflow-y:auto;padding:10px 20px 20px;}
-.adm-table{width:100%;border-collapse:collapse;font-size:13.5px;}
-.adm-table thead th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-mid);font-size:11.5px;font-weight:600;color:#8ab4d4;white-space:nowrap;letter-spacing:.4px;position:sticky;top:0;background:var(--bg-base);z-index:2;}
-.adm-table tbody tr{border-bottom:1px solid rgba(255,255,255,.08);transition:background var(--transition);}
-.adm-table tbody tr:hover{background:rgba(255,255,255,.06);}
-.adm-table td{padding:10px 10px;color:var(--text-secondary);vertical-align:middle;}
-.adm-table td.td-seq{width:36px;text-align:center;font-size:12px;color:var(--text-label);font-variant-numeric:tabular-nums;}
-.adm-table td.td-title{font-size:14px;color:#c4ddf4;font-weight:500;}
-.adm-table td.td-file{font-family:monospace;font-size:11.5px;color:var(--text-label);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.adm-table td.td-ops{width:100px;white-space:nowrap;}
-.adm-op-btn{padding:3px 10px;font-size:12px;border-radius:var(--radius-xs);cursor:pointer;transition:all var(--transition);backdrop-filter:blur(8px);margin-right:4px;}
-.adm-op-btn:hover{transform:translateY(-1px);}
-.adm-op-btn-edit{border:1px solid rgba(90,184,255,.35);background:rgba(90,184,255,.10);color:#7ec4f8;}
-.adm-op-btn-edit:hover{background:rgba(90,184,255,.22);color:#c0e4ff;box-shadow:0 2px 10px rgba(90,184,255,.22);}
-.adm-op-btn-del{border:1px solid rgba(255,107,107,.32);background:rgba(255,107,107,.12);color:#e07070;}
-.adm-op-btn-del:hover{background:rgba(255,107,107,.22);color:#ff9090;box-shadow:0 2px 10px rgba(255,107,107,.22);}
-
-.adm-empty{text-align:center;padding:50px 0;color:var(--text-muted);font-size:13px;}
-.adm-empty-icon{font-size:36px;opacity:.22;margin-bottom:10px;}
-
-/* 类别表 */
-.adm-cat-table{width:100%;border-collapse:collapse;font-size:13.5px;}
-.adm-cat-table thead th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-mid);font-size:11.5px;font-weight:600;color:#8ab4d4;white-space:nowrap;letter-spacing:.4px;position:sticky;top:0;background:var(--bg-base);z-index:2;}
-.adm-cat-table tbody tr{border-bottom:1px solid rgba(255,255,255,.08);transition:background var(--transition);}
-.adm-cat-table tbody tr:hover{background:rgba(255,255,255,.06);}
-.adm-cat-table td{padding:10px 10px;color:var(--text-secondary);vertical-align:middle;}
-.adm-cat-table td.td-catname{font-size:14px;color:#c4ddf4;font-weight:500;}
-.adm-cat-table td.td-cnt{width:80px;font-size:12.5px;color:var(--text-label);text-align:center;}
-.adm-cat-table td.td-ops{width:100px;white-space:nowrap;}
-
-/* 公告管理 */
-.ann-admin-wrap{padding:20px;max-width:560px;}
-.ann-admin-section{background:var(--glass-mid);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
-.ann-admin-section-hd{padding:11px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-label);letter-spacing:.4px;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:8px;}
-.ann-admin-section-body{padding:16px;display:flex;flex-direction:column;gap:12px;}
-.ann-form-row{display:flex;flex-direction:column;gap:5px;}
-.ann-form-label{font-size:12px;color:var(--text-label);font-weight:600;display:flex;align-items:center;gap:4px;}
-.ann-form-req{color:var(--red);}
-.ann-form-input,.ann-form-textarea,.ann-form-select{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-primary);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-family:inherit;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition);outline:none;backdrop-filter:blur(8px);}
-.ann-form-input:focus,.ann-form-textarea:focus,.ann-form-select:focus{border-color:var(--accent);background:rgba(77,174,255,.06);box-shadow:0 0 0 3px rgba(77,174,255,.10);}
-.ann-form-textarea{resize:vertical;min-height:72px;line-height:1.55;}
-.ann-form-select option{background:#0a1428;}
-.ann-form-hint{font-size:11.5px;color:var(--text-muted);line-height:1.5;}
-.ann-form-row-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.ann-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
-.ann-toggle-row:last-child{border-bottom:none;padding-bottom:0;}
-.ann-toggle-label{font-size:13px;color:var(--text-secondary);font-weight:500;}
-.ann-toggle-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
-.ann-toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
-.ann-toggle input{opacity:0;width:0;height:0;}
-.ann-toggle-slider{position:absolute;inset:0;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:22px;transition:all .25s ease;}
-.ann-toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:var(--text-muted);border-radius:50%;transition:all .25s ease;}
-.ann-toggle input:checked+.ann-toggle-slider{background:rgba(77,174,255,.25);border-color:rgba(77,174,255,.45);}
-.ann-toggle input:checked+.ann-toggle-slider::before{transform:translateX(16px);background:var(--accent);box-shadow:0 0 8px rgba(77,174,255,.7);}
-.ann-action-bar{display:flex;gap:9px;justify-content:flex-end;}
-.ann-btn{padding:8px 18px;font-size:13px;font-family:inherit;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);backdrop-filter:blur(12px);box-shadow:var(--shadow-btn);}
-.ann-btn:hover{transform:translateY(-1.5px);}
-.ann-btn-preview{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-label);}
-.ann-btn-preview:hover{background:rgba(255,255,255,.09);color:var(--text-secondary);}
-.ann-btn-clear{background:var(--red-dim);border:1px solid rgba(255,90,90,.22);color:#cc5858;}
-.ann-btn-clear:hover{background:rgba(255,90,90,.18);color:#ff7a7a;}
-.ann-btn-save{background:rgba(77,174,255,.13);border:1px solid rgba(77,174,255,.32);color:#88c4ff;}
-.ann-btn-save:hover{background:rgba(77,174,255,.26);color:#bedfff;box-shadow:0 0 18px rgba(77,174,255,.28),var(--shadow-btn);}
-.ann-char-count{font-size:11px;color:var(--text-muted);text-align:right;margin-top:2px;}
-
-/* 预览按钮旁的 guide 链接 */
-.guide-preview-link{
-  display:inline-flex;align-items:center;gap:5px;font-size:12.5px;
-  color:var(--accent);cursor:pointer;padding:4px 10px;border-radius:var(--radius-sm);
-  border:1px solid rgba(90,184,255,.24);background:rgba(90,184,255,.06);
-  transition:all var(--transition);
-}
-.guide-preview-link:hover{background:rgba(90,184,255,.14);border-color:rgba(90,184,255,.40);}
-
-/* 模态框 */
-.modal-mask{position:fixed;inset:0;z-index:600;background:rgba(2,6,18,.82);backdrop-filter:blur(10px) saturate(160%);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .22s ease;}
-.modal-mask.open{display:flex;}
-.modal-mask.visible{opacity:1;}
-.modal-box{background:var(--glass-thick);backdrop-filter:blur(40px) saturate(200%);border:1px solid var(--border-mid);border-radius:var(--radius-lg);padding:24px 26px 22px;width:500px;max-width:95vw;box-shadow:var(--shadow-modal);display:flex;flex-direction:column;gap:16px;transform:scale(.94) translateY(10px);transition:transform .24s cubic-bezier(.34,1.45,.64,1),opacity .22s ease;opacity:0;}
-.modal-mask.visible .modal-box{transform:scale(1) translateY(0);opacity:1;}
-.modal-top{display:flex;align-items:center;justify-content:space-between;}
-.modal-title{font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:9px;}
-.m-tag{font-size:11px;font-weight:400;color:var(--text-label);background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1px 8px;}
-.modal-close{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text-label);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
-.modal-close:hover{background:rgba(255,255,255,.09);color:var(--text-primary);border-color:var(--border-mid);}
-.modal-divider{height:1px;background:var(--border);margin:0 -2px;}
-.modal-form{display:flex;flex-direction:column;gap:12px;}
-.form-row{display:flex;flex-direction:column;gap:5px;}
-.form-row label{font-size:12px;color:var(--text-label);font-weight:600;}
-.form-req{color:var(--red);}
-.form-input,.form-textarea,.form-select{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-primary);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-family:inherit;transition:border-color var(--transition),background var(--transition);outline:none;backdrop-filter:blur(8px);}
-.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent);background:rgba(77,174,255,.06);box-shadow:0 0 0 3px rgba(77,174,255,.10);}
-.form-textarea{resize:vertical;min-height:72px;line-height:1.55;}
-.form-select option{background:#0a1428;}
-.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
-.modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:4px;}
-.modal-btn{padding:8px 20px;font-size:13px;font-family:inherit;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);backdrop-filter:blur(12px);box-shadow:var(--shadow-btn);}
-.modal-btn:hover{transform:translateY(-1.5px);}
-.modal-btn-cancel{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-label);}
-.modal-btn-cancel:hover{background:rgba(255,255,255,.08);color:var(--text-secondary);}
-.modal-btn-confirm{background:rgba(77,174,255,.13);border:1px solid rgba(77,174,255,.32);color:#88c4ff;}
-.modal-btn-confirm:hover{background:rgba(77,174,255,.26);box-shadow:0 0 18px rgba(77,174,255,.28),var(--shadow-btn);color:#bedfff;}
-.modal-btn-danger{background:var(--red-dim);border:1px solid rgba(255,90,90,.28);color:#cc5858;}
-.modal-btn-danger:hover{background:rgba(255,90,90,.20);color:#ff7a7a;}
-.modal-box.sm{width:380px;}
-.modal-confirm-msg{font-size:14px;color:var(--text-secondary);line-height:1.65;}
-.modal-confirm-msg strong{color:var(--text-primary);}
-
-/* 上传区 */
-.upload-zone{position:relative;border:1.5px dashed rgba(77,174,255,.28);border-radius:var(--radius-sm);background:rgba(77,174,255,.04);cursor:pointer;transition:border-color var(--transition),background var(--transition);overflow:hidden;min-height:72px;display:flex;align-items:center;justify-content:center;}
-.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(77,174,255,.09);}
-.upload-zone.has-file{border-style:solid;border-color:rgba(0,232,152,.30);background:rgba(0,232,152,.05);}
+/* ── 视频上传区(点击/拖拽选择文件) ── */
+.upload-zone{position:relative;border:1.5px dashed rgba(31,101,255,.4);border-radius:4px;background:rgba(31,101,255,.06);cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden;min-height:72px;display:flex;align-items:center;justify-content:center;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--primary);background:var(--primary-dim);}
+.upload-zone.has-file{border-style:solid;border-color:rgba(103,194,58,.4);background:rgba(103,194,58,.06);}
 .upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 12px;pointer-events:none;}
 .upload-icon{font-size:24px;opacity:.5;}
-.upload-main{font-size:13px;color:var(--text-secondary);}
-.upload-sub{font-size:11.5px;color:var(--text-muted);}
+.upload-main{font-size:13px;color:var(--tx);}
+.upload-sub{font-size:12px;color:var(--ts);}
 .upload-info{display:flex;align-items:center;gap:10px;padding:12px 14px;width:100%;pointer-events:none;}
-.upload-file-name{display:block;font-size:13px;color:var(--text-primary);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.upload-file-size{font-size:11.5px;color:var(--text-muted);}
-.upload-clear{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-label);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;pointer-events:all;transition:all var(--transition);}
-.upload-clear:hover{background:var(--red-dim);border-color:rgba(255,90,90,.28);color:#ff7a7a;}
+.upload-file-name{display:block;font-size:13px;color:var(--txw);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.upload-file-size{font-size:12px;color:var(--ts);}
+.upload-clear{width:22px;height:22px;border-radius:50%;border:1px solid var(--bd2);background:var(--bg-input);color:var(--ts);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;pointer-events:all;transition:all .15s;}
+.upload-clear:hover{background:var(--er-dim);border-color:rgba(245,108,108,.4);color:var(--er);}
 
-/* Toast */
-#toast{position:fixed;bottom:30px;left:50%;z-index:900;transform:translateX(-50%) translateY(20px);background:var(--glass-thick);backdrop-filter:blur(32px) saturate(200%);border:1px solid var(--border-mid);color:#88c4f0;font-size:13px;padding:10px 22px 10px 16px;border-radius:var(--radius-lg);box-shadow:0 12px 36px rgba(0,0,0,.55);display:flex;align-items:center;gap:9px;opacity:0;pointer-events:none;transition:opacity .24s ease,transform .26s cubic-bezier(.34,1.45,.64,1);max-width:320px;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-#toast.ok{border-color:rgba(0,232,152,.30);color:var(--green);}
-#toast.err{border-color:rgba(255,90,90,.30);color:#ff8888;}
-.toast-icon{font-size:15px;flex-shrink:0;}
-
-/* 公告预览 modal */
-.modal-mask.visible .modal-box{transform:scale(1) translateY(0);opacity:1;}
+/* ── 弹窗内表单 ── */
+.dlg-form .frm-row{margin-bottom:12px;}
+.confirm-msg{font-size:14px;color:var(--tx);line-height:1.65;padding:4px 0;}
+.confirm-msg strong{color:var(--txw);}
 </style>
 </head>
 <body>
-<div id="shell">
 
-  <!-- 面包屑栏 -->
-  <div class="bc-bar">
-    <span class="bc-title">系统管理</span>
-    <span style="color:var(--text-muted);font-size:12px;">/</span>
-    <span style="font-size:13px;color:var(--accent);font-weight:600;">操作指引管理</span>
-    <span style="flex:1;"></span>
-    <span class="guide-preview-link" onclick="previewGuide()">👁 预览指引</span>
+<!-- 页面头:标题 + 面包屑 + 预览指引入口 -->
+<div class="ph">
+  <div>
+    <div class="pt">操作指引管理</div>
+    <div class="crumb">系统管理 <span>/</span> 操作指引管理</div>
   </div>
+  <div class="pa">
+    <button class="btn btn-plain" onclick="previewGuide()">👁 预览指引</button>
+  </div>
+</div>
 
-  <div class="adm-body">
+<div class="layout">
 
-    <!-- 左侧菜单 -->
-    <div class="adm-settings-menu">
-      <div class="adm-settings-hd"><span>⚙</span> 功能设置</div>
-      <nav class="adm-settings-nav">
-        <div class="adm-settings-item active" id="navGuide" onclick="switchPane('guide')">
-          <span class="adm-settings-item-icon">🎬</span>操作指引内容
-        </div>
-        <div class="adm-settings-item" id="navAnn" onclick="switchPane('ann')">
-          <span class="adm-settings-item-icon">📢</span>公告管理
-        </div>
-      </nav>
+  <!-- 左侧功能设置菜单 -->
+  <aside class="side-menu">
+    <div class="sm-title">功能设置</div>
+    <div class="sm-item active" id="navGuide" onclick="switchPane('guide')">
+      <span class="sm-item-icon">🎬</span>操作指引内容
     </div>
+    <div class="sm-item" id="navAnn" onclick="switchPane('ann')">
+      <span class="sm-item-icon">📢</span>公告管理
+    </div>
+  </aside>
+
+  <div class="main-col">
 
     <!-- 操作指引内容管理面板 -->
-    <div class="adm-pane active" id="admGuidePaneFull">
-      <div class="adm-inner-tabs">
-        <div class="adm-inner-tab active" id="admInnerTabVideo" onclick="switchGuideTab('video')">视频列表</div>
-        <div class="adm-inner-tab" id="admInnerTabCat" onclick="switchGuideTab('cat')">类别管理</div>
+    <div class="adm-pane active panel" id="admGuidePaneFull">
+      <!-- 内部 Tab:视频列表 / 类别管理 -->
+      <div class="tabs">
+        <div class="tab active" id="admInnerTabVideo" onclick="switchGuideTab('video')">视频列表</div>
+        <div class="tab" id="admInnerTabCat" onclick="switchGuideTab('cat')">类别管理</div>
       </div>
 
       <!-- 视频列表 -->
-      <div id="admSubVideo" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-        <div class="adm-pane-hd">
-          <div class="adm-pane-title">视频列表管理</div>
-          <div class="adm-pane-actions">
-            <button class="adm-add-btn adm-add-btn-blue" onclick="openVideoModal()">＋ 添加视频</button>
-          </div>
+      <div id="admSubVideo">
+        <div class="pane-hd">
+          <div class="pane-hd-title">视频列表管理</div>
+          <button class="btn btnp" onclick="openVideoModal()">＋ 添加视频</button>
         </div>
-        <div class="adm-table-wrap" id="admVideoWrap">
-          <table class="adm-table" id="admTable">
+        <div class="tw">
+          <table>
             <thead>
               <tr>
-                <th style="width:38px">序号</th>
-                <th style="width:110px">类别</th>
-                <th>视频标题</th>
-                <th>文件名</th>
-                <th style="width:100px">操作</th>
+                <th style="width:50px">序号</th>
+                <th style="width:120px">类别</th>
+                <th class="tl">视频标题</th>
+                <th class="tl">文件名</th>
+                <th style="width:110px">操作</th>
               </tr>
             </thead>
             <tbody id="admTbody"></tbody>
           </table>
-          <div class="adm-empty" id="admEmpty" style="display:none;">
-            <div class="adm-empty-icon">🎬</div>
-            暂无视频，点击右上角"添加视频"
+          <div class="empty" id="admEmpty" style="display:none;">
+            <span class="ei">🎬</span><span class="et">暂无视频，点击右上角"添加视频"</span>
           </div>
         </div>
       </div>
 
       <!-- 类别管理 -->
-      <div id="admSubCat" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-        <div class="adm-pane-hd">
-          <div class="adm-pane-title">类别管理</div>
-          <div class="adm-pane-actions">
-            <button class="adm-add-btn adm-add-btn-green" onclick="openAddCatModal()">＋ 新增类别</button>
-          </div>
+      <div id="admSubCat" style="display:none;">
+        <div class="pane-hd">
+          <div class="pane-hd-title">类别管理</div>
+          <button class="btn btns" onclick="openAddCatModal()">＋ 新增类别</button>
         </div>
-        <div class="adm-table-wrap">
-          <table class="adm-cat-table" id="admCatTable">
+        <div class="tw">
+          <table>
             <thead>
               <tr>
-                <th style="width:38px">序号</th>
-                <th>类别名称</th>
-                <th style="width:80px;text-align:center">视频数</th>
-                <th style="width:100px">操作</th>
+                <th style="width:50px">序号</th>
+                <th class="tl">类别名称</th>
+                <th style="width:80px">视频数</th>
+                <th style="width:110px">操作</th>
               </tr>
             </thead>
             <tbody id="admCatTbody"></tbody>
           </table>
-          <div class="adm-empty" id="admCatEmpty" style="display:none;">
-            <div class="adm-empty-icon">📁</div>
-            暂无类别，点击右上角"新增类别"
+          <div class="empty" id="admCatEmpty" style="display:none;">
+            <span class="ei">📁</span><span class="et">暂无类别，点击右上角"新增类别"</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 公告管理面板 -->
-    <div class="adm-pane" id="admAnnPane">
-      <div class="ann-admin-wrap">
-        <div class="ann-admin-section">
-          <div class="ann-admin-section-hd">📢 公告内容配置</div>
-          <div class="ann-admin-section-body">
-            <div class="ann-toggle-row">
-              <div>
-                <div class="ann-toggle-label">启用公告</div>
-                <div class="ann-toggle-sub">关闭后前台不显示任何公告</div>
-              </div>
-              <label class="ann-toggle">
-                <input type="checkbox" id="annEnabled" checked>
-                <span class="ann-toggle-slider"></span>
-              </label>
+    <div class="adm-pane panel" id="admAnnPane">
+      <div class="ann-wrap">
+        <div class="sec">
+          <div class="sec-title">公告内容配置</div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">启用公告</div>
+              <div class="toggle-sub">关闭后前台不显示任何公告</div>
             </div>
-            <div class="ann-form-row">
-              <label class="ann-form-label">公告类型 <span class="ann-form-req">*</span></label>
-              <select class="ann-form-select" id="annType">
-                <option value="update">系统更新</option>
-                <option value="feature">新功能上线</option>
-                <option value="promo">活动推广</option>
-              </select>
-            </div>
-            <div class="ann-form-row">
-              <label class="ann-form-label">公告标题 <span class="ann-form-req">*</span></label>
-              <input class="ann-form-input" id="annTitleInput" placeholder="请输入公告标题" maxlength="30" oninput="updateCharCount('annTitleInput','annTitleCount',30)">
-              <div class="ann-char-count"><span id="annTitleCount">0</span> / 30</div>
-            </div>
-            <div class="ann-form-row">
-              <label class="ann-form-label">公告内容 <span class="ann-form-req">*</span></label>
-              <textarea class="ann-form-textarea" id="annBodyInput" placeholder="请输入公告内容" maxlength="120" oninput="updateCharCount('annBodyInput','annBodyCount',120)"></textarea>
-              <div class="ann-char-count"><span id="annBodyCount">0</span> / 120</div>
-            </div>
+            <span class="switch on" id="annEnabled" onclick="this.classList.toggle('on')"></span>
+          </div>
+          <div class="frm-row">
+            <label class="frm-label">公告类型<span class="req">*</span></label>
+            <select id="annType">
+              <option value="update">系统更新</option>
+              <option value="feature">新功能上线</option>
+              <option value="promo">活动推广</option>
+            </select>
+          </div>
+          <div class="frm-row">
+            <label class="frm-label">公告标题<span class="req">*</span></label>
+            <input id="annTitleInput" placeholder="请输入公告标题" maxlength="30" oninput="updateCharCount('annTitleInput','annTitleCount',30)">
+            <div class="char-count"><span id="annTitleCount">0</span> / 30</div>
+          </div>
+          <div class="frm-row">
+            <label class="frm-label">公告内容<span class="req">*</span></label>
+            <textarea id="annBodyInput" placeholder="请输入公告内容" maxlength="120" oninput="updateCharCount('annBodyInput','annBodyCount',120)"></textarea>
+            <div class="char-count"><span id="annBodyCount">0</span> / 120</div>
           </div>
         </div>
-        <div class="ann-admin-section">
-          <div class="ann-admin-section-hd">📅 展示时间范围</div>
-          <div class="ann-admin-section-body">
-            <div class="ann-form-row ann-form-row-2col">
-              <div class="ann-form-row">
-                <label class="ann-form-label">开始时间 <span class="ann-form-req">*</span></label>
-                <input class="ann-form-input" type="datetime-local" id="annStartDate">
-              </div>
-              <div class="ann-form-row">
-                <label class="ann-form-label">结束时间 <span class="ann-form-req">*</span></label>
-                <input class="ann-form-input" type="datetime-local" id="annEndDate">
-              </div>
+        <div class="sec">
+          <div class="sec-title">展示时间范围</div>
+          <div class="frm-2col">
+            <div class="frm-row">
+              <label class="frm-label">开始时间<span class="req">*</span></label>
+              <input type="datetime-local" id="annStartDate">
             </div>
-            <div class="ann-form-hint">公告仅在设定时间范围内向用户展示（精确到分钟）。</div>
+            <div class="frm-row">
+              <label class="frm-label">结束时间<span class="req">*</span></label>
+              <input type="datetime-local" id="annEndDate">
+            </div>
           </div>
+          <div class="frm-hint" style="margin-top:8px;">公告仅在设定时间范围内向用户展示（精确到分钟）。</div>
         </div>
-        <div class="ann-action-bar">
-          <button class="ann-btn ann-btn-clear" onclick="clearAnn()">清空</button>
-          <button class="ann-btn ann-btn-preview" onclick="previewAnn()">预览效果</button>
-          <button class="ann-btn ann-btn-save" onclick="saveAnn()">保存发布</button>
+        <div class="action-bar">
+          <button class="btn btnd" onclick="clearAnn()">清空</button>
+          <button class="btn" onclick="previewAnn()">预览效果</button>
+          <button class="btn btnp" onclick="saveAnn()">保存发布</button>
         </div>
       </div>
     </div>
@@ -416,28 +214,24 @@ button{font-family:inherit;}
   </div>
 </div>
 
-<!-- 视频 Modal -->
-<div class="modal-mask" id="modalVideo">
-  <div class="modal-box">
-    <div class="modal-top">
-      <div class="modal-title">
-        <span id="modalVideoTitle">添加视频</span>
-        <span class="m-tag" id="modalVideoCatTag"></span>
-      </div>
-      <button class="modal-close" onclick="closeModal('modalVideo')">✕</button>
+<!-- 添加/编辑视频弹窗 -->
+<div class="modal" id="modalVideo">
+  <div class="dialog" style="width:520px">
+    <div class="dh">
+      <span><span id="modalVideoTitle">添加视频</span> <span class="tag tin" id="modalVideoCatTag" style="margin-left:6px;"></span></span>
+      <span class="dx" onclick="$modalClose('modalVideo')">✕</span>
     </div>
-    <div class="modal-divider"></div>
-    <div class="modal-form">
-      <div class="form-row">
-        <label>视频标题 <span class="form-req">*</span></label>
-        <input class="form-input" id="fvTitle" placeholder="请输入视频标题" maxlength="60">
+    <div class="db dlg-form">
+      <div class="frm-row">
+        <label class="frm-label">视频标题<span class="req">*</span></label>
+        <input id="fvTitle" placeholder="请输入视频标题" maxlength="60">
       </div>
-      <div class="form-row">
-        <label>视频简介</label>
-        <textarea class="form-textarea" id="fvDesc" placeholder="简要描述视频内容（可留空）"></textarea>
+      <div class="frm-row">
+        <label class="frm-label">视频简介</label>
+        <textarea id="fvDesc" placeholder="简要描述视频内容（可留空）"></textarea>
       </div>
-      <div class="form-row">
-        <label>视频文件 <span class="form-req">*</span></label>
+      <div class="frm-row">
+        <label class="frm-label">视频文件<span class="req">*</span></label>
         <input type="file" id="fvFileInput" accept="video/*" style="display:none" onchange="onFileSelected(this)">
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fvFileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
           <div class="upload-placeholder" id="uploadPlaceholder">
@@ -453,63 +247,55 @@ button{font-family:inherit;}
             <button class="upload-clear" title="重新选择" onclick="clearUpload(event)">✕</button>
           </div>
         </div>
-        <div class="form-hint" id="fvFileHint">将视频文件复制到与 HTML 相同的目录后即可播放</div>
+        <div class="frm-hint" id="fvFileHint">将视频文件复制到与 HTML 相同的目录后即可播放</div>
         <input type="hidden" id="fvFile">
       </div>
-      <div class="form-row">
-        <label>所属分类 <span class="form-req">*</span></label>
-        <select class="form-select" id="fvCat"></select>
+      <div class="frm-row">
+        <label class="frm-label">所属分类<span class="req">*</span></label>
+        <select id="fvCat"></select>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="modal-btn modal-btn-cancel" onclick="closeModal('modalVideo')">取消</button>
-      <button class="modal-btn modal-btn-confirm" onclick="saveVideo()">保存</button>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('modalVideo')">取消</button>
+      <button class="btn btnp" onclick="saveVideo()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- 类别 Modal -->
-<div class="modal-mask" id="modalCat">
-  <div class="modal-box" style="width:420px;">
-    <div class="modal-top">
-      <div class="modal-title"><span id="modalCatTitle">新增类别</span></div>
-      <button class="modal-close" onclick="closeModal('modalCat')">✕</button>
-    </div>
-    <div class="modal-divider"></div>
-    <div class="modal-form">
-      <div class="form-row">
-        <label>类别名称 <span class="form-req">*</span></label>
-        <input class="form-input" id="fcName" placeholder="请输入类别名称" maxlength="20">
+<!-- 新增/编辑类别弹窗 -->
+<div class="modal" id="modalCat">
+  <div class="dialog" style="width:420px">
+    <div class="dh"><span id="modalCatTitle">新增类别</span><span class="dx" onclick="$modalClose('modalCat')">✕</span></div>
+    <div class="db dlg-form">
+      <div class="frm-row">
+        <label class="frm-label">类别名称<span class="req">*</span></label>
+        <input id="fcName" placeholder="请输入类别名称" maxlength="20">
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="modal-btn modal-btn-cancel" onclick="closeModal('modalCat')">取消</button>
-      <button class="modal-btn modal-btn-confirm" onclick="saveCat()">保存</button>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('modalCat')">取消</button>
+      <button class="btn btnp" onclick="saveCat()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- 删除确认 Modal -->
-<div class="modal-mask" id="modalDel">
-  <div class="modal-box sm">
-    <div class="modal-top">
-      <div class="modal-title" style="color:#ff8888;">确认删除</div>
-      <button class="modal-close" onclick="closeModal('modalDel')">✕</button>
+<!-- 删除确认弹窗 -->
+<div class="modal" id="modalDel">
+  <div class="dialog" style="width:420px">
+    <div class="dh"><span class="text-er">确认删除</span><span class="dx" onclick="$modalClose('modalDel')">✕</span></div>
+    <div class="db">
+      <div class="confirm-msg" id="delMsg"></div>
     </div>
-    <div class="modal-divider"></div>
-    <div class="modal-confirm-msg" id="delMsg" style="padding:4px 0;"></div>
-    <div class="modal-footer">
-      <button class="modal-btn modal-btn-cancel" onclick="closeModal('modalDel')">取消</button>
-      <button class="modal-btn modal-btn-danger" id="delConfirmBtn">确认删除</button>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('modalDel')">取消</button>
+      <button class="btn btnd" id="delConfirmBtn">确认删除</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div id="toast"><span class="toast-icon" id="toastIcon"></span><span id="toastMsg"></span></div>
-
+<script src="_ui.js"></script>
 <script>
-// 数据
+/* ── 视频数据(与 guide-view.html 保持一致的分类/视频清单) ── */
 const CATEGORIES=[
   {name:'常用集控操作',icon:'❄️',videos:[
     {id:'D02',title:'平台访问与登录',desc:'介绍平台登录方式。',file:'【D02】集控计费平台01-如何登录平台.mp4'},
@@ -547,7 +333,7 @@ let allVideos=CATEGORIES.flatMap(c=>c.videos);
 
 function syncAll(){allVideos=CATEGORIES.flatMap(c=>c.videos);}
 
-// 面板切换
+/* ── 左侧菜单:面板切换(操作指引内容 / 公告管理) ── */
 function switchPane(pane){
   ['guide','ann'].forEach(p=>{
     document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active',p===pane);
@@ -557,35 +343,36 @@ function switchPane(pane){
   if(pane==='ann'){loadAnnForm();}
 }
 
+/* ── 内部 Tab 切换(视频列表 / 类别管理) ── */
 function switchGuideTab(tab){
   document.getElementById('admInnerTabVideo').classList.toggle('active',tab==='video');
   document.getElementById('admInnerTabCat').classList.toggle('active',tab==='cat');
-  document.getElementById('admSubVideo').style.display=tab==='video'?'flex':'none';
-  document.getElementById('admSubCat').style.display=tab==='cat'?'flex':'none';
+  document.getElementById('admSubVideo').style.display=tab==='video'?'block':'none';
+  document.getElementById('admSubCat').style.display=tab==='cat'?'block':'none';
   if(tab==='cat')renderCatTable();
 }
 
-// 视频列表
+/* ── 视频列表渲染 ── */
 function renderVideoList(){
   const tbody=document.getElementById('admTbody');
   const empty=document.getElementById('admEmpty');
   tbody.innerHTML='';
   const rows=CATEGORIES.flatMap((cat,ci)=>cat.videos.map((v,i)=>({v,i,cat,ci})));
-  if(rows.length===0){empty.style.display='block';return;}
+  if(rows.length===0){empty.style.display='flex';return;}
   empty.style.display='none';
   let seq=0;
   rows.forEach(({v,i,cat,ci})=>{
     seq++;
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td class="td-seq">${seq}</td>
-      <td style="font-size:12.5px;color:var(--text-label);white-space:nowrap;">${cat.name}</td>
-      <td class="td-title">${v.title}</td>
-      <td class="td-file" title="${v.file}">${v.file}</td>
-      <td class="td-ops">
-        <button class="adm-op-btn adm-op-btn-edit" onclick="openVideoModal('${v.id}')">编辑</button>
-        <button class="adm-op-btn adm-op-btn-del" onclick="confirmDelVideo('${v.id}')">删除</button>
-      </td>`;
+      <td>${seq}</td>
+      <td style="font-size:12.5px;color:var(--ts);white-space:nowrap;">${cat.name}</td>
+      <td class="tl td-title">${v.title}</td>
+      <td class="tl td-file" title="${v.file}">${v.file}</td>
+      <td><span class="op">
+        <a onclick="openVideoModal('${v.id}')">编辑</a>
+        <a class="danger" onclick="confirmDelVideo('${v.id}')">删除</a>
+      </span></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -593,6 +380,7 @@ function renderVideoList(){
 let editingVideoId=null;
 let pendingFile=null;
 
+/* ── 添加/编辑视频弹窗 ── */
 function openVideoModal(id){
   editingVideoId=id||null;
   const catSel=document.getElementById('fvCat');
@@ -603,6 +391,7 @@ function openVideoModal(id){
     const ci=CATEGORIES.findIndex(c=>c.videos.some(vv=>vv.id===id));
     document.getElementById('modalVideoTitle').textContent='编辑视频';
     document.getElementById('modalVideoCatTag').textContent=CATEGORIES[ci]?.name||'';
+    document.getElementById('modalVideoCatTag').style.display='';
     document.getElementById('fvTitle').value=v.title;
     document.getElementById('fvDesc').value=v.desc;
     document.getElementById('fvFile').value=v.file;
@@ -611,11 +400,12 @@ function openVideoModal(id){
   } else {
     document.getElementById('modalVideoTitle').textContent='添加视频';
     document.getElementById('modalVideoCatTag').textContent='';
+    document.getElementById('modalVideoCatTag').style.display='none';
     ['fvTitle','fvDesc','fvFile'].forEach(k=>document.getElementById(k).value='');
     document.getElementById('fvFileHint').textContent='将视频文件复制到与 HTML 相同的目录后即可播放';
     resetUpload();if(CATEGORIES.length>0)catSel.value='0';
   }
-  openModal('modalVideo');
+  $modal('modalVideo');
 }
 
 function saveVideo(){
@@ -623,50 +413,51 @@ function saveVideo(){
   const desc=document.getElementById('fvDesc').value.trim();
   const file=document.getElementById('fvFile').value.trim();
   const ci=parseInt(document.getElementById('fvCat').value);
-  if(!title)return showToast('请填写视频标题','err');
-  if(!file)return showToast('请填写或选择视频文件','err');
-  if(isNaN(ci))return showToast('请选择分类','err');
+  if(!title)return $msg('请填写视频标题','error');
+  if(!file)return $msg('请填写或选择视频文件','error');
+  if(isNaN(ci))return $msg('请选择分类','error');
   if(editingVideoId){
     const oldCi=CATEGORIES.findIndex(c=>c.videos.some(v=>v.id===editingVideoId));
     const v=CATEGORIES[oldCi].videos.find(v=>v.id===editingVideoId);
     v.title=title;v.desc=desc;v.file=file;
     if(oldCi!==ci){CATEGORIES[oldCi].videos=CATEGORIES[oldCi].videos.filter(v=>v.id!==editingVideoId);CATEGORIES[ci].videos.push(v);}
-    showToast('视频已更新','ok');
+    $msg('视频已更新','success');
   } else {
     const newId='V'+Date.now().toString(36).toUpperCase();
     CATEGORIES[ci].videos.push({id:newId,title,desc,file});
-    showToast('视频已添加','ok');
+    $msg('视频已添加','success');
   }
-  pendingFile=null;syncAll();closeModal('modalVideo');renderVideoList();renderCatTable();
+  pendingFile=null;syncAll();$modalClose('modalVideo');renderVideoList();renderCatTable();
 }
 
+/* ── 删除视频(二次确认) ── */
 function confirmDelVideo(id){
   const v=allVideos.find(v=>v.id===id);
   document.getElementById('delMsg').innerHTML=`确定要删除视频 <strong>${v?v.title:id}</strong> 吗？此操作无法撤销。`;
   document.getElementById('delConfirmBtn').onclick=()=>{
     for(const cat of CATEGORIES){const before=cat.videos.length;cat.videos=cat.videos.filter(v=>v.id!==id);if(cat.videos.length<before)break;}
-    syncAll();closeModal('modalDel');renderVideoList();renderCatTable();showToast('视频已删除','ok');
+    syncAll();$modalClose('modalDel');renderVideoList();renderCatTable();$msg('视频已删除','success');
   };
-  openModal('modalDel');
+  $modal('modalDel');
 }
 
-// 类别管理
+/* ── 类别管理 ── */
 function renderCatTable(){
   const tbody=document.getElementById('admCatTbody');
   const empty=document.getElementById('admCatEmpty');
   tbody.innerHTML='';
-  if(CATEGORIES.length===0){empty.style.display='block';return;}
+  if(CATEGORIES.length===0){empty.style.display='flex';return;}
   empty.style.display='none';
   CATEGORIES.forEach((cat,idx)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td class="td-seq">${idx+1}</td>
-      <td class="td-catname">${cat.name}</td>
-      <td class="td-cnt" style="text-align:center;">${cat.videos.length}</td>
-      <td class="td-ops">
-        <button class="adm-op-btn adm-op-btn-edit" onclick="editCat(${idx})">编辑</button>
-        <button class="adm-op-btn adm-op-btn-del" onclick="confirmDelCat(${idx},event)">删除</button>
-      </td>`;
+      <td>${idx+1}</td>
+      <td class="tl td-title">${cat.name}</td>
+      <td>${cat.videos.length}</td>
+      <td><span class="op">
+        <a onclick="editCat(${idx})">编辑</a>
+        <a class="danger" onclick="confirmDelCat(${idx},event)">删除</a>
+      </span></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -675,23 +466,23 @@ function openAddCatModal(){
   document.getElementById('modalCatTitle').textContent='新增类别';
   document.getElementById('fcName').value='';
   delete document.getElementById('modalCat').dataset.editIdx;
-  openModal('modalCat');
+  $modal('modalCat');
 }
 
 function editCat(idx){
   document.getElementById('modalCatTitle').textContent='编辑类别';
   document.getElementById('fcName').value=CATEGORIES[idx].name;
   document.getElementById('modalCat').dataset.editIdx=idx;
-  openModal('modalCat');
+  $modal('modalCat');
 }
 
 function saveCat(){
   const name=document.getElementById('fcName').value.trim();
-  if(!name){showToast('请输入类别名称','err');return;}
+  if(!name){$msg('请输入类别名称','error');return;}
   const editIdx=document.getElementById('modalCat').dataset.editIdx;
-  if(editIdx!==undefined){CATEGORIES[parseInt(editIdx)].name=name;showToast('类别已更新','ok');}
-  else{CATEGORIES.push({name,icon:'📁',videos:[]});showToast('类别已添加','ok');}
-  syncAll();renderCatTable();renderVideoList();closeModal('modalCat');
+  if(editIdx!==undefined){CATEGORIES[parseInt(editIdx)].name=name;$msg('类别已更新','success');}
+  else{CATEGORIES.push({name,icon:'📁',videos:[]});$msg('类别已添加','success');}
+  syncAll();renderCatTable();renderVideoList();$modalClose('modalCat');
 }
 
 function confirmDelCat(idx,e){
@@ -699,12 +490,12 @@ function confirmDelCat(idx,e){
   const cat=CATEGORIES[idx];
   document.getElementById('delMsg').innerHTML=`确定要删除类别 <strong>${cat.name}</strong> 吗？<br>该类别下 <strong>${cat.videos.length}</strong> 个视频将一并删除，操作无法撤销。`;
   document.getElementById('delConfirmBtn').onclick=()=>{
-    CATEGORIES.splice(idx,1);syncAll();closeModal('modalDel');renderCatTable();renderVideoList();showToast('类别已删除','ok');
+    CATEGORIES.splice(idx,1);syncAll();$modalClose('modalDel');renderCatTable();renderVideoList();$msg('类别已删除','success');
   };
-  openModal('modalDel');
+  $modal('modalDel');
 }
 
-// 上传区交互
+/* ── 上传区交互(点击选择 / 拖拽放置 / 清除) ── */
 function onFileSelected(input){const f=input.files&&input.files[0];if(f)applyFile(f);}
 function applyFile(f){
   pendingFile=f;
@@ -722,11 +513,11 @@ function onDragLeave(e){document.getElementById('uploadZone').classList.remove('
 function onDrop(e){e.preventDefault();document.getElementById('uploadZone').classList.remove('drag-over');const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)applyFile(f);}
 function formatSize(b){if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
 
-// 公告管理
+/* ── 公告管理(localStorage 键名/字段与主框架壳联动,保持不变) ── */
 const ANN_KEY='announcement_config';
 function loadAnnForm(){
   try{const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');if(!cfg)return;
-  document.getElementById('annEnabled').checked=!!cfg.enabled;
+  document.getElementById('annEnabled').classList.toggle('on',!!cfg.enabled);
   document.getElementById('annType').value=cfg.type||'update';
   document.getElementById('annTitleInput').value=cfg.title||'';
   document.getElementById('annBodyInput').value=cfg.body||'';
@@ -740,53 +531,35 @@ function saveAnn(){
   const body=document.getElementById('annBodyInput').value.trim();
   const start=document.getElementById('annStartDate').value;
   const end=document.getElementById('annEndDate').value;
-  if(!title)return showToast('请填写公告标题','err');
-  if(!body)return showToast('请填写公告内容','err');
-  if(!start||!end)return showToast('请设置展示时间范围','err');
-  if(start>end)return showToast('结束时间不能早于开始时间','err');
-  const cfg={id:'ann_'+Date.now(),enabled:document.getElementById('annEnabled').checked,type:document.getElementById('annType').value,title,body,startDate:start,endDate:end};
+  if(!title)return $msg('请填写公告标题','error');
+  if(!body)return $msg('请填写公告内容','error');
+  if(!start||!end)return $msg('请设置展示时间范围','error');
+  if(start>end)return $msg('结束时间不能早于开始时间','error');
+  const cfg={id:'ann_'+Date.now(),enabled:document.getElementById('annEnabled').classList.contains('on'),type:document.getElementById('annType').value,title,body,startDate:start,endDate:end};
   localStorage.setItem(ANN_KEY,JSON.stringify(cfg));
-  showToast('公告已保存发布','ok');
+  $msg('公告已保存发布','success');
 }
 function clearAnn(){
   localStorage.removeItem(ANN_KEY);
   ['annTitleInput','annBodyInput','annStartDate','annEndDate'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('annEnabled').checked=true;document.getElementById('annType').value='update';
+  document.getElementById('annEnabled').classList.add('on');document.getElementById('annType').value='update';
   updateCharCount('annTitleInput','annTitleCount',30);updateCharCount('annBodyInput','annBodyCount',120);
-  showToast('公告配置已清空','ok');
+  $msg('公告配置已清空','success');
 }
-function previewAnn(){showToast('预览功能：请在前台页面查看实际展示效果','');}
+function previewAnn(){$msg('预览功能：请在前台页面查看实际展示效果','info');}
 function updateCharCount(inId,cntId,max){
   const len=document.getElementById(inId).value.length;
   const el=document.getElementById(cntId);el.textContent=len;
-  el.style.color=len>=max?'var(--red)':'';
+  el.style.color=len>=max?'var(--er)':'';
 }
 
-// 跳转预览
+/* ── 跳转预览(优先走主框架壳导航,独立打开时新开窗口) ── */
 function previewGuide(){
   try{if(window.parent&&window.parent.nav){window.parent.nav('guide-view');return;}}catch(e){}
   window.open('guide-view.html','_blank');
 }
 
-// Modal 操作
-function openModal(id){const el=document.getElementById(id);el.classList.add('open');requestAnimationFrame(()=>{requestAnimationFrame(()=>{el.classList.add('visible');});});}
-function closeModal(id){const el=document.getElementById(id);el.classList.remove('visible');setTimeout(()=>{el.classList.remove('open');},200);}
-['modalVideo','modalCat','modalDel'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
-});
-
-// Toast
-let toastTimer=null;
-const toastIcons={ok:'✅',err:'❌','':'ℹ️'};
-function showToast(msg,type){
-  const el=document.getElementById('toast');
-  document.getElementById('toastMsg').textContent=msg;
-  document.getElementById('toastIcon').textContent=toastIcons[type||'']||'ℹ️';
-  el.className='show '+(type||'');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{document.getElementById('toast').className='';},2600);
-}
-
-// 初始化
+/* ── 初始化 ── */
 renderVideoList();
 </script>
 </body>
