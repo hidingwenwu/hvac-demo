@@ -5,382 +5,287 @@
 <title>公告管理</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* ── 页面头(面包屑) ── */
-.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px;}
+/* ── 布局:左"公告内容配置"卡片(600px) + 右"公告历史记录"卡片(自适应),与线上一致 ── */
+.layout{display:flex;gap:20px;align-items:stretch;min-height:calc(100vh - 32px);}
+.card-left{width:600px;flex-shrink:0;}
+.card-right{flex:1;min-width:0;display:flex;flex-direction:column;}
+@media(max-width:1200px){.layout{flex-direction:column;}.card-left{width:auto;}}
 
-/* ── 左右两栏布局:左配置(560px) + 右历史记录 ── */
-.layout{display:grid;grid-template-columns:560px 1fr;gap:14px;align-items:start;}
-@media(max-width:1180px){.layout{grid-template-columns:1fr;}}
+/* ── 卡片标题(线上 h3 样式) ── */
+.card-title{font-size:15px;font-weight:600;color:var(--txw);margin-bottom:16px;}
 
-/* ── 配置分区(panel 内的小节) ── */
-.sec{border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px;}
-.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--txw);margin-bottom:12px;}
-.sec-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
+/* ── Element 风格表单:label 左侧 90px 右对齐,红色星号在前 ── */
+.efrm-item{display:flex;align-items:flex-start;margin-bottom:18px;}
+.efrm-label{width:90px;flex-shrink:0;text-align:right;padding-right:12px;font-size:13px;color:var(--tx);line-height:32px;white-space:nowrap;}
+.efrm-label .req{color:var(--er);margin-right:4px;}
+.efrm-content{flex:1;min-width:0;}
 
-/* ── 启用开关行 ── */
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--bd);margin-bottom:12px;}
-.toggle-label{font-size:13px;color:var(--tx);font-weight:500;}
-.toggle-sub{font-size:12px;color:var(--ts);margin-top:2px;}
+/* ── 带字数统计的 textarea(计数悬浮在右下角,同 Element el-input__count) ── */
+.ta-wrap{position:relative;}
+.ta-wrap textarea{width:100%;line-height:1.6;padding-bottom:20px;}
+.ta-count{position:absolute;right:10px;bottom:6px;font-size:12px;color:var(--tw3);background:var(--bg-input);padding-left:4px;pointer-events:none;}
 
-/* ── 表单行 ── */
-.frm-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-.frm-row:last-child{margin-bottom:0;}
-.frm-label{font-size:13px;color:var(--tx);}
-.frm-label .req{color:var(--er);margin-left:2px;}
-.frm-row input,.frm-row select,.frm-row textarea{width:100%;}
-.frm-row textarea{min-height:80px;line-height:1.6;}
-.frm-hint{font-size:12px;color:var(--ts);line-height:1.5;}
-.frm-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.char-count{font-size:12px;color:var(--tw3);text-align:right;}
+/* ── 展示时间:开始/结束(带时钟图标) + "至"分隔 ── */
+.time-range{display:flex;align-items:center;gap:10px;}
+.time-item{position:relative;flex:1;min-width:0;}
+.time-item input{width:100%;padding-left:30px;}
+.time-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ts);pointer-events:none;}
+.time-sep{color:var(--tx);font-size:13px;flex-shrink:0;}
+.time-tip{font-size:12px;color:var(--ts);line-height:1.6;margin-top:8px;}
 
-/* ── 当前状态提示条 ── */
-.status-bar{display:flex;align-items:center;gap:9px;padding:10px 14px;margin-bottom:14px;
-  background:#12281c;border:1px solid rgba(103,194,58,.4);border-radius:4px;font-size:13px;color:var(--ok);}
-.status-bar.inactive{background:var(--bg-panel-2);border-color:var(--bd2);color:var(--ts);}
-.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+/* ── 操作按钮行(右对齐) ── */
+.frm-actions{text-align:right;margin-top:6px;display:flex;justify-content:flex-end;gap:10px;}
 
-/* ── 操作栏 ── */
-.action-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+/* ── 历史记录表格:标题/内容列单行省略,左对齐 ── */
+td.td-clip{max-width:200px;}
+td.td-clip .clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tw{flex:1;}
+/* 分页靠右(线上形态) */
+.pager-wrap .pg{justify-content:flex-end;}
 
-/* ── 历史记录表格 ── */
-.cell-title{color:var(--txw);font-weight:500;max-width:140px;}
-.cell-body{max-width:220px;color:var(--ts);line-height:1.5;}
-.cell-clamp{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.cell-time{white-space:nowrap;color:var(--ts);font-size:12px;line-height:1.6;}
-.tw td{height:auto;padding:10px;}
-.tw tbody tr{cursor:pointer;}
-
-/* ── 预览弹窗:跑马灯 + 弹出卡片 ── */
-.preview-zone{background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:14px 16px;
-  display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
-.preview-zone:last-child{margin-bottom:0;}
-.preview-label{font-size:12px;color:var(--ts);letter-spacing:.3px;}
-/* 模拟顶栏跑马灯 */
-.marquee-preview{background:var(--bg-panel);border:1px solid var(--bd2);border-radius:4px;padding:9px 14px;
-  display:flex;align-items:center;gap:8px;overflow:hidden;}
-.marquee-track{flex:1;min-width:0;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);}
-.marquee-text{display:inline-block;white-space:nowrap;font-size:12.5px;color:var(--ts);animation:marqueeScroll linear infinite;}
-@keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-/* 悬停弹出卡片预览 */
-.popup-preview{border-radius:6px;overflow:hidden;border:1px solid var(--bd2);box-shadow:0 8px 24px rgba(0,0,0,.35);}
-.popup-bar{height:3px;width:100%;}
-.popup-body{padding:13px 16px 15px;display:flex;flex-direction:column;gap:7px;background:var(--bg-panel);}
-.popup-badge{font-size:11px;font-weight:600;letter-spacing:.4px;padding:2px 9px;border-radius:3px;display:inline-block;align-self:flex-start;}
-.popup-title{font-size:13px;font-weight:600;color:var(--txw);line-height:1.4;}
-.popup-content{font-size:12px;color:var(--ts);line-height:1.7;}
+/* ── 预览弹窗:模拟顶栏跑马灯效果 ── */
+.pv-label{font-size:12px;color:var(--ts);margin-bottom:8px;}
+.pv-marquee{background:var(--bg-input);border:1px solid var(--bd);border-radius:4px;padding:9px 14px;display:flex;align-items:center;gap:8px;overflow:hidden;margin-bottom:16px;}
+.pv-track{flex:1;min-width:0;overflow:hidden;}
+.pv-text{display:inline-block;white-space:nowrap;font-size:12.5px;color:var(--wn);animation:pvScroll linear infinite;}
+@keyframes pvScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.pv-card{border:1px solid var(--bd2);border-radius:6px;background:var(--bg-panel);padding:14px 16px;}
+.pv-title{font-size:14px;font-weight:600;color:var(--txw);margin-bottom:8px;}
+.pv-body{font-size:12.5px;color:var(--ts);line-height:1.8;white-space:pre-wrap;}
+.pv-time{font-size:12px;color:var(--tw3);margin-top:10px;}
 </style>
 </head>
 <body>
 
-<!-- 页面头:标题 + 面包屑 -->
-<div class="ph">
-  <div>
-    <div class="pt">公告管理</div>
-    <div class="crumb">系统管理 <span>/</span> 公告管理</div>
-  </div>
-</div>
-
 <div class="layout">
 
-  <!-- ========== 左栏:公告内容配置 ========== -->
-  <div class="panel">
+  <!-- ========== 左栏:公告内容配置(与线上表单字段一致) ========== -->
+  <div class="panel card-left">
+    <div class="card-title">公告内容配置</div>
 
-    <!-- 当前状态 -->
-    <div id="statusBar" class="status-bar inactive">
-      <span class="status-dot"></span>
-      <span id="statusText">暂无生效中的公告</span>
-    </div>
-
-    <!-- 公告内容 -->
-    <div class="sec">
-      <div class="sec-title">公告内容配置</div>
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">启用公告</div>
-          <div class="toggle-sub">关闭后前台顶部栏不显示公告跑马灯</div>
-        </div>
+    <!-- 启用公告 -->
+    <div class="efrm-item">
+      <label class="efrm-label"><span class="req">*</span>启用公告</label>
+      <div class="efrm-content" style="display:flex;align-items:center;height:32px;">
         <span class="switch on" id="annEnabled" onclick="this.classList.toggle('on')"></span>
       </div>
-      <div class="frm-row">
-        <label class="frm-label">公告类型<span class="req">*</span></label>
-        <select id="annType">
-          <option value="update">系统更新</option>
-          <option value="feature">新功能上线</option>
-          <option value="promo">活动推广</option>
-        </select>
-      </div>
-      <div class="frm-row">
-        <label class="frm-label">公告标题<span class="req">*</span></label>
-        <input id="annTitle" placeholder="请输入公告标题，建议10字以内" maxlength="30" oninput="syncCount('annTitle','titleCount',30)">
-        <div class="char-count"><span id="titleCount">0</span> / 30</div>
-      </div>
-      <div class="frm-row">
-        <label class="frm-label">公告内容<span class="req">*</span></label>
-        <textarea id="annBody" placeholder="请输入公告内容，可包含版本号、更新时间、功能亮点等" maxlength="120" oninput="syncCount('annBody','bodyCount',120)"></textarea>
-        <div class="char-count"><span id="bodyCount">0</span> / 120</div>
+    </div>
+
+    <!-- 公告标题:textarea 3 行,上限 100 字 -->
+    <div class="efrm-item">
+      <label class="efrm-label"><span class="req">*</span>公告标题</label>
+      <div class="efrm-content">
+        <div class="ta-wrap">
+          <textarea id="annTitle" rows="3" maxlength="100" placeholder="请输入公告标题" oninput="syncCount('annTitle','titleCount',100)"></textarea>
+          <span class="ta-count" id="titleCount">0/100</span>
+        </div>
       </div>
     </div>
 
-    <!-- 展示时间 -->
-    <div class="sec">
-      <div class="sec-title">展示时间范围</div>
-      <div class="frm-2col">
-        <div class="frm-row">
-          <label class="frm-label">开始时间<span class="req">*</span></label>
-          <input type="datetime-local" id="annStart">
-        </div>
-        <div class="frm-row">
-          <label class="frm-label">结束时间<span class="req">*</span></label>
-          <input type="datetime-local" id="annEnd">
+    <!-- 公告内容:textarea 10 行,上限 300 字 -->
+    <div class="efrm-item">
+      <label class="efrm-label"><span class="req">*</span>公告内容</label>
+      <div class="efrm-content">
+        <div class="ta-wrap">
+          <textarea id="annBody" rows="10" maxlength="300" placeholder="请输入公告内容" oninput="syncCount('annBody','bodyCount',300)"></textarea>
+          <span class="ta-count" id="bodyCount">0/300</span>
         </div>
       </div>
-      <div class="frm-hint" style="margin-top:8px;">公告仅在设定时间范围内向用户展示（精确到分钟）。当前时间不在范围内时，即使已启用也不显示。</div>
     </div>
 
-    <!-- 操作栏 -->
-    <div class="action-bar">
-      <button class="btn btnd" onclick="clearAnn()">重置配置</button>
+    <!-- 展示时间:开始 至 结束 -->
+    <div class="efrm-item" style="margin-bottom:14px;">
+      <label class="efrm-label"><span class="req">*</span>展示时间</label>
+      <div class="efrm-content">
+        <div class="time-range">
+          <div class="time-item"><span class="time-icon">🕐</span><input type="datetime-local" id="annStart" placeholder="开始时间"></div>
+          <span class="time-sep">至</span>
+          <div class="time-item"><span class="time-icon">🕐</span><input type="datetime-local" id="annEnd" placeholder="结束时间"></div>
+        </div>
+        <p class="time-tip">公告仅在设定时间范围内向用户展示（精确到分钟）。当前时间不在范围内时，即使已启用也不会显示。</p>
+      </div>
+    </div>
+
+    <!-- 操作按钮(与线上一致:清空配置 / 预览效果 / 保存发布) -->
+    <div class="frm-actions">
+      <button class="btn" onclick="clearConfig()">清空配置</button>
       <button class="btn" onclick="openPreview()">预览效果</button>
-      <button class="btn btnp" onclick="saveAnn()">保存发布</button>
+      <button class="btn btnp" onclick="savePublish()">保存发布</button>
     </div>
-
   </div>
 
   <!-- ========== 右栏:公告历史记录 ========== -->
-  <div class="panel">
-    <div class="panel-title">公告历史记录</div>
+  <div class="panel card-right">
+    <div class="card-title">公告历史记录</div>
     <div class="tw">
       <table>
         <thead>
           <tr>
-            <th class="tl">公告标题</th>
-            <th class="tl">公告内容</th>
+            <th class="tl" style="width:180px">公告标题</th>
+            <th class="tl" style="width:230px">公告内容</th>
             <th>展示时间</th>
-            <th>启用状态</th>
-            <th>发布时间</th>
+            <th style="width:90px">启用状态</th>
+            <th style="width:160px">发布时间</th>
           </tr>
         </thead>
         <tbody id="histBody"></tbody>
       </table>
     </div>
-    <div id="histPager"></div>
+    <div class="pager-wrap"><div id="histPager"></div></div>
   </div>
 
 </div>
 
-<!-- ========== 预览弹窗(展示效果) ========== -->
+<!-- ========== 预览效果弹窗(线上:500px,底部"关 闭"主按钮) ========== -->
 <div class="modal" id="dlgPreview">
-  <div class="dialog" style="width:460px">
-    <div class="dh"><span>展示效果预览</span><span class="dx" onclick="$modalClose('dlgPreview')">✕</span></div>
+  <div class="dialog" style="width:500px">
+    <div class="dh"><span>预览效果</span><span class="dx" onclick="$modalClose('dlgPreview')">✕</span></div>
     <div class="db">
-      <div class="preview-zone">
-        <div class="preview-label">TOPBAR 跑马灯</div>
-        <div class="marquee-preview">
-          <span style="font-size:13px;opacity:.75;flex-shrink:0;">📢</span>
-          <div class="marquee-track">
-            <span class="marquee-text" id="prevMarquee">（请填写公告标题和内容后查看预览）</span>
-          </div>
-        </div>
+      <div class="pv-label">顶栏跑马灯效果</div>
+      <div class="pv-marquee">
+        <span style="font-size:13px;flex-shrink:0;">📢</span>
+        <div class="pv-track"><span class="pv-text" id="pvMarquee"></span></div>
       </div>
-      <div class="preview-zone">
-        <div class="preview-label">悬停弹出详情卡片</div>
-        <div class="popup-preview">
-          <div class="popup-bar" id="prevBar"></div>
-          <div class="popup-body">
-            <span class="popup-badge" id="prevBadge">系统更新</span>
-            <div class="popup-title" id="prevTitle">（预览）公告标题</div>
-            <div class="popup-content" id="prevContent">（预览）公告内容将在此处展示，用户将看到完整的公告文字。</div>
-          </div>
-        </div>
+      <div class="pv-label">公告详情</div>
+      <div class="pv-card">
+        <div class="pv-title" id="pvTitle"></div>
+        <div class="pv-body" id="pvBody"></div>
+        <div class="pv-time" id="pvTime"></div>
       </div>
     </div>
     <div class="df">
-      <button class="btn" onclick="$modalClose('dlgPreview')">关闭</button>
+      <button class="btn btnp" onclick="$modalClose('dlgPreview')">关 闭</button>
     </div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
 <script>
-/* ── localStorage 键名(与主框架壳顶栏跑马灯联动,不可更改) ── */
-const ANN_KEY='announcement_config';       // 当前生效配置(前台读取)
-const ANN_HIST_KEY='announcement_history'; // 历史记录列表
-let editingId=null; // 当前正在编辑的历史记录 id,null 为新建
+/* ── localStorage 键名(与主框架壳顶栏跑马灯联动,键名与字段结构不可更改) ── */
+const ANN_KEY='announcement_config';
 
-/* 公告类型 → 预览样式映射(新设计系统配色:主蓝/成功绿/警示橙) */
-const TYPE_MAP={
-  update: {label:'系统更新',  barBg:'linear-gradient(90deg,#1f65ff,#5a8dff)',badgeBg:'rgba(31,101,255,.15)',badgeBd:'rgba(31,101,255,.35)',badgeClr:'#5a8dff'},
-  feature:{label:'新功能上线',barBg:'linear-gradient(90deg,#4d9a28,#67c23a)',badgeBg:'rgba(103,194,58,.15)',badgeBd:'rgba(103,194,58,.3)', badgeClr:'#67c23a'},
-  promo:  {label:'活动推广',  barBg:'linear-gradient(90deg,#c07f1d,#e6a23c)',badgeBg:'rgba(230,162,60,.15)',badgeBd:'rgba(230,162,60,.3)', badgeClr:'#e6a23c'},
-};
+/* ── 历史记录模拟数据(取自线上真实记录) ── */
+const LIVE_TITLE_1='平台将于2026/07/01 10:00~12:00发布更新，若个别页面异常请耐心等待后刷新即可，有疑问可咨询技术支持人员。';
+const LIVE_BODY_1='本次更新内容：\n1、新增子账号查看计费数据功能；\n2、新增温控器批量配置功能；\n3、更新API协议接口；\n4、优化子账号创建流程/时间计费法报表内容；\n5、优化部分管理页面并修复部分已知问题。';
+const LIVE_TITLE_2='平台将于2026/06/17 10:00~12:00发布更新，若个别页面异常请耐心等待后刷新即可，有疑问可咨询技术支持人员。';
+const LIVE_BODY_2='本次更新内容：\n1、新增平台操作指引页面；\n2、新增实时负荷展示（需设备侧支持）；\n3、优化环境联动策略和温度来源处理逻辑；\n4、优化批量解绑逻辑；\n5、修复部分已知问题。';
+let HISTORY=[
+  {title:LIVE_TITLE_1,body:LIVE_BODY_1,start:'2026-06-30 10:07',end:'2026-07-01 12:00',enabled:true, publishedAt:'2026-06-30 10:08:55'},
+  {title:LIVE_TITLE_1,body:LIVE_BODY_1,start:'2026-06-30 10:07',end:'2026-07-01 12:00',enabled:false,publishedAt:'2026-06-30 10:08:17'},
+  {title:LIVE_TITLE_2,body:LIVE_BODY_2,start:'2026-06-17 16:06',end:'2026-06-18 12:00',enabled:false,publishedAt:'2026-06-17 17:10:57'},
+  {title:LIVE_TITLE_2,body:LIVE_BODY_2,start:'2026-06-17 16:06',end:'2026-06-18 12:00',enabled:false,publishedAt:'2026-06-17 16:06:44'},
+  {title:LIVE_TITLE_2,body:LIVE_BODY_2,start:'2026-06-17 00:00',end:'2026-06-17 12:00',enabled:false,publishedAt:'2026-06-17 10:46:57'},
+];
 
-/* ============ 历史记录存取 ============ */
-function getHistory(){try{return JSON.parse(localStorage.getItem(ANN_HIST_KEY)||'[]');}catch(e){return [];}}
-function setHistory(list){localStorage.setItem(ANN_HIST_KEY,JSON.stringify(list));}
+/* ── 字数统计(格式 x/max,同 Element 计数器) ── */
+function syncCount(inId,cntId,max){
+  const l=document.getElementById(inId).value.length;
+  const el=document.getElementById(cntId);
+  el.textContent=l+'/'+max;
+  el.style.color=l>=max?'var(--er)':'';
+}
 
-/* ============ 加载已保存配置到左栏表单 ============ */
+/* ── 加载已保存配置回填表单(联动键:enabled/type/title/body/startDate/endDate) ── */
 function loadCurrent(){
-  try{const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');if(!cfg){updateStatus(null);return;}
-  fillForm(cfg);updateStatus(cfg);
-  }catch(e){updateStatus(null);}
+  try{
+    const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');
+    if(!cfg)return fillDefault();
+    document.getElementById('annEnabled').classList.toggle('on',!!cfg.enabled);
+    document.getElementById('annTitle').value=cfg.title||'';
+    document.getElementById('annBody').value=cfg.body||'';
+    document.getElementById('annStart').value=cfg.startDate||'';
+    document.getElementById('annEnd').value=cfg.endDate||'';
+  }catch(e){fillDefault();}
+  syncCount('annTitle','titleCount',100);syncCount('annBody','bodyCount',300);
 }
-function fillForm(cfg){
-  editingId=cfg.id||null;
-  document.getElementById('annEnabled').classList.toggle('on',!!cfg.enabled);
-  document.getElementById('annType').value=cfg.type||'update';
-  document.getElementById('annTitle').value=cfg.title||'';
-  document.getElementById('annBody').value=cfg.body||'';
-  document.getElementById('annStart').value=cfg.startDate||'';
-  document.getElementById('annEnd').value=cfg.endDate||'';
-  syncCount('annTitle','titleCount',30);syncCount('annBody','bodyCount',120);
-}
-
-/* ============ 当前状态提示条 ============ */
-function updateStatus(cfg){
-  const bar=document.getElementById('statusBar');
-  const txt=document.getElementById('statusText');
-  if(!cfg||!cfg.enabled){bar.className='status-bar inactive';txt.textContent=cfg?'公告已禁用':'暂无生效中的公告';return;}
-  const now=Date.now();
-  const s=cfg.startDate?new Date(cfg.startDate).getTime():0;
-  const e=cfg.endDate?new Date(cfg.endDate).getTime():Infinity;
-  if(now>=s&&now<=e){bar.className='status-bar';txt.textContent='公告生效中：'+cfg.title;}
-  else if(now<s){bar.className='status-bar inactive';txt.textContent='公告未到展示时间：'+cfg.title;}
-  else{bar.className='status-bar inactive';txt.textContent='公告已过期：'+cfg.title;}
+/* 无已保存配置时,按线上当前生效公告预填(便于演示) */
+function fillDefault(){
+  document.getElementById('annTitle').value=LIVE_TITLE_1;
+  document.getElementById('annBody').value=LIVE_BODY_1;
+  document.getElementById('annStart').value='2026-06-30T10:07';
+  document.getElementById('annEnd').value='2026-07-01T12:00';
+  syncCount('annTitle','titleCount',100);syncCount('annBody','bodyCount',300);
 }
 
-/* ============ 预览弹窗 ============ */
+/* ── 保存发布:写 localStorage(联动键) + 追加历史记录(最新一条"启用",其余"停用") ── */
+function savePublish(){
+  const title=document.getElementById('annTitle').value.trim();
+  const body=document.getElementById('annBody').value.trim();
+  const start=document.getElementById('annStart').value;
+  const end=document.getElementById('annEnd').value;
+  if(!title)return $msg('请输入公告标题','error');
+  if(!body)return $msg('请输入公告内容','error');
+  if(!start||!end)return $msg('请选择展示时间','error');
+  if(start>end)return $msg('结束时间不能早于开始时间','error');
+  const enabled=document.getElementById('annEnabled').classList.contains('on');
+
+  // 联动约定:键名 announcement_config,字段 enabled/type/title/body/startDate/endDate(壳顶栏跑马灯读取)
+  const cfg={enabled,type:'update',title,body,startDate:start,endDate:end};
+  localStorage.setItem(ANN_KEY,JSON.stringify(cfg));
+
+  // 历史记录:新记录置顶;若本次启用,旧记录一律转为"停用"(与线上行为一致)
+  if(enabled)HISTORY.forEach(h=>h.enabled=false);
+  HISTORY.unshift({title,body,start:start.replace('T',' '),end:end.replace('T',' '),enabled,publishedAt:fmtNow()});
+  pg.total=HISTORY.length;pg.page=1;
+  $pager('histPager',pg);renderTable();
+  $msg('保存发布成功','success');
+}
+
+/* ── 清空配置:清空表单 + 移除 localStorage 生效配置 ── */
+function clearConfig(){
+  $confirm('确定要清空当前公告配置吗？',()=>{
+    localStorage.removeItem(ANN_KEY);
+    ['annTitle','annBody','annStart','annEnd'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('annEnabled').classList.add('on');
+    syncCount('annTitle','titleCount',100);syncCount('annBody','bodyCount',300);
+    $msg('配置已清空','success');
+  });
+}
+
+/* ── 预览效果弹窗 ── */
 function openPreview(){
   const title=document.getElementById('annTitle').value.trim();
   const body=document.getElementById('annBody').value.trim();
-  if(!title&&!body)return $msg('请先填写公告标题或内容','error');
-  const type=document.getElementById('annType').value;
-  const info=TYPE_MAP[type]||TYPE_MAP.update;
-  const t=title||'（预览）公告标题';
-  const b=body||'（预览）公告内容将在此处展示，用户将看到完整的公告文字。';
-
-  // 跑马灯:标题 + 内容摘要,按文字长度自适应滚动时长
-  const snippet=b.slice(0,24)+(b.length>24?'…':'');
-  const text=t+(snippet?'　·　'+snippet:'');
-  const dur=Math.max(8,text.length*0.55);
-  const m=document.getElementById('prevMarquee');
-  m.textContent=text+'　　　'+text;m.style.animationDuration=dur+'s';
-
-  // 弹出卡片:按公告类型着色
-  document.getElementById('prevBar').style.background=info.barBg;
-  const badge=document.getElementById('prevBadge');
-  badge.textContent=info.label;
-  badge.style.background=info.badgeBg;
-  badge.style.border='1px solid '+info.badgeBd;
-  badge.style.color=info.badgeClr;
-  document.getElementById('prevTitle').textContent=t;
-  document.getElementById('prevContent').textContent=b;
-
+  if(!title&&!body)return $msg('请先填写公告标题或内容','warning');
+  const start=document.getElementById('annStart').value.replace('T',' ');
+  const end=document.getElementById('annEnd').value.replace('T',' ');
+  // 跑马灯:标题滚动,时长按文字长度自适应
+  const m=document.getElementById('pvMarquee');
+  const text=title||body.slice(0,40);
+  m.textContent=text+'　　　　'+text;
+  m.style.animationDuration=Math.max(8,text.length*0.4)+'s';
+  document.getElementById('pvTitle').textContent=title||'（未填写标题）';
+  document.getElementById('pvBody').textContent=body||'（未填写内容）';
+  document.getElementById('pvTime').textContent=(start&&end)?('展示时间：'+start+' 至 '+end):'';
   $modal('dlgPreview');
 }
-
-/* ============ 字数统计 ============ */
-function syncCount(inId,cntId,max){const l=document.getElementById(inId).value.length;const el=document.getElementById(cntId);el.textContent=l;el.style.color=l>=max?'var(--er)':'';}
 
 function fmtNow(){
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
 }
-
-/* ============ 保存发布 ============ */
-function saveAnn(){
-  const title=document.getElementById('annTitle').value.trim();
-  const body=document.getElementById('annBody').value.trim();
-  const start=document.getElementById('annStart').value;
-  const end=document.getElementById('annEnd').value;
-  if(!title)return $msg('请填写公告标题','error');
-  if(!body)return $msg('请填写公告内容','error');
-  if(!start||!end)return $msg('请设置展示时间范围','error');
-  if(start>end)return $msg('结束时间不能早于开始时间','error');
-
-  const enabled=document.getElementById('annEnabled').classList.contains('on');
-  const type=document.getElementById('annType').value;
-  const cfg={
-    id:editingId||('ann_'+Date.now()),
-    enabled,type,title,body,startDate:start,endDate:end,
-    publishedAt:fmtNow()
-  };
-
-  // 写入当前生效配置(键名/字段结构与主框架壳联动,保持不变)
-  localStorage.setItem(ANN_KEY,JSON.stringify(cfg));
-
-  // 写入历史记录(编辑则更新原条目,新建则插入到最前)
-  let list=getHistory();
-  const idx=list.findIndex(x=>x.id===cfg.id);
-  if(idx>=0){list[idx]=cfg;}
-  else{list.unshift(cfg);}
-  setHistory(list);
-
-  editingId=cfg.id;
-  updateStatus(cfg);
-  renderHistory();
-  $msg(idx>=0?'公告已更新':'公告已保存发布','success');
-}
-
-/* ============ 重置配置(仅清空左栏表单,不删历史) ============ */
-function clearAnn(){
-  localStorage.removeItem(ANN_KEY);
-  editingId=null;
-  ['annTitle','annBody','annStart','annEnd'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('annEnabled').classList.add('on');
-  document.getElementById('annType').value='update';
-  syncCount('annTitle','titleCount',30);syncCount('annBody','bodyCount',120);
-  updateStatus(null);
-  $msg('配置已重置','success');
-}
-
-/* ============ 历史记录渲染(分页使用 $pager) ============ */
-const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
-
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-function renderHistory(){
-  const list=getHistory();
-  pg.total=list.length;
-  const totalPages=Math.max(1,Math.ceil(pg.total/pg.size));
-  if(pg.page>totalPages)pg.page=totalPages;
-  $pager('histPager',pg);
-  renderTable();
-}
-
+/* ── 历史记录表格 + 分页(线上:10/20/30/50 条每页,分页靠右) ── */
+const pg={total:HISTORY.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
 function renderTable(){
-  const list=getHistory();
-  const tbody=document.getElementById('histBody');
-  const pageItems=list.slice((pg.page-1)*pg.size,pg.page*pg.size);
-  if(list.length===0){
-    tbody.innerHTML='<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无公告历史记录</span></div></td></tr>';
-    return;
-  }
-  tbody.innerHTML=pageItems.map(x=>{
-    const time=(x.startDate||'').replace('T',' ')+' ~<br>'+(x.endDate||'').replace('T',' ');
-    const tag=x.enabled?'<span class="tag tok">已启用</span>':'<span class="tag tin">已禁用</span>';
-    return `<tr onclick="editRecord('${x.id}')" title="点击载入到左侧编辑">
-      <td class="tl cell-title">${esc(x.title)}</td>
-      <td class="tl cell-body"><div class="cell-clamp">${esc(x.body)}</div></td>
-      <td class="cell-time">${time}</td>
-      <td>${tag}</td>
-      <td class="cell-time">${esc(x.publishedAt||'')}</td>
-    </tr>`;
-  }).join('');
+  const start=(pg.page-1)*pg.size;
+  const rows=HISTORY.slice(start,start+pg.size);
+  document.getElementById('histBody').innerHTML=rows.length?rows.map(h=>`
+    <tr>
+      <td class="tl td-clip" style="max-width:180px" title="${esc(h.title)}"><div class="clip">${esc(h.title)}</div></td>
+      <td class="tl td-clip" style="max-width:230px" title="${esc(h.body)}"><div class="clip">${esc(h.body.replace(/\n/g,' '))}</div></td>
+      <td>${h.start} 至 ${h.end}</td>
+      <td>${h.enabled?'<span class="tag tok">启用</span>':'<span class="tag tin">停用</span>'}</td>
+      <td>${h.publishedAt}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 
-/* 点击历史记录行 → 载入到左侧表单编辑 */
-function editRecord(id){
-  const rec=getHistory().find(x=>x.id===id);
-  if(!rec)return;
-  fillForm(rec);
-  updateStatus(rec);
-  window.scrollTo({top:0,behavior:'smooth'});
-  $msg('已载入到左侧，可修改后重新保存','success');
-}
-
-/* ============ 初始化 ============ */
+/* ── 初始化 ── */
 loadCurrent();
-renderHistory();
+$pager('histPager',pg);
+renderTable();
 </script>
 </body>
 </html>

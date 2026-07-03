@@ -5,186 +5,483 @@
 <title>风水联动</title>
 <link rel="stylesheet" href="_base.css">
 <!--
-  说明:该页 live 抓取被重定向至综合监控大屏(strategy-wind.json 的 _finalUrl 为 largeScreen/index),
-  无真实页面截图可依据。按同模块"负荷调控"(/loadControl/task/index)与 ctrl-fault 的
-  标准"筛选 + 表格 + 分页"模式设计,内容为主机/水泵与末端联动策略列表。
+  依据:天长政务中心 项目下抓取的线上真实页面复刻
+  三件套:capture/live/pages/strategy-wind.live3.png / .live3.json / .live3.html
+  线上结构:顶部标签页(任务列表/风盘运行状态)
+    · 任务列表:筛选(任务名称/任务状态/房间范围/时间范围) + 搜索/重置/创建任务/策略管理
+      表格列:任务ID|任务名称|起始时间|结束时间|房间范围|执行策略|任务状态|创建时间|操作
+      分页:共X条 + 10/20/30/50条/页 + 页码 + 前往X页
+    · 弹窗:创建任务(800px 取消/确定)、策略管理(1000px)、策略编辑(700px 取消/确定)、
+      执行日志(600px 导出日志/关闭);任务状态枚举:执行中/停用/未开始/已过期
+  线上任务数据为空("暂无数据"),此处按列语义补充贴真实感模拟数据。
 -->
 <style>
-.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
-.detail-grid .k{color:var(--ts);text-align:right;}
-.detail-grid .v{color:var(--tx);}
+/* 页面专有样式:仅本页使用 */
+/* 策略管理弹窗内的表格容器(高度受限可滚动) */
+.strat-tw{max-height:46vh;overflow-y:auto;border-radius:6px;background:var(--bg-panel-2);}
+/* 执行日志列表 */
+.log-list{display:flex;flex-direction:column;gap:0;font-size:13px;max-height:48vh;overflow-y:auto;}
+.log-row{display:flex;gap:12px;padding:9px 4px;border-bottom:1px dashed rgba(255,255,255,.07);}
+.log-row:last-child{border-bottom:none;}
+.log-time{color:var(--ts);white-space:nowrap;}
+.log-ok{color:var(--ok);}
+.log-er{color:var(--er);}
+/* 页签内容区:与线上一致占满视口高度,分页器固定在底部 */
+#paneTask{display:flex;flex-direction:column;min-height:calc(100vh - 105px);}
+#paneTask #pager{margin-top:auto;}
+/* 创建任务弹窗中的时间范围行 */
+.range-row{display:flex;align-items:center;gap:8px;}
+.range-row input{flex:1;min-width:0;}
+/* 风盘运行状态页签的顶部统计条 */
+.rs-bar{display:flex;gap:24px;align-items:center;margin-bottom:14px;font-size:13px;color:var(--ts);}
+.rs-bar b{color:var(--txw);font-size:16px;margin:0 2px;}
 </style>
 </head>
 <body>
-<!-- 筛选 + 操作按钮 -->
-<div class="fb">
-  <div class="fi"><span class="fl">策略名称</span><input id="fName" placeholder="请输入策略名称" style="width:190px"></div>
-  <div class="fi"><span class="fl">启用状态</span>
-    <select id="fState" style="width:190px">
-      <option value="">请选择启用状态</option>
-      <option value="1">启用</option>
-      <option value="0">停用</option>
-    </select>
+<!-- 顶部标签页(与线上一致:任务列表 / 风盘运行状态) -->
+<div class="tabs">
+  <div class="tab active" id="tabTask" onclick="switchTab('task')">任务列表</div>
+  <div class="tab" id="tabRun" onclick="switchTab('run')">风盘运行状态</div>
+</div>
+
+<!-- ════════ 页签一:任务列表 ════════ -->
+<div id="paneTask">
+  <!-- 筛选栏(照线上:任务名称/任务状态/房间范围/时间范围 + 搜索/重置/创建任务/策略管理) -->
+  <div class="fb">
+    <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:180px"></div>
+    <div class="fi"><span class="fl">任务状态</span>
+      <select id="fState" style="width:180px">
+        <option value="">请选择任务状态</option>
+        <option>执行中</option><option>停用</option><option>未开始</option><option>已过期</option>
+      </select>
+    </div>
+    <div class="fi"><span class="fl">房间范围</span>
+      <select id="fRoom" style="width:180px">
+        <option value="">请选择房间</option>
+        <option>一楼办事大厅</option><option>二楼办事大厅</option><option>三楼会议中心</option>
+        <option>四楼办公区</option><option>五楼办公区</option>
+      </select>
+    </div>
+    <div class="fi"><span class="fl">时间范围</span>
+      <input type="date" id="fStart" style="width:145px" placeholder="开始日期"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px" placeholder="结束日期">
+    </div>
+    <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+    <button class="btn" onclick="doReset()">重置</button>
+    <button class="btn btnp" onclick="openCreate()">＋ 创建任务</button>
+    <button class="btn btnp" onclick="openStrat()">⚙ 策略管理</button>
   </div>
-  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
-  <button class="btn" onclick="doReset()">重置</button>
-  <button class="btn btnp" onclick="openCreate()">＋ 创建策略</button>
+
+  <!-- 任务表格(列名严格照线上) -->
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>任务ID</th><th>任务名称</th><th>起始时间</th><th>结束时间</th><th>房间范围</th>
+        <th>执行策略</th><th>任务状态</th><th>创建时间</th><th>操作</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div id="pager"></div>
 </div>
 
-<div class="tw">
-  <table>
-    <thead><tr>
-      <th>策略ID</th><th>策略名称</th><th>联动主机</th><th>联动水泵</th><th>末端范围</th>
-      <th>触发条件</th><th>执行动作</th><th>启用状态</th><th>创建时间</th><th>操作</th>
-    </tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+<!-- ════════ 页签二:风盘运行状态(线上该页签内容未展开,按业务语义呈现风盘实时运行表) ════════ -->
+<div id="paneRun" style="display:none">
+  <div class="rs-bar">
+    <span>风盘总数 <b id="rsTotal">0</b> 台</span>
+    <span><span class="dot don"></span>运行中 <b id="rsOn" class="text-ok">0</b> 台</span>
+    <span><span class="dot dof"></span>已关闭 <b id="rsOff">0</b> 台</span>
+    <span><span class="dot der"></span>离线 <b id="rsErr" class="text-er">0</b> 台</span>
+  </div>
+  <div class="fb">
+    <div class="fi"><span class="fl">房间范围</span>
+      <select id="rRoom" style="width:180px" onchange="renderRun()">
+        <option value="">请选择房间</option>
+        <option>一楼办事大厅</option><option>二楼办事大厅</option><option>三楼会议中心</option>
+        <option>四楼办公区</option><option>五楼办公区</option>
+      </select>
+    </div>
+    <button class="btn" onclick="renderRun();$msg('已刷新','info')">刷新</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>风盘名称</th><th>所在房间</th><th>运行状态</th><th>运行模式</th><th>风速</th>
+        <th>设定温度</th><th>回风温度</th><th>水阀状态</th><th>更新时间</th>
+      </tr></thead>
+      <tbody id="runBody"></tbody>
+    </table>
+  </div>
 </div>
-<div id="pager"></div>
 
-<!-- 创建/编辑策略弹窗 -->
+<!-- ── 创建/编辑任务弹窗(线上 800px,取 消/确 定) ── -->
 <div class="modal" id="dlgEdit">
-  <div class="dialog" style="width:640px">
-    <div class="dh"><span id="dlgEditTitle">创建策略</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+  <div class="dialog" style="width:800px">
+    <div class="dh"><span id="dlgEditTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
     <div class="db">
       <div class="form-grid">
-        <div class="form-item"><span class="fl"><span class="req">*</span>策略名称</span><input id="eName" placeholder="请输入策略名称"></div>
-        <div class="form-item"><span class="fl"><span class="req">*</span>联动主机</span>
-          <select id="eHost"><option>1#冷水机组</option><option>2#冷水机组</option><option>3#热泵机组</option></select>
+        <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="eName" placeholder="请输入任务名称"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>房间范围</span>
+          <select id="eRoom">
+            <option>全部房间</option><option>一楼办事大厅</option><option>二楼办事大厅</option>
+            <option>三楼会议中心</option><option>四楼办公区</option><option>五楼办公区</option>
+          </select>
         </div>
-        <div class="form-item"><span class="fl"><span class="req">*</span>联动水泵</span>
-          <select id="ePump"><option>1#冷冻水泵</option><option>2#冷冻水泵</option><option>1#冷却水泵</option><option>2#冷却水泵</option></select>
+        <div class="form-item"><span class="fl"><span class="req">*</span>时间范围</span>
+          <div class="range-row"><input type="date" id="eStart"><span class="text-sub">至</span><input type="date" id="eEnd"></div>
         </div>
-        <div class="form-item"><span class="fl"><span class="req">*</span>末端范围</span>
-          <select id="eScope"><option>全部末端</option><option>1号楼 3~9层</option><option>1号楼 14~23层</option><option>机房群控区域</option></select>
+        <div class="form-item"><span class="fl"><span class="req">*</span>执行周期</span>
+          <div class="form-row" style="height:32px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer"><input type="radio" name="eCycle" value="按天" checked>按天</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer"><input type="radio" name="eCycle" value="按小时">按小时</label>
+          </div>
         </div>
-        <div class="form-item"><span class="fl"><span class="req">*</span>触发条件</span><input id="eCond" placeholder="如:末端开启率 ≥ 60%"></div>
-        <div class="form-item"><span class="fl"><span class="req">*</span>执行动作</span><input id="eAct" placeholder="如:水泵频率上调至 45Hz"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>执行策略</span>
+          <select id="eStrat"></select>
+        </div>
+        <div class="form-item"><span class="fl">备注</span><input id="eRemark" placeholder="请输入备注"></div>
       </div>
     </div>
     <div class="df">
       <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
-      <button class="btn btnp" onclick="saveRule()">确 定</button>
+      <button class="btn btnp" onclick="saveTask()">确 定</button>
     </div>
   </div>
 </div>
 
-<!-- 策略详情弹窗 -->
-<div class="modal" id="dlgDetail">
-  <div class="dialog" style="width:520px">
-    <div class="dh"><span>策略详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
-    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
-    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+<!-- ── 策略管理弹窗(线上 1000px;设备类型页签取自线上标签:氟机/直膨机/温控器/水机) ── -->
+<div class="modal" id="dlgStrat">
+  <div class="dialog" style="width:1000px">
+    <div class="dh"><span>策略管理</span><span class="dx" onclick="$modalClose('dlgStrat')">✕</span></div>
+    <div class="db">
+      <div class="flex jcb aic mb14">
+        <div class="rtabs" id="stratTabs"></div>
+        <button class="btn btnp" onclick="openStratEdit()">＋ 新增策略</button>
+      </div>
+      <div class="strat-tw">
+        <table>
+          <thead><tr>
+            <th>策略名称</th><th>运行模式</th><th>温度设定</th><th>风速</th><th>联动水阀</th><th>创建时间</th><th>操作</th>
+          </tr></thead>
+          <tbody id="stratBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgStrat')">关闭</button></div>
+  </div>
+</div>
+
+<!-- ── 新增/编辑策略弹窗(线上 700px,取 消/确 定) ── -->
+<div class="modal" id="dlgStratEdit">
+  <div class="dialog" style="width:700px">
+    <div class="dh"><span id="dlgStratEditTitle">新增策略</span><span class="dx" onclick="$modalClose('dlgStratEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-grid">
+        <div class="form-item"><span class="fl"><span class="req">*</span>策略名称</span><input id="sName" placeholder="请输入策略名称"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>设备类型</span>
+          <select id="sDev"><option>氟机</option><option>直膨机</option><option>温控器</option><option>水机</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>运行模式</span>
+          <select id="sMode"><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>温度设定</span>
+          <select id="sTemp"><option>24℃</option><option>25℃</option><option>26℃</option><option>27℃</option><option>28℃</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>风速</span>
+          <select id="sFan"><option>自动</option><option>低速</option><option>中速</option><option>高速</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>联动水阀</span>
+          <select id="sValve"><option>随风盘启停</option><option>常开</option><option>常闭</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgStratEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveStrat()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 执行日志弹窗(线上 600px,导出日志/关闭) ── -->
+<div class="modal" id="dlgLog">
+  <div class="dialog" style="width:600px">
+    <div class="dh"><span id="dlgLogTitle">执行日志</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
+    <div class="db"><div class="log-list" id="logList"></div></div>
+    <div class="df">
+      <button class="btn" onclick="$msg('日志已导出')">导出日志</button>
+      <button class="btn btnp" onclick="$modalClose('dlgLog')">关闭</button>
+    </div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
 <script>
-/* ── 模拟数据:主机/水泵与末端联动策略 ── */
-let RULES=[
-{id:2018,name:'制冷高峰水泵升频联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'1号楼 3~9层',cond:'末端开启率 ≥ 60%',act:'水泵频率上调至 45Hz',on:true,crt:'2026-06-28 10:12:36'},
-{id:2017,name:'低负荷水泵降频联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'全部末端',cond:'末端开启率 < 30% 持续 15 分钟',act:'水泵频率下调至 32Hz',on:true,crt:'2026-06-25 15:40:08'},
-{id:2015,name:'末端全关联动停机',host:'2#冷水机组',pump:'2#冷冻水泵',scope:'全部末端',cond:'末端全部关闭持续 20 分钟',act:'停主机并延时 5 分钟停水泵',on:true,crt:'2026-06-20 09:05:44'},
-{id:2013,name:'供回水温差过小联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'1号楼 14~23层',cond:'供回水温差 < 2℃ 持续 10 分钟',act:'水泵频率下调 2Hz/次',on:false,crt:'2026-06-14 14:22:19'},
-{id:2011,name:'冷却水高温保护联动',host:'2#冷水机组',pump:'2#冷却水泵',scope:'机房群控区域',cond:'冷却水回水温度 ≥ 33℃',act:'冷却水泵频率上调至 48Hz',on:true,crt:'2026-06-09 11:37:52'},
-{id:2009,name:'夜间末端联动加机',host:'3#热泵机组',pump:'1#冷却水泵',scope:'1号楼 3~9层',cond:'22:00 后末端开启率 ≥ 75%',act:'联动开启 3#热泵机组',on:false,crt:'2026-05-30 16:58:03',},
-{id:2008,name:'早高峰预冷联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'全部末端',cond:'工作日 07:30 定时触发',act:'开主机与水泵,水泵频率 40Hz',on:true,crt:'2026-05-22 08:46:27'},
+/* ══════════ 模拟数据(线上任务列表为空,按列语义补充) ══════════ */
+/* 联动策略库(策略管理弹窗;设备类型页签:氟机/直膨机/温控器/水机) */
+let STRATS=[
+{id:301,dev:'水机',name:'夏季制冷节能策略',mode:'制冷',temp:'26℃',fan:'自动',valve:'随风盘启停',crt:'2026-05-08 09:20:15'},
+{id:302,dev:'水机',name:'办公时段舒适策略',mode:'制冷',temp:'25℃',fan:'中速',valve:'随风盘启停',crt:'2026-05-12 14:36:40'},
+{id:303,dev:'水机',name:'夜间值班低负荷策略',mode:'制冷',temp:'28℃',fan:'低速',valve:'常闭',crt:'2026-05-20 17:02:33'},
+{id:304,dev:'温控器',name:'大厅恒温策略',mode:'制冷',temp:'26℃',fan:'自动',valve:'随风盘启停',crt:'2026-06-01 10:15:08'},
+{id:305,dev:'温控器',name:'会议室预冷策略',mode:'制冷',temp:'24℃',fan:'高速',valve:'常开',crt:'2026-06-03 08:47:56'},
+{id:306,dev:'氟机',name:'过渡季送风策略',mode:'送风',temp:'27℃',fan:'低速',valve:'常闭',crt:'2026-04-15 11:28:19'},
+{id:307,dev:'直膨机',name:'梅雨季除湿策略',mode:'除湿',temp:'26℃',fan:'中速',valve:'随风盘启停',crt:'2026-06-10 15:54:02'},
 ];
 
-/* ── 查询/表格/分页 ── */
-let filtered=RULES.slice(),editId=null;
+/* 风水联动任务列表(任务ID 参照线上长 ID 形态) */
+let TASKS=[
+{id:'1938401265842716673',name:'办事大厅工作日制冷任务',start:'2026-06-15',end:'2026-09-30',room:'一楼办事大厅',strat:'夏季制冷节能策略',state:'执行中',crt:'2026-06-14 09:32:18'},
+{id:'1938052710437859330',name:'二楼大厅高峰时段联动',start:'2026-06-10',end:'2026-08-31',room:'二楼办事大厅',strat:'办公时段舒适策略',state:'执行中',crt:'2026-06-09 15:47:52'},
+{id:'1937326485109247489',name:'会议中心会前预冷任务',start:'2026-06-08',end:'2026-10-15',room:'三楼会议中心',strat:'会议室预冷策略',state:'执行中',crt:'2026-06-07 10:06:35'},
+{id:'1936598742315671554',name:'办公区午休节能任务',start:'2026-07-01',end:'2026-09-15',room:'四楼办公区',strat:'夏季制冷节能策略',state:'未开始',crt:'2026-06-05 16:21:09'},
+{id:'1935874092768215041',name:'五楼办公区恒温联动',start:'2026-06-03',end:'2026-09-30',room:'五楼办公区',strat:'大厅恒温策略',state:'停用',crt:'2026-06-03 08:58:44'},
+{id:'1933710254689132546',name:'夜间值班区低负荷运行',start:'2026-05-28',end:'2026-08-31',room:'一楼办事大厅',strat:'夜间值班低负荷策略',state:'执行中',crt:'2026-05-27 17:40:26'},
+{id:'1929845617230458881',name:'梅雨季大厅除湿任务',start:'2026-05-18',end:'2026-06-20',room:'二楼办事大厅',strat:'梅雨季除湿策略',state:'已过期',crt:'2026-05-16 11:12:57'},
+{id:'1921063748295610370',name:'过渡季通风换气任务',start:'2026-04-20',end:'2026-05-31',room:'四楼办公区',strat:'过渡季送风策略',state:'已过期',crt:'2026-04-22 14:05:31'},
+];
+
+/* 风盘运行状态模拟数据(页签二) */
+const FANS=(()=>{
+  const rooms=['一楼办事大厅','二楼办事大厅','三楼会议中心','四楼办公区','五楼办公区'];
+  const rows=[];let n=0;
+  rooms.forEach((rm,ri)=>{
+    const cnt=[6,5,4,5,4][ri];
+    for(let k=1;k<=cnt;k++){
+      const st=n%7===5?'离线':(n%3===2?'已关闭':'运行中');
+      rows.push({name:`FP-${ri+1}0${k} 风机盘管`,room:rm,state:st,
+        mode:st==='运行中'?'制冷':'—',fan:st==='运行中'?['自动','中速','低速','高速'][n%4]:'—',
+        set:st==='运行中'?(24+n%4)+'℃':'—',ret:st==='离线'?'—':(25.2+(n%9)*0.4).toFixed(1)+'℃',
+        valve:st==='运行中'?'开启':'关闭',upd:'2026-07-03 10:'+String(12+n).padStart(2,'0')+':'+String((n*7)%60).padStart(2,'0')});
+      n++;
+    }
+  });
+  return rows;
+})();
+
+/* ══════════ 页签切换 ══════════ */
+function switchTab(t){
+  document.getElementById('tabTask').classList.toggle('active',t==='task');
+  document.getElementById('tabRun').classList.toggle('active',t==='run');
+  document.getElementById('paneTask').style.display=t==='task'?'':'none';
+  document.getElementById('paneRun').style.display=t==='run'?'':'none';
+  if(t==='run')renderRun();
+}
+
+/* ══════════ 任务列表:查询/重置/表格/分页 ══════════ */
+let filtered=TASKS.slice(),editId=null;
 const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
 function doQuery(){
   const name=document.getElementById('fName').value.trim();
   const st=document.getElementById('fState').value;
-  filtered=RULES.filter(r=>(!name||r.name.includes(name))&&(!st||String(+r.on)===st));
+  const rm=document.getElementById('fRoom').value;
+  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  filtered=TASKS.filter(r=>
+    (!name||r.name.includes(name))&&
+    (!st||r.state===st)&&
+    (!rm||r.room===rm)&&
+    (!s||r.end>=s)&&(!e||r.start<=e)
+  );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  document.getElementById('fName').value='';
+  ['fName','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fState').value='';
+  document.getElementById('fRoom').value='';
   doQuery();
 }
+/* 任务状态标签配色:执行中=绿 未开始=蓝 停用=灰 已过期=橙 */
+const STATE_TAG={'执行中':'tok','未开始':'thl','停用':'tin','已过期':'twn'};
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
   document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
     <tr>
-      <td>${r.id}</td><td>${r.name}</td><td>${r.host}</td><td>${r.pump}</td><td>${r.scope}</td>
-      <td>${r.cond}</td><td>${r.act}</td>
-      <td><span class="switch ${r.on?'on':''}" onclick="toggleRule(${r.id})"></span></td>
+      <td>${r.id}</td><td>${r.name}</td><td>${r.start}</td><td>${r.end}</td><td>${r.room}</td>
+      <td>${r.strat}</td>
+      <td><span class="tag ${STATE_TAG[r.state]}">${r.state}</span></td>
       <td>${r.crt}</td>
-      <td><span class="op"><a onclick="showDetail(${r.id})">详情</a><a onclick="openEdit(${r.id})">编辑</a><a class="danger" onclick="delRule(${r.id})">删除</a></span></td>
+      <td><span class="op">
+        <a onclick="openEdit('${r.id}')">编辑</a>
+        <a onclick="toggleTask('${r.id}')">${r.state==='停用'?'启用':'停用'}</a>
+        <a onclick="openLog('${r.id}')">日志</a>
+        <a class="danger" onclick="delTask('${r.id}')">删除</a>
+      </span></td>
     </tr>`).join('')
-    :'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
-function toggleRule(id){
-  const r=RULES.find(t=>t.id===id);r.on=!r.on;
-  renderTable();$msg(r.on?'策略已启用':'策略已停用');
+
+/* 启用/停用任务 */
+function toggleTask(id){
+  const r=TASKS.find(t=>t.id===id);
+  if(r.state==='已过期')return $msg('任务已过期,不可启停','warning');
+  if(r.state==='停用'){r.state=r.start>'2026-07-03'?'未开始':'执行中';$msg('任务已启用');}
+  else{
+    $confirm(`确定停用任务「${r.name}」吗?`,()=>{r.state='停用';renderTable();$msg('任务已停用');});
+    return;
+  }
+  renderTable();
 }
-function delRule(id){
-  $confirm('确定删除该联动策略吗?',()=>{
-    RULES=RULES.filter(t=>t.id!==id);doQuery();$msg('删除成功');
+/* 删除任务 */
+function delTask(id){
+  const r=TASKS.find(t=>t.id===id);
+  $confirm(`确定删除任务「${r.name}」吗?删除后不可恢复。`,()=>{
+    TASKS=TASKS.filter(t=>t.id!==id);doQuery();$msg('删除成功');
   });
 }
 
-/* ── 创建/编辑 ── */
+/* ══════════ 创建/编辑任务 ══════════ */
+function fillStratOptions(){
+  document.getElementById('eStrat').innerHTML=STRATS.map(s=>`<option>${s.name}</option>`).join('');
+}
 function openCreate(){
   editId=null;
-  document.getElementById('dlgEditTitle').textContent='创建策略';
-  ['eName','eCond','eAct'].forEach(i=>document.getElementById(i).value='');
-  document.getElementById('eHost').value='1#冷水机组';
-  document.getElementById('ePump').value='1#冷冻水泵';
-  document.getElementById('eScope').value='全部末端';
+  document.getElementById('dlgEditTitle').textContent='创建任务';
+  ['eName','eStart','eEnd','eRemark'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('eRoom').value='全部房间';
+  document.querySelector('input[name=eCycle][value=按天]').checked=true;
+  fillStratOptions();
   $modal('dlgEdit');
 }
 function openEdit(id){
-  const r=RULES.find(t=>t.id===id);editId=id;
-  document.getElementById('dlgEditTitle').textContent='编辑策略';
+  const r=TASKS.find(t=>t.id===id);editId=id;
+  document.getElementById('dlgEditTitle').textContent='编辑任务';
+  fillStratOptions();
   document.getElementById('eName').value=r.name;
-  document.getElementById('eHost').value=r.host;
-  document.getElementById('ePump').value=r.pump;
-  document.getElementById('eScope').value=r.scope;
-  document.getElementById('eCond').value=r.cond;
-  document.getElementById('eAct').value=r.act;
+  document.getElementById('eRoom').value=r.room;
+  document.getElementById('eStart').value=r.start;
+  document.getElementById('eEnd').value=r.end;
+  document.getElementById('eStrat').value=r.strat;
+  document.getElementById('eRemark').value=r.remark||'';
   $modal('dlgEdit');
 }
-function saveRule(){
+function saveTask(){
   const name=document.getElementById('eName').value.trim();
-  const cond=document.getElementById('eCond').value.trim();
-  const act=document.getElementById('eAct').value.trim();
-  if(!name)return $msg('请输入策略名称','warning');
-  if(!cond)return $msg('请输入触发条件','warning');
-  if(!act)return $msg('请输入执行动作','warning');
-  const data={name,host:document.getElementById('eHost').value,pump:document.getElementById('ePump').value,
-    scope:document.getElementById('eScope').value,cond,act};
+  const s=document.getElementById('eStart').value,e=document.getElementById('eEnd').value;
+  if(!name)return $msg('请输入任务名称','warning');
+  if(!s||!e)return $msg('请选择时间范围','warning');
+  if(s>e)return $msg('起始时间不能晚于结束时间','warning');
+  const data={name,room:document.getElementById('eRoom').value,start:s,end:e,
+    strat:document.getElementById('eStrat').value,remark:document.getElementById('eRemark').value.trim()};
   if(editId){
-    Object.assign(RULES.find(t=>t.id===editId),data);
+    Object.assign(TASKS.find(t=>t.id===editId),data);
     $msg('保存成功');
   }else{
     const now=new Date(),p=n=>String(n).padStart(2,'0');
-    RULES.unshift(Object.assign({id:Math.max(...RULES.map(t=>t.id))+1,on:true,
-      crt:`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`},data));
+    TASKS.unshift(Object.assign({
+      id:'19'+String(Math.floor(Math.random()*1e17)).padStart(17,'0'),
+      state:s>'2026-07-03'?'未开始':'执行中',
+      crt:`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`
+    },data));
     $msg('创建成功');
   }
   $modalClose('dlgEdit');doQuery();
 }
 
-/* ── 详情 ── */
-function showDetail(id){
-  const r=RULES.find(t=>t.id===id);
-  document.getElementById('detailGrid').innerHTML=`
-    <span class="k">策略ID:</span><span class="v">${r.id}</span>
-    <span class="k">策略名称:</span><span class="v">${r.name}</span>
-    <span class="k">联动主机:</span><span class="v">${r.host}</span>
-    <span class="k">联动水泵:</span><span class="v">${r.pump}</span>
-    <span class="k">末端范围:</span><span class="v">${r.scope}</span>
-    <span class="k">触发条件:</span><span class="v">${r.cond}</span>
-    <span class="k">执行动作:</span><span class="v">${r.act}</span>
-    <span class="k">启用状态:</span><span class="v ${r.on?'text-ok':'text-sub'}">${r.on?'启用':'停用'}</span>
-    <span class="k">创建时间:</span><span class="v">${r.crt}</span>`;
-  $modal('dlgDetail');
+/* ══════════ 策略管理(设备类型页签:氟机/直膨机/温控器/水机) ══════════ */
+const DEV_TYPES=['水机','温控器','氟机','直膨机'];
+let stratDev='水机',stratEditId=null;
+function openStrat(){renderStratTabs();renderStratTable();$modal('dlgStrat');}
+function renderStratTabs(){
+  document.getElementById('stratTabs').innerHTML=DEV_TYPES.map(d=>
+    `<span class="rtab ${d===stratDev?'active':''}" onclick="stratDev='${d}';renderStratTabs();renderStratTable()">${d}</span>`).join('');
+}
+function renderStratTable(){
+  const rows=STRATS.filter(s=>s.dev===stratDev);
+  document.getElementById('stratBody').innerHTML=rows.length?rows.map(s=>`
+    <tr>
+      <td>${s.name}</td><td>${s.mode}</td><td>${s.temp}</td><td>${s.fan}</td><td>${s.valve}</td><td>${s.crt}</td>
+      <td><span class="op">
+        <a onclick="bindStrat(${s.id})">绑定</a>
+        <a onclick="openStratEdit(${s.id})">编辑</a>
+        <a class="danger" onclick="delStrat(${s.id})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="7"><div class="empty" style="padding:36px 20px"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+/* 绑定策略到当前项目房间 */
+function bindStrat(id){
+  const s=STRATS.find(t=>t.id===id);
+  $confirm(`将策略「${s.name}」绑定到当前项目(天长政务中心)的房间范围吗?`,()=>$msg('绑定成功'));
+}
+function openStratEdit(id){
+  stratEditId=id||null;
+  document.getElementById('dlgStratEditTitle').textContent=id?'编辑策略':'新增策略';
+  if(id){
+    const s=STRATS.find(t=>t.id===id);
+    document.getElementById('sName').value=s.name;
+    document.getElementById('sDev').value=s.dev;
+    document.getElementById('sMode').value=s.mode;
+    document.getElementById('sTemp').value=s.temp;
+    document.getElementById('sFan').value=s.fan;
+    document.getElementById('sValve').value=s.valve;
+  }else{
+    document.getElementById('sName').value='';
+    document.getElementById('sDev').value=stratDev;
+    document.getElementById('sMode').value='制冷';
+    document.getElementById('sTemp').value='26℃';
+    document.getElementById('sFan').value='自动';
+    document.getElementById('sValve').value='随风盘启停';
+  }
+  $modal('dlgStratEdit');
+}
+function saveStrat(){
+  const name=document.getElementById('sName').value.trim();
+  if(!name)return $msg('请输入策略名称','warning');
+  const data={name,dev:document.getElementById('sDev').value,mode:document.getElementById('sMode').value,
+    temp:document.getElementById('sTemp').value,fan:document.getElementById('sFan').value,valve:document.getElementById('sValve').value};
+  if(stratEditId){
+    Object.assign(STRATS.find(t=>t.id===stratEditId),data);
+    $msg('保存成功');
+  }else{
+    const now=new Date(),p=n=>String(n).padStart(2,'0');
+    STRATS.push(Object.assign({id:Math.max(...STRATS.map(t=>t.id))+1,
+      crt:`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`},data));
+    $msg('新增成功');
+  }
+  stratDev=data.dev;
+  $modalClose('dlgStratEdit');renderStratTabs();renderStratTable();
+}
+function delStrat(id){
+  const s=STRATS.find(t=>t.id===id);
+  if(TASKS.some(t=>t.strat===s.name&&t.state!=='已过期'))return $msg('该策略已被任务引用,不可删除','warning');
+  $confirm(`确定删除策略「${s.name}」吗?`,()=>{
+    STRATS=STRATS.filter(t=>t.id!==id);renderStratTable();$msg('删除成功');
+  });
+}
+
+/* ══════════ 执行日志(导出日志/关闭) ══════════ */
+function openLog(id){
+  const r=TASKS.find(t=>t.id===id);
+  document.getElementById('dlgLogTitle').textContent=`执行日志 — ${r.name}`;
+  const days=['2026-07-03','2026-07-02','2026-07-01','2026-06-30','2026-06-29'];
+  document.getElementById('logList').innerHTML=days.map((d,i)=>{
+    const fail=i===3;
+    return `<div class="log-row">
+      <span class="log-time">${d} 0${8+(i%2)}:00:0${i*7%10}</span>
+      <span class="${fail?'log-er':'log-ok'}">${fail?'✕ 执行失败':'✓ 执行成功'}</span>
+      <span class="text-sub">${fail?'部分风盘离线,3 台未下发':'按策略「'+r.strat+'」下发 '+r.room+' 全部风盘'}</span>
+    </div>`;
+  }).join('');
+  $modal('dlgLog');
+}
+
+/* ══════════ 风盘运行状态渲染 ══════════ */
+function renderRun(){
+  const rm=document.getElementById('rRoom').value;
+  const rows=FANS.filter(f=>!rm||f.room===rm);
+  document.getElementById('rsTotal').textContent=rows.length;
+  document.getElementById('rsOn').textContent=rows.filter(f=>f.state==='运行中').length;
+  document.getElementById('rsOff').textContent=rows.filter(f=>f.state==='已关闭').length;
+  document.getElementById('rsErr').textContent=rows.filter(f=>f.state==='离线').length;
+  const dotCls={'运行中':'don','已关闭':'dof','离线':'der'};
+  document.getElementById('runBody').innerHTML=rows.length?rows.map(f=>`
+    <tr>
+      <td>${f.name}</td><td>${f.room}</td>
+      <td><span class="dot ${dotCls[f.state]}"></span>${f.state}</td>
+      <td>${f.mode}</td><td>${f.fan}</td><td>${f.set}</td><td>${f.ret}</td>
+      <td class="${f.valve==='开启'?'text-ok':'text-sub'}">${f.valve}</td><td>${f.upd}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 
 doQuery();

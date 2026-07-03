@@ -5,562 +5,317 @@
 <title>操作指引管理</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* ── 页面头(面包屑) ── */
-.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px;}
+/* ── 顶部:标签页(视频列表/类别列表)在左 + 新增按钮在右(线上形态) ── */
+.top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;}
+.top-row .tabs{flex:1;min-width:0;margin-bottom:0;}
 
-/* ── 布局:左设置菜单 + 右内容面板 ── */
-.layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 92px);}
-.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+/* ── 排序列:上移/下移小按钮(模拟线上拖拽手柄排序) ── */
+.sort-cell{display:inline-flex;flex-direction:column;gap:2px;}
+.sort-btn{width:20px;height:16px;line-height:14px;font-size:10px;text-align:center;cursor:pointer;
+  color:var(--ts);background:transparent;border:1px solid var(--bd);border-radius:2px;padding:0;transition:all .15s;}
+.sort-btn:hover{color:var(--primary);border-color:var(--primary);}
+.sort-btn:disabled{opacity:.3;cursor:not-allowed;}
 
-/* ── 左侧功能设置菜单(复用侧树面板风格) ── */
-.side-menu{width:190px;flex-shrink:0;background:var(--bg-panel);border-radius:var(--r);padding:14px 10px;}
-.side-menu .sm-title{font-size:14px;font-weight:600;color:var(--txw);padding:0 6px 12px;}
-.sm-item{display:flex;align-items:center;gap:8px;padding:9px 10px;font-size:13px;color:var(--tx);cursor:pointer;border-radius:4px;border-left:3px solid transparent;transition:all .15s;user-select:none;}
-.sm-item:hover{background:var(--bg-hover);}
-.sm-item.active{background:var(--bg-active);border-left-color:var(--primary);color:var(--txw);font-weight:500;}
-.sm-item-icon{font-size:15px;flex-shrink:0;}
+/* ── 表格单元格:简介/链接单行省略 ── */
+td.td-clip{max-width:300px;}
+td.td-clip .clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+td.td-link{max-width:300px;}
+td.td-link .clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);}
 
-/* ── 内容面板切换 ── */
-.adm-pane{display:none;flex:1;min-width:0;}
-.adm-pane.active{display:block;}
+/* ── 面板容器占满视口高 ── */
+.page-panel{background:var(--bg-panel);border-radius:var(--r);padding:16px;min-height:calc(100vh - 32px);}
 
-/* ── 面板工具行(标题 + 添加按钮) ── */
-.pane-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.pane-hd-title{font-size:14px;font-weight:600;color:var(--txw);display:flex;align-items:center;gap:8px;}
-.pane-hd-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
-
-/* ── 表格单元格 ── */
-td.td-file{font-family:'Roboto Mono',Consolas,monospace;font-size:12px;color:var(--ts);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-td.td-title{color:var(--txw);}
-
-/* ── 公告管理面板:配置分区 ── */
-.ann-wrap{max-width:560px;}
-.sec{border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px;}
-.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--txw);margin-bottom:12px;}
-.sec-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--bd);margin-bottom:12px;}
-.toggle-label{font-size:13px;color:var(--tx);font-weight:500;}
-.toggle-sub{font-size:12px;color:var(--ts);margin-top:2px;}
-.frm-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-.frm-row:last-child{margin-bottom:0;}
-.frm-label{font-size:13px;color:var(--tx);}
-.frm-label .req{color:var(--er);margin-left:2px;}
-.frm-row input,.frm-row select,.frm-row textarea{width:100%;}
-.frm-row textarea{min-height:72px;line-height:1.55;}
-.frm-hint{font-size:12px;color:var(--ts);line-height:1.5;}
-.frm-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.char-count{font-size:12px;color:var(--tw3);text-align:right;}
-.action-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
-
-/* ── 视频上传区(点击/拖拽选择文件) ── */
-.upload-zone{position:relative;border:1.5px dashed rgba(31,101,255,.4);border-radius:4px;background:rgba(31,101,255,.06);cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden;min-height:72px;display:flex;align-items:center;justify-content:center;}
-.upload-zone:hover,.upload-zone.drag-over{border-color:var(--primary);background:var(--primary-dim);}
-.upload-zone.has-file{border-style:solid;border-color:rgba(103,194,58,.4);background:rgba(103,194,58,.06);}
-.upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 12px;pointer-events:none;}
-.upload-icon{font-size:24px;opacity:.5;}
-.upload-main{font-size:13px;color:var(--tx);}
-.upload-sub{font-size:12px;color:var(--ts);}
-.upload-info{display:flex;align-items:center;gap:10px;padding:12px 14px;width:100%;pointer-events:none;}
-.upload-file-name{display:block;font-size:13px;color:var(--txw);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.upload-file-size{font-size:12px;color:var(--ts);}
-.upload-clear{width:22px;height:22px;border-radius:50%;border:1px solid var(--bd2);background:var(--bg-input);color:var(--ts);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;pointer-events:all;transition:all .15s;}
-.upload-clear:hover{background:var(--er-dim);border-color:rgba(245,108,108,.4);color:var(--er);}
-
-/* ── 弹窗内表单 ── */
-.dlg-form .frm-row{margin-bottom:12px;}
-.confirm-msg{font-size:14px;color:var(--tx);line-height:1.65;padding:4px 0;}
-.confirm-msg strong{color:var(--txw);}
+/* ── 弹窗表单 ── */
+.dlg-form .frm-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.dlg-form .frm-label{font-size:13px;color:var(--tx);}
+.dlg-form .frm-label .req{color:var(--er);margin-right:3px;}
+.dlg-form input,.dlg-form select,.dlg-form textarea{width:100%;}
+.dlg-form textarea{min-height:72px;line-height:1.55;}
 </style>
 </head>
 <body>
 
-<!-- 页面头:标题 + 面包屑 + 预览指引入口 -->
-<div class="ph">
-  <div>
-    <div class="pt">操作指引管理</div>
-    <div class="crumb">系统管理 <span>/</span> 操作指引管理</div>
+<div class="page-panel">
+
+  <!-- 顶部:标签页 + 新增按钮 -->
+  <div class="top-row">
+    <div class="tabs">
+      <div class="tab active" id="tabVideo" onclick="switchTab('video')">视频列表</div>
+      <div class="tab" id="tabCat" onclick="switchTab('cat')">类别列表</div>
+    </div>
+    <button class="btn btnp" id="btnAddVideo" onclick="openVideoDlg()">＋ 新增视频</button>
+    <button class="btn btnp" id="btnAddCat" style="display:none" onclick="openCatDlg()">＋ 新增类别</button>
   </div>
-  <div class="pa">
-    <button class="btn btn-plain" onclick="previewGuide()">👁 预览指引</button>
+
+  <!-- ===== 视频列表(线上列结构:排序/序号/类别/标题/简介/视频链接/操作) ===== -->
+  <div id="paneVideo">
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:48px"></th>
+            <th style="width:48px">序号</th>
+            <th style="width:150px">类别</th>
+            <th>标题</th>
+            <th>简介</th>
+            <th>视频链接</th>
+            <th style="width:170px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="videoBody"></tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- ===== 类别列表(线上未截取到明细,按同风格补齐:排序/序号/类别名称/视频数/操作) ===== -->
+  <div id="paneCat" style="display:none">
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:48px"></th>
+            <th style="width:48px">序号</th>
+            <th class="tl">类别名称</th>
+            <th style="width:100px">视频数</th>
+            <th style="width:130px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="catBody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
-<div class="layout">
-
-  <!-- 左侧功能设置菜单 -->
-  <aside class="side-menu">
-    <div class="sm-title">功能设置</div>
-    <div class="sm-item active" id="navGuide" onclick="switchPane('guide')">
-      <span class="sm-item-icon">🎬</span>操作指引内容
-    </div>
-    <div class="sm-item" id="navAnn" onclick="switchPane('ann')">
-      <span class="sm-item-icon">📢</span>公告管理
-    </div>
-  </aside>
-
-  <div class="main-col">
-
-    <!-- 操作指引内容管理面板 -->
-    <div class="adm-pane active panel" id="admGuidePaneFull">
-      <!-- 内部 Tab:视频列表 / 类别管理 -->
-      <div class="tabs">
-        <div class="tab active" id="admInnerTabVideo" onclick="switchGuideTab('video')">视频列表</div>
-        <div class="tab" id="admInnerTabCat" onclick="switchGuideTab('cat')">类别管理</div>
-      </div>
-
-      <!-- 视频列表 -->
-      <div id="admSubVideo">
-        <div class="pane-hd">
-          <div class="pane-hd-title">视频列表管理</div>
-          <button class="btn btnp" onclick="openVideoModal()">＋ 添加视频</button>
-        </div>
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:50px">序号</th>
-                <th style="width:120px">类别</th>
-                <th class="tl">视频标题</th>
-                <th class="tl">文件名</th>
-                <th style="width:110px">操作</th>
-              </tr>
-            </thead>
-            <tbody id="admTbody"></tbody>
-          </table>
-          <div class="empty" id="admEmpty" style="display:none;">
-            <span class="ei">🎬</span><span class="et">暂无视频，点击右上角"添加视频"</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 类别管理 -->
-      <div id="admSubCat" style="display:none;">
-        <div class="pane-hd">
-          <div class="pane-hd-title">类别管理</div>
-          <button class="btn btns" onclick="openAddCatModal()">＋ 新增类别</button>
-        </div>
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:50px">序号</th>
-                <th class="tl">类别名称</th>
-                <th style="width:80px">视频数</th>
-                <th style="width:110px">操作</th>
-              </tr>
-            </thead>
-            <tbody id="admCatTbody"></tbody>
-          </table>
-          <div class="empty" id="admCatEmpty" style="display:none;">
-            <span class="ei">📁</span><span class="et">暂无类别，点击右上角"新增类别"</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 公告管理面板 -->
-    <div class="adm-pane panel" id="admAnnPane">
-      <div class="ann-wrap">
-        <div class="sec">
-          <div class="sec-title">公告内容配置</div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">启用公告</div>
-              <div class="toggle-sub">关闭后前台不显示任何公告</div>
-            </div>
-            <span class="switch on" id="annEnabled" onclick="this.classList.toggle('on')"></span>
-          </div>
-          <div class="frm-row">
-            <label class="frm-label">公告类型<span class="req">*</span></label>
-            <select id="annType">
-              <option value="update">系统更新</option>
-              <option value="feature">新功能上线</option>
-              <option value="promo">活动推广</option>
-            </select>
-          </div>
-          <div class="frm-row">
-            <label class="frm-label">公告标题<span class="req">*</span></label>
-            <input id="annTitleInput" placeholder="请输入公告标题" maxlength="30" oninput="updateCharCount('annTitleInput','annTitleCount',30)">
-            <div class="char-count"><span id="annTitleCount">0</span> / 30</div>
-          </div>
-          <div class="frm-row">
-            <label class="frm-label">公告内容<span class="req">*</span></label>
-            <textarea id="annBodyInput" placeholder="请输入公告内容" maxlength="120" oninput="updateCharCount('annBodyInput','annBodyCount',120)"></textarea>
-            <div class="char-count"><span id="annBodyCount">0</span> / 120</div>
-          </div>
-        </div>
-        <div class="sec">
-          <div class="sec-title">展示时间范围</div>
-          <div class="frm-2col">
-            <div class="frm-row">
-              <label class="frm-label">开始时间<span class="req">*</span></label>
-              <input type="datetime-local" id="annStartDate">
-            </div>
-            <div class="frm-row">
-              <label class="frm-label">结束时间<span class="req">*</span></label>
-              <input type="datetime-local" id="annEndDate">
-            </div>
-          </div>
-          <div class="frm-hint" style="margin-top:8px;">公告仅在设定时间范围内向用户展示（精确到分钟）。</div>
-        </div>
-        <div class="action-bar">
-          <button class="btn btnd" onclick="clearAnn()">清空</button>
-          <button class="btn" onclick="previewAnn()">预览效果</button>
-          <button class="btn btnp" onclick="saveAnn()">保存发布</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- 添加/编辑视频弹窗 -->
-<div class="modal" id="modalVideo">
+<!-- ===== 新增/编辑视频弹窗(线上:520px,取 消/保 存) ===== -->
+<div class="modal" id="dlgVideo">
   <div class="dialog" style="width:520px">
-    <div class="dh">
-      <span><span id="modalVideoTitle">添加视频</span> <span class="tag tin" id="modalVideoCatTag" style="margin-left:6px;"></span></span>
-      <span class="dx" onclick="$modalClose('modalVideo')">✕</span>
-    </div>
+    <div class="dh"><span id="dlgVideoTitle">添加视频</span><span class="dx" onclick="$modalClose('dlgVideo')">✕</span></div>
     <div class="db dlg-form">
       <div class="frm-row">
-        <label class="frm-label">视频标题<span class="req">*</span></label>
+        <label class="frm-label"><span class="req">*</span>类别</label>
+        <select id="fvCat"></select>
+      </div>
+      <div class="frm-row">
+        <label class="frm-label"><span class="req">*</span>标题</label>
         <input id="fvTitle" placeholder="请输入视频标题" maxlength="60">
       </div>
       <div class="frm-row">
-        <label class="frm-label">视频简介</label>
-        <textarea id="fvDesc" placeholder="简要描述视频内容（可留空）"></textarea>
+        <label class="frm-label">简介</label>
+        <textarea id="fvDesc" placeholder="请输入视频简介"></textarea>
       </div>
       <div class="frm-row">
-        <label class="frm-label">视频文件<span class="req">*</span></label>
-        <input type="file" id="fvFileInput" accept="video/*" style="display:none" onchange="onFileSelected(this)">
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fvFileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-          <div class="upload-placeholder" id="uploadPlaceholder">
-            <div class="upload-icon">🎬</div>
-            <div class="upload-main">点击选择文件 · 或将视频拖拽至此</div>
-            <div class="upload-sub">支持 mp4 / mov / avi 等格式</div>
-          </div>
-          <div class="upload-info" id="uploadInfo" style="display:none;">
-            <div style="flex:1;min-width:0;">
-              <span class="upload-file-name" id="uploadFileName"></span>
-              <span class="upload-file-size" id="uploadFileSize"></span>
-            </div>
-            <button class="upload-clear" title="重新选择" onclick="clearUpload(event)">✕</button>
-          </div>
-        </div>
-        <div class="frm-hint" id="fvFileHint">将视频文件复制到与 HTML 相同的目录后即可播放</div>
-        <input type="hidden" id="fvFile">
-      </div>
-      <div class="frm-row">
-        <label class="frm-label">所属分类<span class="req">*</span></label>
-        <select id="fvCat"></select>
+        <label class="frm-label"><span class="req">*</span>视频链接</label>
+        <input id="fvUrl" placeholder="请输入视频链接（https://…）">
       </div>
     </div>
     <div class="df">
-      <button class="btn" onclick="$modalClose('modalVideo')">取消</button>
-      <button class="btn btnp" onclick="saveVideo()">保存</button>
+      <button class="btn" onclick="$modalClose('dlgVideo')">取 消</button>
+      <button class="btn btnp" onclick="saveVideo()">保 存</button>
     </div>
   </div>
 </div>
 
-<!-- 新增/编辑类别弹窗 -->
-<div class="modal" id="modalCat">
+<!-- ===== 新增/编辑类别弹窗 ===== -->
+<div class="modal" id="dlgCat">
   <div class="dialog" style="width:420px">
-    <div class="dh"><span id="modalCatTitle">新增类别</span><span class="dx" onclick="$modalClose('modalCat')">✕</span></div>
+    <div class="dh"><span id="dlgCatTitle">新增类别</span><span class="dx" onclick="$modalClose('dlgCat')">✕</span></div>
     <div class="db dlg-form">
       <div class="frm-row">
-        <label class="frm-label">类别名称<span class="req">*</span></label>
+        <label class="frm-label"><span class="req">*</span>类别名称</label>
         <input id="fcName" placeholder="请输入类别名称" maxlength="20">
       </div>
     </div>
     <div class="df">
-      <button class="btn" onclick="$modalClose('modalCat')">取消</button>
-      <button class="btn btnp" onclick="saveCat()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 删除确认弹窗 -->
-<div class="modal" id="modalDel">
-  <div class="dialog" style="width:420px">
-    <div class="dh"><span class="text-er">确认删除</span><span class="dx" onclick="$modalClose('modalDel')">✕</span></div>
-    <div class="db">
-      <div class="confirm-msg" id="delMsg"></div>
-    </div>
-    <div class="df">
-      <button class="btn" onclick="$modalClose('modalDel')">取消</button>
-      <button class="btn btnd" id="delConfirmBtn">确认删除</button>
+      <button class="btn" onclick="$modalClose('dlgCat')">取 消</button>
+      <button class="btn btnp" onclick="saveCat()">保 存</button>
     </div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
 <script>
-/* ── 视频数据(与 guide-view.html 保持一致的分类/视频清单) ── */
-const CATEGORIES=[
-  {name:'常用集控操作',icon:'❄️',videos:[
-    {id:'D02',title:'平台访问与登录',desc:'介绍平台登录方式。',file:'【D02】集控计费平台01-如何登录平台.mp4'},
-    {id:'D03',title:'查看项目综合监控大屏',desc:'展示大屏各模块关键数据。',file:'【D03】集控计费平台02-综合大屏查看项目总览.mp4'},
-    {id:'D04',title:'查看空调详细状态',desc:'查看单台空调的运行参数。',file:'【D04】集控计费平台03-查看空调详细状态.mp4'},
-    {id:'D05',title:'单台或批量控制空调',desc:'演示如何对空调进行控制。',file:'【D05】集控计费平台04-单台&批量控制空调.mp4'},
-    {id:'D06',title:'创建定时任务',desc:'演示如何创建空调定时开关机任务。',file:'【D06】集控计费平台05-创建定时任务.mp4'},
-    {id:'D07',title:'创建群组及群组控制',desc:'演示如何将多台空调加入群组。',file:'【D07】集控计费平台06-创建群组及群组控制.mp4'},
-    {id:'D08',title:'锁定空调状态',desc:'演示如何锁定空调状态。',file:'【D08】集控计费平台07-空调状态锁定功能.mp4'},
-    {id:'D09',title:'查看开关机记录',desc:'演示如何查询空调历史记录。',file:'【D09】集控计费平台08-查看开关机记录.mp4'},
-    {id:'D10',title:'查看空调故障记录',desc:'演示如何查看空调故障告警历史。',file:'【D10】集控计费平台09-安装-故障记录.mp4'},
-    {id:'D11',title:'查看环境感知状态',desc:'演示如何查看传感器实时数据。',file:'【D11】集控计费平台10-查看环境感知状态.mp4'},
-    {id:'D19',title:'创建空调可视化布局',desc:'演示可视化管理功能。',file:'【D19】集控计费平台23-空调可视化管理.mp4'},
-  ]},
-  {name:'项目调试维护',icon:'🔧',videos:[
-    {id:'D12',title:'创建建筑物及绑定空调关系',desc:'演示如何创建建筑物结构。',file:'【D12】集控计费平台11-项目设置页.mp4'},
-    {id:'D13',title:'自定义空调名称',desc:'演示如何修改空调设备的显示名称。',file:'【D13】集控计费平台12-空调名称自定义.mp4'},
-    {id:'D14',title:'添加网关设备',desc:'演示如何在平台中添加新的网关设备。',file:'【D14】集控计费平台13-添加网关设备.mp4'},
-    {id:'D15',title:'添加子账户',desc:'演示如何创建子账户。',file:'【D15】集控计费平台14-添加子账户.mp4'},
-    {id:'D24',title:'添加传感器',desc:'演示如何在平台中添加环境传感器。',file:'【D24】集控计费平台17-添加传感器.mp4'},
-    {id:'D25',title:'添加电表',desc:'演示如何在平台中添加电表设备。',file:'【D25】集控计费平台18-添加电表.mp4'},
-  ]},
-  {name:'节能策略相关',icon:'♻️',videos:[
-    {id:'D16',title:'创建环境感知联动策略',desc:'演示如何创建自动联动策略。',file:'【D16】集控计费平台15-创建环境感知联动策略.mp4'},
-    {id:'D17',title:'创建极致节能策略',desc:'演示如何创建极致节能运行策略。',file:'【D17】集控计费平台16-创建极致节能策略.mp4'},
-  ]},
-  {name:'分户计费相关',icon:'💰',videos:[
-    {id:'D20',title:'查询电费账单',desc:'演示如何查询各租户的月度电费账单。',file:'【D20】集控计费平台19-查询电费账单.mp4'},
-    {id:'D21',title:'查询费用明细',desc:'演示如何查看租户用电明细。',file:'【D21】集控计费平台20-查看详情用电情况.mp4'},
-    {id:'D22',title:'设定电价',desc:'演示如何为项目设置分时电价方案。',file:'【D22】集控计费平台21-设定电价.mp4'},
-    {id:'D23',title:'维护租户信息',desc:'演示如何添加、编辑、删除租户信息。',file:'【D23】集控计费平台22-租户管理.mp4'},
-  ]},
+/* ── 类别顺序(与线上一致) ── */
+let CATS=['常用集控操作','项目调试维护','节能策略相关','分户计费相关'];
+
+/* ── 视频数据(23 条,标题/简介/链接均取自线上真实页面) ── */
+const U=id=>`https://oss2.feiyikj.cn/sv/${id}/${id}.mp4`;
+let VIDEOS=[
+  {cat:'常用集控操作',title:'平台访问与登录',desc:'介绍平台登录方式，包括账号密码登录和手机号登录，以及首次登录的操作步骤。',url:U('3baa3721-19ed36cad49')},
+  {cat:'常用集控操作',title:'查看项目综合监控大屏',desc:'展示大屏各模块关键数据，包含空调运行状态统计、项目总览、能耗趋势及日使用详情等。',url:U('5c68801-19ed3550ada')},
+  {cat:'常用集控操作',title:'查看空调详细状态',desc:'演示如何进入空调详情页，查看单台空调的运行参数、温度设定、模式及风速等状态信息。',url:U('62b4bbdd-19ed38bf975')},
+  {cat:'常用集控操作',title:'单台或批量控制空调',desc:'演示如何对单台空调进行开关机、调温等控制，以及如何批量统一控制多台空调。',url:U('e5cdde5-19ed35523f9')},
+  {cat:'常用集控操作',title:'创建定时任务',desc:'演示如何创建空调定时开关机任务，支持按周循环、指定时间段等灵活配置。',url:U('61eb299f-19ed38bf977')},
+  {cat:'常用集控操作',title:'创建群组及群组控制',desc:'演示如何将多台空调加入群组，并通过群组一键统一控制，提升管理效率。',url:U('2ac87f31-19ed38bf98f')},
+  {cat:'常用集控操作',title:'锁定空调状态',desc:'演示如何锁定空调状态，防止其他用户修改，适用于需要保持特定运行状态的场景。',url:U('2f3f5750-19ed355635e')},
+  {cat:'常用集控操作',title:'查看开关机记录',desc:'演示如何查询空调的历史开关机操作记录，了解空调使用情况与操作日志。',url:U('64b5dfc5-19ed38bf975')},
+  {cat:'常用集控操作',title:'查看空调故障记录',desc:'演示如何查看空调故障告警历史，包括故障类型、发生时间及处理状态。',url:U('5026fc51-19ed35582f6')},
+  {cat:'常用集控操作',title:'查看环境感知状态',desc:'演示如何在平台中查看各环境传感器的实时数据，如温度、湿度、CO₂浓度等。',url:U('1513796d-19ed355b4b8')},
+  {cat:'常用集控操作',title:'创建空调可视化布局',desc:'演示如何使用空调可视化管理功能，在平面图上查看并控制各区域空调设备。',url:U('59b8c66f-19ed3546022')},
+  {cat:'项目调试维护',title:'创建建筑物并绑定空调关系',desc:'演示如何在项目设置中创建建筑物结构，并将空调设备与楼层、区域进行绑定。',url:U('4f3659b1-19ed355bd9e')},
+  {cat:'项目调试维护',title:'自定义空调名称',desc:'演示如何修改空调设备的显示名称，便于现场对应识别与日常管理。',url:U('80b7b8b-19ed355c50b')},
+  {cat:'项目调试维护',title:'添加网关设备',desc:'演示如何在平台中添加新的网关设备，完成配网并与项目绑定。',url:U('4f044dc3-19ed38c405b')},
+  {cat:'项目调试维护',title:'添加子账户',desc:'演示如何创建子账户，并为其分配可管理的项目及功能权限。',url:U('4a830e12-19ed38c42c2')},
+  {cat:'项目调试维护',title:'添加传感器',desc:'演示如何在平台中添加环境传感器，完成配置并与空调联动策略绑定。',url:U('853daab-19ed354afff')},
+  {cat:'项目调试维护',title:'添加电表',desc:'演示如何在平台中添加电表设备，完成通信配置并与计费系统关联。',url:U('38ad8e94-19ed354beda')},
+  {cat:'节能策略相关',title:'创建环境感知联动策略',desc:'演示如何根据传感器数据（温度、湿度等）创建自动联动策略，实现空调智能调节。',url:U('5fe15e66-19ed38c4606')},
+  {cat:'节能策略相关',title:'创建极致节能策略',desc:'演示如何创建极致节能运行策略，通过参数优化在保证舒适度的同时最大化节能效果。',url:U('662bd7cf-19ed38bf975')},
+  {cat:'分户计费相关',title:'查询电费账单',desc:'演示如何查询各租户的月度电费账单，支持按项目、日期范围筛选查看。',url:U('1c17c100-19ed3546018')},
+  {cat:'分户计费相关',title:'查询费用明细',desc:'演示如何查看租户用电明细，包括分时用电量、空调用电占比等详细统计数据。',url:U('63371d41-19ed354602c')},
+  {cat:'分户计费相关',title:'设定电价',desc:'演示如何为项目设置分时电价方案，支持峰谷平电价及自定义时段配置。',url:U('461f921e-19ed3546030')},
+  {cat:'分户计费相关',title:'维护租户信息',desc:'演示如何为项目设置分时电价方案，支持峰谷平电价及自定义时段配置。',url:U('11a22391-19ed354602b')},
 ];
-let allVideos=CATEGORIES.flatMap(c=>c.videos);
 
-function syncAll(){allVideos=CATEGORIES.flatMap(c=>c.videos);}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-/* ── 左侧菜单:面板切换(操作指引内容 / 公告管理) ── */
-function switchPane(pane){
-  ['guide','ann'].forEach(p=>{
-    document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active',p===pane);
-    document.getElementById(p==='guide'?'admGuidePaneFull':'admAnnPane').classList.toggle('active',p===pane);
-  });
-  if(pane==='guide'){renderVideoList();renderCatTable();}
-  if(pane==='ann'){loadAnnForm();}
+/* ── 标签页切换:视频列表 / 类别列表(右上按钮同步切换) ── */
+function switchTab(tab){
+  document.getElementById('tabVideo').classList.toggle('active',tab==='video');
+  document.getElementById('tabCat').classList.toggle('active',tab==='cat');
+  document.getElementById('paneVideo').style.display=tab==='video'?'block':'none';
+  document.getElementById('paneCat').style.display=tab==='cat'?'block':'none';
+  document.getElementById('btnAddVideo').style.display=tab==='video'?'':'none';
+  document.getElementById('btnAddCat').style.display=tab==='cat'?'':'none';
 }
 
-/* ── 内部 Tab 切换(视频列表 / 类别管理) ── */
-function switchGuideTab(tab){
-  document.getElementById('admInnerTabVideo').classList.toggle('active',tab==='video');
-  document.getElementById('admInnerTabCat').classList.toggle('active',tab==='cat');
-  document.getElementById('admSubVideo').style.display=tab==='video'?'block':'none';
-  document.getElementById('admSubCat').style.display=tab==='cat'?'block':'none';
-  if(tab==='cat')renderCatTable();
-}
-
-/* ── 视频列表渲染 ── */
-function renderVideoList(){
-  const tbody=document.getElementById('admTbody');
-  const empty=document.getElementById('admEmpty');
-  tbody.innerHTML='';
-  const rows=CATEGORIES.flatMap((cat,ci)=>cat.videos.map((v,i)=>({v,i,cat,ci})));
-  if(rows.length===0){empty.style.display='flex';return;}
-  empty.style.display='none';
-  let seq=0;
-  rows.forEach(({v,i,cat,ci})=>{
-    seq++;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${seq}</td>
-      <td style="font-size:12.5px;color:var(--ts);white-space:nowrap;">${cat.name}</td>
-      <td class="tl td-title">${v.title}</td>
-      <td class="tl td-file" title="${v.file}">${v.file}</td>
+/* ── 视频列表渲染(首列为上移/下移排序按钮,模拟线上拖拽排序) ── */
+function renderVideos(){
+  document.getElementById('videoBody').innerHTML=VIDEOS.length?VIDEOS.map((v,i)=>`
+    <tr>
+      <td><span class="sort-cell">
+        <button class="sort-btn" title="上移" ${i===0?'disabled':''} onclick="moveVideo(${i},-1)">▲</button>
+        <button class="sort-btn" title="下移" ${i===VIDEOS.length-1?'disabled':''} onclick="moveVideo(${i},1)">▼</button>
+      </span></td>
+      <td>${i+1}</td>
+      <td>${esc(v.cat)}</td>
+      <td>${esc(v.title)}</td>
+      <td class="td-clip tl" title="${esc(v.desc)}"><div class="clip">${esc(v.desc)}</div></td>
+      <td class="td-link tl" title="${esc(v.url)}"><div class="clip">${esc(v.url)}</div></td>
       <td><span class="op">
-        <a onclick="openVideoModal('${v.id}')">编辑</a>
-        <a class="danger" onclick="confirmDelVideo('${v.id}')">删除</a>
-      </span></td>`;
-    tbody.appendChild(tr);
-  });
+        <a onclick="copyLink(${i})">复制链接</a>
+        <a onclick="openVideoDlg(${i})">编辑</a>
+        <a class="danger" onclick="delVideo(${i})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="7"><div class="empty"><span class="ei">🎬</span><span class="et">暂无数据</span></div></td></tr>';
 }
 
-let editingVideoId=null;
-let pendingFile=null;
+/* ── 排序:上移/下移交换相邻行 ── */
+function moveVideo(i,dir){
+  const j=i+dir;if(j<0||j>=VIDEOS.length)return;
+  [VIDEOS[i],VIDEOS[j]]=[VIDEOS[j],VIDEOS[i]];
+  renderVideos();$msg('排序已调整','success');
+}
 
-/* ── 添加/编辑视频弹窗 ── */
-function openVideoModal(id){
-  editingVideoId=id||null;
-  const catSel=document.getElementById('fvCat');
-  catSel.innerHTML='';
-  CATEGORIES.forEach((c,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=c.name;catSel.appendChild(opt);});
-  if(id){
-    const v=allVideos.find(v=>v.id===id);
-    const ci=CATEGORIES.findIndex(c=>c.videos.some(vv=>vv.id===id));
-    document.getElementById('modalVideoTitle').textContent='编辑视频';
-    document.getElementById('modalVideoCatTag').textContent=CATEGORIES[ci]?.name||'';
-    document.getElementById('modalVideoCatTag').style.display='';
+/* ── 复制链接 ── */
+function copyLink(i){
+  const url=VIDEOS[i].url;
+  const done=()=>$msg('链接已复制','success');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>fallbackCopy(url,done));}
+  else fallbackCopy(url,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){$msg('复制失败','error');}
+  ta.remove();
+}
+
+/* ── 新增/编辑视频弹窗 ── */
+let editVideoIdx=null;
+function openVideoDlg(i){
+  editVideoIdx=(i===undefined)?null:i;
+  const sel=document.getElementById('fvCat');
+  sel.innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join('');
+  document.getElementById('dlgVideoTitle').textContent=editVideoIdx===null?'添加视频':'编辑视频';
+  if(editVideoIdx!==null){
+    const v=VIDEOS[editVideoIdx];
+    sel.value=v.cat;
     document.getElementById('fvTitle').value=v.title;
     document.getElementById('fvDesc').value=v.desc;
-    document.getElementById('fvFile').value=v.file;
-    document.getElementById('fvFileHint').textContent='当前文件：'+v.file+' · 重新选择将覆盖';
-    resetUpload();catSel.value=ci;
-  } else {
-    document.getElementById('modalVideoTitle').textContent='添加视频';
-    document.getElementById('modalVideoCatTag').textContent='';
-    document.getElementById('modalVideoCatTag').style.display='none';
-    ['fvTitle','fvDesc','fvFile'].forEach(k=>document.getElementById(k).value='');
-    document.getElementById('fvFileHint').textContent='将视频文件复制到与 HTML 相同的目录后即可播放';
-    resetUpload();if(CATEGORIES.length>0)catSel.value='0';
+    document.getElementById('fvUrl').value=v.url;
+  }else{
+    sel.value=CATS[0];
+    ['fvTitle','fvDesc','fvUrl'].forEach(id=>document.getElementById(id).value='');
   }
-  $modal('modalVideo');
+  $modal('dlgVideo');
 }
-
 function saveVideo(){
+  const cat=document.getElementById('fvCat').value;
   const title=document.getElementById('fvTitle').value.trim();
   const desc=document.getElementById('fvDesc').value.trim();
-  const file=document.getElementById('fvFile').value.trim();
-  const ci=parseInt(document.getElementById('fvCat').value);
-  if(!title)return $msg('请填写视频标题','error');
-  if(!file)return $msg('请填写或选择视频文件','error');
-  if(isNaN(ci))return $msg('请选择分类','error');
-  if(editingVideoId){
-    const oldCi=CATEGORIES.findIndex(c=>c.videos.some(v=>v.id===editingVideoId));
-    const v=CATEGORIES[oldCi].videos.find(v=>v.id===editingVideoId);
-    v.title=title;v.desc=desc;v.file=file;
-    if(oldCi!==ci){CATEGORIES[oldCi].videos=CATEGORIES[oldCi].videos.filter(v=>v.id!==editingVideoId);CATEGORIES[ci].videos.push(v);}
-    $msg('视频已更新','success');
-  } else {
-    const newId='V'+Date.now().toString(36).toUpperCase();
-    CATEGORIES[ci].videos.push({id:newId,title,desc,file});
-    $msg('视频已添加','success');
-  }
-  pendingFile=null;syncAll();$modalClose('modalVideo');renderVideoList();renderCatTable();
+  const url=document.getElementById('fvUrl').value.trim();
+  if(!title)return $msg('请输入标题','error');
+  if(!url)return $msg('请输入视频链接','error');
+  if(editVideoIdx===null){VIDEOS.push({cat,title,desc,url});$msg('新增成功','success');}
+  else{Object.assign(VIDEOS[editVideoIdx],{cat,title,desc,url});$msg('保存成功','success');}
+  $modalClose('dlgVideo');renderVideos();renderCats();
 }
 
 /* ── 删除视频(二次确认) ── */
-function confirmDelVideo(id){
-  const v=allVideos.find(v=>v.id===id);
-  document.getElementById('delMsg').innerHTML=`确定要删除视频 <strong>${v?v.title:id}</strong> 吗？此操作无法撤销。`;
-  document.getElementById('delConfirmBtn').onclick=()=>{
-    for(const cat of CATEGORIES){const before=cat.videos.length;cat.videos=cat.videos.filter(v=>v.id!==id);if(cat.videos.length<before)break;}
-    syncAll();$modalClose('modalDel');renderVideoList();renderCatTable();$msg('视频已删除','success');
-  };
-  $modal('modalDel');
-}
-
-/* ── 类别管理 ── */
-function renderCatTable(){
-  const tbody=document.getElementById('admCatTbody');
-  const empty=document.getElementById('admCatEmpty');
-  tbody.innerHTML='';
-  if(CATEGORIES.length===0){empty.style.display='flex';return;}
-  empty.style.display='none';
-  CATEGORIES.forEach((cat,idx)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${idx+1}</td>
-      <td class="tl td-title">${cat.name}</td>
-      <td>${cat.videos.length}</td>
-      <td><span class="op">
-        <a onclick="editCat(${idx})">编辑</a>
-        <a class="danger" onclick="confirmDelCat(${idx},event)">删除</a>
-      </span></td>`;
-    tbody.appendChild(tr);
+function delVideo(i){
+  $confirm('确定删除视频「'+VIDEOS[i].title+'」吗？',()=>{
+    VIDEOS.splice(i,1);renderVideos();renderCats();$msg('删除成功','success');
   });
 }
 
-function openAddCatModal(){
-  document.getElementById('modalCatTitle').textContent='新增类别';
-  document.getElementById('fcName').value='';
-  delete document.getElementById('modalCat').dataset.editIdx;
-  $modal('modalCat');
+/* ── 类别列表渲染 ── */
+function renderCats(){
+  document.getElementById('catBody').innerHTML=CATS.length?CATS.map((c,i)=>`
+    <tr>
+      <td><span class="sort-cell">
+        <button class="sort-btn" title="上移" ${i===0?'disabled':''} onclick="moveCat(${i},-1)">▲</button>
+        <button class="sort-btn" title="下移" ${i===CATS.length-1?'disabled':''} onclick="moveCat(${i},1)">▼</button>
+      </span></td>
+      <td>${i+1}</td>
+      <td class="tl">${esc(c)}</td>
+      <td>${VIDEOS.filter(v=>v.cat===c).length}</td>
+      <td><span class="op">
+        <a onclick="openCatDlg(${i})">编辑</a>
+        <a class="danger" onclick="delCat(${i})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="5"><div class="empty"><span class="ei">📁</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function moveCat(i,dir){
+  const j=i+dir;if(j<0||j>=CATS.length)return;
+  [CATS[i],CATS[j]]=[CATS[j],CATS[i]];
+  renderCats();$msg('排序已调整','success');
 }
 
-function editCat(idx){
-  document.getElementById('modalCatTitle').textContent='编辑类别';
-  document.getElementById('fcName').value=CATEGORIES[idx].name;
-  document.getElementById('modalCat').dataset.editIdx=idx;
-  $modal('modalCat');
+/* ── 新增/编辑类别弹窗 ── */
+let editCatIdx=null;
+function openCatDlg(i){
+  editCatIdx=(i===undefined)?null:i;
+  document.getElementById('dlgCatTitle').textContent=editCatIdx===null?'新增类别':'编辑类别';
+  document.getElementById('fcName').value=editCatIdx===null?'':CATS[editCatIdx];
+  $modal('dlgCat');
 }
-
 function saveCat(){
   const name=document.getElementById('fcName').value.trim();
-  if(!name){$msg('请输入类别名称','error');return;}
-  const editIdx=document.getElementById('modalCat').dataset.editIdx;
-  if(editIdx!==undefined){CATEGORIES[parseInt(editIdx)].name=name;$msg('类别已更新','success');}
-  else{CATEGORIES.push({name,icon:'📁',videos:[]});$msg('类别已添加','success');}
-  syncAll();renderCatTable();renderVideoList();$modalClose('modalCat');
+  if(!name)return $msg('请输入类别名称','error');
+  if(CATS.some((c,i)=>c===name&&i!==editCatIdx))return $msg('类别名称已存在','error');
+  if(editCatIdx===null){CATS.push(name);$msg('新增成功','success');}
+  else{
+    const old=CATS[editCatIdx];CATS[editCatIdx]=name;
+    VIDEOS.forEach(v=>{if(v.cat===old)v.cat=name;}); // 同步更新视频所属类别名
+    $msg('保存成功','success');
+  }
+  $modalClose('dlgCat');renderCats();renderVideos();
 }
 
-function confirmDelCat(idx,e){
-  if(e)e.stopPropagation();
-  const cat=CATEGORIES[idx];
-  document.getElementById('delMsg').innerHTML=`确定要删除类别 <strong>${cat.name}</strong> 吗？<br>该类别下 <strong>${cat.videos.length}</strong> 个视频将一并删除，操作无法撤销。`;
-  document.getElementById('delConfirmBtn').onclick=()=>{
-    CATEGORIES.splice(idx,1);syncAll();$modalClose('modalDel');renderCatTable();renderVideoList();$msg('类别已删除','success');
-  };
-  $modal('modalDel');
-}
-
-/* ── 上传区交互(点击选择 / 拖拽放置 / 清除) ── */
-function onFileSelected(input){const f=input.files&&input.files[0];if(f)applyFile(f);}
-function applyFile(f){
-  pendingFile=f;
-  document.getElementById('uploadZone').classList.add('has-file');
-  document.getElementById('uploadPlaceholder').style.display='none';
-  document.getElementById('uploadInfo').style.display='flex';
-  document.getElementById('uploadFileName').textContent=f.name;
-  document.getElementById('uploadFileSize').textContent=formatSize(f.size);
-  document.getElementById('fvFile').value=f.name;
-}
-function clearUpload(e){e.stopPropagation();pendingFile=null;resetUpload();document.getElementById('fvFileInput').value='';if(editingVideoId){const v=allVideos.find(v=>v.id===editingVideoId);if(v)document.getElementById('fvFile').value=v.file;}else{document.getElementById('fvFile').value='';}}
-function resetUpload(){pendingFile=null;const z=document.getElementById('uploadZone');z.classList.remove('has-file','drag-over');document.getElementById('uploadPlaceholder').style.display='flex';document.getElementById('uploadInfo').style.display='none';}
-function onDragOver(e){e.preventDefault();document.getElementById('uploadZone').classList.add('drag-over');}
-function onDragLeave(e){document.getElementById('uploadZone').classList.remove('drag-over');}
-function onDrop(e){e.preventDefault();document.getElementById('uploadZone').classList.remove('drag-over');const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)applyFile(f);}
-function formatSize(b){if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
-
-/* ── 公告管理(localStorage 键名/字段与主框架壳联动,保持不变) ── */
-const ANN_KEY='announcement_config';
-function loadAnnForm(){
-  try{const cfg=JSON.parse(localStorage.getItem(ANN_KEY)||'null');if(!cfg)return;
-  document.getElementById('annEnabled').classList.toggle('on',!!cfg.enabled);
-  document.getElementById('annType').value=cfg.type||'update';
-  document.getElementById('annTitleInput').value=cfg.title||'';
-  document.getElementById('annBodyInput').value=cfg.body||'';
-  document.getElementById('annStartDate').value=cfg.startDate||'';
-  document.getElementById('annEndDate').value=cfg.endDate||'';
-  updateCharCount('annTitleInput','annTitleCount',30);updateCharCount('annBodyInput','annBodyCount',120);
-  }catch(e){}
-}
-function saveAnn(){
-  const title=document.getElementById('annTitleInput').value.trim();
-  const body=document.getElementById('annBodyInput').value.trim();
-  const start=document.getElementById('annStartDate').value;
-  const end=document.getElementById('annEndDate').value;
-  if(!title)return $msg('请填写公告标题','error');
-  if(!body)return $msg('请填写公告内容','error');
-  if(!start||!end)return $msg('请设置展示时间范围','error');
-  if(start>end)return $msg('结束时间不能早于开始时间','error');
-  const cfg={id:'ann_'+Date.now(),enabled:document.getElementById('annEnabled').classList.contains('on'),type:document.getElementById('annType').value,title,body,startDate:start,endDate:end};
-  localStorage.setItem(ANN_KEY,JSON.stringify(cfg));
-  $msg('公告已保存发布','success');
-}
-function clearAnn(){
-  localStorage.removeItem(ANN_KEY);
-  ['annTitleInput','annBodyInput','annStartDate','annEndDate'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('annEnabled').classList.add('on');document.getElementById('annType').value='update';
-  updateCharCount('annTitleInput','annTitleCount',30);updateCharCount('annBodyInput','annBodyCount',120);
-  $msg('公告配置已清空','success');
-}
-function previewAnn(){$msg('预览功能：请在前台页面查看实际展示效果','info');}
-function updateCharCount(inId,cntId,max){
-  const len=document.getElementById(inId).value.length;
-  const el=document.getElementById(cntId);el.textContent=len;
-  el.style.color=len>=max?'var(--er)':'';
-}
-
-/* ── 跳转预览(优先走主框架壳导航,独立打开时新开窗口) ── */
-function previewGuide(){
-  try{if(window.parent&&window.parent.nav){window.parent.nav('guide-view');return;}}catch(e){}
-  window.open('guide-view.html','_blank');
+/* ── 删除类别(其下视频一并删除,二次确认) ── */
+function delCat(i){
+  const n=VIDEOS.filter(v=>v.cat===CATS[i]).length;
+  $confirm('确定删除类别「'+CATS[i]+'」吗？其下 '+n+' 个视频将一并删除。',()=>{
+    const name=CATS[i];CATS.splice(i,1);
+    VIDEOS=VIDEOS.filter(v=>v.cat!==name);
+    renderCats();renderVideos();$msg('删除成功','success');
+  });
 }
 
 /* ── 初始化 ── */
-renderVideoList();
+renderVideos();
+renderCats();
 </script>
 </body>
 </html>

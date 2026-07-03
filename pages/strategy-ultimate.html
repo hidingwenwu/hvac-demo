@@ -91,19 +91,18 @@
   <button class="btn" onclick="doReset()">重置</button>
 </div>
 
-<!-- 操作按钮:创建(原版) + 同步(线上通用元素,合并保留) -->
+<!-- 操作按钮(策略由平台维护并执行,设备侧仅执行空调控制动作,无需同步) -->
 <div class="toolbar">
   <button class="btn btnp" onclick="openTask('new')">＋ 创建节能任务</button>
-  <button class="btn btnp" onclick="syncTasks()">⟳ 同步</button>
 </div>
 
-<!-- 节能任务表格(原版列 + 同步状态列) -->
+<!-- 节能任务表格 -->
 <div class="tw">
   <table>
     <thead><tr>
       <th style="width:44px"><input type="checkbox" id="ckAll" onclick="checkAll(this)"></th>
       <th>节能任务名称</th><th>执行时间</th><th>有效日期</th><th>指令动作</th>
-      <th>任务状态</th><th>同步状态</th><th>创建时间</th><th style="width:220px">操作</th>
+      <th>任务状态</th><th>创建时间</th><th style="width:220px">操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -161,7 +160,6 @@
                 <div class="muted">启用后，平台在任务有效日期、周运行时间和每日执行时间范围内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
               </div>
               <div class="form-line" style="margin-top:12px">
-                <div class="form-item"><span class="fl">开关机状态</span><select id="power" onchange="updatePreview()"><option>开机</option><option>关机</option></select></div>
                 <div class="form-item"><span class="fl">空调模式</span><select id="mode" onchange="updatePreview()"><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>自动</option></select></div>
                 <div class="form-item"><span class="fl">温度设置（16-30℃）</span><input id="temp" type="number" min="16" max="30" step="0.5" value="26" oninput="updatePreview()"></div>
                 <div class="form-item"><span class="fl">风速设置</span><select id="fan" onchange="updatePreview()"><option>自动</option><option>低</option><option>中</option><option selected>高</option></select></div>
@@ -198,10 +196,10 @@
 /* ══════════ 模拟数据(原版两条样例任务) ══════════ */
 let TASKS=[
   {name:'午休时段定时节能',ts:'12:00',te:'14:00',iv:15,start:'2026-07-01',end:'2026-12-31',
-   status:'启用',sync:true,crt:'2026-07-02 09:20:16',power:'开机',mode:'制冷',temp:'26',fan:'高',
+   status:'启用',crt:'2026-07-02 09:20:16',mode:'制冷',temp:'26',fan:'高',
    week:[1,1,1,1,1,0,0],rooms:['801会议室','803会议室','产品部','运营部','901会议室','903会议室','技术部','研发部']},
   {name:'深夜恒温控制',ts:'22:00',te:'23:45',iv:30,start:'2026-07-06',end:'2026-12-31',
-   status:'启用',sync:false,crt:'2026-07-01 18:05:43',power:'开机',mode:'制冷',temp:'27',fan:'低',
+   status:'启用',crt:'2026-07-01 18:05:43',mode:'制冷',temp:'27',fan:'低',
    week:[1,1,1,1,1,1,1],rooms:['901会议室','903会议室','技术部','研发部']},
 ];
 
@@ -236,7 +234,6 @@ function renderTable(){
       <td>${r.start} 至 ${r.end}</td>
       <td><span class="tag thl">空调控制</span></td>
       <td><span class="tag ${r.status==='启用'?'tok':'tin'}">${r.status}</span></td>
-      <td><span class="tag ${r.sync?'tok':'twn'}">${r.sync?'已同步':'未同步'}</span></td>
       <td>${r.crt}</td>
       <td><span class="op">
         <a onclick="viewTask(${i})">查看</a>
@@ -246,21 +243,11 @@ function renderTable(){
         <a class="danger" onclick="deleteTask(${i})">删除</a>
       </span></td>
     </tr>`;}).join('')
-    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 function checkAll(el){document.querySelectorAll('.ck').forEach(c=>c.checked=el.checked);}
 function deleteTask(i){
   $confirm(`确定删除节能任务「${TASKS[i].name}」吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});
-}
-/* 同步(线上通用能力,合并保留):勾选行同步,未勾选则同步全部未同步任务 */
-function syncTasks(){
-  const sel=[...document.querySelectorAll('.ck:checked')].map(c=>+c.dataset.i);
-  const targets=sel.length?sel:TASKS.map((_,i)=>i).filter(i=>!TASKS[i].sync);
-  if(!targets.length){$msg('当前任务均已同步','info');return;}
-  $confirm(`确定将 ${targets.length} 个节能任务同步下发吗？`,()=>{
-    targets.forEach(i=>TASKS[i].sync=true);
-    renderTable();$msg('同步成功');
-  });
 }
 
 /* ══════════ 房间选择树(楼栋/楼层/房间三级勾选,原版结构) ══════════ */
@@ -349,9 +336,7 @@ function updatePreview(){
   const s=minutesFromTime(start),e=minutesFromTime(end);
   const points=[];
   if(e>s){for(let t=s;t<e&&points.length<12;t+=interval) points.push(fmt(t));}
-  const command=document.getElementById('power').value==='关机'
-    ?'关机'
-    :`${document.getElementById('mode').value}模式 ${document.getElementById('temp').value||'--'}℃ ${document.getElementById('fan').value}风`;
+  const command=`${document.getElementById('mode').value}模式 ${document.getElementById('temp').value||'--'}℃ ${document.getElementById('fan').value}风`;
   box.innerHTML=`<b>执行计划预览</b><br>
     <b>任务名称：</b>${document.getElementById('taskName').value||'未命名任务'}<br>
     <b>执行范围：</b>已选 ${picked.size} 个房间 / 约 ${picked.size*3} 台空调<br>
@@ -374,7 +359,6 @@ function openTask(mode,i){
   document.getElementById('startTime').value=r?r.ts:'12:00';
   document.getElementById('endTime').value=r?r.te:'14:00';
   document.getElementById('interval').value=r?r.iv:15;
-  document.getElementById('power').value=r?r.power:'开机';
   document.getElementById('mode').value=r?r.mode:'制冷';
   document.getElementById('temp').value=r?r.temp:'26';
   document.getElementById('fan').value=r?r.fan:'高';
@@ -408,7 +392,7 @@ function validateTask(){
   if(minutesFromTime(document.getElementById('endTime').value)<=minutesFromTime(document.getElementById('startTime').value)) errors.push('执行结束时间必须晚于开始时间');
   if(document.getElementById('startDate').value>document.getElementById('endDate').value) errors.push('执行结束日期不能早于开始日期');
   if(!numberInRange(document.getElementById('interval').value,1,1440,0)) errors.push('下发间隔请输入 1-1440 分钟的整数');
-  if(document.getElementById('power').value==='开机'&&!numberInRange(document.getElementById('temp').value,16,30,1)) errors.push('温度设置请输入 16-30℃，最多保留 1 位小数');
+  if(!numberInRange(document.getElementById('temp').value,16,30,1)) errors.push('温度设置请输入 16-30℃，最多保留 1 位小数');
   const box=document.getElementById('formErrors');
   if(errors.length){
     box.innerHTML=`表单校验失败，请修正以下问题：<br>${errors.map(e=>'• '+e).join('<br>')}`;
@@ -425,8 +409,8 @@ function collectTask(status){
     ts:document.getElementById('startTime').value,te:document.getElementById('endTime').value,
     iv:+document.getElementById('interval').value,
     start:document.getElementById('startDate').value,end:document.getElementById('endDate').value,
-    status:status||document.getElementById('taskStatus').value,sync:false,
-    power:document.getElementById('power').value,mode:document.getElementById('mode').value,
+    status:status||document.getElementById('taskStatus').value,
+    mode:document.getElementById('mode').value,
     temp:document.getElementById('temp').value,fan:document.getElementById('fan').value,
     week:weekOn.slice(),rooms:[...picked],
   };
