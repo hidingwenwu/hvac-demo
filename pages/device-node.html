@@ -1,1 +1,153 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>节点管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">节点管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">节点名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">所属控制器</div><select style="width:140px"><option value="">全部</option><option>CTR001</option><option>CTR002</option><option>CTR003</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>节点名称</th><th>所属控制器</th><th>节点类型</th><th>节点地址</th><th>数据类型</th><th>在线状态</th><th>操作</th></tr></thead><tbody><tr><td>NODE-CTR001-01</td><td>CTR001</td><td>温度节点</td><td>0x01</td><td>Float</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>NODE-CTR001-02</td><td>CTR001</td><td>开关节点</td><td>0x02</td><td>Bool</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>NODE-CTR002-01</td><td>CTR002</td><td>温度节点</td><td>0x01</td><td>Float</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>NODE-CTR003-01</td><td>CTR003</td><td>模式节点</td><td>0x03</td><td>Int</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>NODE-CTR004-01</td><td>CTR004</td><td>温度节点</td><td>0x01</td><td>Float</td><td><span class="tag ter">离线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>节点管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-content:start;}
+.card{background:var(--bg-panel);border-radius:8px;padding:10px 14px 12px;}
+.card-hd{display:flex;justify-content:flex-end;margin-bottom:2px;}
+.card-edit{color:#8f9bb3;cursor:pointer;line-height:0;padding:2px;}
+.card-edit:hover{color:var(--primary);}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;line-height:22px;}
+.kv .k{color:var(--ts);white-space:nowrap;}
+.kv .v{color:var(--tx);text-align:right;word-break:break-all;}
+.card-ft{display:flex;justify-content:flex-end;margin-top:10px;}
+.card-ft .btn{height:26px;padding:0 12px;font-size:12px;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+</style>
+</head>
+<body>
+<!-- 筛选栏 -->
+<div class="fb">
+  <div class="fi"><span class="fl">主机信息列表</span>
+    <select id="fHost" style="width:280px"><option value="">请选择</option></select>
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+</div>
+
+<!-- 节点卡片网格 -->
+<div class="cards" id="cards"></div>
+<div id="pager"></div>
+
+<!-- 节点详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>节点详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 编辑节点弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:440px">
+    <div class="dh"><span>编辑节点</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db" style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+      <div class="form-row"><span class="fl">设备编码</span><span class="flex1" style="font-size:12px;color:var(--ts);word-break:break-all" id="eCode"></span></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>空调品牌</span>
+        <select id="eBrand" class="flex1"><option>自动识别</option><option>美的</option><option>海信</option><option>海尔</option><option>格力</option><option>大金</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取消</button>
+      <button class="btn btnp" onclick="saveEdit()">提交</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 主机列表(与控制器管理一致) ── */
+const HOSTS=[
+  {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',cid:7},
+  {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',cid:6},
+  {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',cid:5},
+  {name:'B2-6-10层抄表器',code:'a176334174880a5db4679c9e6ea66b30',cid:4},
+  {name:'B2-3-5层抄表器',code:'aec0109604dd731c62659c9e6ee291b4',cid:3},
+  {name:'B2-1',code:'fa000001400001240240614000100379',cid:2},
+  {name:'B2-2',code:'fa000001400001240240614000100343',cid:1}
+];
+
+/* ── 模拟节点数据(共14条,与线上形态一致) ── */
+const NODES=[
+  {code:'861d5345da5643d49dbd9c9e6edf7370',cid:5,ncid:1,ver:'18.41.0.0.102',st:'空调搜索进行中',brand:'美的',commTime:'2025-06-27 21:10:08'},
+  {code:'aec0109604dd731c62659c9e6ee291b4',cid:3,ncid:1,ver:'18.41.0.0.105',st:'空调搜索进行中',brand:'美的',commTime:'2025-06-28 17:00:45'},
+  {code:'a176334174880a5db4679c9e6ea66b30',cid:4,ncid:3,ver:'18.127.0.0.18',st:'空调搜索进行中',brand:'海信',commTime:'2025-06-27 20:51:57'},
+  {code:'a176334174880a5db4679c9e6ea66b30',cid:4,ncid:2,ver:'18.127.0.0.18',st:'空调搜索进行中',brand:'海信',commTime:'2025-06-27 20:51:57'},
+  {code:'275b647a7878e52540b69c9e6ee02b4c',cid:6,ncid:1,ver:'18.132.0.0.9',st:'空调搜索进行中',brand:'自动识别',commTime:'2025-06-27 11:23:01'},
+  {code:'391df10258d42f83cee49c9e6ee0efa4',cid:7,ncid:1,ver:'18.132.0.0.9',st:'空调搜索进行中',brand:'自动识别',commTime:'2025-06-27 11:23:00'},
+  {code:'fa000001400001240240614000100379',cid:2,ncid:4,ver:'18.127.0.0.18',st:'空调搜索进行中',brand:'海尔',commTime:'2026-07-02 18:41:23'},
+  {code:'fa000001400001240240614000100379',cid:2,ncid:3,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海信',commTime:'2026-07-02 18:41:23'},
+  {code:'fa000001400001240240614000100379',cid:2,ncid:2,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海信',commTime:'2026-07-02 18:41:23'},
+  {code:'fa000001400001240240614000100379',cid:2,ncid:1,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海信',commTime:'2026-07-02 18:41:23'},
+  {code:'fa000001400001240240614000100343',cid:1,ncid:4,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海信',commTime:'2026-07-02 18:39:51'},
+  {code:'fa000001400001240240614000100343',cid:1,ncid:3,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海尔',commTime:'2026-07-02 18:39:51'},
+  {code:'fa000001400001240240614000100343',cid:1,ncid:2,ver:'18.127.0.0.18',st:'空调搜索进行中',brand:'海信',commTime:'2026-07-02 18:39:50'},
+  {code:'fa000001400001240240614000100343',cid:1,ncid:1,ver:'18.127.0.0.18',st:'正常,空调搜索完成',brand:'海信',commTime:'2026-07-02 18:39:50'}
+];
+
+const EDIT_SVG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
+
+/* ── 查询 / 渲染 / 分页 ── */
+let filtered=NODES.slice(),editIdx=-1;
+const pg={total:NODES.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderCards()};
+
+document.getElementById('fHost').innerHTML='<option value="">请选择</option>'+
+  HOSTS.map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
+
+function doQuery(){
+  const host=document.getElementById('fHost').value;
+  filtered=NODES.filter(n=>!host||n.code===host);
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderCards();
+}
+function doReset(){document.getElementById('fHost').value='';doQuery();}
+
+function renderCards(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('cards').innerHTML=rows.length?rows.map(n=>{
+    const i=NODES.indexOf(n);
+    return `<div class="card">
+      <div class="card-hd"><span class="card-edit" onclick="openEdit(${i})">${EDIT_SVG}</span></div>
+      ${kv('设备编码','<span style="cursor:pointer" title="查看详情" onclick="showDetail('+i+')">'+n.code+'</span>')}
+      ${kv('通信id',n.cid)}${kv('节点通信id',n.ncid)}${kv('节点版本号',n.ver)}
+      ${kv('节点状态',n.st)}${kv('空调品牌',n.brand)}${kv('通信时间',n.commTime)}
+      <div class="card-ft"><button class="btn btnd" onclick="rebootNode(${i})">重启</button></div>
+    </div>`;
+  }).join(''):'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
+}
+function kv(k,val){return `<div class="kv"><span class="k">${k}</span><span class="v">${val}</span></div>`;}
+
+/* ── 详情 / 编辑 / 重启 ── */
+function showDetail(i){
+  const n=NODES[i];
+  const host=HOSTS.find(h=>h.code===n.code);
+  const F=[['设备编码',n.code],['所属主机',host?host.name:'-'],['通信id',n.cid],['节点通信id',n.ncid],
+    ['节点版本号',n.ver],['节点状态',n.st],['空调品牌',n.brand],['通信时间',n.commTime]];
+  document.getElementById('detailGrid').innerHTML=F.map(([k,val])=>`<span class="k">${k}:</span><span class="v">${val}</span>`).join('');
+  $modal('dlgDetail');
+}
+function openEdit(i){
+  editIdx=i;
+  document.getElementById('eCode').textContent=NODES[i].code+'(节点通信id: '+NODES[i].ncid+')';
+  document.getElementById('eBrand').value=NODES[i].brand;
+  $modal('dlgEdit');
+}
+function saveEdit(){
+  NODES[editIdx].brand=document.getElementById('eBrand').value;
+  $modalClose('dlgEdit');$msg('保存成功');renderCards();
+}
+function rebootNode(i){
+  $confirm(`确定重启该节点(节点通信id: ${NODES[i].ncid})吗?`,()=>$msg('重启指令已下发'));
+}
+
+doQuery();
+</script>
+</body>
+</html>

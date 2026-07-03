@@ -1,1 +1,352 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>项目管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">项目管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">项目总数</div><div class="sc-v scc">12</div></div><div class="scd"><div class="sc-lb">运行中</div><div class="sc-v scg">11</div></div><div class="scd"><div class="sc-lb">停用</div><div class="sc-v scr">1</div></div></div><div class="fb"><div class="fi"><div class="fl">项目名称</div><input placeholder="请输入" style="width:160px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>运行中</option><option>停用</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>项目名称</th><th>项目编号</th><th>城市</th><th>地址</th><th>空调总数</th><th>在线率</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>上海某商业广场</td><td>PRJ001</td><td>上海</td><td>浦东新区某路100号</td><td>128</td><td><span class="tag tok">97.6%</span></td><td><span class="tag tok">运行中</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>北京某写字楼</td><td>PRJ002</td><td>北京</td><td>朝阳区某大道88号</td><td>86</td><td><span class="tag tok">100%</span></td><td><span class="tag tok">运行中</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>广州购物中心</td><td>PRJ003</td><td>广州</td><td>天河区某商业街56号</td><td>204</td><td><span class="tag twn">89.2%</span></td><td><span class="tag tok">运行中</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>深圳科技园A栋</td><td>PRJ004</td><td>深圳</td><td>南山区某科技路10号</td><td>64</td><td><span class="tag tok">98.4%</span></td><td><span class="tag tok">运行中</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>杭州办公楼</td><td>PRJ005</td><td>杭州</td><td>西湖区某路22号</td><td>42</td><td><span class="tag ter">75.0%</span></td><td><span class="tag ter">停用</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>项目管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 项目管理页专有样式 */
+.name-cell{color:var(--tx);max-width:180px;line-height:1.5;}          /* 项目名称列(可换行) */
+.dealer-cell{max-width:150px;line-height:1.5;}                        /* 经销商列(可换行) */
+/* 「更多」下拉菜单 */
+.more-menu{position:fixed;background:var(--bg-panel-2);border:1px solid var(--bd2);border-radius:4px;
+  z-index:1100;box-shadow:0 6px 20px rgba(0,0,0,.5);min-width:96px;overflow:hidden;}
+.more-menu div{padding:9px 16px;font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap;}
+.more-menu div:hover{background:var(--bg-hover);color:var(--txw);}
+/* 弹窗查看详情 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+/* 异常通知设定行 */
+.notify-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--bd);font-size:13px;}
+.notify-row:last-child{border-bottom:none;}
+.notify-row .nr-desc{color:var(--tw3);font-size:12px;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<!-- 筛选栏(按线上两行布局:名称/类型/抄表/计费/损耗/功能 + 来源/地址/经销商/时间/按钮) -->
+<div class="fb">
+  <div class="fi"><span class="fl">项目名称</span><input id="fName" placeholder="请输入项目名称" style="width:170px"></div>
+  <div class="fi"><span class="fl">项目类型</span>
+    <select id="fType" style="width:160px">
+      <option value="">请选择项目类型</option>
+      <option>不计费</option><option>后付费</option><option>预付费</option><option>仅抄表</option><option>机房群控</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">抄表单位</span>
+    <select id="fMeter" style="width:150px">
+      <option value="">请选择抄表单位</option>
+      <option>按天</option><option>按小时</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">计费方式</span>
+    <select id="fBill" style="width:150px">
+      <option value="">请选择计费方式</option>
+      <option>按当量计费</option><option>按电量计费</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">损耗分摊方式</span>
+    <select id="fShare" style="width:170px">
+      <option value="">请选择损耗分摊方式</option>
+      <option>按容量平均分</option><option>按面积平均分</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">功能类型</span>
+    <select id="fFunc" style="width:150px">
+      <option value="">请选择功能类型</option>
+      <option>氟机</option><option>直膨机</option><option>温控器</option><option>水机</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">系统来源</span>
+    <select id="fSrc" style="width:160px">
+      <option value="">请选择系统来源</option>
+      <option>集控计费</option><option>集控节能</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">项目地址</span>
+    <select id="fAddr" style="width:160px">
+      <option value="">请选择省市区</option>
+      <option>山东省</option><option>上海市</option><option>北京市</option><option>天津市</option><option>广东省</option><option>湖北省</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">项目经销商</span>
+    <select id="fDealer" style="width:180px">
+      <option value="">请选择项目经销商</option>
+      <option>青岛中弘数字技术有限公司</option><option>空调集控</option><option>彭程项目</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">创建时间</span>
+    <input type="date" id="fStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px">
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openAdd()">＋ 添加</button>
+  <button class="btn btnp" onclick="$modal('dlgNotify')">⚙ 异常通知设定</button>
+</div>
+
+<!-- 数据表(列严格按线上 headers) -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>序号</th><th>项目名称</th><th>项目类型</th><th>抄表单位</th><th>计费方式</th><th>损耗分摊方式</th>
+      <th>功能类型</th><th>系统来源</th><th>项目经销商</th><th>项目实施人</th><th>创建时间</th><th>创建人</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 添加/编辑项目弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:680px">
+    <div class="dh"><span id="dlgEditTitle">添加项目</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-grid">
+        <div class="form-item"><span class="fl"><span class="req">*</span>项目名称</span><input id="eName" placeholder="请输入项目名称"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>项目类型</span>
+          <select id="eType"><option>不计费</option><option>后付费</option><option>预付费</option><option>仅抄表</option><option>机房群控</option></select>
+        </div>
+        <div class="form-item"><span class="fl">抄表单位</span>
+          <select id="eMeter"><option>按天</option><option>按小时</option></select>
+        </div>
+        <div class="form-item"><span class="fl">计费方式</span>
+          <select id="eBill"><option value="--">--</option><option>按当量计费</option><option>按电量计费</option></select>
+        </div>
+        <div class="form-item"><span class="fl">损耗分摊方式</span>
+          <select id="eShare"><option value="">--</option><option>按容量平均分</option><option>按面积平均分</option></select>
+        </div>
+        <div class="form-item"><span class="fl">功能类型</span>
+          <select id="eFunc"><option value="--">--</option><option>氟机</option><option>直膨机</option><option>温控器</option><option>水机</option></select>
+        </div>
+        <div class="form-item"><span class="fl">系统来源</span>
+          <select id="eSrc"><option>集控计费</option><option>集控节能</option></select>
+        </div>
+        <div class="form-item"><span class="fl">项目经销商</span>
+          <select id="eDealer"><option value="">请选择项目经销商</option><option>青岛中弘数字技术有限公司</option><option>空调集控</option><option>彭程项目</option></select>
+        </div>
+        <div class="form-item"><span class="fl">项目地址</span><input id="eAddr" placeholder="请输入项目详细地址"></div>
+        <div class="form-item"><span class="fl">项目实施人</span><input id="eImpl" placeholder="请输入项目实施人"></div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveProject()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 项目详情弹窗 -->
+<div class="modal" id="dlgView">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>项目详情</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="viewGrid"></div></div>
+    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgView')">关 闭</button></div>
+  </div>
+</div>
+
+<!-- 异常通知设定弹窗 -->
+<div class="modal" id="dlgNotify">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>异常通知设定</span><span class="dx" onclick="$modalClose('dlgNotify')">✕</span></div>
+    <div class="db">
+      <div class="notify-row">
+        <div><div>设备故障通知</div><div class="nr-desc">设备发生故障时推送平台消息</div></div>
+        <span class="switch on" onclick="this.classList.toggle('on')"></span>
+      </div>
+      <div class="notify-row">
+        <div><div>设备离线通知</div><div class="nr-desc">网关/控制器离线超过10分钟时通知</div></div>
+        <span class="switch on" onclick="this.classList.toggle('on')"></span>
+      </div>
+      <div class="notify-row">
+        <div><div>短信通知</div><div class="nr-desc">异常同时发送短信至项目实施人</div></div>
+        <span class="switch" onclick="this.classList.toggle('on')"></span>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgNotify')">取 消</button>
+      <button class="btn btnp" onclick="$modalClose('dlgNotify');$msg('异常通知设定已保存')">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(形态贴线上,共60条) ── */
+const NAME_POOL=[
+  '1861蔚蓝公寓B2','W-国际办公建筑','W二期功能-质量部测试','上海巴黎春天','上海新锦江酒店','上海泰琳实业',
+  '海尔R7专项测试','天津红桥万通尚都嘉园焕新模块项目','浩瑞通R7试用','恒茂国际都会焕新模块项目',
+  '湖北反腐倡廉教育基地','福田保税区项目','青岛国际创新园','济南汉峪金谷A3','杭州未来科技城二期',
+  '成都天府软件园C区','武汉光谷金融港','西安高新万达ONE','南京河西金鹰世界','重庆来福士广场',
+  '苏州中心广场','深圳湾科技生态园','北京中关村壹号','长沙梅溪湖金茂广场','郑州绿地中心',
+  '合肥滨湖世纪城','宁波东部新城中心','厦门海峡明珠广场','佛山保利中心','东莞民盈国荣大厦'
+];
+const TYPE_POOL=['不计费','不计费','后付费','预付费','不计费','仅抄表','机房群控'];
+const SHARE_POOL=['','按容量平均分','按容量平均分','','按面积平均分'];
+const FUNC_POOL=['--','氟机','氟机','直膨机','温控器','水机'];
+const DEALER_POOL=['青岛中弘数字技术有限公司','空调集控','彭程项目',''];
+const CREATOR_POOL=['项目管理员','','项目管理员','管理员'];
+
+/* 生成递减的时间戳:自 2026-07-03 09:05:15 起每条往前推 7~40 小时 */
+function genTime(i){
+  const base=new Date('2026-07-03T09:05:15').getTime();
+  const t=new Date(base-i*(7*3600+i%13*2340)*1000);
+  const p=n=>String(n).padStart(2,'0');
+  return `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`;
+}
+let SEQ=0;
+const DATA=Array.from({length:60},(_,i)=>{
+  const type=TYPE_POOL[i%TYPE_POOL.length];
+  return {
+    id:++SEQ,
+    name:NAME_POOL[i%NAME_POOL.length]+(i>=NAME_POOL.length?'二期':''),
+    type,
+    meter:i%9===4?'按小时':'按天',
+    bill:type==='后付费'||type==='预付费'?'按当量计费':'--',
+    share:SHARE_POOL[i%SHARE_POOL.length],
+    func:FUNC_POOL[i%FUNC_POOL.length],
+    src:'集控计费',
+    dealer:DEALER_POOL[i%DEALER_POOL.length],
+    impl:i%11===6?'王胜利':'',
+    time:genTime(i),
+    creator:CREATOR_POOL[i%CREATOR_POOL.length],
+    addr:['山东省','上海市','北京市','天津市','广东省','湖北省'][i%6]
+  };
+});
+
+/* ── 查询/重置/分页 ── */
+let filtered=DATA.slice();
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const v=id=>document.getElementById(id).value.trim();
+  const name=v('fName'),type=v('fType'),meter=v('fMeter'),bill=v('fBill'),share=v('fShare'),
+        func=v('fFunc'),src=v('fSrc'),addr=v('fAddr'),dealer=v('fDealer'),s=v('fStart'),e=v('fEnd');
+  filtered=DATA.filter(r=>
+    (!name||r.name.includes(name))&&(!type||r.type===type)&&(!meter||r.meter===meter)&&
+    (!bill||r.bill===bill)&&(!share||r.share===share)&&(!func||r.func===func)&&
+    (!src||r.src===src)&&(!addr||r.addr===addr)&&(!dealer||r.dealer===dealer)&&
+    (!s||r.time>=s)&&(!e||r.time<=e+' 23:59:59')
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  ['fName','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
+  ['fType','fMeter','fBill','fShare','fFunc','fSrc','fAddr','fDealer'].forEach(id=>document.getElementById(id).value='');
+  doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${start+i+1}</td>
+      <td><div class="name-cell">${r.name}</div></td>
+      <td>${r.type}</td><td>${r.meter}</td><td>${r.bill}</td><td>${r.share||''}</td>
+      <td>${r.func}</td><td>${r.src}</td>
+      <td><div class="dealer-cell">${r.dealer}</div></td>
+      <td>${r.impl}</td><td>${r.time}</td><td>${r.creator}</td>
+      <td><span class="op">
+        <a onclick="onView(${r.id})">查看</a>
+        <a onclick="showMore(event,${r.id})">更多</a>
+        <a class="danger" onclick="onDel(${r.id})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="13"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 「更多」下拉(编辑/用户管理) ── */
+let moreMenu=null;
+function closeMore(){if(moreMenu){moreMenu.remove();moreMenu=null;}}
+function showMore(ev,id){
+  ev.stopPropagation();
+  closeMore();
+  moreMenu=document.createElement('div');
+  moreMenu.className='more-menu';
+  moreMenu.innerHTML=`<div onclick="onEdit(${id})">编辑</div><div onclick="onUser(${id})">用户管理</div>`;
+  document.body.appendChild(moreMenu);
+  const rc=ev.target.getBoundingClientRect();
+  moreMenu.style.left=Math.min(rc.left,window.innerWidth-110)+'px';
+  moreMenu.style.top=(rc.bottom+4)+'px';
+}
+document.addEventListener('click',closeMore);
+
+/* ── 查看详情 ── */
+function onView(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  document.getElementById('viewGrid').innerHTML=`
+    <span class="k">项目名称:</span><span class="v">${r.name}</span>
+    <span class="k">项目类型:</span><span class="v">${r.type}</span>
+    <span class="k">抄表单位:</span><span class="v">${r.meter}</span>
+    <span class="k">计费方式:</span><span class="v">${r.bill}</span>
+    <span class="k">损耗分摊方式:</span><span class="v">${r.share||'--'}</span>
+    <span class="k">功能类型:</span><span class="v">${r.func}</span>
+    <span class="k">系统来源:</span><span class="v">${r.src}</span>
+    <span class="k">项目地址:</span><span class="v">${r.addr}</span>
+    <span class="k">项目经销商:</span><span class="v">${r.dealer||'--'}</span>
+    <span class="k">项目实施人:</span><span class="v">${r.impl||'--'}</span>
+    <span class="k">创建时间:</span><span class="v">${r.time}</span>
+    <span class="k">创建人:</span><span class="v">${r.creator||'--'}</span>`;
+  $modal('dlgView');
+}
+
+/* ── 添加/编辑 ── */
+let editId=null;
+function openAdd(){
+  editId=null;
+  document.getElementById('dlgEditTitle').textContent='添加项目';
+  ['eName','eAddr','eImpl'].forEach(id=>document.getElementById(id).value='');
+  ['eType','eMeter','eBill','eShare','eFunc','eSrc','eDealer'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  $modal('dlgEdit');
+}
+function onEdit(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  editId=id;
+  document.getElementById('dlgEditTitle').textContent='编辑项目';
+  document.getElementById('eName').value=r.name;
+  document.getElementById('eType').value=r.type;
+  document.getElementById('eMeter').value=r.meter;
+  document.getElementById('eBill').value=r.bill;
+  document.getElementById('eShare').value=r.share;
+  document.getElementById('eFunc').value=r.func;
+  document.getElementById('eSrc').value=r.src;
+  document.getElementById('eDealer').value=r.dealer;
+  document.getElementById('eAddr').value=r.addr;
+  document.getElementById('eImpl').value=r.impl;
+  $modal('dlgEdit');
+}
+function saveProject(){
+  const name=document.getElementById('eName').value.trim();
+  if(!name){$msg('请输入项目名称','warning');return;}
+  const g=id=>document.getElementById(id).value;
+  if(editId){ /* 编辑保存 */
+    const r=DATA.find(x=>x.id===editId);
+    Object.assign(r,{name,type:g('eType'),meter:g('eMeter'),bill:g('eBill'),share:g('eShare'),
+      func:g('eFunc'),src:g('eSrc'),dealer:g('eDealer'),addr:g('eAddr'),impl:g('eImpl').trim()});
+    $msg('保存成功');
+  }else{ /* 新增到最前 */
+    DATA.unshift({id:++SEQ,name,type:g('eType'),meter:g('eMeter'),bill:g('eBill'),share:g('eShare'),
+      func:g('eFunc'),src:g('eSrc'),dealer:g('eDealer'),addr:g('eAddr')||'山东省',impl:g('eImpl').trim(),
+      time:genTime(0),creator:'项目管理员'});
+    $msg('添加成功');
+  }
+  $modalClose('dlgEdit');doQuery();
+}
+function onUser(id){
+  const r=DATA.find(x=>x.id===id);
+  $msg('已进入「'+(r?r.name:'')+'」用户管理(演示)','info');
+}
+
+/* ── 删除 ── */
+function onDel(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  $confirm('确定删除项目「'+r.name+'」?',()=>{
+    DATA.splice(DATA.indexOf(r),1);
+    $msg('删除成功');doQuery();
+  });
+}
+
+doQuery();
+</script>
+</body>
+</html>

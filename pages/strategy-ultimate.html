@@ -5,52 +5,62 @@
 <title>极致节能</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-body{padding:16px 18px;}
-.ph{margin-bottom:12px;}
-.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px}
-.fb{align-items:flex-end;padding:11px 14px;margin-bottom:10px;}
-.fi.room select{width:190px}.time-range{display:flex;align-items:center;gap:8px}.time-range input{width:136px}
-.bar-actions{display:flex;gap:8px;margin-left:0}
-.tw{height:calc(100vh - 158px);display:flex;flex-direction:column}.tw table{table-layout:fixed}
-.tw th,.tw td{text-align:center}.tw th:nth-child(2),.tw td:nth-child(2){text-align:left;width:20%}
-.tw th:nth-child(1),.tw td:nth-child(1){width:44px}.tw th:nth-child(8),.tw td:nth-child(8){width:16%}
-.op{justify-content:center;gap:4px;white-space:nowrap}.op a{padding:2px 4px}
-.empty-line td{height:58px;color:var(--ts)}
-.modal{position:fixed;inset:0;background:rgba(0,5,16,.72);display:none;align-items:center;justify-content:center;z-index:20;padding:24px}
-.modal.show{display:flex}.dialog{width:min(1280px,calc(100vw - 48px));height:min(850px,calc(100vh - 48px));background:#08152e;border:1px solid rgba(0,229,255,.28);border-radius:8px;box-shadow:0 20px 80px rgba(0,0,0,.45);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
-.dh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(30,58,110,.65);background:rgba(12,28,66,.85)}
-.dh-title{font-weight:700;font-size:15px}.xbtn{width:30px;height:30px;border-radius:4px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--ts);cursor:pointer}
-.db{display:grid;grid-template-columns:278px 1fr;min-height:0}.room-pane{border-right:1px solid rgba(30,58,110,.65);padding:14px;background:rgba(3,11,28,.4);overflow:auto}
-.config-pane{padding:14px 16px;overflow:auto}.search{width:100%;margin-bottom:10px}.tree-title{font-size:11px;color:var(--ts);font-weight:700;letter-spacing:.06em;margin:12px 0 6px}
-.tree-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:4px;color:#c8d8f0;font-size:12px;cursor:pointer}
-.tree-row:hover{background:rgba(255,255,255,.04)}.tree-row.active{background:rgba(0,229,255,.1);color:var(--hl);box-shadow:inset 2px 0 0 var(--hl)}
-.tree-row input{width:auto}
-.room-tree{display:flex;flex-direction:column;gap:2px}
-.tree-lv1{font-weight:700;color:#e9f2ff;margin-top:4px}
-.tree-lv2{padding-left:22px;color:#b8c8e3}
-.tree-lv3{padding-left:44px;color:#c8d8f0}
-.tree-meta{margin-left:auto;font-size:10px;color:var(--ts)}
-.section{border:1px solid rgba(30,58,110,.75);border-radius:7px;background:rgba(255,255,255,.025);padding:14px;margin-bottom:12px}
-.section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:12px;color:#e9f2ff}.section-title:before{content:'';width:3px;height:14px;background:linear-gradient(#00e5ff,#2979ff);border-radius:2px}
-.form-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.form-line.two{grid-template-columns:1fr 1fr}.form-item{min-width:0}
-.form-item label{font-size:12px;color:var(--ts);display:block;margin-bottom:5px}.form-item input,.form-item select{width:100%}
-.quick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}.qbtn{padding:4px 10px;border:1px solid var(--bd);border-radius:4px;background:rgba(255,255,255,.035);color:var(--ts);font-size:12px;cursor:pointer}.qbtn:hover{border-color:var(--gw);color:var(--hl)}
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{border:1px solid var(--bd);border-radius:4px;padding:8px 4px;text-align:center;font-size:12px;color:var(--ts);cursor:pointer}.day.on{background:var(--pd);border-color:var(--gw);color:var(--hl)}
-.action-summary{border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.055);border-radius:7px;padding:12px 14px;margin-bottom:12px}
-.action-summary b{display:block;color:#e9f2ff;margin-bottom:6px}.action-summary p{font-size:12px;color:var(--ts);line-height:1.6}
-.timer-card{border:1px solid rgba(0,230,118,.24);background:rgba(0,230,118,.045);border-radius:7px;padding:14px;margin-top:12px}
-.timer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.timer-head b{font-size:13px;color:#e9f2ff}
-.interval-row{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:end}.muted{font-size:12px;color:var(--ts);line-height:1.65}
-.preview{border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.055);border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;color:#c8d8f0;line-height:1.8}
-.preview b{color:#e9f2ff}.time-points{color:var(--hl);font-family:'Roboto Mono',Consolas,monospace}
-.error-box{display:none;border:1px solid rgba(255,77,79,.5);background:rgba(255,77,79,.08);color:#ff9a9b;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.65}.error-box.show{display:block}
-.df{padding:12px 18px;border-top:1px solid rgba(30,58,110,.65);display:flex;justify-content:flex-end;gap:10px;background:rgba(12,28,66,.75)}
-.log-panel{display:none;position:fixed;right:26px;top:78px;width:620px;max-width:calc(100vw - 52px);background:#08152e;border:1px solid rgba(0,229,255,.28);border-radius:8px;z-index:22;box-shadow:0 18px 70px rgba(0,0,0,.48);overflow:hidden}.log-panel.show{display:block}
-.log-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bd);background:rgba(12,28,66,.9)}.log-body{padding:12px}.log-row{display:grid;grid-template-columns:145px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#c8d8f0}.log-row:last-child{border-bottom:0}
-@media(max-width:1100px){.dialog{height:calc(100vh - 32px)}.db{grid-template-columns:1fr}.room-pane{border-right:0;border-bottom:1px solid var(--bd);max-height:230px}.form-line,.form-line.two,.interval-row{grid-template-columns:1fr}.tw{height:auto;overflow-x:auto}}
+/* ── 页面头:面包屑(原版分区) ── */
+.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px;}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;}
+
+/* ── 配置弹窗:左房间树 + 右配置区 ── */
+.cfg-body{display:flex;gap:14px;align-items:stretch;}
+.pick-pane{width:250px;flex-shrink:0;background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:10px;max-height:58vh;overflow-y:auto;}
+.pick-pane .pp-title{font-size:12px;color:var(--ts);font-weight:600;margin:4px 2px 8px;}
+.pick-pane input.search{width:100%;height:28px;margin-bottom:8px;}
+.cfg-main{flex:1;min-width:0;}
+.tree-meta{margin-left:auto;font-size:10px;color:var(--tw3);}
+.tree-lv1{font-weight:600;color:var(--txw);}
+
+/* ── 分区(基础信息 / 指令动作) ── */
+.sec{border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px;}
+.sec:last-child{margin-bottom:0;}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--txw);margin-bottom:12px;}
+.sec-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
+.form-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.form-line.two{grid-template-columns:1fr 1fr;}
+.time-range{display:flex;align-items:center;gap:6px;}
+.time-range input{flex:1;min-width:0;}
+
+/* ── 周运行时间:快捷按钮 + 七天格 ── */
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.qbtn{height:24px;padding:0 10px;border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);color:var(--ts);font-size:12px;cursor:pointer;transition:all .15s;}
+.qbtn:hover{border-color:var(--primary);color:var(--primary);}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.day{border:1px solid var(--bd2);border-radius:4px;padding:7px 2px;text-align:center;font-size:12px;color:var(--ts);cursor:pointer;user-select:none;transition:all .15s;background:var(--bg-input);}
+.day.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* ── 指令动作说明 / 定时下发配置卡 / 预览 ── */
+.action-summary{border:1px solid rgba(31,101,255,.35);background:var(--primary-dim);border-radius:6px;padding:12px 14px;margin-bottom:12px;}
+.action-summary b{display:block;color:var(--txw);margin-bottom:6px;font-size:13px;}
+.action-summary p{font-size:12px;color:var(--ts);line-height:1.7;}
+.timer-card{border:1px solid rgba(103,194,58,.3);background:rgba(103,194,58,.05);border-radius:6px;padding:14px;}
+.timer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.timer-head b{font-size:13px;color:var(--txw);}
+.interval-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:end;}
+.muted{font-size:12px;color:var(--ts);line-height:1.7;}
+.preview{border:1px solid rgba(31,101,255,.3);background:var(--primary-dim);border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--tx);line-height:1.9;}
+.preview b{color:var(--txw);}
+.time-points{color:var(--primary-hover);font-family:'Roboto Mono',Consolas,monospace;}
+
+/* ── 表单校验错误框 ── */
+.error-box{display:none;border:1px solid rgba(245,108,108,.4);background:var(--er-dim);color:var(--er);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.7;}
+.error-box.show{display:block;}
+
+/* ── 指令日志弹窗 ── */
+.log-row{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);font-size:12px;color:var(--tx);}
+.log-row:last-child{border-bottom:none;}
+.log-row .lt{color:var(--ts);font-family:'Roboto Mono',Consolas,monospace;}
 </style>
 </head>
 <body>
+<!-- 页面头:标题 + 面包屑 + 策略说明标签(原版分区) -->
 <div class="ph">
   <div>
     <div class="pt">极致节能</div>
@@ -59,206 +69,346 @@ body{padding:16px 18px;}
   <div class="pa"><span class="tag thl">平台侧定时下发</span><span class="tag tin">指令动作：空调控制</span></div>
 </div>
 
+<!-- 筛选栏(原版四组条件) -->
 <div class="fb">
-  <div class="fi room"><div class="fl">房间编号</div><select><option>请选择房间</option><option>801会议室</option><option>研发部办公区</option><option>9层全部房间</option></select></div>
-  <div class="fi"><div class="fl">开始日期</div><div class="time-range"><input type="date"><span>至</span><input type="date"></div></div>
-  <div class="fi"><div class="fl">结束日期</div><div class="time-range"><input type="date"><span>至</span><input type="date"></div></div>
-  <div class="fi"><div class="fl">创建时间</div><div class="time-range"><input type="date"><span>至</span><input type="date"></div></div>
-  <div class="bar-actions"><button class="btn btnp">查询</button><button class="btn">重置</button></div>
+  <div class="fi"><span class="fl">房间编号</span>
+    <select id="fRoom" style="width:170px">
+      <option value="">请选择房间</option>
+      <option>801会议室</option><option>803会议室</option><option>产品部</option><option>运营部</option>
+      <option>901会议室</option><option>903会议室</option><option>技术部</option><option>研发部</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">开始日期</span>
+    <input type="date" id="fS1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fS2" style="width:140px">
+  </div>
+  <div class="fi"><span class="fl">结束日期</span>
+    <input type="date" id="fE1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fE2" style="width:140px">
+  </div>
+  <div class="fi"><span class="fl">创建时间</span>
+    <input type="date" id="fC1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fC2" style="width:140px">
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
 </div>
-<div class="pa" style="margin-bottom:12px"><button class="btn btnp" onclick="openTask()">+ 创建节能任务</button></div>
 
+<!-- 操作按钮:创建(原版) + 同步(线上通用元素,合并保留) -->
+<div class="toolbar">
+  <button class="btn btnp" onclick="openTask('new')">＋ 创建节能任务</button>
+  <button class="btn btnp" onclick="syncTasks()">⟳ 同步</button>
+</div>
+
+<!-- 节能任务表格(原版列 + 同步状态列) -->
 <div class="tw">
-<table>
-<thead><tr><th><input type="checkbox"></th><th>节能任务名称</th><th>执行时间</th><th>有效日期</th><th>指令动作</th><th>任务状态</th><th>创建时间</th><th>操作</th></tr></thead>
-<tbody>
-<tr><td><input type="checkbox"></td><td>午休时段定时节能</td><td>12:00 ~ 14:00，每15分钟</td><td>2026-07-01 至 2026-12-31</td><td><span class="tag thl">空调控制</span></td><td><span class="tag tok">启用</span></td><td>2026-07-02 09:20:16</td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
-<tr><td><input type="checkbox"></td><td>深夜恒温控制</td><td>22:00 ~ 06:00，每30分钟</td><td>2026-07-06 至 2026-12-31</td><td><span class="tag thl">空调控制</span></td><td><span class="tag tok">启用</span></td><td>2026-07-01 18:05:43</td><td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td></tr>
-</tbody>
-</table>
-<div class="pg"><div class="pg-info">共 2 条</div><div class="pgr"><span class="pgb">‹</span><span class="pgb pga">1</span><span class="pgb">›</span><span style="margin-left:12px">前往</span><input value="1" style="width:46px;text-align:center"><span>页</span></div></div>
+  <table>
+    <thead><tr>
+      <th style="width:44px"><input type="checkbox" id="ckAll" onclick="checkAll(this)"></th>
+      <th>节能任务名称</th><th>执行时间</th><th>有效日期</th><th>指令动作</th>
+      <th>任务状态</th><th>同步状态</th><th>创建时间</th><th style="width:220px">操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
+<div id="pager"></div>
 
-<div class="modal" id="taskModal">
-  <div class="dialog">
-    <div class="dh"><div class="dh-title" id="modalTitle">新建极致节能任务</div><button class="xbtn" onclick="closeTask()">×</button></div>
+<!-- 创建/编辑/复制节能任务弹窗(原版向导:左房间树 + 右任务配置) -->
+<div class="modal" id="dlgTask">
+  <div class="dialog" style="width:1080px">
+    <div class="dh"><span id="modalTitle">新建极致节能任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
     <div class="db">
-      <aside class="room-pane">
-        <input class="search" placeholder="搜索楼栋、楼层、房间">
-        <div class="tree-title">选择房间</div>
-        <div class="room-tree">
-          <label class="tree-row tree-lv1 active"><input type="checkbox" checked> 博研楼 <span class="tree-meta">2层 / 8间</span></label>
-          <label class="tree-row tree-lv2 active"><input type="checkbox" checked> 8层 <span class="tree-meta">4间</span></label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 801会议室</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 803会议室</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 产品部</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 运营部</label>
-          <label class="tree-row tree-lv2 active"><input type="checkbox" checked> 9层 <span class="tree-meta">4间</span></label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 901会议室</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 903会议室</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 技术部</label>
-          <label class="tree-row tree-lv3"><input type="checkbox" checked> 研发部</label>
-          <label class="tree-row tree-lv1"><input type="checkbox"> 研发楼 <span class="tree-meta">3层 / 12间</span></label>
-          <label class="tree-row tree-lv2"><input type="checkbox"> 3层</label>
-          <label class="tree-row tree-lv3"><input type="checkbox"> 301实验室</label>
-          <label class="tree-row tree-lv3"><input type="checkbox"> 302办公室</label>
+      <div class="cfg-body">
+        <!-- 左:房间选择树(楼栋/楼层/房间三级勾选) -->
+        <aside class="pick-pane">
+          <input class="search" id="treeSearch" placeholder="搜索楼栋、楼层、房间" oninput="renderTree()">
+          <div class="pp-title">选择房间</div>
+          <div id="roomTree"></div>
+        </aside>
+        <!-- 右:任务配置 -->
+        <div class="cfg-main">
+          <section class="sec">
+            <div class="sec-title">基础信息</div>
+            <div class="form-line">
+              <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="taskName" maxlength="30" placeholder="请输入任务名称" oninput="updatePreview()"></div>
+              <div class="form-item"><span class="fl"><span class="req">*</span>执行开始日期</span><input id="startDate" type="date" value="2026-07-01"></div>
+              <div class="form-item"><span class="fl"><span class="req">*</span>执行结束日期</span><input id="endDate" type="date" value="2026-12-31"></div>
+              <div class="form-item"><span class="fl">任务状态</span><select id="taskStatus"><option>启用</option><option>停用</option></select></div>
+            </div>
+            <div class="form-line two" style="margin-top:12px">
+              <div class="form-item"><span class="fl"><span class="req">*</span>每日执行时间</span>
+                <div class="time-range"><input id="startTime" type="time" value="12:00" onchange="updatePreview()"><span class="text-sub">至</span><input id="endTime" type="time" value="14:00" onchange="updatePreview()"></div>
+              </div>
+              <div class="form-item"><span class="fl"><span class="req">*</span>周运行时间</span>
+                <div class="quick">
+                  <button class="qbtn" onclick="setWeek('workday')">工作日</button>
+                  <button class="qbtn" onclick="setWeek('weekend')">周末</button>
+                  <button class="qbtn" onclick="setWeek('all')">全选</button>
+                  <button class="qbtn" onclick="setWeek('none')">取消</button>
+                </div>
+                <div class="week-grid" id="weekGrid"></div>
+              </div>
+            </div>
+          </section>
+          <div class="error-box" id="formErrors"></div>
+          <section class="sec">
+            <div class="sec-title">指令动作</div>
+            <div class="action-summary">
+              <b>空调控制</b>
+              <p>在指定时间段内，按照固定间隔由平台侧重复下发空调控制指令，确保所选房间范围持续保持目标节能状态。</p>
+            </div>
+            <div class="timer-card" id="timerCard">
+              <div class="timer-head"><b>空调控制配置</b><span class="tag tbl">平台实现</span></div>
+              <div class="interval-row">
+                <div class="form-item"><span class="fl"><span class="req">*</span>下发间隔（分钟）</span><input id="interval" type="number" min="1" max="1440" step="1" value="15" oninput="updatePreview()"></div>
+                <div class="muted">启用后，平台在任务有效日期、周运行时间和每日执行时间范围内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
+              </div>
+              <div class="form-line" style="margin-top:12px">
+                <div class="form-item"><span class="fl">开关机状态</span><select id="power" onchange="updatePreview()"><option>开机</option><option>关机</option></select></div>
+                <div class="form-item"><span class="fl">空调模式</span><select id="mode" onchange="updatePreview()"><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>自动</option></select></div>
+                <div class="form-item"><span class="fl">温度设置（16-30℃）</span><input id="temp" type="number" min="16" max="30" step="0.5" value="26" oninput="updatePreview()"></div>
+                <div class="form-item"><span class="fl">风速设置</span><select id="fan" onchange="updatePreview()"><option>自动</option><option>低</option><option>中</option><option selected>高</option></select></div>
+              </div>
+              <div class="preview" id="previewBox"></div>
+            </div>
+          </section>
         </div>
-      </aside>
-      <main class="config-pane">
-        <section class="section">
-          <div class="section-title">基础信息</div>
-          <div class="form-line">
-            <div class="form-item"><label>任务名称</label><input id="taskName" value="午休时段定时节能" maxlength="30" oninput="updatePreview()"></div>
-            <div class="form-item"><label>执行开始日期</label><input id="startDate" type="date" value="2026-07-01"></div>
-            <div class="form-item"><label>执行结束日期</label><input id="endDate" type="date" value="2026-12-31"></div>
-            <div class="form-item"><label>任务状态</label><select><option>启用</option><option>停用</option></select></div>
-          </div>
-          <div class="form-line two" style="margin-top:12px">
-            <div class="form-item"><label>每日执行时间</label><div class="time-range"><input id="startTime" type="time" value="12:00" onchange="updatePreview()"><span>至</span><input id="endTime" type="time" value="14:00" onchange="updatePreview()"></div></div>
-            <div class="form-item"><label>周运行时间</label><div class="quick"><button class="qbtn" onclick="setWeek('workday')">工作日</button><button class="qbtn" onclick="setWeek('weekend')">周末</button><button class="qbtn" onclick="setWeek('all')">全选</button><button class="qbtn" onclick="setWeek('none')">取消</button></div><div class="week-grid" id="weekGrid"><div class="day on">周一</div><div class="day on">周二</div><div class="day on">周三</div><div class="day on">周四</div><div class="day on">周五</div><div class="day">周六</div><div class="day">周日</div></div></div>
-          </div>
-        </section>
-        <div class="error-box" id="formErrors"></div>
-        <section class="section">
-          <div class="section-title">指令动作</div>
-          <div class="action-summary">
-            <b>空调控制</b>
-            <p>在指定时间段内，按照固定间隔由平台侧重复下发空调控制指令，确保所选房间范围持续保持目标节能状态。</p>
-          </div>
-          <div class="timer-card" id="timerCard">
-            <div class="timer-head"><b>空调控制配置</b><span class="tag tbl">平台实现</span></div>
-            <div class="interval-row">
-              <div class="form-item"><label>下发间隔（分钟）</label><input id="interval" type="number" min="1" max="1440" step="1" value="15" oninput="updatePreview()"></div>
-              <div class="muted">启用后，平台在任务有效日期、周运行时间和每日执行时间范围内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
-            </div>
-            <div class="form-line" style="margin-top:12px">
-              <div class="form-item"><label>开关机状态</label><select id="power" onchange="updatePreview()"><option>开机</option><option>关机</option></select></div>
-              <div class="form-item"><label>空调模式</label><select id="mode" onchange="updatePreview()"><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>自动</option></select></div>
-              <div class="form-item"><label>温度设置（16-30℃）</label><input id="temp" type="number" min="16" max="30" step="0.5" value="26" oninput="updatePreview()"></div>
-              <div class="form-item"><label>风速设置</label><select id="fan" onchange="updatePreview()"><option>自动</option><option>低</option><option>中</option><option selected>高</option></select></div>
-            </div>
-            <div class="preview" id="previewBox"></div>
-          </div>
-        </section>
-      </main>
+      </div>
     </div>
-    <div class="df"><button class="btn" onclick="closeTask()">取消</button><button class="btn">保存草稿</button><button class="btn btnp" onclick="saveTask()">保存并启用任务</button></div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgTask')">取 消</button>
+      <button class="btn" onclick="saveDraft()">保存草稿</button>
+      <button class="btn btnp" onclick="saveTask()">保存并启用任务</button>
+    </div>
   </div>
 </div>
 
-<div class="log-panel" id="logPanel">
-  <div class="log-head"><b>空调控制指令记录</b><button class="xbtn" onclick="closeLog()">×</button></div>
-  <div class="log-body">
-    <div class="log-row"><span>2026-07-02 12:00:01</span><span>801会议室、803会议室：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
-    <div class="log-row"><span>2026-07-02 12:15:02</span><span>产品部办公区：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
-    <div class="log-row"><span>2026-07-02 12:30:01</span><span>研发部 2 台离线，其他空调下发成功</span><span class="tag twn">部分成功</span></div>
+<!-- 空调控制指令记录弹窗(原版日志面板,迁移为标准弹窗) -->
+<div class="modal" id="dlgLog">
+  <div class="dialog" style="width:640px">
+    <div class="dh"><span>空调控制指令记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
+    <div class="db">
+      <div class="log-row"><span class="lt">2026-07-02 12:00:01</span><span>801会议室、803会议室：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
+      <div class="log-row"><span class="lt">2026-07-02 12:15:02</span><span>产品部办公区：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
+      <div class="log-row"><span class="lt">2026-07-02 12:30:01</span><span>研发部 2 台离线，其他空调下发成功</span><span class="tag twn">部分成功</span></div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgLog')">关闭</button></div>
   </div>
 </div>
 
+<script src="_ui.js"></script>
 <script>
-function openTask(mode){
-  document.getElementById('modalTitle').textContent = mode === 'edit' ? '编辑极致节能任务' : mode === 'copy' ? '复制极致节能任务' : '新建极致节能任务';
-  document.getElementById('formErrors').classList.remove('show');
-  document.getElementById('taskModal').classList.add('show');
-  updatePreview();
+/* ══════════ 模拟数据(原版两条样例任务) ══════════ */
+let TASKS=[
+  {name:'午休时段定时节能',ts:'12:00',te:'14:00',iv:15,start:'2026-07-01',end:'2026-12-31',
+   status:'启用',sync:true,crt:'2026-07-02 09:20:16',power:'开机',mode:'制冷',temp:'26',fan:'高',
+   week:[1,1,1,1,1,0,0],rooms:['801会议室','803会议室','产品部','运营部','901会议室','903会议室','技术部','研发部']},
+  {name:'深夜恒温控制',ts:'22:00',te:'23:45',iv:30,start:'2026-07-06',end:'2026-12-31',
+   status:'启用',sync:false,crt:'2026-07-01 18:05:43',power:'开机',mode:'制冷',temp:'27',fan:'低',
+   week:[1,1,1,1,1,1,1],rooms:['901会议室','903会议室','技术部','研发部']},
+];
+
+/* ══════════ 查询 / 表格 / 分页 ══════════ */
+let filtered=TASKS.slice();
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const v=id=>document.getElementById(id).value;
+  filtered=TASKS.filter(r=>
+    (!v('fRoom')||r.rooms.includes(v('fRoom')))&&
+    (!v('fS1')||r.start>=v('fS1'))&&(!v('fS2')||r.start<=v('fS2'))&&
+    (!v('fE1')||r.end>=v('fE1'))&&(!v('fE2')||r.end<=v('fE2'))&&
+    (!v('fC1')||r.crt>=v('fC1'))&&(!v('fC2')||r.crt<=v('fC2')+' 23:59:59')
+  );
+  pg.page=1;pg.total=filtered.length;
+  document.getElementById('ckAll').checked=false;
+  $pager('pager',pg);renderTable();
 }
-function closeTask(){document.getElementById('taskModal').classList.remove('show')}
-function viewTask(){openTask('edit')}
-function openLog(){document.getElementById('logPanel').classList.add('show')}
-function closeLog(){document.getElementById('logPanel').classList.remove('show')}
-function deleteTask(el){
-  if(!confirm('确定删除该任务吗？')) return;
-  const row=el.closest('tr');
-  if(row) row.remove();
-  const count=document.querySelectorAll('.tw tbody tr').length;
-  document.querySelector('.pg-info').textContent=`共 ${count} 条`;
+function doReset(){
+  ['fRoom','fS1','fS2','fE1','fE2','fC1','fC2'].forEach(id=>document.getElementById(id).value='');
+  doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>{
+    const i=TASKS.indexOf(r);
+    return `<tr>
+      <td><input type="checkbox" class="ck" data-i="${i}"></td>
+      <td>${r.name}</td>
+      <td>${r.ts} ~ ${r.te}，每${r.iv}分钟</td>
+      <td>${r.start} 至 ${r.end}</td>
+      <td><span class="tag thl">空调控制</span></td>
+      <td><span class="tag ${r.status==='启用'?'tok':'tin'}">${r.status}</span></td>
+      <td><span class="tag ${r.sync?'tok':'twn'}">${r.sync?'已同步':'未同步'}</span></td>
+      <td>${r.crt}</td>
+      <td><span class="op">
+        <a onclick="viewTask(${i})">查看</a>
+        <a onclick="openTask('edit',${i})">编辑</a>
+        <a onclick="openTask('copy',${i})">复制</a>
+        <a onclick="openLog()">日志</a>
+        <a class="danger" onclick="deleteTask(${i})">删除</a>
+      </span></td>
+    </tr>`;}).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function checkAll(el){document.querySelectorAll('.ck').forEach(c=>c.checked=el.checked);}
+function deleteTask(i){
+  $confirm(`确定删除节能任务「${TASKS[i].name}」吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});
+}
+/* 同步(线上通用能力,合并保留):勾选行同步,未勾选则同步全部未同步任务 */
+function syncTasks(){
+  const sel=[...document.querySelectorAll('.ck:checked')].map(c=>+c.dataset.i);
+  const targets=sel.length?sel:TASKS.map((_,i)=>i).filter(i=>!TASKS[i].sync);
+  if(!targets.length){$msg('当前任务均已同步','info');return;}
+  $confirm(`确定将 ${targets.length} 个节能任务同步下发吗？`,()=>{
+    targets.forEach(i=>TASKS[i].sync=true);
+    renderTable();$msg('同步成功');
+  });
+}
+
+/* ══════════ 房间选择树(楼栋/楼层/房间三级勾选,原版结构) ══════════ */
+const TREE=[
+  {lb:'博研楼',meta:'2层 / 8间',open:true,floors:[
+    {lb:'8层',meta:'4间',rooms:['801会议室','803会议室','产品部','运营部']},
+    {lb:'9层',meta:'4间',rooms:['901会议室','903会议室','技术部','研发部']}]},
+  {lb:'研发楼',meta:'3层 / 12间',open:true,floors:[
+    {lb:'3层',meta:'2间',rooms:['301实验室','302办公室']}]},
+];
+let picked=new Set();
+function allRooms(node){return node.floors?node.floors.flatMap(f=>f.rooms):node.rooms;}
+function toggleGroup(node){
+  const rooms=allRooms(node);
+  const on=!rooms.every(r=>picked.has(r));
+  rooms.forEach(r=>on?picked.add(r):picked.delete(r));
+  renderTree();updatePreview();
+}
+function toggleRoom(rm){
+  picked.has(rm)?picked.delete(rm):picked.add(rm);
+  renderTree();updatePreview();
+}
+function renderTree(){
+  const kw=(document.getElementById('treeSearch').value||'').trim();
+  const el=document.getElementById('roomTree');el.innerHTML='';
+  TREE.forEach(b=>{
+    const bOn=allRooms(b).every(r=>picked.has(r));
+    const bRow=document.createElement('label');
+    bRow.className='tree-row tree-lv1'+(bOn?' active':'');
+    bRow.innerHTML=`<input type="checkbox" ${bOn?'checked':''}><span>${b.lb}</span><span class="tree-meta">${b.meta}</span>`;
+    bRow.querySelector('input').onclick=e=>{e.preventDefault();toggleGroup(b);};
+    el.appendChild(bRow);
+    b.floors.forEach(f=>{
+      const fOn=f.rooms.every(r=>picked.has(r));
+      const fRow=document.createElement('label');
+      fRow.className='tree-row'+(fOn?' active':'');
+      fRow.style.paddingLeft='24px';
+      fRow.innerHTML=`<input type="checkbox" ${fOn?'checked':''}><span>${f.lb}</span><span class="tree-meta">${f.meta}</span>`;
+      fRow.querySelector('input').onclick=e=>{e.preventDefault();toggleGroup(f);};
+      el.appendChild(fRow);
+      f.rooms.filter(rm=>!kw||rm.includes(kw)||f.lb.includes(kw)||b.lb.includes(kw)).forEach(rm=>{
+        const rRow=document.createElement('label');
+        rRow.className='tree-row'+(picked.has(rm)?' active':'');
+        rRow.style.paddingLeft='44px';
+        rRow.innerHTML=`<input type="checkbox" ${picked.has(rm)?'checked':''}><span>${rm}</span>`;
+        rRow.querySelector('input').onclick=e=>{e.preventDefault();toggleRoom(rm);};
+        el.appendChild(rRow);
+      });
+    });
+  });
+}
+
+/* ══════════ 周运行时间(七天格 + 快捷选择) ══════════ */
+const WEEK=['周一','周二','周三','周四','周五','周六','周日'];
+let weekOn=[1,1,1,1,1,0,0];
+function renderWeek(){
+  document.getElementById('weekGrid').innerHTML=WEEK.map((w,i)=>
+    `<span class="day ${weekOn[i]?'on':''}" onclick="weekOn[${i}]^=1;renderWeek();updatePreview()">${w}</span>`).join('');
 }
 function setWeek(type){
-  const days=[...document.querySelectorAll('#weekGrid .day')];
-  days.forEach((d,i)=>{
-    d.classList.toggle('on', type==='all' || (type==='workday' && i<5) || (type==='weekend' && i>4));
-    if(type==='none') d.classList.remove('on');
-  });
-  updatePreview();
+  weekOn=WEEK.map((_,i)=>
+    type==='all'||(type==='workday'&&i<5)||(type==='weekend'&&i>4)?1:0);
+  renderWeek();updatePreview();
 }
-function minutesFromTime(value){
-  const parts=value.split(':').map(Number);
-  return parts[0]*60+parts[1];
+function weekText(){
+  const active=WEEK.filter((_,i)=>weekOn[i]);
+  if(active.length===7) return '每天';
+  if(active.join(',')==='周一,周二,周三,周四,周五') return '工作日';
+  if(active.join(',')==='周六,周日') return '周末';
+  return active.length?active.join('、'):'未选择周运行时间';
 }
+
+/* ══════════ 执行计划预览(原版核心交互) ══════════ */
+function minutesFromTime(v){const p=v.split(':').map(Number);return p[0]*60+p[1];}
 function fmt(mins){
   const h=String(Math.floor(mins/60)).padStart(2,'0');
   const m=String(mins%60).padStart(2,'0');
   return `${h}:${m}`;
 }
-function weekText(){
-  const active=[...document.querySelectorAll('#weekGrid .day')].filter(d=>d.classList.contains('on')).map(d=>d.textContent);
-  if(active.length===7) return '每天';
-  if(active.join(',')==='周一,周二,周三,周四,周五') return '工作日';
-  if(active.join(',')==='周六,周日') return '周末';
-  return active.length ? active.join('、') : '未选择周运行时间';
-}
 function updatePreview(){
   const box=document.getElementById('previewBox');
   if(!box) return;
   const interval=Math.max(1,parseInt(document.getElementById('interval').value||'15',10));
-  const start=document.getElementById('startTime').value || '12:00';
-  const end=document.getElementById('endTime').value || '14:00';
-  const s=minutesFromTime(start), e=minutesFromTime(end);
+  const start=document.getElementById('startTime').value||'12:00';
+  const end=document.getElementById('endTime').value||'14:00';
+  const s=minutesFromTime(start),e=minutesFromTime(end);
   const points=[];
-  if(e>s){
-    for(let t=s;t<e && points.length<12;t+=interval) points.push(fmt(t));
-  }
-  const command=document.getElementById('power').value === '关机'
-    ? '关机'
-    : `${document.getElementById('mode').value}模式 ${document.getElementById('temp').value || '--'}℃ ${document.getElementById('fan').value}风`;
+  if(e>s){for(let t=s;t<e&&points.length<12;t+=interval) points.push(fmt(t));}
+  const command=document.getElementById('power').value==='关机'
+    ?'关机'
+    :`${document.getElementById('mode').value}模式 ${document.getElementById('temp').value||'--'}℃ ${document.getElementById('fan').value}风`;
   box.innerHTML=`<b>执行计划预览</b><br>
-    <b>任务名称：</b>${document.getElementById('taskName').value || '未命名任务'}<br>
-    <b>执行范围：</b>博研楼 8-9层 12个房间 / 36台空调<br>
+    <b>任务名称：</b>${document.getElementById('taskName').value||'未命名任务'}<br>
+    <b>执行范围：</b>已选 ${picked.size} 个房间 / 约 ${picked.size*3} 台空调<br>
     <b>执行时间：</b>${weekText()} ${start} - ${end}<br>
     <b>控制策略：</b>每 ${interval} 分钟下发一次控制指令，将空调设置为 <b>${command}</b><br>
-    <span class="time-points">执行时间点示例：${points.length ? points.join(', ') : '结束时间需晚于开始时间'}</span>`;
+    <span class="time-points">执行时间点示例：${points.length?points.join(', '):'结束时间需晚于开始时间'}</span>`;
 }
+
+/* ══════════ 弹窗:新建 / 查看 / 编辑 / 复制 ══════════ */
+let editIdx=-1,editMode='new';
+function openTask(mode,i){
+  editMode=mode;editIdx=mode==='edit'?i:-1;
+  document.getElementById('modalTitle').textContent=
+    mode==='edit'?'编辑极致节能任务':mode==='copy'?'复制极致节能任务':'新建极致节能任务';
+  const r=i!=null?TASKS[i]:null;
+  document.getElementById('taskName').value=r?(mode==='copy'?r.name+'-副本':r.name):'';
+  document.getElementById('startDate').value=r?r.start:'2026-07-01';
+  document.getElementById('endDate').value=r?r.end:'2026-12-31';
+  document.getElementById('taskStatus').value=r?r.status:'启用';
+  document.getElementById('startTime').value=r?r.ts:'12:00';
+  document.getElementById('endTime').value=r?r.te:'14:00';
+  document.getElementById('interval').value=r?r.iv:15;
+  document.getElementById('power').value=r?r.power:'开机';
+  document.getElementById('mode').value=r?r.mode:'制冷';
+  document.getElementById('temp').value=r?r.temp:'26';
+  document.getElementById('fan').value=r?r.fan:'高';
+  weekOn=r?r.week.slice():[1,1,1,1,1,0,0];
+  picked=new Set(r?r.rooms:TREE[0].floors.flatMap(f=>f.rooms));
+  document.getElementById('formErrors').classList.remove('show');
+  renderTree();renderWeek();updatePreview();
+  $modal('dlgTask');
+}
+function viewTask(i){openTask('edit',i);} /* 原版行为:查看即打开编辑态 */
+function openLog(){$modal('dlgLog');}
+
+/* ══════════ 校验与保存(原版规则全部保留) ══════════ */
 function numberInRange(value,min,max,decimals){
-  if(value==='' || value===null || value===undefined) return false;
+  if(value===''||value===null||value===undefined) return false;
   const text=String(value);
-  if(decimals===0 && !/^\d+$/.test(text)) return false;
-  if(decimals===1 && !/^\d+(\.\d)?$/.test(text)) return false;
+  if(decimals===0&&!/^\d+$/.test(text)) return false;
+  if(decimals===1&&!/^\d+(\.\d)?$/.test(text)) return false;
   const n=Number(text);
-  return Number.isFinite(n) && n>=min && n<=max;
+  return Number.isFinite(n)&&n>=min&&n<=max;
 }
-function currentDateTimeText(){
-  const now=new Date();
-  const pad=n=>String(n).padStart(2,'0');
-  return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+function now(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
-function insertTaskRow(){
-  const tbody=document.querySelector('.tw tbody');
-  const taskName=document.getElementById('taskName').value.trim();
-  const start=document.getElementById('startTime').value;
-  const end=document.getElementById('endTime').value;
-  const interval=document.getElementById('interval').value;
-  const startDate=document.getElementById('startDate').value.replaceAll('-','/');
-  const endDate=document.getElementById('endDate').value.replaceAll('-','/');
-  const row=document.createElement('tr');
-  row.innerHTML=`<td><input type="checkbox"></td>
-    <td>${taskName}</td>
-    <td>${start} ~ ${end}，每${interval}分钟</td>
-    <td>${startDate} 至 ${endDate}</td>
-    <td><span class="tag thl">空调控制</span></td>
-    <td><span class="tag tok">启用</span></td>
-    <td>${currentDateTimeText()}</td>
-    <td><div class="op"><a onclick="viewTask()">查看</a><a onclick="openTask('edit')">编辑</a><a onclick="openTask('copy')">复制</a><a onclick="openLog()">日志</a><a class="del" onclick="deleteTask(this)">删除</a></div></td>`;
-  tbody.prepend(row);
-  const count=document.querySelectorAll('.tw tbody tr').length;
-  document.querySelector('.pg-info').textContent=`共 ${count} 条`;
-}
-function saveTask(){
+function validateTask(){
   const errors=[];
   if(!document.getElementById('taskName').value.trim()) errors.push('请输入任务名称');
-  if(!document.querySelectorAll('#weekGrid .day.on').length) errors.push('请至少选择一个周运行时间');
+  if(!picked.size) errors.push('请至少选择一个房间');
+  if(!weekOn.some(Boolean)) errors.push('请至少选择一个周运行时间');
   if(minutesFromTime(document.getElementById('endTime').value)<=minutesFromTime(document.getElementById('startTime').value)) errors.push('执行结束时间必须晚于开始时间');
+  if(document.getElementById('startDate').value>document.getElementById('endDate').value) errors.push('执行结束日期不能早于开始日期');
   if(!numberInRange(document.getElementById('interval').value,1,1440,0)) errors.push('下发间隔请输入 1-1440 分钟的整数');
-  if(document.getElementById('power').value==='开机' && !numberInRange(document.getElementById('temp').value,16,30,1)) errors.push('温度设置请输入 16-30℃，最多保留 1 位小数');
+  if(document.getElementById('power').value==='开机'&&!numberInRange(document.getElementById('temp').value,16,30,1)) errors.push('温度设置请输入 16-30℃，最多保留 1 位小数');
   const box=document.getElementById('formErrors');
   if(errors.length){
     box.innerHTML=`表单校验失败，请修正以下问题：<br>${errors.map(e=>'• '+e).join('<br>')}`;
@@ -267,14 +417,38 @@ function saveTask(){
     return false;
   }
   box.classList.remove('show');
-  insertTaskRow();
-  alert(`空调控制任务已保存。系统将在有效期间每 ${document.getElementById('interval').value} 分钟下发一次控制指令。`);
-  closeTask();
   return true;
 }
-document.querySelectorAll('#weekGrid .day').forEach(d=>d.onclick=()=>{d.classList.toggle('on');updatePreview();});
-document.getElementById('taskModal').addEventListener('click',e=>{if(e.target.id==='taskModal')closeTask()});
-updatePreview();
+function collectTask(status){
+  return {
+    name:document.getElementById('taskName').value.trim(),
+    ts:document.getElementById('startTime').value,te:document.getElementById('endTime').value,
+    iv:+document.getElementById('interval').value,
+    start:document.getElementById('startDate').value,end:document.getElementById('endDate').value,
+    status:status||document.getElementById('taskStatus').value,sync:false,
+    power:document.getElementById('power').value,mode:document.getElementById('mode').value,
+    temp:document.getElementById('temp').value,fan:document.getElementById('fan').value,
+    week:weekOn.slice(),rooms:[...picked],
+  };
+}
+function saveTask(){
+  if(!validateTask()) return;
+  const data=collectTask('启用');
+  if(editMode==='edit'&&editIdx>=0) Object.assign(TASKS[editIdx],data);
+  else TASKS.unshift({...data,crt:now()});
+  $modalClose('dlgTask');doQuery();
+  $msg(`空调控制任务已保存。系统将在有效期间每 ${data.iv} 分钟下发一次控制指令。`);
+}
+function saveDraft(){
+  if(!document.getElementById('taskName').value.trim()){$msg('请先输入任务名称','warning');return;}
+  const data=collectTask('停用');
+  if(editMode==='edit'&&editIdx>=0) Object.assign(TASKS[editIdx],data);
+  else TASKS.unshift({...data,crt:now()});
+  $modalClose('dlgTask');doQuery();
+  $msg('草稿已保存（任务状态：停用）','info');
+}
+
+doQuery();
 </script>
 </body>
 </html>

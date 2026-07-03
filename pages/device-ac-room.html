@@ -1,1 +1,425 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>空调与房间关系</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">空调与房间关系</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="fb"><div class="fi"><div class="fl">空调名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">楼层</div><select style="width:80px"><option value="">全部</option><option>1F</option><option>2F</option><option>3F</option><option>B1</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>空调名称</th><th>所在楼层</th><th>所在房间</th><th>控制器</th><th>控制器通道</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>1F-大厅-01</td><td>1F</td><td>一楼大厅</td><td>CTR001</td><td>CH01</td><td><span class="tag tok">已关联</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>1F-大厅-02</td><td>1F</td><td>一楼大厅</td><td>CTR001</td><td>CH02</td><td><span class="tag tok">已关联</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>2F-会议室-01</td><td>2F</td><td>二楼大会议室</td><td>CTR002</td><td>CH01</td><td><span class="tag tok">已关联</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>2F-办公区-01</td><td>2F</td><td>二楼开放办公区</td><td>CTR002</td><td>CH02</td><td><span class="tag tok">已关联</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>3F-储藏室-01</td><td>3F</td><td>三楼储藏室</td><td>CTR003</td><td>CH01</td><td><span class="tag twn">未关联</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>空调与房间关系</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* ── 顶部三分区 ── */
+.top{display:flex;gap:14px;margin-bottom:14px;align-items:stretch;}
+.pnl{background:var(--bg-panel);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;min-width:0;}
+.p1,.p2{flex:1;}
+.p3{width:210px;flex-shrink:0;}
+.pnl-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.pnl-t{font-size:16px;font-weight:700;color:var(--txw);display:flex;align-items:baseline;gap:8px;white-space:nowrap;}
+.pnl-t .num{font-size:22px;font-weight:700;}
+.pnl-t .sub{font-size:13px;font-weight:400;color:var(--ts);}
+.pnl-body{flex:1;min-height:0;overflow:auto;}
+.top .tw{background:transparent;}
+.top th{background:#202a42;}
+.top td{height:38px;}
+
+/* 全部/未绑定 切换 */
+.seg{display:inline-flex;}
+.seg .sg{height:32px;padding:0 14px;display:flex;align-items:center;font-size:12px;color:var(--tx);background:var(--bg-input);border:1px solid var(--bd2);cursor:pointer;user-select:none;}
+.seg .sg:first-child{border-radius:3px 0 0 3px;}
+.seg .sg:last-child{border-radius:0 3px 3px 0;border-left:none;}
+.seg .sg.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* 树表 行内小图标按钮 */
+.tb{width:28px;height:22px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:1px solid transparent;margin:0 2px;transition:all .15s;}
+.tb-edit{border-color:var(--primary);color:var(--primary);background:transparent;}
+.tb-edit:hover{background:var(--primary-dim);}
+.tb-del{border-color:var(--er);color:var(--er);background:transparent;}
+.tb-del:hover{background:var(--er-dim);}
+.tb-mv{background:var(--primary);border-color:var(--primary);color:#fff;}
+.tb-mv:hover{background:var(--primary-hover);}
+.cell-name{display:flex;align-items:center;gap:6px;text-align:left;}
+.cell-name .arr{font-size:10px;color:var(--ts);width:12px;flex-shrink:0;cursor:pointer;transition:transform .15s;text-align:center;}
+.cell-name .arr.open{transform:rotate(90deg);}
+.cell-name .arr.hid{visibility:hidden;}
+
+/* 面板2 筛选栅格 */
+.acf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.acf input,.acf select{width:100%;}
+tr.acsel td{background:#0d1730!important;}
+
+/* 面板3 确认绑定 */
+.p3-body{flex:1;display:flex;flex-direction:column;align-items:center;gap:0;}
+.slot{width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:4px;min-height:36px;padding:8px 10px;text-align:center;color:var(--ts);font-size:13px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;}
+.slot.has{color:var(--txw);}
+.darr{color:var(--primary);font-size:26px;line-height:1;padding:26px 0;}
+.bindbtn{width:100%;height:54px;font-size:16px;border-radius:6px;margin-top:auto;}
+
+/* 下方关系表 */
+.rel td input,.rel td select{height:30px;font-size:12px;}
+.rel .btn-mini{height:24px;padding:0 10px;}
+.btn-plain-d{background:transparent;border:1px solid var(--er);color:var(--er);}
+.btn-plain-d:hover{background:var(--er-dim);color:var(--er);}
+.th-tenant{display:inline-flex;align-items:center;gap:6px;justify-content:center;}
+.th-tenant .btn-mini{height:22px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ 顶部:选择房间 / 选择空调 / 确认绑定 ═══ -->
+<div class="top">
+  <!-- 1 选择房间 -->
+  <div class="pnl p1">
+    <div class="pnl-h">
+      <div class="pnl-t"><span class="num">1</span>选择房间</div>
+      <div class="flex aic gap8">
+        <button class="btn btnp" onclick="sortTree()">⇅ 一键排序</button>
+        <span class="seg">
+          <span class="sg active" id="segAll" onclick="setSeg('all')">全部</span>
+          <span class="sg" id="segUn" onclick="setSeg('un')">未绑定</span>
+        </span>
+        <button class="btn btnp" onclick="openNew()">+ 新建</button>
+      </div>
+    </div>
+    <div class="pnl-body tw">
+      <table>
+        <thead><tr><th class="tl" style="padding-left:24px">建筑物名称</th><th>建筑物类型</th><th style="width:170px">操作</th></tr></thead>
+        <tbody id="treeBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2 选择空调 -->
+  <div class="pnl p2">
+    <div class="pnl-h">
+      <div class="pnl-t"><span class="num">2</span>选择空调 <span class="sub" id="acCount">(未绑定2台)</span></div>
+      <div class="flex aic gap8">
+        <button class="btn btnp" onclick="acQuery()">🔍 搜索空调</button>
+        <button class="btn btnp" onclick="$msg('功能演示:更多操作','info')">更多操作 ▾</button>
+      </div>
+    </div>
+    <div class="acf">
+      <select id="afHost"><option value="">主机编号</option><option>1</option><option>2</option></select>
+      <select id="afNode"><option value="">节点</option><option>节点1</option><option>节点2</option><option>节点3</option></select>
+      <input id="afOut" placeholder="室外机地址">
+      <input id="afIn" placeholder="室内机地址">
+      <select id="afSw"><option value="">开关</option><option>开</option><option>关</option></select>
+      <select id="afMode"><option value="">模式</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select>
+      <select id="afTemp"><option value="">温度</option><option>23</option><option>24</option><option>25</option><option>26</option></select>
+      <select id="afFan"><option value="">风速</option><option>高风</option><option>中风</option><option>低风</option></select>
+    </div>
+    <div class="pnl-body tw">
+      <table>
+        <thead><tr>
+          <th style="width:36px"><input type="checkbox" id="acAll" onclick="acCheckAll(this.checked)"></th>
+          <th>内机地址</th><th>开关</th><th>模式</th><th>温度</th><th>风速</th><th>空调容量</th>
+        </tr></thead>
+        <tbody id="acBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3 确认绑定 -->
+  <div class="pnl p3">
+    <div class="pnl-h"><div class="pnl-t"><span class="num">3</span>确认绑定</div></div>
+    <div class="p3-body">
+      <div class="slot" id="slotRoom">未选房间</div>
+      <div class="darr">⬇</div>
+      <div class="slot" id="slotAc">未选空调</div>
+      <div class="darr">⬇</div>
+      <button class="btn btnp bindbtn" onclick="doBind()">🔗 绑定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 下方:已绑定关系列表 ═══ -->
+<div class="pnl rel" style="display:block">
+  <div class="fb" style="margin-bottom:12px">
+    <div class="fi"><span class="fl">内机地址</span><input id="fAddr" placeholder="请输入内机地址" style="width:200px"></div>
+    <div class="fi"><span class="fl">租户</span><input id="fTenant" placeholder="请输入租户" style="width:200px"></div>
+    <button class="btn btnp" onclick="relQuery()">🔍 查询</button>
+    <button class="btn" onclick="relReset()">重置</button>
+    <button class="btn btnp" onclick="batchSubmit()">批量提交</button>
+    <button class="btn btnp" onclick="batchUnbind()">批量解绑</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="relAll" onclick="relCheckAll(this.checked)"></th>
+        <th>楼栋</th><th>楼层</th><th>房间</th>
+        <th><span class="th-tenant">租户 <button class="btn btnp btn-mini" onclick="showTenantDetail()">详情</button></span></th>
+        <th>内机地址</th><th>内机标识名称</th><th>容量</th><th style="width:150px">操作</th>
+      </tr></thead>
+      <tbody id="relBody"></tbody>
+    </table>
+  </div>
+  <div id="pager"></div>
+</div>
+
+<!-- 新建/编辑建筑物 -->
+<div class="modal" id="dlgNew">
+  <div class="dialog" style="width:440px">
+    <div class="dh"><span id="dlgNewTitle">新建</span><span class="dx" onclick="$modalClose('dlgNew')">✕</span></div>
+    <div class="db">
+      <div class="form-row mb14"><span class="fl"><span class="req">*</span>建筑物名称</span><input id="nName" placeholder="请输入建筑物名称" class="flex1"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>建筑物类型</span>
+        <select id="nType" class="flex1"><option>楼栋</option><option>楼层</option><option>房间</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgNew')">取 消</button>
+      <button class="btn btnp" onclick="saveNew()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 租户详情 -->
+<div class="modal" id="dlgTenant">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>租户详情</span><span class="dx" onclick="$modalClose('dlgTenant')">✕</span></div>
+    <div class="db">
+      <div class="tw"><table>
+        <thead><tr><th>租户</th><th>房间数</th><th>内机数</th></tr></thead>
+        <tbody id="tenantBody"></tbody>
+      </table></div>
+    </div>
+    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgTenant')">关 闭</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ══════════ 模拟数据 ══════════ */
+/* 建筑物树:1号楼 > 楼层 > 房间 */
+const FLOOR_ROOMS={
+  '3层':['301','302','303','304','305','306','307','308'],
+  '7层':['707','713','714','715','716','717','718','719'],
+  '9层':['903','905','906','908','909','912'],
+  '13层':['1301','1302','1303','1304','1305','1306','1307','中走廊','1310','1311'],
+  '14层':['1404','1406','1408','1410','1412'],
+  '23层':['2302','2303','2305','2308']
+};
+const TREE=[{name:'1号楼',type:'楼栋',open:false,children:Object.keys(FLOOR_ROOMS).map(f=>({
+  name:f,type:'楼层',open:false,children:FLOOR_ROOMS[f].map(r=>({name:r,type:'房间'}))
+}))}];
+
+/* 未绑定空调 */
+let ACS=[
+  {addr:'2-3-0-5', sw:'关',mode:'制冷',temp:24,fan:'高风',cap:70,checked:false},
+  {addr:'2-3-26-7',sw:'关',mode:'制冷',temp:23,fan:'高风',cap:70,checked:false}
+];
+let acFiltered=ACS.slice();
+
+/* 已绑定关系(共618条,首屏对齐线上截图) */
+const RELS=(()=>{
+  const head=[
+    {fl:'13层',room:'1301',addr:'2-3-2-2',cap:45},
+    {fl:'13层',room:'1305',addr:'2-3-2-1',cap:70},
+    {fl:'13层',room:'1307',addr:'2-3-4-6',cap:70},
+    {fl:'13层',room:'1306',addr:'2-3-4-7',cap:70},
+    {fl:'13层',room:'1303',addr:'2-3-2-3',cap:70},
+    {fl:'13层',room:'1304',addr:'2-3-2-4',cap:70},
+    {fl:'13层',room:'1302',addr:'2-3-2-5',cap:70},
+    {fl:'13层',room:'中走廊',addr:'2-3-2-6',cap:45,tenant:'31'},
+    {fl:'13层',room:'1310',addr:'2-3-4-1',cap:70},
+    {fl:'13层',room:'1311',addr:'2-3-4-2',cap:70}
+  ];
+  const rows=head.map(r=>({bld:'1号楼',fl:r.fl,room:r.room,tenant:r.tenant||r.room,addr:r.addr,name:'',cap:r.cap,checked:false}));
+  let i=0;
+  while(rows.length<618){
+    const fl=1+(i%23);
+    const rm=fl*100+1+Math.floor(i/23)%28;
+    rows.push({bld:'1号楼',fl:fl+'层',room:String(rm),tenant:String(rm),
+      addr:`${1+(i%2)}-${1+(i%4)}-${fl%28}-${i%8}`,name:'',
+      cap:[70,45,56,70][i%4],checked:false});
+    i++;
+  }
+  return rows;
+})();
+
+/* ══════════ 面板1:建筑物树 ══════════ */
+let seg='all';
+let selRoom=null;   /* {name,fl} */
+function setSeg(v){
+  seg=v;
+  document.getElementById('segAll').className='sg'+(v==='all'?' active':'');
+  document.getElementById('segUn').className='sg'+(v==='un'?' active':'');
+  renderTree();
+}
+const boundRooms=new Set(RELS.slice(0,60).map(r=>r.room));
+function renderTree(){
+  const tb=document.getElementById('treeBody');
+  const rows=[];
+  const ops=`<span class="op"><span class="tb tb-edit" onclick="event.stopPropagation();editNode(this)" title="编辑">✎</span><span class="tb tb-del" onclick="event.stopPropagation();delNode(this)" title="删除">🗑</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已上移')" title="上移">▲</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已下移')" title="下移">▼</span></span>`;
+  TREE.forEach((b,bi)=>{
+    rows.push(`<tr><td class="tl" style="padding-left:12px"><span class="cell-name">
+      <span class="arr ${b.open?'open':''}" onclick="toggleNode(${bi})">▶</span>
+      <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${b.name}</span></span></td>
+      <td>${b.type}</td><td>${ops}</td></tr>`);
+    if(b.open) b.children.forEach((f,fi)=>{
+      if(seg==='un'&&f.children.every(r=>boundRooms.has(r.name))) return;
+      rows.push(`<tr><td class="tl" style="padding-left:34px"><span class="cell-name">
+        <span class="arr ${f.open?'open':''}" onclick="toggleNode(${bi},${fi})">▶</span>
+        <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${f.name}</span></span></td>
+        <td>${f.type}</td><td>${ops}</td></tr>`);
+      if(f.open) f.children.forEach(r=>{
+        if(seg==='un'&&boundRooms.has(r.name)) return;
+        const sel=selRoom&&selRoom.name===r.name&&selRoom.fl===f.name;
+        rows.push(`<tr><td class="tl" style="padding-left:58px"><span class="cell-name">
+          <span class="arr hid">▶</span>
+          <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();pickRoom('${f.name}|${r.name}',this)"><span>${r.name}</span></span></td>
+          <td>${r.type}</td><td>${ops}</td></tr>`);
+      });
+    });
+  });
+  tb.innerHTML=rows.join('');
+}
+function toggleNode(bi,fi){
+  if(fi===undefined) TREE[bi].open=!TREE[bi].open;
+  else TREE[bi].children[fi].open=!TREE[bi].children[fi].open;
+  renderTree();
+}
+function pickRoom(key,el){
+  if(!key){ el.checked=false; $msg('请勾选房间进行绑定','warning'); return; }
+  const [fl,name]=key.split('|');
+  selRoom=el.checked?{fl,name}:null;
+  renderTree();renderSlots();
+}
+function sortTree(){ $msg('一键排序完成'); }
+let editing=null;
+function openNew(){ editing=null;
+  document.getElementById('dlgNewTitle').textContent='新建';
+  document.getElementById('nName').value='';document.getElementById('nType').value='楼栋';
+  $modal('dlgNew');
+}
+function editNode(el){ editing=el;
+  const name=el.closest('tr').querySelector('.cell-name span:last-child').textContent;
+  const type=el.closest('tr').children[1].textContent;
+  document.getElementById('dlgNewTitle').textContent='编辑';
+  document.getElementById('nName').value=name;document.getElementById('nType').value=type;
+  $modal('dlgNew');
+}
+function saveNew(){
+  if(!document.getElementById('nName').value.trim()){$msg('请输入建筑物名称','warning');return;}
+  $modalClose('dlgNew');$msg(editing?'保存成功':'新建成功');
+}
+function delNode(el){
+  const name=el.closest('tr').querySelector('.cell-name span:last-child').textContent;
+  $confirm('确定删除「'+name+'」吗?',()=>$msg('删除成功'));
+}
+
+/* ══════════ 面板2:选择空调 ══════════ */
+function renderAcs(){
+  const tb=document.getElementById('acBody');
+  tb.innerHTML=acFiltered.length?acFiltered.map((a,i)=>`
+    <tr class="${a.checked?'acsel':''}">
+      <td><input type="checkbox" ${a.checked?'checked':''} onclick="acCheck(${i},this.checked)"></td>
+      <td>${a.addr}</td><td>${a.sw}</td><td>${a.mode}</td><td>${a.temp}</td><td>${a.fan}</td><td>${a.cap}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="7"><div class="empty" style="padding:30px"><span class="et">暂无数据</span></div></td></tr>';
+  document.getElementById('acCount').textContent='(未绑定'+ACS.length+'台)';
+  document.getElementById('acAll').checked=acFiltered.length>0&&acFiltered.every(a=>a.checked);
+  renderSlots();
+}
+function acCheck(i,v){ acFiltered[i].checked=v; renderAcs(); }
+function acCheckAll(v){ acFiltered.forEach(a=>a.checked=v); renderAcs(); }
+function acQuery(){
+  const q={in:document.getElementById('afIn').value.trim(),sw:document.getElementById('afSw').value,
+    mode:document.getElementById('afMode').value,temp:document.getElementById('afTemp').value,fan:document.getElementById('afFan').value};
+  acFiltered=ACS.filter(a=>(!q.in||a.addr.includes(q.in))&&(!q.sw||a.sw===q.sw)&&
+    (!q.mode||a.mode===q.mode)&&(!q.temp||String(a.temp)===q.temp)&&(!q.fan||a.fan===q.fan));
+  renderAcs();
+}
+
+/* ══════════ 面板3:确认绑定 ══════════ */
+function renderSlots(){
+  const sr=document.getElementById('slotRoom'),sa=document.getElementById('slotAc');
+  if(selRoom){sr.textContent='1号楼 / '+selRoom.fl+' / '+selRoom.name;sr.classList.add('has');}
+  else{sr.textContent='未选房间';sr.classList.remove('has');}
+  const picked=ACS.filter(a=>a.checked);
+  if(picked.length){sa.textContent=picked.map(a=>a.addr).join('、');sa.classList.add('has');}
+  else{sa.textContent='未选空调';sa.classList.remove('has');}
+}
+function doBind(){
+  const picked=ACS.filter(a=>a.checked);
+  if(!selRoom){$msg('请先选择房间','warning');return;}
+  if(!picked.length){$msg('请先选择空调','warning');return;}
+  picked.forEach(a=>{
+    RELS.unshift({bld:'1号楼',fl:selRoom.fl,room:selRoom.name,tenant:selRoom.name,addr:a.addr,name:'',cap:a.cap,checked:false});
+  });
+  ACS=ACS.filter(a=>!a.checked);acFiltered=ACS.slice();
+  selRoom=null;
+  $msg('绑定成功');
+  renderTree();renderAcs();relQuery();
+}
+
+/* ══════════ 下方:关系列表 ══════════ */
+let relFiltered=RELS.slice();
+const pg={total:RELS.length,page:1,size:10,onChange:()=>renderRel()};
+function relQuery(){
+  const addr=document.getElementById('fAddr').value.trim();
+  const ten=document.getElementById('fTenant').value.trim();
+  relFiltered=RELS.filter(r=>(!addr||r.addr.includes(addr))&&(!ten||r.tenant.includes(ten)));
+  pg.page=1;pg.total=relFiltered.length;
+  $pager('pager',pg);renderRel();
+}
+function relReset(){
+  document.getElementById('fAddr').value='';document.getElementById('fTenant').value='';
+  relQuery();
+}
+function renderRel(){
+  const start=(pg.page-1)*pg.size;
+  const rows=relFiltered.slice(start,start+pg.size);
+  document.getElementById('relBody').innerHTML=rows.length?rows.map((r,i)=>{
+    const gi=RELS.indexOf(r);
+    return `<tr>
+      <td><input type="checkbox" ${r.checked?'checked':''} onclick="RELS[${gi}].checked=this.checked"></td>
+      <td>${r.bld}</td><td>${r.fl}</td><td>${r.room}</td>
+      <td><select style="width:120px" onchange="$msg('租户已变更')">
+        <option ${'selected'}>${r.tenant}</option><option>公共区域</option><option>未分配</option></select></td>
+      <td>${r.addr}</td>
+      <td><input placeholder="请输入" value="${r.name}" style="width:180px" onchange="RELS[${gi}].name=this.value"></td>
+      <td><input value="${r.cap}" style="width:110px" onchange="RELS[${gi}].cap=this.value"></td>
+      <td><span class="op">
+        <button class="btn btn-mini btn-plain" onclick="$msg('提交成功')">提交</button>
+        <button class="btn btn-mini btn-plain-d" onclick="unbindRow(${gi})">解绑</button>
+      </span></td>
+    </tr>`;}).join('')
+    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  document.getElementById('relAll').checked=false;
+}
+function relCheckAll(v){
+  const start=(pg.page-1)*pg.size;
+  relFiltered.slice(start,start+pg.size).forEach(r=>r.checked=v);
+  renderRel();
+  document.getElementById('relAll').checked=v;
+}
+function unbindRow(gi){
+  const r=RELS[gi];
+  $confirm('确定解绑房间 '+r.room+' 的内机 '+r.addr+' 吗?',()=>{
+    RELS.splice(gi,1);relQuery();$msg('解绑成功');
+  });
+}
+function batchSubmit(){
+  const n=RELS.filter(r=>r.checked).length;
+  if(!n){$msg('请先勾选记录','warning');return;}
+  $msg('已批量提交 '+n+' 条记录');
+  RELS.forEach(r=>r.checked=false);renderRel();
+}
+function batchUnbind(){
+  const picked=RELS.filter(r=>r.checked);
+  if(!picked.length){$msg('请先勾选记录','warning');return;}
+  $confirm('确定批量解绑选中的 '+picked.length+' 条记录吗?',()=>{
+    picked.forEach(r=>{const i=RELS.indexOf(r);if(i>-1)RELS.splice(i,1);});
+    relQuery();$msg('批量解绑成功');
+  });
+}
+function showTenantDetail(){
+  const map={};
+  RELS.forEach(r=>{map[r.tenant]=map[r.tenant]||{rooms:new Set(),n:0};map[r.tenant].rooms.add(r.room);map[r.tenant].n++;});
+  document.getElementById('tenantBody').innerHTML=Object.keys(map).slice(0,8).map(t=>
+    `<tr><td>${t}</td><td>${map[t].rooms.size}</td><td>${map[t].n}</td></tr>`).join('');
+  $modal('dlgTenant');
+}
+
+renderTree();renderAcs();
+$pager('pager',pg);renderRel();
+</script>
+</body>
+</html>

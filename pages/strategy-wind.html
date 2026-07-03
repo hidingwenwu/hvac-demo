@@ -4,85 +4,190 @@
 <meta charset="UTF-8">
 <title>风水联动</title>
 <link rel="stylesheet" href="_base.css">
+<!--
+  说明:该页 live 抓取被重定向至综合监控大屏(strategy-wind.json 的 _finalUrl 为 largeScreen/index),
+  无真实页面截图可依据。按同模块"负荷调控"(/loadControl/task/index)与 ctrl-fault 的
+  标准"筛选 + 表格 + 分页"模式设计,内容为主机/水泵与末端联动策略列表。
+-->
 <style>
-.tabs{display:flex;gap:8px;margin-bottom:var(--gap)}
-.tab{padding:7px 14px;border:1px solid var(--bd);border-radius:999px;color:var(--ts);background:rgba(255,255,255,.03)}
-.tab.active{border-color:var(--gw);color:var(--hl);background:var(--pd)}
-.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap);margin-bottom:var(--gap)}
-.mini{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px}
-.mini .lb{font-size:11px;color:var(--ts);margin-bottom:6px}
-.mini .v{font:700 24px 'Roboto Mono',monospace}
-.trend{height:170px;border:1px solid rgba(30,58,110,.65);border-radius:var(--r);background:linear-gradient(180deg,rgba(0,229,255,.05),rgba(41,121,255,.02));position:relative;overflow:hidden}
-.trend svg{width:100%;height:100%}
-.legend{display:flex;gap:16px;color:var(--ts);font-size:12px;margin-top:10px}
-.legend span{display:flex;align-items:center;gap:6px}.legend i{width:10px;height:2px;display:inline-block}
-.rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-top:var(--gap)}
-.rule{border:1px solid rgba(30,58,110,.8);border-radius:var(--r);background:rgba(255,255,255,.025);padding:14px}
-.rule h3{font-size:13px;margin-bottom:12px;color:#dbeaff}.rule p{color:var(--ts);line-height:1.7;font-size:12px}
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.rule-grid{grid-template-columns:1fr}}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
 </style>
 </head>
 <body>
-<div class="ph">
-  <div class="pt">风水联动</div>
-  <div class="pa"><button class="btn">策略管理</button><button class="btn">执行日志</button><button class="btn btnp">创建新任务</button></div>
-</div>
-
-<div class="tabs"><div class="tab active">任务列表</div><div class="tab">风盘运行状态</div><div class="tab">策略配置</div><div class="tab">历史曲线</div></div>
-
-<div class="kpi-grid">
-  <div class="mini"><div class="lb">风盘开机率1</div><div class="v scc">68%</div></div>
-  <div class="mini"><div class="lb">风盘开机率2</div><div class="v scb">72%</div></div>
-  <div class="mini"><div class="lb">温度达标率</div><div class="v scg">89%</div></div>
-  <div class="mini"><div class="lb">低/无风比例</div><div class="v scw">32%</div></div>
-  <div class="mini"><div class="lb">温度正偏数量</div><div class="v scr">12</div></div>
-  <div class="mini"><div class="lb">风量最大仍不达标</div><div class="v scw">5</div></div>
-</div>
-
+<!-- 筛选 + 操作按钮 -->
 <div class="fb">
-  <div class="fi"><div class="fl">任务状态</div><select style="width:130px"><option>全部状态</option><option>执行中</option><option>停用</option><option>未到执行时间</option><option>已过期</option></select></div>
-  <div class="fi"><div class="fl">房间范围</div><select style="width:150px"><option>所有房间</option><option>楼栋1</option><option>楼栋2</option><option>机房群控区域</option></select></div>
-  <div class="fi"><div class="fl">起始时间</div><input type="datetime-local" style="width:185px"></div>
-  <div class="fi"><div class="fl">结束时间</div><input type="datetime-local" style="width:185px"></div>
-  <button class="btn btnp">查询</button><button class="btn">重置</button>
+  <div class="fi"><span class="fl">策略名称</span><input id="fName" placeholder="请输入策略名称" style="width:190px"></div>
+  <div class="fi"><span class="fl">启用状态</span>
+    <select id="fState" style="width:190px">
+      <option value="">请选择启用状态</option>
+      <option value="1">启用</option>
+      <option value="0">停用</option>
+    </select>
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openCreate()">＋ 创建策略</button>
 </div>
 
 <div class="tw">
-<table>
-<thead><tr><th>任务ID</th><th>任务名称</th><th>起始时间</th><th>结束时间</th><th>房间范围</th><th>执行策略</th><th>任务状态</th><th>创建时间</th><th>操作</th></tr></thead>
-<tbody>
-<tr><td>20230615001</td><td>办公区节能策略</td><td>2026-06-15 08:00</td><td>2026-06-15 18:00</td><td>楼栋1-1至5层</td><td>夏季制冷策略</td><td><span class="tag tok">执行中</span></td><td>2026-06-14 15:30</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
-<tr><td>20230614002</td><td>会议室温控调节</td><td>2026-06-14 09:00</td><td>2026-06-14 17:00</td><td>楼栋2-会议室</td><td>会议室专用策略</td><td><span class="tag tin">已过期</span></td><td>2026-06-13 10:15</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
-<tr><td>20230616003</td><td>夜间节能模式</td><td>2026-06-16 22:00</td><td>2026-06-17 06:00</td><td>楼栋1/楼栋2</td><td>夜间低温策略</td><td><span class="tag twn">未到执行时间</span></td><td>2026-06-15 09:45</td><td><div class="op"><a>同步</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
-<tr><td>20230612004</td><td>测试策略</td><td>2026-06-12 10:00</td><td>2026-06-12 12:00</td><td>楼栋1-3层-301</td><td>测试用策略</td><td><span class="tag ter">停用</span></td><td>2026-06-12 09:30</td><td><div class="op"><a>启用</a><a>编辑</a><a>日志</a><a class="del">删除</a></div></td></tr>
-</tbody>
-</table>
-<div class="pg"><div class="pg-info">显示 1 至 4 条，共 24 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+  <table>
+    <thead><tr>
+      <th>策略ID</th><th>策略名称</th><th>联动主机</th><th>联动水泵</th><th>末端范围</th>
+      <th>触发条件</th><th>执行动作</th><th>启用状态</th><th>创建时间</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 创建/编辑策略弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:640px">
+    <div class="dh"><span id="dlgEditTitle">创建策略</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-grid">
+        <div class="form-item"><span class="fl"><span class="req">*</span>策略名称</span><input id="eName" placeholder="请输入策略名称"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>联动主机</span>
+          <select id="eHost"><option>1#冷水机组</option><option>2#冷水机组</option><option>3#热泵机组</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>联动水泵</span>
+          <select id="ePump"><option>1#冷冻水泵</option><option>2#冷冻水泵</option><option>1#冷却水泵</option><option>2#冷却水泵</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>末端范围</span>
+          <select id="eScope"><option>全部末端</option><option>1号楼 3~9层</option><option>1号楼 14~23层</option><option>机房群控区域</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>触发条件</span><input id="eCond" placeholder="如:末端开启率 ≥ 60%"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>执行动作</span><input id="eAct" placeholder="如:水泵频率上调至 45Hz"></div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveRule()">确 定</button>
+    </div>
+  </div>
 </div>
 
-<div class="rule-grid">
-  <div class="panel">
-    <div class="pnt">运行效率指标趋势</div>
-    <div class="trend">
-      <svg viewBox="0 0 600 170" preserveAspectRatio="none">
-        <polyline points="0,110 80,95 160,104 240,78 320,84 400,63 480,72 600,48" fill="none" stroke="#00e5ff" stroke-width="3"/>
-        <polyline points="0,132 80,120 160,126 240,106 320,112 400,100 480,92 600,82" fill="none" stroke="#00e676" stroke-width="3"/>
-        <polyline points="0,88 80,83 160,76 240,72 320,66 400,58 480,54 600,46" fill="none" stroke="#ffb300" stroke-width="3"/>
-      </svg>
-    </div>
-    <div class="legend"><span><i style="background:#00e5ff"></i>风盘开机率1</span><span><i style="background:#00e676"></i>风盘开机率2</span><span><i style="background:#ffb300"></i>温度达标率</span></div>
-  </div>
-  <div class="panel">
-    <div class="pnt">策略配置摘要</div>
-    <div class="rule">
-      <h3>夏季制冷策略</h3>
-      <p>模式锁定为制冷，设定温度上限 28℃、下限 24℃。当温差正偏超过 2℃ 时优先调高风速；连续 15 分钟不达标时下调设定温度。</p>
-    </div>
-    <div class="rule" style="margin-top:12px">
-      <h3>夜间低温策略</h3>
-      <p>夜间时段执行低负荷运行，降低低/无风比例，限制风量已最大但仍不达标房间数量，并记录每次调整日志。</p>
-    </div>
+<!-- 策略详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>策略详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
   </div>
 </div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据:主机/水泵与末端联动策略 ── */
+let RULES=[
+{id:2018,name:'制冷高峰水泵升频联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'1号楼 3~9层',cond:'末端开启率 ≥ 60%',act:'水泵频率上调至 45Hz',on:true,crt:'2026-06-28 10:12:36'},
+{id:2017,name:'低负荷水泵降频联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'全部末端',cond:'末端开启率 < 30% 持续 15 分钟',act:'水泵频率下调至 32Hz',on:true,crt:'2026-06-25 15:40:08'},
+{id:2015,name:'末端全关联动停机',host:'2#冷水机组',pump:'2#冷冻水泵',scope:'全部末端',cond:'末端全部关闭持续 20 分钟',act:'停主机并延时 5 分钟停水泵',on:true,crt:'2026-06-20 09:05:44'},
+{id:2013,name:'供回水温差过小联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'1号楼 14~23层',cond:'供回水温差 < 2℃ 持续 10 分钟',act:'水泵频率下调 2Hz/次',on:false,crt:'2026-06-14 14:22:19'},
+{id:2011,name:'冷却水高温保护联动',host:'2#冷水机组',pump:'2#冷却水泵',scope:'机房群控区域',cond:'冷却水回水温度 ≥ 33℃',act:'冷却水泵频率上调至 48Hz',on:true,crt:'2026-06-09 11:37:52'},
+{id:2009,name:'夜间末端联动加机',host:'3#热泵机组',pump:'1#冷却水泵',scope:'1号楼 3~9层',cond:'22:00 后末端开启率 ≥ 75%',act:'联动开启 3#热泵机组',on:false,crt:'2026-05-30 16:58:03',},
+{id:2008,name:'早高峰预冷联动',host:'1#冷水机组',pump:'1#冷冻水泵',scope:'全部末端',cond:'工作日 07:30 定时触发',act:'开主机与水泵,水泵频率 40Hz',on:true,crt:'2026-05-22 08:46:27'},
+];
+
+/* ── 查询/表格/分页 ── */
+let filtered=RULES.slice(),editId=null;
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const name=document.getElementById('fName').value.trim();
+  const st=document.getElementById('fState').value;
+  filtered=RULES.filter(r=>(!name||r.name.includes(name))&&(!st||String(+r.on)===st));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fName').value='';
+  document.getElementById('fState').value='';
+  doQuery();
+}
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
+    <tr>
+      <td>${r.id}</td><td>${r.name}</td><td>${r.host}</td><td>${r.pump}</td><td>${r.scope}</td>
+      <td>${r.cond}</td><td>${r.act}</td>
+      <td><span class="switch ${r.on?'on':''}" onclick="toggleRule(${r.id})"></span></td>
+      <td>${r.crt}</td>
+      <td><span class="op"><a onclick="showDetail(${r.id})">详情</a><a onclick="openEdit(${r.id})">编辑</a><a class="danger" onclick="delRule(${r.id})">删除</a></span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function toggleRule(id){
+  const r=RULES.find(t=>t.id===id);r.on=!r.on;
+  renderTable();$msg(r.on?'策略已启用':'策略已停用');
+}
+function delRule(id){
+  $confirm('确定删除该联动策略吗?',()=>{
+    RULES=RULES.filter(t=>t.id!==id);doQuery();$msg('删除成功');
+  });
+}
+
+/* ── 创建/编辑 ── */
+function openCreate(){
+  editId=null;
+  document.getElementById('dlgEditTitle').textContent='创建策略';
+  ['eName','eCond','eAct'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('eHost').value='1#冷水机组';
+  document.getElementById('ePump').value='1#冷冻水泵';
+  document.getElementById('eScope').value='全部末端';
+  $modal('dlgEdit');
+}
+function openEdit(id){
+  const r=RULES.find(t=>t.id===id);editId=id;
+  document.getElementById('dlgEditTitle').textContent='编辑策略';
+  document.getElementById('eName').value=r.name;
+  document.getElementById('eHost').value=r.host;
+  document.getElementById('ePump').value=r.pump;
+  document.getElementById('eScope').value=r.scope;
+  document.getElementById('eCond').value=r.cond;
+  document.getElementById('eAct').value=r.act;
+  $modal('dlgEdit');
+}
+function saveRule(){
+  const name=document.getElementById('eName').value.trim();
+  const cond=document.getElementById('eCond').value.trim();
+  const act=document.getElementById('eAct').value.trim();
+  if(!name)return $msg('请输入策略名称','warning');
+  if(!cond)return $msg('请输入触发条件','warning');
+  if(!act)return $msg('请输入执行动作','warning');
+  const data={name,host:document.getElementById('eHost').value,pump:document.getElementById('ePump').value,
+    scope:document.getElementById('eScope').value,cond,act};
+  if(editId){
+    Object.assign(RULES.find(t=>t.id===editId),data);
+    $msg('保存成功');
+  }else{
+    const now=new Date(),p=n=>String(n).padStart(2,'0');
+    RULES.unshift(Object.assign({id:Math.max(...RULES.map(t=>t.id))+1,on:true,
+      crt:`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`},data));
+    $msg('创建成功');
+  }
+  $modalClose('dlgEdit');doQuery();
+}
+
+/* ── 详情 ── */
+function showDetail(id){
+  const r=RULES.find(t=>t.id===id);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">策略ID:</span><span class="v">${r.id}</span>
+    <span class="k">策略名称:</span><span class="v">${r.name}</span>
+    <span class="k">联动主机:</span><span class="v">${r.host}</span>
+    <span class="k">联动水泵:</span><span class="v">${r.pump}</span>
+    <span class="k">末端范围:</span><span class="v">${r.scope}</span>
+    <span class="k">触发条件:</span><span class="v">${r.cond}</span>
+    <span class="k">执行动作:</span><span class="v">${r.act}</span>
+    <span class="k">启用状态:</span><span class="v ${r.on?'text-ok':'text-sub'}">${r.on?'启用':'停用'}</span>
+    <span class="k">创建时间:</span><span class="v">${r.crt}</span>`;
+  $modal('dlgDetail');
+}
+
+doQuery();
+</script>
 </body>
 </html>

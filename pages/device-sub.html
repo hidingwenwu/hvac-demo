@@ -1,140 +1,240 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>子账号列表</title>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>子账号列表</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-tbody tr{animation:fadeUp .18s ease both;}
-tbody tr:nth-child(1){animation-delay:.03s}tbody tr:nth-child(2){animation-delay:.06s}
-tbody tr:nth-child(3){animation-delay:.09s}tbody tr:nth-child(4){animation-delay:.12s}
-tbody tr:nth-child(5){animation-delay:.15s}tbody tr:nth-child(6){animation-delay:.18s}
-tbody tr:nth-child(7){animation-delay:.21s}tbody tr:nth-child(8){animation-delay:.24s}
-.op a+a{margin-left:2px;}
-.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;}
-.confirm-bg.show{display:flex;}
-.confirm-box{background:#071426;border:1px solid var(--bd);border-radius:8px;padding:24px 28px;min-width:280px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6);}
-.confirm-box p{font-size:14px;margin-bottom:18px;line-height:1.6;}
-.confirm-box .cf-btns{display:flex;gap:10px;justify-content:center;}
-.bc-nav{font-size:12px;color:var(--ts);margin-top:3px;}
-.bc-nav .bcs{margin:0 5px;opacity:.5;}
-.bc-nav .cur{color:var(--hl);}
+/* 子账号列表页专有样式 */
+.tag-click{cursor:pointer;}                                 /* 状态标签可点击切换启停 */
+.detail-grid{display:grid;grid-template-columns:100px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+/* 房间清单 */
+.room-list{display:flex;flex-wrap:wrap;gap:8px;}
+.room-item{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-input);
+  border:1px solid var(--bd);border-radius:4px;font-size:12px;color:var(--tx);}
 </style>
-</head><body>
+</head>
+<body>
 
-<div class="ph">
-  <div>
-    <div class="pt">子账号列表</div>
-    <div class="bc-nav">项目及设备管理 <span class="bcs">/</span> <span class="cur">子账号列表</span></div>
-  </div>
-  <div class="pa"></div>
-</div>
-
+<!-- 筛选栏(登录账号/姓名/手机号码 + 搜索/重置,右侧添加子账号) -->
 <div class="fb">
-  <div class="fi"><div class="fl">登录账号</div><input id="q-login" placeholder="请输入" style="width:130px"></div>
-  <div class="fi"><div class="fl">姓名</div><input id="q-name" placeholder="请输入" style="width:110px"></div>
-  <div class="fi"><div class="fl">手机号码</div><input id="q-phone" placeholder="请输入" style="width:130px"></div>
-  <button class="btn btnp" onclick="doQuery()">搜索</button>
+  <div class="fi"><span class="fl">登录账号</span><input id="fLogin" placeholder="请输入登录账号" style="width:170px"></div>
+  <div class="fi"><span class="fl">姓名</span><input id="fName" placeholder="请输入姓名" style="width:160px"></div>
+  <div class="fi"><span class="fl">手机号码</span><input id="fPhone" placeholder="请输入手机号" style="width:170px"></div>
+  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
-  <button class="btn btns" onclick="goCreate()">+ 添加子账号</button>
+  <button class="btn btnp" style="margin-left:auto" onclick="location.href='device-sub-create.html'">＋ 添加子账号</button>
 </div>
 
+<!-- 数据表(列严格按线上 headers) -->
 <div class="tw">
-  <table id="main-table">
+  <table>
     <thead><tr>
-      <th>添加时间</th>
-      <th>登录名称</th>
-      <th>姓名</th>
-      <th>手机号</th>
-      <th>性别</th>
-      <th style="text-align:center">状态</th>
-      <th>操作</th>
+      <th>添加时间</th><th>登录名称</th><th>姓名</th><th>手机号</th><th>性别</th><th>职位</th><th>状态</th><th>操作</th>
     </tr></thead>
-    <tbody id="tb"></tbody>
+    <tbody id="tbody"></tbody>
   </table>
-  <div class="pg">
-    <div class="pg-info" id="pg-info">共8条</div>
-    <div class="pgr">
-      <span class="pgb pga">1</span>
-      <span class="pgb">2</span>
-      <span class="pgb">›</span>
+</div>
+<div id="pager"></div>
+
+<!-- 子账号详情弹窗 -->
+<div class="modal" id="dlgView">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>子账号详情</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="viewGrid"></div></div>
+    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgView')">关 闭</button></div>
+  </div>
+</div>
+
+<!-- 编辑子账号弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span>编辑子账号</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-grid">
+        <div class="form-item"><span class="fl"><span class="req">*</span>登录名称</span><input id="eLogin" disabled style="opacity:.6"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>姓名</span><input id="eName" placeholder="请输入姓名"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>手机号</span><input id="ePhone" placeholder="请输入手机号"></div>
+        <div class="form-item"><span class="fl">性别</span>
+          <select id="eGender"><option>男</option><option>女</option></select>
+        </div>
+        <div class="form-item"><span class="fl">职位</span>
+          <select id="eJob"><option>默认</option><option>项目经理</option><option>运营专员</option><option>财务</option><option>技术员</option></select>
+        </div>
+        <div class="form-item"><span class="fl">状态</span>
+          <select id="eStatus"><option value="1">启用</option><option value="0">停用</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveEdit()">确 定</button>
     </div>
   </div>
 </div>
 
-<!-- 确认删除弹窗 -->
-<div class="confirm-bg" id="del-bg">
-  <div class="confirm-box">
-    <p id="del-msg">确认删除该子账号？</p>
-    <div class="cf-btns">
-      <button class="btn" onclick="closeConfirm()">取消</button>
-      <button class="btn btnd" id="del-ok">确认删除</button>
+<!-- 查看/修改房间弹窗 -->
+<div class="modal" id="dlgRoom">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span id="dlgRoomTitle">查看房间</span><span class="dx" onclick="$modalClose('dlgRoom')">✕</span></div>
+    <div class="db">
+      <div class="text-sub" style="font-size:12px;margin-bottom:10px" id="roomTip"></div>
+      <div class="room-list" id="roomList"></div>
     </div>
+    <div class="df" id="roomFoot"></div>
   </div>
 </div>
 
+<script src="_ui.js"></script>
 <script>
-const ROWS=[
-  {id:1,added:'2024-03-01 09:12',login:'sh_admin',name:'陈明',phone:'136****0011',gender:'男',job:'项目经理',status:1},
-  {id:2,added:'2024-03-05 14:30',login:'sh_op1',name:'刘芳',phone:'135****0012',gender:'女',job:'运营专员',status:1},
-  {id:3,added:'2024-04-01 10:05',login:'bj_admin',name:'孙强',phone:'138****0021',gender:'男',job:'项目经理',status:1},
-  {id:4,added:'2024-05-10 16:45',login:'gz_view',name:'杨洁',phone:'139****0031',gender:'女',job:'财务',status:1},
-  {id:5,added:'2024-06-01 08:55',login:'sh_view2',name:'赵磊',phone:'137****0041',gender:'男',job:'技术员',status:0},
-  {id:6,added:'2024-06-10 11:20',login:'bj_op1',name:'李娜',phone:'130****0051',gender:'女',job:'运营专员',status:1},
-  {id:7,added:'2024-07-01 13:00',login:'gz_admin',name:'王伟',phone:'131****0061',gender:'男',job:'项目经理',status:1},
-  {id:8,added:'2024-07-15 09:30',login:'gz_op1',name:'张敏',phone:'132****0071',gender:'女',job:'财务',status:1},
-];
+/* ── 模拟数据(首条与线上一致,状态绿"启用"/红"停用") ── */
+const ROOMS_ALL=['1-701','1-702','1-707','1-713','1-714','1-715','1-716','1-717','1-718','1-719','2-1404','2-1408','2-1412','2-2302','2-2305'];
+let SEQ=0;
+const DATA=[
+  {time:'2025-06-24 15:31:56',login:'wlgyB2',name:'1861蔚蓝公寓B2',phone:'12313432435',gender:'男',job:'默认',status:1,rooms:ROOMS_ALL.slice(0,10)},
+  {time:'2025-09-11 10:22:40',login:'wlgyB2_op1',name:'刘志强',phone:'13805320166',gender:'男',job:'项目经理',status:1,rooms:ROOMS_ALL.slice(0,6)},
+  {time:'2025-10-08 14:05:33',login:'wlgyB2_op2',name:'王晓燕',phone:'15954287733',gender:'女',job:'运营专员',status:1,rooms:ROOMS_ALL.slice(3,9)},
+  {time:'2025-11-19 09:47:12',login:'wlgyB2_fin',name:'张海丽',phone:'13278645290',gender:'女',job:'财务',status:1,rooms:ROOMS_ALL.slice(0,4)},
+  {time:'2026-01-06 16:38:05',login:'wlgyB2_tech',name:'赵国栋',phone:'18866532417',gender:'男',job:'技术员',status:0,rooms:ROOMS_ALL.slice(5,12)},
+  {time:'2026-02-14 11:20:58',login:'wlgyB2_op3',name:'孙梦洁',phone:'13153409821',gender:'女',job:'运营专员',status:1,rooms:ROOMS_ALL.slice(8,14)},
+  {time:'2026-03-27 15:02:36',login:'wlgyB2_view',name:'李文博',phone:'15866731204',gender:'男',job:'默认',status:0,rooms:ROOMS_ALL.slice(0,3)},
+  {time:'2026-05-09 08:55:21',login:'wlgyB2_mgr',name:'陈永康',phone:'13964278530',gender:'男',job:'项目经理',status:1,rooms:ROOMS_ALL.slice(2,11)},
+  {time:'2026-06-09 16:47:37',login:'wlgyB2_op4',name:'周雅琴',phone:'18754309662',gender:'女',job:'运营专员',status:1,rooms:ROOMS_ALL.slice(4,8)},
+].map(r=>(r.id=++SEQ,r));
 
-let delTargetId=null;
-
-function renderTable(rows){
-  document.getElementById('tb').innerHTML=rows.map(r=>`<tr>
-    <td style="color:var(--ts);font-size:12px;">${r.added}</td>
-    <td>${r.login}</td>
-    <td>${r.name}</td>
-    <td>${r.phone}</td>
-    <td>${r.gender}</td>
-    <td style="text-align:center"><span class="tag ${r.status?'tok':'twn'}">${r.status?'启用':'停用'}</span></td>
-    <td><div class="op">
-      <a onclick="goView(${r.id})">查看</a>
-      <a onclick="goEdit(${r.id})">编辑</a>
-      <a onclick="resetPwd('${r.login}')">重置密码</a>
-      <a onclick="goRoom(${r.id})">修改房间信息</a>
-      <a class="del" onclick="confirmDel(${r.id},'${r.name}')">删除</a>
-    </div></td>
-  </tr>`).join('');
-  document.getElementById('pg-info').textContent=`共${rows.length}条`;
-}
-renderTable(ROWS);
-
+/* ── 查询/重置/分页(线上默认 20条/页) ── */
+let filtered=DATA.slice();
+const pg={total:0,page:1,size:20,sizes:[10,20,30,50],onChange:()=>renderTable()};
 function doQuery(){
-  const l=document.getElementById('q-login').value.trim().toLowerCase();
-  const n=document.getElementById('q-name').value.trim();
-  const p=document.getElementById('q-phone').value.trim();
-  renderTable(ROWS.filter(r=>
-    (!l||r.login.includes(l))&&
+  const l=document.getElementById('fLogin').value.trim().toLowerCase();
+  const n=document.getElementById('fName').value.trim();
+  const p=document.getElementById('fPhone').value.trim();
+  filtered=DATA.filter(r=>
+    (!l||r.login.toLowerCase().includes(l))&&
     (!n||r.name.includes(n))&&
     (!p||r.phone.includes(p))
-  ));
+  );
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
 }
 function doReset(){
-  document.getElementById('q-login').value='';
-  document.getElementById('q-name').value='';
-  document.getElementById('q-phone').value='';
-  renderTable(ROWS);
+  ['fLogin','fName','fPhone'].forEach(id=>document.getElementById(id).value='');
+  doQuery();
 }
-function goCreate(){window.location.href='device-sub-create.html';}
-function goView(id){alert('查看子账号 id='+id);}
-function goEdit(id){window.location.href='device-sub-create.html?id='+id;}
-function resetPwd(login){if(confirm('确认将账号 '+login+' 的密码重置为默认密码 zhong666@？'))alert('密码已重置为 zhong666@');}
-function goRoom(id){alert('修改房间信息 id='+id);}
-function confirmDel(id,name){
-  delTargetId=id;
-  document.getElementById('del-msg').textContent='确认删除子账号「'+name+'」？此操作不可恢复。';
-  document.getElementById('del-bg').classList.add('show');
-  document.getElementById('del-ok').onclick=()=>{
-    const idx=ROWS.findIndex(r=>r.id===delTargetId);
-    if(idx>-1)ROWS.splice(idx,1);
-    renderTable(ROWS);closeConfirm();
-  };
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
+    <tr>
+      <td>${r.time}</td><td>${r.login}</td><td>${r.name}</td><td>${r.phone}</td>
+      <td><span class="tag ${r.gender==='男'?'tok':'ter'}">${r.gender}</span></td>
+      <td>${r.job}</td>
+      <td><span class="tag tag-click ${r.status?'tok':'ter'}" title="点击切换启用/停用" onclick="toggleStatus(${r.id})">${r.status?'启用':'停用'}</span></td>
+      <td><span class="op">
+        <a onclick="onView(${r.id})">查看</a>
+        <a onclick="onEdit(${r.id})">编辑</a>
+        <a onclick="onResetPwd(${r.id})">重置密码</a>
+        <a onclick="onRoom(${r.id},false)">查看房间</a>
+        <a onclick="onRoom(${r.id},true)">修改房间信息</a>
+        <a class="danger" onclick="onDel(${r.id})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
-function closeConfirm(){document.getElementById('del-bg').classList.remove('show');}
+
+/* ── 查看详情 ── */
+function onView(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  document.getElementById('viewGrid').innerHTML=`
+    <span class="k">添加时间:</span><span class="v">${r.time}</span>
+    <span class="k">登录名称:</span><span class="v">${r.login}</span>
+    <span class="k">姓名:</span><span class="v">${r.name}</span>
+    <span class="k">手机号:</span><span class="v">${r.phone}</span>
+    <span class="k">性别:</span><span class="v">${r.gender}</span>
+    <span class="k">职位:</span><span class="v">${r.job}</span>
+    <span class="k">状态:</span><span class="v ${r.status?'text-ok':'text-er'}">${r.status?'启用':'停用'}</span>
+    <span class="k">分配房间:</span><span class="v">${r.rooms.join('、')}</span>`;
+  $modal('dlgView');
+}
+
+/* ── 编辑 ── */
+let editId=null;
+function onEdit(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  editId=id;
+  document.getElementById('eLogin').value=r.login;
+  document.getElementById('eName').value=r.name;
+  document.getElementById('ePhone').value=r.phone;
+  document.getElementById('eGender').value=r.gender;
+  document.getElementById('eJob').value=r.job;
+  document.getElementById('eStatus').value=String(r.status);
+  $modal('dlgEdit');
+}
+function saveEdit(){
+  const r=DATA.find(x=>x.id===editId);if(!r)return;
+  const name=document.getElementById('eName').value.trim();
+  const phone=document.getElementById('ePhone').value.trim();
+  if(!name){$msg('请输入姓名','warning');return;}
+  if(!/^1\d{10}$/.test(phone)&&!/^\d{11}$/.test(phone)){$msg('请输入正确的手机号','warning');return;}
+  r.name=name;r.phone=phone;
+  r.gender=document.getElementById('eGender').value;
+  r.job=document.getElementById('eJob').value;
+  r.status=+document.getElementById('eStatus').value;
+  $modalClose('dlgEdit');$msg('保存成功');doQuery();
+}
+
+/* ── 状态启停切换 ── */
+function toggleStatus(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  $confirm(`确定${r.status?'停用':'启用'}子账号「${r.login}」?`,()=>{
+    r.status=r.status?0:1;
+    $msg(r.status?'已启用':'已停用');renderTable();
+  });
+}
+
+/* ── 重置密码 ── */
+function onResetPwd(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  $confirm(`确定将账号「${r.login}」的密码重置为默认密码 zhong666@ ?`,()=>$msg('密码已重置为 zhong666@'));
+}
+
+/* ── 查看/修改房间 ── */
+let roomId=null;
+function onRoom(id,editable){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  roomId=id;
+  document.getElementById('dlgRoomTitle').textContent=editable?'修改房间信息':'查看房间';
+  document.getElementById('roomTip').textContent=editable
+    ?`勾选「${r.name}」可管控的房间:`
+    :`「${r.name}」已分配 ${r.rooms.length} 个房间:`;
+  document.getElementById('roomList').innerHTML=editable
+    ?ROOMS_ALL.map(m=>`<label class="room-item"><input type="checkbox" value="${m}" ${r.rooms.includes(m)?'checked':''}>${m}</label>`).join('')
+    :r.rooms.map(m=>`<span class="room-item">${m}</span>`).join('');
+  document.getElementById('roomFoot').innerHTML=editable
+    ?'<button class="btn" onclick="$modalClose(\'dlgRoom\')">取 消</button><button class="btn btnp" onclick="saveRooms()">确 定</button>'
+    :'<button class="btn btnp" onclick="$modalClose(\'dlgRoom\')">关 闭</button>';
+  $modal('dlgRoom');
+}
+function saveRooms(){
+  const r=DATA.find(x=>x.id===roomId);if(!r)return;
+  const checked=[...document.querySelectorAll('#roomList input:checked')].map(c=>c.value);
+  if(!checked.length){$msg('请至少选择一个房间','warning');return;}
+  r.rooms=checked;
+  $modalClose('dlgRoom');$msg('房间信息已更新');
+}
+
+/* ── 删除 ── */
+function onDel(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;
+  $confirm(`确定删除子账号「${r.login}」?此操作不可恢复。`,()=>{
+    DATA.splice(DATA.indexOf(r),1);
+    $msg('删除成功');doQuery();
+  });
+}
+
+doQuery();
 </script>
-</body></html>
+</body>
+</html>

@@ -5,74 +5,285 @@
 <title>电表管理</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-.meter-card{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--gap);margin-top:var(--gap)}
-.protocol{border:1px solid var(--bd);border-radius:var(--r);background:var(--bp);padding:16px}
-.protocol h3{font-size:13px;margin-bottom:12px;color:#dbeaff}
-.param-table th,.param-table td{font-size:12px;padding:8px 10px}
-.textarea-like{border:1px solid var(--bd);border-radius:4px;background:rgba(255,255,255,.04);padding:10px;min-height:92px;color:#dbeaff;line-height:1.7;font-family:'Roboto Mono',monospace;font-size:12px}
-@media(max-width:1100px){.meter-card{grid-template-columns:1fr}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:14px;align-content:start;}
+.card{background:var(--bg-panel);border-radius:8px;padding:12px 16px 14px;}
+.card-hd{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.card-title{font-size:17px;font-weight:600;color:var(--txw);flex:1;cursor:pointer;line-height:1.4;}
+.card-title:hover{color:var(--primary-hover);}
+.card-edit{color:#8f9bb3;cursor:pointer;line-height:0;padding:2px;flex-shrink:0;}
+.card-edit:hover{color:var(--primary);}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;line-height:22px;}
+.kv .k{color:var(--ts);white-space:nowrap;}
+.kv .v{color:var(--tx);text-align:right;word-break:break-all;}
+.card-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+.card-ft .btn{height:26px;padding:0 10px;font-size:12px;}
+.detail-grid{display:grid;grid-template-columns:120px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
 </style>
 </head>
 <body>
-<div class="ph">
-  <div class="pt">电表管理</div>
-  <div class="pa"><button class="btn">下发电表地址</button><button class="btn">设置上报频率</button><button class="btn btnp">添加电表</button></div>
-</div>
-<div class="sc">
-  <div class="scd"><div class="sc-lb">电表总数</div><div class="sc-v scc">36</div></div>
-  <div class="scd"><div class="sc-lb">Modbus自定义</div><div class="sc-v scb">8</div></div>
-  <div class="scd"><div class="sc-lb">正常</div><div class="sc-v scg">34</div></div>
-  <div class="scd"><div class="sc-lb">异常</div><div class="sc-v scr">2</div></div>
-</div>
+<!-- 筛选栏 + 工具按钮 -->
 <div class="fb">
-  <div class="fi"><div class="fl">电表名称</div><input placeholder="请输入电表名称" style="width:150px"></div>
-  <div class="fi"><div class="fl">协议类型</div><select style="width:170px"><option>全部协议</option><option>DLT645-1997</option><option>DLT645-2007</option><option>CJ/T188</option><option>Modbus-RTU（自定义）</option></select></div>
-  <div class="fi"><div class="fl">设备状态</div><select style="width:110px"><option>全部状态</option><option>在线</option><option>离线</option><option>异常</option></select></div>
-  <button class="btn btnp">查询</button><button class="btn">重置</button>
-</div>
-<div class="tw">
-<table>
-<thead><tr><th>序号</th><th>电表名称</th><th>协议类型</th><th>波特率</th><th>校验方式</th><th>电表地址</th><th>变比</th><th>绑定主机</th><th>状态</th><th>操作</th></tr></thead>
-<tbody>
-<tr><td>1</td><td>办公楼1层总电表</td><td>DLT645-2007</td><td>9600</td><td>无校验</td><td>12345678</td><td>1.00</td><td>主机001</td><td><span class="tag tok">在线</span></td><td><div class="op"><a>编辑</a><a>抄表</a><a class="del">删除</a></div></td></tr>
-<tr><td>2</td><td>宿舍楼2层电表</td><td>Modbus-RTU（自定义）</td><td>4800</td><td>偶校验</td><td>87654321</td><td>0.50</td><td>主机002</td><td><span class="tag tin">离线</span></td><td><div class="op"><a>编辑</a><a>配置</a><a class="del">删除</a></div></td></tr>
-<tr><td>3</td><td>食堂后厨电表</td><td>CJ/T188</td><td>19200</td><td>无校验</td><td>11223344</td><td>2.00</td><td>主机003</td><td><span class="tag ter">异常</span></td><td><div class="op"><a>编辑</a><a>抄表</a><a class="del">删除</a></div></td></tr>
-<tr><td>4</td><td>能源站自定义表</td><td>Modbus-RTU（自定义）</td><td>9600</td><td>无校验</td><td>01020304</td><td>1.00</td><td>主机004</td><td><span class="tag tok">在线</span></td><td><div class="op"><a>编辑</a><a>配置</a><a class="del">删除</a></div></td></tr>
-</tbody>
-</table>
-<div class="pg"><div class="pg-info">显示 1-4 / 36 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">3</span><span class="pgb">...</span></div></div>
+  <div class="fi"><span class="fl">主机信息列表</span>
+    <select id="fHost" style="width:230px"><option value="">请选择主机</option></select>
+  </div>
+  <div class="fi"><span class="fl">电表状态</span>
+    <select id="fStatus" style="width:170px">
+      <option value="">请选择电表状态</option><option>正常运行</option><option>主机离线</option>
+    </select>
+  </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openAdd()">+ 添加电表</button>
+  <button class="btn btnp" onclick="sendAddr()">&lt; 下发电表地址</button>
+  <button class="btn btnp" onclick="openFreq()">⚙ 设置上报频率</button>
+  <button class="btn btnd" onclick="delMeters()">🗑 删除</button>
+  <button class="btn" onclick="$msg('导出成功')">⇩ 导出</button>
 </div>
 
-<div class="meter-card">
-  <div class="protocol">
-    <h3>新增电表 - 基础配置</h3>
-    <div class="form-grid">
-      <div class="form-item"><label>绑定主机 *</label><select><option>主机001（办公楼监控室）</option><option>主机002（宿舍楼监控室）</option><option>主机003（食堂监控室）</option></select></div>
-      <div class="form-item"><label>协议类型 *</label><select><option>DLT645-1997</option><option>DLT645-2007</option><option>CJ/T188</option><option selected>Modbus-RTU（自定义）</option></select></div>
-      <div class="form-item"><label>波特率 *</label><select><option>1200</option><option>2400</option><option>4800</option><option selected>9600</option><option>19200</option></select></div>
-      <div class="form-item"><label>校验方式 *</label><select><option selected>无校验（NONE）</option><option>奇校验（ODD）</option><option>偶校验（EVEN）</option></select></div>
-      <div class="form-item"><label>电表名称 *</label><input value="能源站自定义表"></div>
-      <div class="form-item"><label>变比</label><input value="1.00"></div>
-    </div>
-    <div class="form-item" style="margin-top:14px"><label>电表地址 *（每行一个，支持批量创建）</label><div class="textarea-like">01020304<br>01020305<br>01020306</div></div>
-  </div>
-  <div class="protocol">
-    <h3>Modbus 自定义配置</h3>
-    <div class="tw">
-      <table class="param-table">
-        <thead><tr><th>参数</th><th>起始地址</th><th>数据格式</th><th>寄存器数量</th><th>变比系数</th><th>偏移量</th></tr></thead>
-        <tbody>
-          <tr><td>正向有功电能 *</td><td>40001</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
-          <tr><td>反向有功电能</td><td>40003</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
-          <tr><td>A相电压</td><td>40011</td><td>UINT16</td><td>1</td><td>10</td><td>0</td></tr>
-          <tr><td>A相电流</td><td>40021</td><td>FLOAT（CD AB）</td><td>2</td><td>1000</td><td>0</td></tr>
-          <tr><td>总有功功率</td><td>40031</td><td>FLOAT（AB CD）</td><td>2</td><td>100</td><td>0</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div style="margin-top:12px;color:var(--ts);font-size:12px;line-height:1.7">数据变比系数=存储值/实际值，数据偏移量=存储值-实际值；每个参数可独立配置数据格式，验证成功后可保存为项目协议模板。</div>
-    <div class="pa" style="margin-top:14px;justify-content:flex-end"><button class="btn">取消</button><button class="btn btnp">确认添加</button></div>
+<!-- 电表卡片网格 -->
+<div class="cards" id="cards"></div>
+<div id="pager"></div>
+
+<!-- 电表详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>电表详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
   </div>
 </div>
+
+<!-- 添加电表弹窗 -->
+<div class="modal" id="dlgAdd">
+  <div class="dialog" style="width:500px">
+    <div class="dh"><span>添加电表</span><span class="dx" onclick="$modalClose('dlgAdd')">✕</span></div>
+    <div class="db" style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+      <div class="form-row"><span class="fl"><span class="req">*</span>所属主机</span>
+        <select id="aHost" class="flex1"></select>
+      </div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>位置名称</span><input id="aName" class="flex1" placeholder="如:13-2"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>电表地址</span><input id="aAddr" class="flex1" placeholder="请输入12位电表地址"></div>
+      <div class="form-row"><span class="fl">电表协议类型</span>
+        <select id="aProto" class="flex1"><option>DLT645-2007</option><option>DLT645-1997</option></select>
+      </div>
+      <div class="form-row"><span class="fl">电表变比</span><input id="aRatio" class="flex1" value="1"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgAdd')">取消</button>
+      <button class="btn btnp" onclick="saveAdd()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑电表弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>编辑电表</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db" style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+      <div class="form-row"><span class="fl"><span class="req">*</span>位置名称</span><input id="eName" class="flex1"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>电表地址</span><input id="eAddr" class="flex1"></div>
+      <div class="form-row"><span class="fl">电表变比</span><input id="eRatio" class="flex1"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取消</button>
+      <button class="btn btnp" onclick="saveEdit()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置上报频率弹窗 -->
+<div class="modal" id="dlgFreq">
+  <div class="dialog" style="width:420px">
+    <div class="dh"><span>设置上报频率</span><span class="dx" onclick="$modalClose('dlgFreq')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl">上报频率</span>
+        <select id="freqType" class="flex1"><option>按天</option><option>按小时</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgFreq')">取消</button>
+      <button class="btn btnp" onclick="$modalClose('dlgFreq');$msg('设置成功')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 系统绑定弹窗 -->
+<div class="modal" id="dlgBind">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>系统绑定</span><span class="dx" onclick="$modalClose('dlgBind')">✕</span></div>
+    <div class="db">
+      <div class="tw"><table>
+        <thead><tr><th>序号</th><th>绑定房间</th><th>绑定类型</th><th>绑定时间</th></tr></thead>
+        <tbody id="bindBody"></tbody>
+      </table></div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgBind')">关闭</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 主机列表(与控制器管理一致) ── */
+const HOSTS=[
+  {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',cid:7},
+  {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',cid:6},
+  {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',cid:5},
+  {name:'B2-6-10层抄表器',code:'a176334174880a5db4679c9e6ea66b30',cid:4},
+  {name:'B2-3-5层抄表器',code:'aec0109604dd731c62659c9e6ee291b4',cid:3},
+  {name:'B2-1',code:'fa000001400001240240614000100379',cid:2},
+  {name:'B2-2',code:'fa000001400001240240614000100343',cid:1}
+];
+function hostForFloor(fl){
+  if(fl>=21)return HOSTS[0];if(fl>=16)return HOSTS[1];if(fl>=11)return HOSTS[2];
+  if(fl>=6)return HOSTS[3];return HOSTS[4];
+}
+
+/* ── 模拟电表数据(共92条,第一页与线上截图一致) ── */
+const METERS=(()=>{
+  const M=(name,host,addr,st,reading,commTime,crtTime)=>({
+    name,host:host.code,cid:host.cid,addr,st,proto:'DLT645-2007',ratio:1,
+    after:reading,before:reading,commTime,crtTime,_ck:false});
+  const rows=[
+    M('13-2',HOSTS[2],'220413099863','正常运行','10342.19','2026-07-03 10:02:52','2025-06-26 22:00:47'),
+    M('13-1',HOSTS[2],'220413099684','正常运行','7267.53','2026-07-03 10:02:52','2025-06-26 21:56:57'),
+    M('25-1',HOSTS[0],'220415113551','正常运行','6442.25','2026-07-03 10:02:37','2025-06-25 21:11:38'),
+    M('25-2',HOSTS[0],'220415113596','正常运行','7439.73','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('25-3',HOSTS[0],'220415113437','正常运行','11894.94','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('25-4',HOSTS[0],'220415113602','正常运行','10626.11','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('24-1',HOSTS[0],'220415113343','正常运行','7784.96','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('24-2',HOSTS[0],'220415114074','正常运行','6895.37','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('24-3',HOSTS[0],'220415114089','正常运行','7431.13','2026-07-03 10:02:37','2025-06-24 16:48:25'),
+    M('24-4',HOSTS[0],'220415114086','正常运行','7227.21','2026-07-03 10:02:37','2025-06-24 16:48:25')
+  ];
+  /* 其余楼层生成至 92 条 */
+  const floors=[13,23,22,21,20,19,18,17,16,15,14,12,11,10,9,8,7,6,5,4,3];
+  let i=0;
+  floors.forEach(fl=>{
+    const ks=fl===13?[3,4]:[1,2,3,4];
+    ks.forEach(k=>{
+      const off=i%17===5;
+      rows.push(M(fl+'-'+k,hostForFloor(fl),
+        '2204'+String(15110000+i*97+k*13),
+        off?'主机离线 (离线前抄表失败)':'正常运行',
+        (3000+(i*731)%9000+((i*37)%100)/100).toFixed(2),
+        off?'2026-06-28 09:1'+(i%10)+':44':'2026-07-03 10:02:'+String(10+(i*7)%50).padStart(2,'0'),
+        '2025-06-2'+(4+i%3)+' 1'+(i%9)+':48:25'));
+      i++;
+    });
+  });
+  return rows;
+})();
+
+const EDIT_SVG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
+
+/* ── 查询 / 渲染 / 分页 ── */
+let filtered=METERS.slice(),editIdx=-1;
+const pg={total:METERS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderCards()};
+
+document.getElementById('fHost').innerHTML='<option value="">请选择主机</option>'+
+  HOSTS.map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
+document.getElementById('aHost').innerHTML=HOSTS.map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
+
+function doQuery(){
+  const host=document.getElementById('fHost').value;
+  const st=document.getElementById('fStatus').value;
+  filtered=METERS.filter(m=>(!host||m.host===host)&&(!st||m.st.startsWith(st)));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderCards();
+}
+function doReset(){document.getElementById('fHost').value='';document.getElementById('fStatus').value='';doQuery();}
+
+function renderCards(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('cards').innerHTML=rows.length?rows.map(m=>{
+    const i=METERS.indexOf(m);
+    return `<div class="card">
+      <div class="card-hd">
+        <input type="checkbox" ${m._ck?'checked':''} onchange="METERS[${i}]._ck=this.checked">
+        <span class="card-title" onclick="showDetail(${i})">${m.name}</span>
+        <span class="card-edit" onclick="openEdit(${i})">${EDIT_SVG}</span>
+      </div>
+      ${kv('主机编号',m.host)}${kv('通信id',m.cid)}${kv('电表地址',m.addr)}
+      ${kv('运行状态',m.st==='正常运行'?m.st:'<span class="text-er">'+m.st+'</span>')}
+      ${kv('电表协议类型',m.proto)}${kv('电表变比',m.ratio)}
+      ${kv('变比后电表读数',m.after)}${kv('变比前电表读数',m.before)}
+      ${kv('通信时间',m.commTime)}${kv('创建时间',m.crtTime)}
+      <div class="card-ft">
+        <button class="btn btnp" onclick="readNow(${i})">立即抄表</button>
+        <button class="btn btnp" onclick="openEdit(${i})">编辑</button>
+        <button class="btn btnp" onclick="openBind(${i})">系统绑定(1)</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
+}
+function kv(k,val){return `<div class="kv"><span class="k">${k}</span><span class="v">${val}</span></div>`;}
+
+/* ── 详情 / 编辑 / 添加 ── */
+function showDetail(i){
+  const m=METERS[i];
+  const host=HOSTS.find(h=>h.code===m.host);
+  const F=[['位置名称',m.name],['所属主机',host?host.name:'-'],['主机编号',m.host],['通信id',m.cid],
+    ['电表地址',m.addr],['运行状态',m.st],['电表协议类型',m.proto],['电表变比',m.ratio],
+    ['变比后电表读数',m.after],['变比前电表读数',m.before],['通信时间',m.commTime],['创建时间',m.crtTime]];
+  document.getElementById('detailGrid').innerHTML=F.map(([k,val])=>`<span class="k">${k}:</span><span class="v">${val}</span>`).join('');
+  $modal('dlgDetail');
+}
+function openEdit(i){
+  editIdx=i;
+  document.getElementById('eName').value=METERS[i].name;
+  document.getElementById('eAddr').value=METERS[i].addr;
+  document.getElementById('eRatio').value=METERS[i].ratio;
+  $modal('dlgEdit');
+}
+function saveEdit(){
+  const m=METERS[editIdx];
+  const name=document.getElementById('eName').value.trim(),addr=document.getElementById('eAddr').value.trim();
+  if(!name||!addr)return $msg('请填写完整信息','warning');
+  m.name=name;m.addr=addr;m.ratio=document.getElementById('eRatio').value.trim()||1;
+  $modalClose('dlgEdit');$msg('保存成功');renderCards();
+}
+function openAdd(){
+  document.getElementById('aName').value='';document.getElementById('aAddr').value='';
+  document.getElementById('aRatio').value='1';$modal('dlgAdd');
+}
+function saveAdd(){
+  const name=document.getElementById('aName').value.trim(),addr=document.getElementById('aAddr').value.trim();
+  if(!name||!addr)return $msg('请填写完整信息','warning');
+  const host=HOSTS.find(h=>h.code===document.getElementById('aHost').value);
+  METERS.unshift({name,host:host.code,cid:host.cid,addr,st:'正常运行',
+    proto:document.getElementById('aProto').value,ratio:document.getElementById('aRatio').value.trim()||1,
+    after:'0.00',before:'0.00',commTime:'2026-07-03 10:30:00',crtTime:'2026-07-03 10:30:00',_ck:false});
+  $modalClose('dlgAdd');$msg('添加成功');doQuery();
+}
+
+/* ── 批量与卡片操作 ── */
+function selCount(){return METERS.filter(m=>m._ck).length;}
+function sendAddr(){
+  const n=selCount();
+  if(!n)return $msg('请先勾选电表','warning');
+  $confirm(`确定向选中的 ${n} 个电表下发电表地址吗?`,()=>$msg('下发成功'));
+}
+function openFreq(){$modal('dlgFreq');}
+function delMeters(){
+  const n=selCount();
+  if(!n)return $msg('请先勾选电表','warning');
+  $confirm(`确定删除选中的 ${n} 个电表吗?删除后不可恢复`,()=>{
+    for(let i=METERS.length-1;i>=0;i--)if(METERS[i]._ck)METERS.splice(i,1);
+    $msg('删除成功');doQuery();
+  });
+}
+function readNow(i){$msg(`电表「${METERS[i].name}」抄表指令已下发`);}
+function openBind(i){
+  const m=METERS[i];
+  document.getElementById('bindBody').innerHTML=
+    `<tr><td>1</td><td>${m.name}</td><td>房间计费</td><td>${m.crtTime}</td></tr>`;
+  $modal('dlgBind');
+}
+
+doQuery();
+</script>
 </body>
 </html>

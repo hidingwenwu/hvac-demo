@@ -1,92 +1,289 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>负荷调控</title><link rel="stylesheet" href="_base.css">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>负荷调控</title>
+<link rel="stylesheet" href="_base.css">
 <style>
-.split{display:flex;gap:var(--gap);height:calc(100vh - 92px);overflow:hidden;}
-.left-panel{width:240px;min-width:240px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
-.right-area{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--gap);}
-.strat-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;}
-.strat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.strat-title{font-size:13px;font-weight:600;color:var(--tx);}
-.cond-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px solid rgba(30,58,110,.3);margin-bottom:6px;font-size:12px;color:var(--ts);}
-.tree-item{padding:7px 10px;border-radius:4px;font-size:12px;color:var(--ts);cursor:pointer;}
-.tree-item:hover{background:rgba(255,255,255,.04);color:var(--tx);}
-.tree-item.active{background:rgba(0,229,255,.08);color:var(--hl);border-left:2px solid var(--hl);}
-.tree-grp{font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;padding:8px 4px 4px;border-top:1px solid rgba(30,58,110,.3);margin-top:6px;}
-.meter{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px;}
-.meter-fill{height:100%;border-radius:4px;background:linear-gradient(to right,var(--ok),var(--wn));}
-</style></head><body>
-<div class="ph">
-  <div class="pt">负荷调控</div>
-  <div class="pa">
-    <select style="width:160px"><option>上海某商业广场</option><option>北京某写字楼</option></select>
-    <button class="btn btnp" onclick="alert('新增策略')">+ 新增策略</button>
+.load-chart{background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:12px;}
+.load-chart svg{width:100%;height:160px;display:block;}
+.load-now{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.load-now .v{font-size:28px;font-weight:600;color:var(--txw);}
+.load-now .u{font-size:12px;color:var(--ts);}
+.detail-grid{display:grid;grid-template-columns:130px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);}
+.range-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;font-size:13px;}
+.range-row:hover{background:var(--bg-hover);}
+</style>
+</head>
+<body>
+<!-- 筛选 + 操作按钮(按 live:任务名称 / 调控结果 / 搜索 / 重置 / 创建任务 / 查看实时负荷 / 调控范围 / 策略管理) -->
+<div class="fb">
+  <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:190px"></div>
+  <div class="fi"><span class="fl">调控结果</span>
+    <select id="fResult" style="width:190px">
+      <option value="">请选择调控结果</option>
+      <option>达标</option>
+      <option>未达标</option>
+      <option>进行中</option>
+    </select>
   </div>
+  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn btnp" onclick="openCreate()">＋ 创建任务</button>
+  <button class="btn btnp" onclick="openRealtime()">👁 查看实时负荷</button>
+  <button class="btn btnp" onclick="$modal('dlgRange')">👁 调控范围</button>
+  <button class="btn btnp" onclick="$modal('dlgStrategy')">👁 策略管理</button>
 </div>
-<div class="split">
-<div class="left-panel">
-  <div style="font-size:12px;color:var(--ts);font-weight:600;margin-bottom:4px;">策略列表</div>
-  <div class="tree-item active" onclick="selS(this)">峰时段功率削减策略</div>
-  <div class="tree-item" onclick="selS(this)">变压器容量保护策略</div>
-  <div class="tree-item" onclick="selS(this)">按需轮控策略</div>
-  <div class="tree-grp">已停用</div>
-  <div class="tree-item" onclick="selS(this)" style="opacity:.55;">用电超额告警策略（停用）</div>
+
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>任务ID</th><th>任务名称</th><th>起始时间</th><th>结束时间</th><th>负荷调控目标</th><th>负荷调控目标(幅度)</th>
+      <th>空调类型</th><th>来源</th><th>策略</th><th>历史负荷</th><th>基准负荷</th><th>运行状态</th><th>任务状态</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
-<div class="right-area">
-  <div class="strat-card">
-    <div class="strat-head">
-      <div class="strat-title" id="st">峰时段功率削减策略</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <span class="tag tok">启用中</span>
-        <button class="btn" onclick="alert('编辑策略')">编辑</button>
-        <button class="btn btnd" onclick="alert('停用策略')">停用</button>
+<div id="pager"></div>
+
+<!-- 创建/编辑任务弹窗 -->
+<div class="modal" id="dlgTask">
+  <div class="dialog" style="width:640px">
+    <div class="dh"><span id="dlgTaskTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+    <div class="db">
+      <div class="form-grid">
+        <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="tName" placeholder="请输入任务名称"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>空调类型</span>
+          <select id="tAcType"><option>水机</option><option>氟机</option><option>直膨机</option><option>温控器</option></select>
+        </div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>起始时间</span><input type="datetime-local" id="tStart"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>结束时间</span><input type="datetime-local" id="tEnd"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>负荷调控目标(kW)</span><input id="tTarget" placeholder="请输入目标负荷"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>负荷调控目标(幅度)</span><input id="tRatio" placeholder="请输入调控幅度,如 15%"></div>
+        <div class="form-item"><span class="fl"><span class="req">*</span>策略</span>
+          <select id="tPolicy"><option>温度上调策略</option><option>风速限制策略</option><option>分组轮停策略</option><option>锁定设定温度策略</option></select>
+        </div>
+        <div class="form-item"><span class="fl">来源</span>
+          <select id="tSource"><option>手动创建</option><option>需求响应</option></select>
+        </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);">
-      <div>
-        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">触发条件</div>
-        <div class="cond-row"><span class="tag thl">监测点</span><span>总配电变压器负荷率</span></div>
-        <div class="cond-row"><span class="tag twn">触发阈值</span><span>负荷率 ≥ 85%</span></div>
-        <div class="cond-row"><span class="tag tin">有效时段</span><span>08:00 ~ 11:00 / 14:00 ~ 17:00</span></div>
-        <div class="cond-row"><span class="tag tin">持续时间</span><span>触发后持续检测 5 分钟</span></div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--ts);font-weight:600;letter-spacing:.06em;margin-bottom:10px;">执行动作</div>
-        <div class="cond-row"><span class="tag tbl">第一级</span><span>非必要区域升温 +2℃</span></div>
-        <div class="cond-row"><span class="tag twn">第二级</span><span>负荷率≥90%：进一步升温 +1℃</span></div>
-        <div class="cond-row"><span class="tag ter">第三级</span><span>负荷率≥95%：关停低优先级空调</span></div>
-        <div class="cond-row"><span class="tag tok">恢复条件</span><span>负荷率 &lt; 80% 持续 10 分钟</span></div>
-      </div>
-    </div>
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(30,58,110,.4);">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:12px;color:var(--ts);">当前负荷率</span>
-        <span style="font-size:13px;font-weight:700;font-family:monospace;" id="load-val">72.4%</span>
-      </div>
-      <div class="meter"><div class="meter-fill" id="load-bar" style="width:72.4%"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:4px;"><span>0%</span><span style="color:var(--wn);">85% 触发</span><span>100%</span></div>
-    </div>
-  </div>
-  <div class="strat-card">
-    <div class="strat-head"><div style="font-size:12px;font-weight:600;color:var(--ts);letter-spacing:.06em;">策略执行记录</div>
-      <button class="btn">导出</button>
-    </div>
-    <div class="tw" style="margin:0;">
-      <table><thead><tr><th>执行时间</th><th>触发值</th><th>触发级别</th><th>控制对象</th><th>执行动作</th><th>执行结果</th></tr></thead>
-      <tbody>
-        <tr><td>2026-06-11 10:25</td><td>负荷率 87.2%</td><td><span class="tag tbl">第一级</span></td><td>3F非必要空调(4台)</td><td>升温 +2℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 10:32</td><td>负荷率 91.5%</td><td><span class="tag twn">第二级</span></td><td>2F展厅空调(2台)</td><td>升温 +1℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-11 10:55</td><td>负荷率 78.1%</td><td><span class="tag tok">恢复</span></td><td>3F/2F受控空调</td><td>恢复原设定</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-10 14:18</td><td>负荷率 86.0%</td><td><span class="tag tbl">第一级</span></td><td>B1通道空调(3台)</td><td>升温 +2℃</td><td><span class="tag tok">成功</span></td></tr>
-        <tr><td>2026-06-10 14:45</td><td>负荷率 79.3%</td><td><span class="tag tok">恢复</span></td><td>B1受控空调</td><td>恢复原设定</td><td><span class="tag tok">成功</span></td></tr>
-      </tbody></table>
-      <div class="pg"><div class="pg-info">共 32 条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgTask')">取 消</button>
+      <button class="btn btnp" onclick="saveTask()">确 定</button>
     </div>
   </div>
 </div>
+
+<!-- 查看实时负荷弹窗 -->
+<div class="modal" id="dlgRealtime">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>查看实时负荷</span><span class="dx" onclick="$modalClose('dlgRealtime')">✕</span></div>
+    <div class="db">
+      <div class="load-now"><span class="text-sub" style="font-size:13px">空调实时负荷</span><span class="v" id="rtVal">486.2</span><span class="u">kW</span></div>
+      <div class="load-chart">
+        <svg viewBox="0 0 520 160" preserveAspectRatio="none">
+          <line x1="0" y1="40" x2="520" y2="40" stroke="rgba(255,255,255,.06)"/>
+          <line x1="0" y1="80" x2="520" y2="80" stroke="rgba(255,255,255,.06)"/>
+          <line x1="0" y1="120" x2="520" y2="120" stroke="rgba(255,255,255,.06)"/>
+          <polyline id="rtLine" points="" fill="none" stroke="#1f65ff" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="text-sub" style="font-size:12px;margin-top:8px">近 30 分钟负荷曲线,每 2 秒刷新</div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgRealtime')">关闭</button></div>
+  </div>
 </div>
+
+<!-- 调控范围弹窗 -->
+<div class="modal" id="dlgRange">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>调控范围</span><span class="dx" onclick="$modalClose('dlgRange')">✕</span></div>
+    <div class="db">
+      <div class="text-sub" style="font-size:12px;margin-bottom:8px">勾选参与负荷调控的区域</div>
+      <label class="range-row"><input type="checkbox" checked><span>1号楼 · 3层(12间)</span></label>
+      <label class="range-row"><input type="checkbox" checked><span>1号楼 · 7层(20间)</span></label>
+      <label class="range-row"><input type="checkbox" checked><span>1号楼 · 9层(16间)</span></label>
+      <label class="range-row"><input type="checkbox"><span>1号楼 · 14层(18间)</span></label>
+      <label class="range-row"><input type="checkbox"><span>1号楼 · 23层(10间)</span></label>
+      <label class="range-row"><input type="checkbox" checked><span>机房群控区域(4套系统)</span></label>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgRange')">取 消</button>
+      <button class="btn btnp" onclick="$modalClose('dlgRange');$msg('调控范围已保存')">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 策略管理弹窗 -->
+<div class="modal" id="dlgStrategy">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span>策略管理</span><span class="dx" onclick="$modalClose('dlgStrategy')">✕</span></div>
+    <div class="db">
+      <div class="tw">
+        <table>
+          <thead><tr><th>策略名称</th><th>调控方式</th><th>调控步长</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>温度上调策略</td><td>上调设定温度</td><td>+1℃/次</td><td><span class="tag tok">启用</span></td><td><span class="op"><a onclick="$msg('演示环境,策略不可编辑','info')">编辑</a></span></td></tr>
+            <tr><td>风速限制策略</td><td>限制最高风速</td><td>降 1 档/次</td><td><span class="tag tok">启用</span></td><td><span class="op"><a onclick="$msg('演示环境,策略不可编辑','info')">编辑</a></span></td></tr>
+            <tr><td>分组轮停策略</td><td>分组轮流停机</td><td>15 分钟/组</td><td><span class="tag tin">停用</span></td><td><span class="op"><a onclick="$msg('演示环境,策略不可编辑','info')">编辑</a></span></td></tr>
+            <tr><td>锁定设定温度策略</td><td>锁定温度上下限</td><td>26℃~28℃</td><td><span class="tag tok">启用</span></td><td><span class="op"><a onclick="$msg('演示环境,策略不可编辑','info')">编辑</a></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgStrategy')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 任务详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:540px">
+    <div class="dh"><span>任务详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
 <script>
-function selS(el){el.closest('div').querySelectorAll('.tree-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('st').textContent=el.textContent;}
-// simulate live load
-let lv=72.4;
-setInterval(()=>{lv+=(Math.random()-.5)*1.2;lv=Math.max(60,Math.min(96,lv));const v=lv.toFixed(1);document.getElementById('load-val').textContent=v+'%';document.getElementById('load-bar').style.width=v+'%';document.getElementById('load-bar').style.background=lv>=90?'var(--er)':lv>=85?'var(--wn)':'linear-gradient(to right,var(--ok),var(--wn))';},2000);
+/* ── 模拟数据(列结构与 live 表头一致) ── */
+let TASKS=[
+{id:1031,name:'7月迎峰度夏削峰任务',start:'2026-07-01 10:00:00',end:'2026-07-31 16:00:00',target:'450kW',ratio:'15%',ac:'水机',src:'需求响应',policy:'温度上调策略',hist:'528.6kW',base:'486.0kW',run:'运行中',on:true,result:'进行中'},
+{id:1030,name:'周末低负荷运行任务',start:'2026-06-27 08:00:00',end:'2026-06-28 20:00:00',target:'320kW',ratio:'10%',ac:'水机',src:'手动创建',policy:'风速限制策略',hist:'352.4kW',base:'341.2kW',run:'已结束',on:false,result:'达标'},
+{id:1028,name:'6月下旬需求响应任务',start:'2026-06-24 13:00:00',end:'2026-06-24 15:00:00',target:'400kW',ratio:'20%',ac:'水机',src:'需求响应',policy:'分组轮停策略',hist:'497.8kW',base:'452.3kW',run:'已结束',on:false,result:'达标'},
+{id:1026,name:'公寓夜间负荷压降',start:'2026-06-20 22:00:00',end:'2026-06-21 06:00:00',target:'260kW',ratio:'12%',ac:'氟机',src:'手动创建',policy:'锁定设定温度策略',hist:'291.5kW',base:'275.0kW',run:'已结束',on:false,result:'未达标'},
+{id:1024,name:'午间尖峰电价调控',start:'2026-06-18 11:00:00',end:'2026-06-18 13:00:00',target:'420kW',ratio:'18%',ac:'水机',src:'需求响应',policy:'温度上调策略',hist:'506.3kW',base:'468.9kW',run:'已结束',on:false,result:'达标'},
+{id:1022,name:'温控器区域限功率任务',start:'2026-06-15 09:00:00',end:'2026-06-19 18:00:00',target:'180kW',ratio:'8%',ac:'温控器',src:'手动创建',policy:'风速限制策略',hist:'196.7kW',base:'188.4kW',run:'已结束',on:false,result:'达标'},
+{id:1020,name:'直膨机组错峰运行',start:'2026-07-05 08:00:00',end:'2026-07-05 18:00:00',target:'150kW',ratio:'10%',ac:'直膨机',src:'手动创建',policy:'分组轮停策略',hist:'--',base:'163.2kW',run:'未开始',on:true,result:'进行中'},
+{id:1018,name:'高温橙色预警响应任务',start:'2026-06-10 12:00:00',end:'2026-06-10 17:00:00',target:'480kW',ratio:'22%',ac:'水机',src:'需求响应',policy:'温度上调策略',hist:'552.1kW',base:'509.7kW',run:'已结束',on:false,result:'未达标'},
+];
+
+/* ── 查询/表格/分页 ── */
+let filtered=TASKS.slice(),editId=null;
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function doQuery(){
+  const name=document.getElementById('fName').value.trim();
+  const res=document.getElementById('fResult').value;
+  filtered=TASKS.filter(r=>(!name||r.name.includes(name))&&(!res||r.result===res));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderTable();
+}
+function doReset(){
+  document.getElementById('fName').value='';
+  document.getElementById('fResult').value='';
+  doQuery();
+}
+const runTag=s=>s==='运行中'?'<span class="tag tok">运行中</span>':s==='未开始'?'<span class="tag twn">未开始</span>':'<span class="tag tin">已结束</span>';
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>`
+    <tr>
+      <td>${r.id}</td><td>${r.name}</td><td>${r.start}</td><td>${r.end}</td>
+      <td>${r.target}</td><td>${r.ratio}</td><td>${r.ac}</td><td>${r.src}</td><td>${r.policy}</td>
+      <td>${r.hist}</td><td>${r.base}</td><td>${runTag(r.run)}</td>
+      <td><span class="switch ${r.on?'on':''}" onclick="toggleTask(${r.id})"></span></td>
+      <td><span class="op"><a onclick="showDetail(${r.id})">详情</a><a onclick="openEdit(${r.id})">编辑</a><a class="danger" onclick="delTask(${r.id})">删除</a></span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="14"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+function toggleTask(id){
+  const r=TASKS.find(t=>t.id===id);r.on=!r.on;
+  renderTable();$msg(r.on?'任务已启用':'任务已停用');
+}
+function delTask(id){
+  $confirm('确定删除该调控任务吗?',()=>{
+    TASKS=TASKS.filter(t=>t.id!==id);doQuery();$msg('删除成功');
+  });
+}
+
+/* ── 创建/编辑 ── */
+function openCreate(){
+  editId=null;
+  document.getElementById('dlgTaskTitle').textContent='创建任务';
+  ['tName','tStart','tEnd','tTarget','tRatio'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('tAcType').value='水机';
+  document.getElementById('tPolicy').value='温度上调策略';
+  document.getElementById('tSource').value='手动创建';
+  $modal('dlgTask');
+}
+function openEdit(id){
+  const r=TASKS.find(t=>t.id===id);editId=id;
+  document.getElementById('dlgTaskTitle').textContent='编辑任务';
+  document.getElementById('tName').value=r.name;
+  document.getElementById('tStart').value=r.start.replace(' ','T').slice(0,16);
+  document.getElementById('tEnd').value=r.end.replace(' ','T').slice(0,16);
+  document.getElementById('tTarget').value=parseFloat(r.target)||'';
+  document.getElementById('tRatio').value=r.ratio;
+  document.getElementById('tAcType').value=r.ac;
+  document.getElementById('tPolicy').value=r.policy;
+  document.getElementById('tSource').value=r.src;
+  $modal('dlgTask');
+}
+function saveTask(){
+  const name=document.getElementById('tName').value.trim();
+  const s=document.getElementById('tStart').value,e=document.getElementById('tEnd').value;
+  const tg=document.getElementById('tTarget').value.trim(),ra=document.getElementById('tRatio').value.trim();
+  if(!name)return $msg('请输入任务名称','warning');
+  if(!s||!e)return $msg('请选择起止时间','warning');
+  if(!tg)return $msg('请输入负荷调控目标','warning');
+  const fmt=v=>v.replace('T',' ')+':00';
+  const data={name,start:fmt(s),end:fmt(e),target:tg.replace(/kw$/i,'')+'kW',
+    ratio:ra?(ra.endsWith('%')?ra:ra+'%'):'--',
+    ac:document.getElementById('tAcType').value,src:document.getElementById('tSource').value,
+    policy:document.getElementById('tPolicy').value};
+  if(editId){
+    Object.assign(TASKS.find(t=>t.id===editId),data);
+    $msg('保存成功');
+  }else{
+    TASKS.unshift(Object.assign({id:Math.max(...TASKS.map(t=>t.id))+1,hist:'--',base:'--',run:'未开始',on:true,result:'进行中'},data));
+    $msg('创建成功');
+  }
+  $modalClose('dlgTask');doQuery();
+}
+
+/* ── 详情 ── */
+function showDetail(id){
+  const r=TASKS.find(t=>t.id===id);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">任务ID:</span><span class="v">${r.id}</span>
+    <span class="k">任务名称:</span><span class="v">${r.name}</span>
+    <span class="k">起始时间:</span><span class="v">${r.start}</span>
+    <span class="k">结束时间:</span><span class="v">${r.end}</span>
+    <span class="k">负荷调控目标:</span><span class="v">${r.target}</span>
+    <span class="k">负荷调控目标(幅度):</span><span class="v">${r.ratio}</span>
+    <span class="k">空调类型:</span><span class="v">${r.ac}</span>
+    <span class="k">来源:</span><span class="v">${r.src}</span>
+    <span class="k">策略:</span><span class="v">${r.policy}</span>
+    <span class="k">历史负荷:</span><span class="v">${r.hist}</span>
+    <span class="k">基准负荷:</span><span class="v">${r.base}</span>
+    <span class="k">运行状态:</span><span class="v">${r.run}</span>
+    <span class="k">调控结果:</span><span class="v ${r.result==='未达标'?'text-er':r.result==='达标'?'text-ok':''}">${r.result}</span>`;
+  $modal('dlgDetail');
+}
+
+/* ── 实时负荷 ── */
+let rtData=Array.from({length:30},()=>460+Math.random()*60),rtTimer=null;
+function drawRt(){
+  document.getElementById('rtVal').textContent=rtData[rtData.length-1].toFixed(1);
+  const min=400,max=560;
+  document.getElementById('rtLine').setAttribute('points',
+    rtData.map((v,i)=>`${(i/(rtData.length-1)*520).toFixed(1)},${(160-(v-min)/(max-min)*140-10).toFixed(1)}`).join(' '));
+}
+function openRealtime(){
+  drawRt();$modal('dlgRealtime');
+  clearInterval(rtTimer);
+  rtTimer=setInterval(()=>{
+    if(!document.getElementById('dlgRealtime').classList.contains('show'))return clearInterval(rtTimer);
+    rtData.push(Math.max(430,Math.min(550,rtData[rtData.length-1]+(Math.random()-.5)*18)));
+    rtData.shift();drawRt();
+  },2000);
+}
+
+doQuery();
 </script>
-</body></html>
+</body>
+</html>

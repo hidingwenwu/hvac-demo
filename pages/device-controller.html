@@ -1,1 +1,223 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>控制器管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">控制器管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">控制器总数</div><div class="sc-v scc">24</div></div><div class="scd"><div class="sc-lb">在线</div><div class="sc-v scg">22</div></div><div class="scd"><div class="sc-lb">离线</div><div class="sc-v scr">2</div></div></div><div class="fb"><div class="fi"><div class="fl">控制器名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>在线</option><option>离线</option><option>故障</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>控制器名称</th><th>控制器编号</th><th>IP地址</th><th>端口</th><th>空调数</th><th>在线状态</th><th>操作</th></tr></thead><tbody><tr><td>CTR-1F-01</td><td>CTR001</td><td>192.168.1.10</td><td>8080</td><td>8</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>CTR-1F-02</td><td>CTR002</td><td>192.168.1.11</td><td>8080</td><td>8</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>CTR-2F-01</td><td>CTR003</td><td>192.168.1.12</td><td>8080</td><td>10</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>CTR-3F-01</td><td>CTR004</td><td>192.168.1.13</td><td>8080</td><td>6</td><td><span class="tag ter">离线</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>CTR-B1-01</td><td>CTR005</td><td>192.168.1.14</td><td>8080</td><td>12</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">查看</a><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>控制器管理 - 主机管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.fb .toolbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.chk-all{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);cursor:pointer;user-select:none;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:14px;align-content:start;}
+.card{background:var(--bg-panel);border-radius:8px;padding:12px 16px 14px;}
+.card-hd{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.card-title{font-size:17px;font-weight:600;color:var(--txw);flex:1;cursor:pointer;line-height:1.4;}
+.card-title:hover{color:var(--primary-hover);}
+.card-edit{color:#8f9bb3;cursor:pointer;line-height:0;padding:2px;flex-shrink:0;}
+.card-edit:hover{color:var(--primary);}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;line-height:22px;}
+.kv .k{color:var(--ts);white-space:nowrap;}
+.kv .v{color:var(--tx);text-align:right;word-break:break-all;}
+.card-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.card-ft .btn{height:26px;padding:0 10px;font-size:12px;}
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+</style>
+</head>
+<body>
+<div class="tabs"><div class="tab active">主机管理</div></div>
+
+<!-- 筛选栏 -->
+<div class="fb">
+  <input id="fCode" placeholder="请输入主机编号" style="width:150px">
+  <input id="fName" placeholder="请输入主机名称" style="width:150px">
+  <input id="fCid" placeholder="请输入通信id" style="width:150px">
+  <input id="fModel" placeholder="请输入型号" style="width:150px">
+  <select id="fOnline" style="width:140px">
+    <option value="">选择在线状态</option><option>在线</option><option>离线</option>
+  </select>
+  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+  <button class="btn" onclick="doReset()">重置</button>
+  <div class="toolbar-right">
+    <label class="chk-all"><input type="checkbox" id="selAll" onchange="toggleAll(this.checked)">本页全选</label>
+    <button class="btn btnp" onclick="batchOp('加入升级计划')">+ 加入升级计划</button>
+    <button class="btn btnp" onclick="batchOp('下发配置')">下发配置</button>
+    <button class="btn btnp" onclick="openEnergy()">设置电量类型</button>
+    <button class="btn btnp" onclick="openCreate()">+ 新建主机</button>
+    <button class="btn btnp" onclick="$msg('刷新成功')">⟳ 刷新</button>
+  </div>
+</div>
+
+<!-- 主机卡片网格 -->
+<div class="cards" id="cards"></div>
+<div id="pager"></div>
+
+<!-- 主机详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>主机详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 编辑主机弹窗 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>编辑主机</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl"><span class="req">*</span>主机名称</span><input id="eName" class="flex1" placeholder="请输入主机名称"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取消</button>
+      <button class="btn btnp" onclick="saveEdit()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新建主机弹窗 -->
+<div class="modal" id="dlgCreate">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>新建主机</span><span class="dx" onclick="$modalClose('dlgCreate')">✕</span></div>
+    <div class="db" style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+      <div class="form-row"><span class="fl"><span class="req">*</span>主机编号</span><input id="cCode" class="flex1" placeholder="请输入主机编号"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>主机名称</span><input id="cName" class="flex1" placeholder="请输入主机名称"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>通信id</span><input id="cCid" class="flex1" placeholder="请输入通信id"></div>
+      <div class="form-row"><span class="fl">型号</span>
+        <select id="cModel" class="flex1"><option>E74G</option><option>A02FG</option><option>S74G3</option><option>A02EG</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgCreate')">取消</button>
+      <button class="btn btnp" onclick="saveCreate()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置电量类型弹窗 -->
+<div class="modal" id="dlgEnergy">
+  <div class="dialog" style="width:420px">
+    <div class="dh"><span>设置电量类型</span><span class="dx" onclick="$modalClose('dlgEnergy')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl">电量类型</span>
+        <select id="energyType" class="flex1"><option>按天</option><option>按小时</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEnergy')">取 消</button>
+      <button class="btn btnp" onclick="$modalClose('dlgEnergy');$msg('设置成功')">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ── 模拟数据(与线上形态一致) ── */
+const HOSTS=[
+  {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',mac:'9c:9e:6e:e0:ef:a6',cid:7,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:27',devTime:'2026-07-03 10:16:00',crtTime:'2025-06-27 11:23:00'},
+  {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',mac:'9c:9e:6e:e0:2b:4e',cid:6,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:20',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 11:23:00'},
+  {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',mac:'9c:9e:6e:df:73:72',cid:5,model:'E74G',ver:'18.41.0.0.102',online:'在线',hasNew:'是',commTime:'2026-07-03 10:16:19',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 21:10:06'},
+  {name:'B2-6-10层抄表器',code:'a176334174880a5db4679c9e6ea66b30',mac:'9c:9e:6e:a6:6b:32',cid:4,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:19:25',devTime:'2026-07-03 10:19:20',crtTime:'2025-06-27 14:36:04'},
+  {name:'B2-3-5层抄表器',code:'aec0109604dd731c62659c9e6ee291b4',mac:'9c:9e:6e:e2:91:b6',cid:3,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:19:18',devTime:'2026-07-03 10:19:19',crtTime:'2025-06-27 14:47:42'},
+  {name:'B2-1',code:'fa00000140000124024061400010 0379'.replace(/ /g,''),mac:'00:01:60:AC:D3:7F',cid:2,model:'A02FG',ver:'82.216.0.3.3',online:'在线',hasNew:'否',commTime:'2026-07-03 10:18:13',devTime:'2026-07-03 10:18:14',crtTime:'2025-06-24 16:00:05'},
+  {name:'B2-2',code:'fa00000140000124024061400010 0343'.replace(/ /g,''),mac:'00:01:9B:14:68:39',cid:1,model:'A02FG',ver:'82.216.0.3.3',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:25',devTime:'2026-07-03 10:16:27',crtTime:'2025-06-24 15:44:48'}
+];
+HOSTS.forEach(h=>h._ck=false);
+
+const EDIT_SVG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
+
+/* ── 查询 / 卡片渲染 / 分页 ── */
+let filtered=HOSTS.slice(),editIdx=-1;
+const pg={total:HOSTS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderCards()};
+
+function doQuery(){
+  const code=v('fCode'),name=v('fName'),cid=v('fCid'),model=v('fModel'),online=v('fOnline');
+  filtered=HOSTS.filter(h=>
+    (!code||h.code.includes(code))&&(!name||h.name.includes(name))&&
+    (!cid||String(h.cid)===cid)&&(!model||h.model.toLowerCase().includes(model.toLowerCase()))&&
+    (!online||h.online===online));
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);renderCards();
+}
+function doReset(){['fCode','fName','fCid','fModel','fOnline'].forEach(id=>document.getElementById(id).value='');doQuery();}
+function v(id){return document.getElementById(id).value.trim();}
+
+function renderCards(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('cards').innerHTML=rows.length?rows.map(h=>{
+    const i=HOSTS.indexOf(h);
+    return `<div class="card">
+      <div class="card-hd">
+        <input type="checkbox" ${h._ck?'checked':''} onchange="HOSTS[${i}]._ck=this.checked;syncSelAll()">
+        <span class="card-title" onclick="showDetail(${i})">${h.name}</span>
+        <span class="card-edit" onclick="openEdit(${i})">${EDIT_SVG}</span>
+      </div>
+      ${kv('主机编号',h.code)}${kv('蓝牙MAC',h.mac)}${kv('通信id',h.cid)}${kv('型号',h.model)}
+      ${kv('主机版本号',h.ver)}${kv('是否在线',h.online==='在线'?h.online:'<span class="text-er">'+h.online+'</span>')}
+      ${kv('是否有新版本',h.hasNew)}${kv('通信时间',h.commTime)}${kv('设备时间',h.devTime)}${kv('创建时间',h.crtTime)}
+      <div class="card-ft">
+        <button class="btn btnp" onclick="syncHost(${i})">手动同步</button>
+        <button class="btn" onclick="rebootHost(${i})">重启</button>
+        <button class="btn" onclick="replaceHost(${i})">替换</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
+  syncSelAll();
+}
+function kv(k,val){return `<div class="kv"><span class="k">${k}</span><span class="v">${val}</span></div>`;}
+
+/* ── 选择 ── */
+function toggleAll(ck){
+  const start=(pg.page-1)*pg.size;
+  filtered.slice(start,start+pg.size).forEach(h=>h._ck=ck);
+  renderCards();
+}
+function syncSelAll(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('selAll').checked=rows.length>0&&rows.every(h=>h._ck);
+}
+function batchOp(op){
+  const n=HOSTS.filter(h=>h._ck).length;
+  if(!n)return $msg('请先勾选主机','warning');
+  $confirm(`确定对选中的 ${n} 台主机执行「${op}」吗?`,()=>$msg(op+'成功'));
+}
+
+/* ── 详情 / 编辑 / 新建 ── */
+function showDetail(i){
+  const h=HOSTS[i];
+  const F=[['主机名称',h.name],['主机编号',h.code],['蓝牙MAC',h.mac],['通信id',h.cid],['型号',h.model],
+    ['主机版本号',h.ver],['是否在线',h.online],['是否有新版本',h.hasNew],
+    ['通信时间',h.commTime],['设备时间',h.devTime],['创建时间',h.crtTime]];
+  document.getElementById('detailGrid').innerHTML=F.map(([k,val])=>`<span class="k">${k}:</span><span class="v">${val}</span>`).join('');
+  $modal('dlgDetail');
+}
+function openEdit(i){editIdx=i;document.getElementById('eName').value=HOSTS[i].name;$modal('dlgEdit');}
+function saveEdit(){
+  const name=document.getElementById('eName').value.trim();
+  if(!name)return $msg('请输入主机名称','warning');
+  HOSTS[editIdx].name=name;$modalClose('dlgEdit');$msg('保存成功');renderCards();
+}
+function openCreate(){['cCode','cName','cCid'].forEach(id=>document.getElementById(id).value='');$modal('dlgCreate');}
+function saveCreate(){
+  const code=v('cCode'),name=v('cName'),cid=v('cCid');
+  if(!code||!name||!cid)return $msg('请填写完整信息','warning');
+  HOSTS.push({name,code,mac:'9c:9e:6e:'+cid+'0:00:0'+cid,cid:+cid||cid,model:document.getElementById('cModel').value,
+    ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:20:00',devTime:'2026-07-03 10:20:00',crtTime:'2026-07-03 10:20:00',_ck:false});
+  $modalClose('dlgCreate');$msg('新建成功');doQuery();
+}
+function openEnergy(){
+  if(!HOSTS.some(h=>h._ck))return $msg('请先勾选主机','warning');
+  $modal('dlgEnergy');
+}
+
+/* ── 卡片操作 ── */
+function syncHost(i){$confirm(`确定手动同步主机「${HOSTS[i].name}」的数据吗?`,()=>$msg('同步指令已下发'));}
+function rebootHost(i){$confirm(`确定重启主机「${HOSTS[i].name}」吗?`,()=>$msg('重启指令已下发'));}
+function replaceHost(i){$confirm(`确定替换主机「${HOSTS[i].name}」吗?`,()=>$msg('替换成功'));}
+
+doQuery();
+</script>
+</body>
+</html>

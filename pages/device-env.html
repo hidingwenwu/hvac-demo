@@ -1,1 +1,262 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>环境感知设备管理</title><link rel="stylesheet" href="_base.css"></head><body><div class="ph"><div class="pt">环境感知设备管理</div><div class="pa"><button class="btn btnp" onclick="alert('功能演示')">+ 新增</button></div></div><div class="sc"><div class="scd"><div class="sc-lb">设备总数</div><div class="sc-v scc">42</div></div><div class="scd"><div class="sc-lb">在线</div><div class="sc-v scg">39</div></div><div class="scd"><div class="sc-lb">离线</div><div class="sc-v scr">3</div></div></div><div class="fb"><div class="fi"><div class="fl">设备名称</div><input placeholder="请输入" style="width:140px"></div><div class="fi"><div class="fl">设备类型</div><select style="width:120px"><option value="">全部</option><option>人体感应器</option><option>温湿度传感器</option><option>CO2传感器</option><option>门窗传感器</option></select></div><div class="fi"><div class="fl">状态</div><select style="width:100px"><option value="">全部</option><option>在线</option><option>离线</option></select></div><button class="btn btnp">查询</button><button class="btn">重置</button></div><div class="tw"><table><thead><tr><th>设备名称</th><th>设备类型</th><th>安装位置</th><th>当前值</th><th>电量</th><th>在线状态</th><th>操作</th></tr></thead><tbody><tr><td>1F-人感-01</td><td>人体感应器</td><td>一楼大厅入口</td><td>有人</td><td>85%</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>1F-温湿-01</td><td>温湿度传感器</td><td>一楼大厅</td><td>26.5℃ / 62%RH</td><td>92%</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>2F-CO2-01</td><td>CO2传感器</td><td>二楼会议室</td><td>850ppm</td><td>78%</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>2F-门窗-01</td><td>门窗传感器</td><td>二楼会议室主门</td><td>关闭</td><td>65%</td><td><span class="tag tok">在线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr><tr><td>3F-人感-02</td><td>人体感应器</td><td>三楼储藏室</td><td>无人</td><td>12%</td><td><span class="tag ter">离线</span></td><td><div class="op"><a class="">编辑</a><a class="del">删除</a></div></td></tr></tbody></table><div class="pg"><div class="pg-info">共20条</div><div class="pgr"><span class="pgb pga">1</span><span class="pgb">2</span><span class="pgb">›</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>环境感知设备管理</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 顶部:类型标签页 + 右侧操作 */
+.top-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:2px solid var(--bd);margin-bottom:14px;}
+.top-bar .tabs{border-bottom:none;margin-bottom:0;}
+.top-bar .pa{padding-bottom:6px;}
+
+/* 传感器卡片 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px;min-height:200px;}
+.card{background:var(--bg-panel);border:1px solid var(--bd);border-radius:6px;padding:14px 14px 12px;display:flex;flex-direction:column;}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.card-h .ttl{font-size:15px;font-weight:600;color:var(--txw);}
+.card-h .edit-ic{color:var(--ts);cursor:pointer;font-size:14px;}
+.card-h .edit-ic:hover{color:var(--primary);}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;font-size:12px;line-height:1.5;}
+.kv .k{color:var(--ts);flex-shrink:0;white-space:nowrap;}
+.kv .v{color:var(--tx);text-align:right;word-break:break-all;}
+.kv .v .lk{color:var(--primary);cursor:pointer;margin-left:6px;white-space:nowrap;}
+.kv .v .lk:hover{color:var(--primary-hover);}
+.card-f{display:flex;gap:6px;justify-content:center;margin-top:12px;}
+.card-f .btn{height:26px;padding:0 10px;font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="tabs" id="tabs">
+    <div class="tab" data-t="th" onclick="setTab('th')">温湿度传感器</div>
+    <div class="tab" data-t="body" onclick="setTab('body')">人体感知传感器</div>
+    <div class="tab" data-t="door" onclick="setTab('door')">门窗感知传感器</div>
+  </div>
+  <div class="pa">
+    <button class="btn btnp" onclick="openAdd()">+ 添加</button>
+    <button class="btn btnp" onclick="doRefresh()">🔄 刷新</button>
+  </div>
+</div>
+
+<div class="cards" id="cards"></div>
+<div id="pager"></div>
+
+<!-- 添加设备 -->
+<div class="modal" id="dlgAdd">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>添加设备</span><span class="dx" onclick="$modalClose('dlgAdd')">✕</span></div>
+    <div class="db">
+      <div class="form-row mb14"><span class="fl"><span class="req">*</span>设备类型</span>
+        <select id="aType" class="flex1"><option value="th">温湿度传感器</option><option value="body">人体感知传感器</option><option value="door">门窗感知传感器</option></select></div>
+      <div class="form-row mb14"><span class="fl"><span class="req">*</span>设备SN</span><input id="aSn" placeholder="请输入设备SN" class="flex1"></div>
+      <div class="form-row mb14"><span class="fl">房间</span><input id="aRoom" placeholder="请输入房间" class="flex1"></div>
+      <div class="form-row"><span class="fl">安装方式</span>
+        <select id="aInstall" class="flex1"><option>顶装</option><option>壁装</option></select></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgAdd')">取 消</button>
+      <button class="btn btnp" onclick="saveAdd()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设备详情 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>设备详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db">
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px" id="detailGrid"></div>
+    </div>
+    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgDetail')">关 闭</button></div>
+  </div>
+</div>
+
+<!-- 字段编辑 -->
+<div class="modal" id="dlgEdit">
+  <div class="dialog" style="width:400px">
+    <div class="dh"><span id="editTitle">编辑</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl" id="editLabel">值</span><input id="editVal" class="flex1"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgEdit')">取 消</button>
+      <button class="btn btnp" onclick="saveEdit()">确 定</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script>
+/* ══════════ 模拟数据(形态对齐线上截图) ══════════ */
+const VER_MAY='SVD2.XX.1.0.1.15.2025.12.05.15_May 11 2026_B2J1';
+const VER_DEC='SVD2.XX.1.0.1.15.2025.12.05.15_Dec 30 2025_B2J1';
+function mk(type,room,sn,iccid,time,extra,install){
+  return Object.assign({type,install:install||'顶装',addr:'无',room,sn,ver:extra.ver||VER_MAY,
+    iccid,status:'正常',time},extra);
+}
+const DEVICES=[
+  /* 人体感知传感器(22台,前10台对齐截图) */
+  mk('body','806会议室','860608072085342','89860827102590837801','2026-06-10 11:14:35',{dist:3,idle:30}),
+  mk('body','808会议室','860608071993868','89860827102590837833','2026-06-10 11:13:14',{dist:4,idle:30}),
+  mk('body','908会议室','860608072055725','89860827102590837841','2026-06-10 11:15:34',{dist:4,idle:30}),
+  mk('body','912会议室','860608072040347','89860827102590837815','2026-06-10 11:14:43',{dist:3,idle:30}),
+  mk('body','901会议室','860608072102824','89860827102590837806','2026-06-10 11:13:35',{dist:3,idle:30}),
+  mk('body','803会议室','860608071836745','89860827102590837847','2026-06-10 11:16:57',{dist:4,idle:30}),
+  mk('body','906会议室','860608071891195','89860827102590837835','2026-06-10 11:15:34',{dist:3,idle:30,ver:VER_DEC}),
+  mk('body','810会议室','860608071864432','89860827102590837804','2026-06-10 11:17:15',{dist:3,idle:30}),
+  mk('body','916会议室','860608071887334','89860827102590837805','2026-06-10 11:16:25',{dist:4,idle:30}),
+  mk('body','910会议室','860608071893316','89860827102590837810','2026-06-10 11:16:22',{dist:3,idle:30}),
+  mk('body','802会议室','860608072091157','89860827102590837812','2026-06-10 11:15:08',{dist:3,idle:30}),
+  mk('body','805办公室','860608071902663','89860827102590837817','2026-06-10 11:14:52',{dist:4,idle:30}),
+  mk('body','812会议室','860608072077481','89860827102590837819','2026-06-10 11:16:41',{dist:3,idle:30}),
+  mk('body','815办公室','860608071948226','89860827102590837822','2026-06-10 11:13:59',{dist:3,idle:30}),
+  mk('body','902办公室','860608072063597','89860827102590837826','2026-06-10 11:15:47',{dist:4,idle:30}),
+  mk('body','903会议室','860608071875119','89860827102590837828','2026-06-10 11:17:03',{dist:3,idle:30,ver:VER_DEC}),
+  mk('body','905办公室','860608072118234','89860827102590837830','2026-06-10 11:14:18',{dist:3,idle:30}),
+  mk('body','909会议室','860608071926452','89860827102590837836','2026-06-10 11:16:09',{dist:4,idle:30}),
+  mk('body','911办公室','860608072084568','89860827102590837839','2026-06-10 11:13:47',{dist:3,idle:30}),
+  mk('body','914会议室','860608071957783','89860827102590837843','2026-06-10 11:15:56',{dist:3,idle:30}),
+  mk('body','915办公室','860608072096824','89860827102590837845','2026-06-10 11:14:27',{dist:4,idle:30}),
+  mk('body','918会议室','860608071869931','89860827102590837849','2026-06-10 11:16:38',{dist:3,idle:30}),
+  /* 温湿度传感器(12台) */
+  mk('th','801会议室','860608073012457','89860827102590838101','2026-06-10 11:12:35',{temp:'25.6℃',humi:'58%'}),
+  mk('th','803会议室','860608073036182','89860827102590838103','2026-06-10 11:14:02',{temp:'26.1℃',humi:'55%'}),
+  mk('th','806会议室','860608073048765','89860827102590838105','2026-06-10 11:13:26',{temp:'25.2℃',humi:'61%'}),
+  mk('th','808办公室','860608073051239','89860827102590838108','2026-06-10 11:15:11',{temp:'24.8℃',humi:'57%'}),
+  mk('th','810会议室','860608073067914','89860827102590838110','2026-06-10 11:12:58',{temp:'26.4℃',humi:'52%',ver:VER_DEC}),
+  mk('th','812办公室','860608073079526','89860827102590838113','2026-06-10 11:16:45',{temp:'25.9℃',humi:'59%'}),
+  mk('th','901会议室','860608073082347','89860827102590838115','2026-06-10 11:13:52',{temp:'25.4℃',humi:'56%'}),
+  mk('th','905会议室','860608073095671','89860827102590838118','2026-06-10 11:15:29',{temp:'26.0℃',humi:'54%'}),
+  mk('th','908办公室','860608073104582','89860827102590838120','2026-06-10 11:14:37',{temp:'25.1℃',humi:'60%'}),
+  mk('th','910会议室','860608073117296','89860827102590838123','2026-06-10 11:12:44',{temp:'24.6℃',humi:'62%'}),
+  mk('th','912办公室','860608073129418','89860827102590838125','2026-06-10 11:16:18',{temp:'25.8℃',humi:'53%'}),
+  mk('th','916会议室','860608073135764','89860827102590838128','2026-06-10 11:13:09',{temp:'26.3℃',humi:'51%'}),
+  /* 门窗感知传感器(8台) */
+  mk('door','801会议室','860608074023615','89860827102590839201','2026-06-10 11:11:42',{door:'关闭'},'壁装'),
+  mk('door','803会议室','860608074038427','89860827102590839203','2026-06-10 11:13:18',{door:'关闭'},'壁装'),
+  mk('door','806会议室','860608074041953','89860827102590839205','2026-06-10 11:14:55',{door:'打开'},'壁装'),
+  mk('door','810办公室','860608074056284','89860827102590839207','2026-06-10 11:12:31',{door:'关闭'},'壁装'),
+  mk('door','901会议室','860608074067519','89860827102590839210','2026-06-10 11:15:47',{door:'关闭'},'壁装'),
+  mk('door','908会议室','860608074078342','89860827102590839212','2026-06-10 11:13:04',{door:'打开',ver:VER_DEC},'壁装'),
+  mk('door','912办公室','860608074089156','89860827102590839215','2026-06-10 11:16:12',{door:'关闭'},'壁装'),
+  mk('door','916会议室','860608074092673','89860827102590839217','2026-06-10 11:14:09',{door:'关闭'},'壁装')
+];
+
+/* ══════════ 标签页 / 卡片渲染 ══════════ */
+let tab='th';
+const pg={total:0,page:1,size:10,onChange:()=>renderCards()};
+function setTab(t){
+  tab=t;pg.page=1;
+  document.querySelectorAll('#tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.t===t));
+  pg.total=DEVICES.filter(d=>d.type===tab).length;
+  $pager('pager',pg);renderCards();
+}
+function kvEdit(gi,field,label){
+  return `<span class="lk" onclick="openEdit(${gi},'${field}','${label}')">编辑</span>`;
+}
+function renderCards(){
+  const list=DEVICES.filter(d=>d.type===tab);
+  const start=(pg.page-1)*pg.size;
+  const rows=list.slice(start,start+pg.size);
+  document.getElementById('cards').innerHTML=rows.length?rows.map(d=>{
+    const gi=DEVICES.indexOf(d);
+    let mid='';
+    if(tab==='body') mid=`
+      <div class="kv"><span class="k">探测距离</span><span class="v">${d.dist}${kvEdit(gi,'dist','探测距离')}</span></div>
+      <div class="kv"><span class="k">无人时间</span><span class="v">${d.idle}${kvEdit(gi,'idle','无人时间')}</span></div>`;
+    else if(tab==='th') mid=`
+      <div class="kv"><span class="k">温度</span><span class="v">${d.temp}</span></div>
+      <div class="kv"><span class="k">湿度</span><span class="v">${d.humi}</span></div>`;
+    else mid=`<div class="kv"><span class="k">门磁状态</span><span class="v ${d.door==='打开'?'text-wn':''}">${d.door}</span></div>`;
+    return `<div class="card">
+      <div class="card-h"><span class="ttl">${d.install}</span><span class="edit-ic" onclick="showDetail(${gi})">🖉</span></div>
+      <div class="kv"><span class="k">地址</span><span class="v">${d.addr}</span></div>
+      <div class="kv"><span class="k">房间</span><span class="v">${d.room}${kvEdit(gi,'room','房间')}</span></div>
+      <div class="kv"><span class="k">设备SN</span><span class="v">${d.sn}</span></div>
+      <div class="kv"><span class="k">版本号</span><span class="v">${d.ver}</span></div>
+      ${mid}
+      <div class="kv"><span class="k">ICCID</span><span class="v">${d.iccid}</span></div>
+      <div class="kv"><span class="k">设备在线状态</span><span class="v text-ok">${d.status}</span></div>
+      <div class="kv"><span class="k">通信时间</span><span class="v">${d.time}</span></div>
+      <div class="card-f">
+        <button class="btn btnp" onclick="$msg('同步指令已下发')">手动同步</button>
+        <button class="btn" onclick="doReboot(${gi})">重启</button>
+        <button class="btn" onclick="doDel(${gi})">删除</button>
+      </div>
+    </div>`;
+  }).join('')
+  :'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
+}
+
+/* ══════════ 交互 ══════════ */
+function showDetail(gi){
+  const d=DEVICES[gi];
+  const typeName={th:'温湿度传感器',body:'人体感知传感器',door:'门窗感知传感器'}[d.type];
+  let mid='';
+  if(d.type==='body') mid=`<span style="color:var(--ts);text-align:right">探测距离:</span><span>${d.dist}</span>
+    <span style="color:var(--ts);text-align:right">无人时间:</span><span>${d.idle}</span>`;
+  else if(d.type==='th') mid=`<span style="color:var(--ts);text-align:right">温度:</span><span>${d.temp}</span>
+    <span style="color:var(--ts);text-align:right">湿度:</span><span>${d.humi}</span>`;
+  else mid=`<span style="color:var(--ts);text-align:right">门磁状态:</span><span>${d.door}</span>`;
+  document.getElementById('detailGrid').innerHTML=`
+    <span style="color:var(--ts);text-align:right">设备类型:</span><span>${typeName}</span>
+    <span style="color:var(--ts);text-align:right">安装方式:</span><span>${d.install}</span>
+    <span style="color:var(--ts);text-align:right">地址:</span><span>${d.addr}</span>
+    <span style="color:var(--ts);text-align:right">房间:</span><span>${d.room}</span>
+    <span style="color:var(--ts);text-align:right">设备SN:</span><span>${d.sn}</span>
+    <span style="color:var(--ts);text-align:right">版本号:</span><span style="word-break:break-all">${d.ver}</span>
+    ${mid}
+    <span style="color:var(--ts);text-align:right">ICCID:</span><span>${d.iccid}</span>
+    <span style="color:var(--ts);text-align:right">设备在线状态:</span><span class="text-ok">${d.status}</span>
+    <span style="color:var(--ts);text-align:right">通信时间:</span><span>${d.time}</span>`;
+  $modal('dlgDetail');
+}
+let editCtx=null;
+function openEdit(gi,field,label){
+  editCtx={gi,field};
+  document.getElementById('editTitle').textContent='编辑'+label;
+  document.getElementById('editLabel').textContent=label;
+  document.getElementById('editVal').value=DEVICES[gi][field];
+  $modal('dlgEdit');
+}
+function saveEdit(){
+  const v=document.getElementById('editVal').value.trim();
+  if(!v){$msg('请输入内容','warning');return;}
+  DEVICES[editCtx.gi][editCtx.field]=isNaN(v)?v:+v;
+  $modalClose('dlgEdit');renderCards();$msg('修改成功');
+}
+function doReboot(gi){
+  $confirm('确定重启设备 '+DEVICES[gi].sn+' 吗?',()=>$msg('重启指令已下发'));
+}
+function doDel(gi){
+  $confirm('确定删除设备 '+DEVICES[gi].sn+' 吗?',()=>{
+    DEVICES.splice(gi,1);
+    pg.total=DEVICES.filter(d=>d.type===tab).length;
+    if((pg.page-1)*pg.size>=pg.total&&pg.page>1)pg.page--;
+    $pager('pager',pg);renderCards();$msg('删除成功');
+  });
+}
+function openAdd(){
+  document.getElementById('aType').value=tab;
+  document.getElementById('aSn').value='';document.getElementById('aRoom').value='';
+  document.getElementById('aInstall').value=tab==='door'?'壁装':'顶装';
+  $modal('dlgAdd');
+}
+function saveAdd(){
+  const sn=document.getElementById('aSn').value.trim();
+  if(!sn){$msg('请输入设备SN','warning');return;}
+  const t=document.getElementById('aType').value;
+  const extra=t==='body'?{dist:3,idle:30}:t==='th'?{temp:'25.0℃',humi:'55%'}:{door:'关闭'};
+  DEVICES.unshift(mk(t,document.getElementById('aRoom').value.trim()||'未分配',sn,
+    '898608271025908'+String(39900+Math.floor(Math.random()*90)),
+    '2026-06-10 '+new Date().toTimeString().slice(0,8),extra,document.getElementById('aInstall').value));
+  $modalClose('dlgAdd');setTab(t);$msg('添加成功');
+}
+function doRefresh(){ renderCards();$msg('刷新成功'); }
+
+setTab('th');
+</script>
+</body>
+</html>
