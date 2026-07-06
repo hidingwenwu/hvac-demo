@@ -16,7 +16,6 @@
 .pick-pane .pp-title{font-size:12px;color:var(--ts);font-weight:600;margin:4px 2px 8px;}
 .pick-pane input.search{width:100%;height:28px;margin-bottom:8px;}
 .cfg-main{flex:1;min-width:0;}
-.tree-meta{margin-left:auto;font-size:10px;color:var(--tw3);}
 .tree-lv1{font-weight:600;color:var(--txw);}
 
 /* ── 分区(基础信息 / 指令动作) ── */
@@ -41,7 +40,6 @@
 .timer-card{border:1px solid rgba(103,194,58,.3);background:rgba(103,194,58,.05);border-radius:6px;padding:14px;}
 .timer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .timer-head b{font-size:13px;color:var(--txw);}
-.interval-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:end;}
 .muted{font-size:12px;color:var(--ts);line-height:1.7;}
 .preview{border:1px solid rgba(31,101,255,.3);background:var(--primary-dim);border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--tx);line-height:1.9;}
 .preview b{color:var(--txw);}
@@ -80,7 +78,7 @@
       <option value="">全部房间</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">执行日期</span>
+  <div class="fi"><span class="fl">执行日期范围</span>
     <input type="date" id="fS1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fS2" style="width:140px">
   </div>
   <div class="fi"><span class="fl">最后修改时间</span>
@@ -88,11 +86,7 @@
   </div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
   <button class="btn" onclick="doReset()">重置</button>
-</div>
-
-<!-- 操作按钮(策略由平台维护并执行,设备侧仅执行空调控制动作,无需同步) -->
-<div class="toolbar">
-  <button class="btn btnp" onclick="openTask('new')">＋ 创建节能任务</button>
+  <button class="btn btnp" style="margin-left:auto" onclick="openTask('new')">＋ 创建节能任务</button>
 </div>
 
 <!-- 节能任务表格 -->
@@ -100,7 +94,7 @@
   <table>
     <thead><tr>
       <th style="width:44px"><input type="checkbox" id="ckAll" onclick="checkAll(this)"></th>
-      <th>节能任务名称</th><th>执行时间</th><th>有效日期</th><th>控制策略</th>
+      <th>任务名称</th><th>执行时间段</th><th>有效日期</th><th>控制策略</th>
       <th>任务状态</th><th>最后修改时间</th><th style="width:220px">操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -111,7 +105,7 @@
 <!-- 创建/编辑/复制节能任务弹窗(原版向导:左房间树 + 右任务配置) -->
 <div class="modal" id="dlgTask">
   <div class="dialog" style="width:1080px">
-    <div class="dh"><span id="modalTitle">新建极致节能任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+    <div class="dh"><span id="modalTitle">新建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
     <div class="db">
       <div class="cfg-body">
         <!-- 左:房间选择树(楼栋/楼层/房间三级勾选) -->
@@ -124,16 +118,21 @@
         <div class="cfg-main">
           <section class="sec">
             <div class="sec-title">基础信息</div>
-            <div class="form-line">
+            <div class="form-line two">
               <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="taskName" maxlength="30" placeholder="请输入任务名称" oninput="updatePreview()"></div>
-              <div class="form-item" style="grid-column:span 2"><span class="fl"><span class="req">*</span>执行日期</span>
-                <div class="time-range"><input id="startDate" type="date" value="2026-07-01"><span class="text-sub">至</span><input id="endDate" type="date" value="2026-12-31"></div>
+              <div class="form-item"><span class="fl">任务描述</span>
+                <textarea id="taskDesc" maxlength="200" placeholder="请输入任务说明" style="width:100%;height:60px;resize:none;"></textarea>
               </div>
             </div>
             <div class="form-line two" style="margin-top:12px">
-              <div class="form-item"><span class="fl"><span class="req">*</span>每日执行时间</span>
+              <div class="form-item"><span class="fl"><span class="req">*</span>执行日期范围</span>
+                <div class="time-range"><input id="startDate" type="date" value="2026-07-01" onchange="updatePreview()"><span class="text-sub">至</span><input id="endDate" type="date" value="2026-12-31" onchange="updatePreview()"></div>
+              </div>
+              <div class="form-item"><span class="fl"><span class="req">*</span>执行时间段</span>
                 <div class="time-range"><input id="startTime" type="time" value="12:00" onchange="updatePreview()"><span class="text-sub">至</span><input id="endTime" type="time" value="14:00" onchange="updatePreview()"></div>
               </div>
+            </div>
+            <div class="form-line two" style="margin-top:12px">
               <div class="form-item"><span class="fl"><span class="req">*</span>周运行时间</span>
                 <div class="quick">
                   <button class="qbtn" onclick="setWeek('workday')">工作日</button>
@@ -143,8 +142,6 @@
                 </div>
                 <div class="week-grid" id="weekGrid"></div>
               </div>
-            </div>
-            <div class="form-line two" style="margin-top:12px">
               <div class="form-item"><span class="fl">排除日期</span>
                 <div class="exclude-row">
                   <input id="excludeDateInput" type="date">
@@ -153,25 +150,21 @@
                 </div>
                 <div class="chips" id="excludeChips"></div>
               </div>
-              <div class="form-item"><span class="fl">任务描述</span>
-                <textarea id="taskDesc" maxlength="200" placeholder="请输入任务说明，便于备注该任务的用途" style="width:100%;height:60px;resize:none;"></textarea>
-              </div>
             </div>
           </section>
           <div class="error-box" id="formErrors"></div>
           <section class="sec">
             <div class="sec-title">空调控制配置</div>
             <div class="timer-card" id="timerCard">
-              <div class="interval-row">
-                <div class="form-item"><span class="fl"><span class="req">*</span>下发间隔（分钟）</span><input id="interval" type="number" min="1" max="1440" step="1" value="15" oninput="updatePreview()"></div>
-                <div class="muted">启用后，平台在任务有效日期、周运行时间和每日执行时间范围内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
+              <div class="form-item">
+                <div style="display:flex;align-items:center;gap:8px"><span class="fl" style="margin:0;white-space:nowrap"><span class="req">*</span>下发间隔</span><input id="interval" type="number" min="1" max="1440" step="1" value="15" style="max-width:80px" oninput="updatePreview()"><span class="text-sub">分钟</span></div>
+                <div class="muted" style="margin-top:6px;white-space:nowrap">启用后，平台在任务有效日期、周运行时间和执行时间段内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
               </div>
-              <div class="muted" style="margin-top:12px">开关机、模式、温度、风速均为可选项，选择「不设置」表示不改变空调该项状态；创建任务时至少需要设置一项。</div>
               <div class="form-line" style="margin-top:10px">
                 <div class="form-item"><span class="fl">开关机</span><select id="power" onchange="updatePreview()"><option>不设置</option><option>开机</option><option>关机</option></select></div>
-                <div class="form-item"><span class="fl">空调模式</span><select id="mode" onchange="updatePreview()"><option>不设置</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>自动</option></select></div>
-                <div class="form-item"><span class="fl">温度设置（16-30℃）</span><input id="temp" type="number" min="16" max="30" step="0.5" placeholder="不设置" oninput="updatePreview()"></div>
-                <div class="form-item"><span class="fl">风速设置</span><select id="fan" onchange="updatePreview()"><option>不设置</option><option>自动</option><option>低</option><option>中</option><option>高</option></select></div>
+                <div class="form-item"><span class="fl">空调模式</span><select id="mode" onchange="updatePreview()"><option>不设置</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select></div>
+                <div class="form-item"><span class="fl">温度设置</span><input id="temp" type="number" min="16" max="30" step="0.5" placeholder="不设置" oninput="updatePreview()"></div>
+                <div class="form-item"><span class="fl">风速设置</span><select id="fan" onchange="updatePreview()"><option>不设置</option><option>低</option><option>中</option><option>高</option></select></div>
               </div>
               <div class="preview" id="previewBox"></div>
             </div>
@@ -181,7 +174,6 @@
     </div>
     <div class="df">
       <button class="btn" onclick="$modalClose('dlgTask')">取 消</button>
-      <button class="btn" onclick="saveDraft()">保存草稿</button>
       <button class="btn btnp" onclick="saveTask()">保存并启用任务</button>
     </div>
   </div>
@@ -259,7 +251,6 @@ function renderTable(){
       </span></td>
       <td>${r.mt}</td>
       <td><span class="op">
-        <a onclick="viewTask(${i})">查看</a>
         <a onclick="openTask('edit',${i})">编辑</a>
         <a onclick="openTask('copy',${i})">复制</a>
         <a onclick="openLog()">日志</a>
@@ -314,7 +305,7 @@ function renderTree(){
     const bOn=allRooms(b).every(r=>picked.has(r));
     const bRow=document.createElement('label');
     bRow.className='tree-row tree-lv1'+(bOn?' active':'');
-    bRow.innerHTML=`<input type="checkbox" ${bOn?'checked':''}><span>${b.lb}</span><span class="tree-meta">${b.meta}</span>`;
+    bRow.innerHTML=`<input type="checkbox" ${bOn?'checked':''}><span>${b.lb}</span>`;
     bRow.querySelector('input').onclick=e=>{e.preventDefault();toggleGroup(b);};
     el.appendChild(bRow);
     b.floors.forEach(f=>{
@@ -322,7 +313,7 @@ function renderTree(){
       const fRow=document.createElement('label');
       fRow.className='tree-row'+(fOn?' active':'');
       fRow.style.paddingLeft='24px';
-      fRow.innerHTML=`<input type="checkbox" ${fOn?'checked':''}><span>${f.lb}</span><span class="tree-meta">${f.meta}</span>`;
+      fRow.innerHTML=`<input type="checkbox" ${fOn?'checked':''}><span>${f.lb}</span>`;
       fRow.querySelector('input').onclick=e=>{e.preventDefault();toggleGroup(f);};
       el.appendChild(fRow);
       f.rooms.filter(rm=>!kw||rm.includes(kw)||f.lb.includes(kw)||b.lb.includes(kw)).forEach(rm=>{
@@ -422,9 +413,8 @@ function updatePreview(){
   box.innerHTML=`<b>执行计划预览</b><br>
     <b>任务名称：</b>${document.getElementById('taskName').value||'未命名任务'}<br>
     <b>执行范围：</b>已选 ${picked.size} 个房间 / 约 ${picked.size*3} 台空调<br>
-    <b>执行时间：</b>${weekText()} ${start} - ${end}<br>
+    <b>执行时间：</b>${document.getElementById('startDate').value} 至 ${document.getElementById('endDate').value} ${weekText()} ${start} - ${end}<br>
     <b>控制策略：</b>每 ${interval} 分钟下发一次控制指令，将空调设置为 <b>${command}</b><br>
-    <b>排除日期：</b>${excludeDates.length?excludeDates.join('、'):'无'}<br>
     <span class="time-points">执行时间点示例：${points.length?points.join(', '):'结束时间需晚于开始时间'}</span>`;
 }
 
@@ -433,7 +423,7 @@ let editIdx=-1,editMode='new';
 function openTask(mode,i){
   editMode=mode;editIdx=mode==='edit'?i:-1;
   document.getElementById('modalTitle').textContent=
-    mode==='edit'?'编辑极致节能任务':mode==='copy'?'复制极致节能任务':'新建极致节能任务';
+    mode==='edit'?'编辑任务':mode==='copy'?'复制任务':'新建任务';
   const r=i!=null?TASKS[i]:null;
   document.getElementById('taskName').value=r?(mode==='copy'?r.name+'-副本':r.name):'';
   document.getElementById('startDate').value=r?r.start:'2026-07-01';
@@ -453,7 +443,6 @@ function openTask(mode,i){
   renderTree();renderWeek();renderExcludeChips();updatePreview();
   $modal('dlgTask');
 }
-function viewTask(i){openTask('edit',i);} /* 原版行为:查看即打开编辑态 */
 function openLog(){$modal('dlgLog');}
 
 /* ══════════ 校验与保存(原版规则全部保留) ══════════ */
@@ -511,14 +500,6 @@ function saveTask(){
   else TASKS.unshift({...data,mt:now()});
   $modalClose('dlgTask');doQuery();
   $msg(`空调控制任务已保存。系统将在有效期间每 ${data.iv} 分钟下发一次控制指令。`);
-}
-function saveDraft(){
-  if(!document.getElementById('taskName').value.trim()){$msg('请先输入任务名称','warning');return;}
-  const data=collectTask('停用');
-  if(editMode==='edit'&&editIdx>=0) Object.assign(TASKS[editIdx],data,{mt:now()});
-  else TASKS.unshift({...data,mt:now()});
-  $modalClose('dlgTask');doQuery();
-  $msg('草稿已保存（任务状态：停用）','info');
 }
 
 populateFilterRooms();
