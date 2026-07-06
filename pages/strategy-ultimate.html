@@ -78,7 +78,7 @@
       <option value="">全部房间</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">执行日期范围</span>
+  <div class="fi"><span class="fl">生效日期</span>
     <input type="date" id="fS1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fS2" style="width:140px">
   </div>
   <div class="fi"><span class="fl">最后修改时间</span>
@@ -366,7 +366,7 @@ let excludeDates=[];
 function excludeHolidays(){
   const s=document.getElementById('startDate').value,e=document.getElementById('endDate').value;
   const inRange=HOLIDAYS.flatMap(h=>h.dates).filter(d=>d>=s&&d<=e);
-  if(!inRange.length){$msg('执行日期范围内没有法定节假日','warning');return;}
+  if(!inRange.length){$msg('生效日期范围内没有法定节假日','warning');return;}
   const added=inRange.filter(d=>!excludeDates.includes(d));
   excludeDates.push(...added);
   renderExcludeChips();updatePreview();
@@ -388,7 +388,7 @@ function addExcludeDate(){
   const d=input.value;
   if(!d){$msg('请先选择要排除的日期','warning');return;}
   const s=document.getElementById('startDate').value,e=document.getElementById('endDate').value;
-  if(d<s||d>e){$msg('排除日期需在执行日期范围内','warning');return;}
+  if(d<s||d>e){$msg('排除日期需在生效日期范围内','warning');return;}
   if(!excludeDates.includes(d)) excludeDates.push(d);
   input.value='';
   renderExcludeChips();updatePreview();
