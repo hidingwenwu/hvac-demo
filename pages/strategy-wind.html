@@ -65,10 +65,10 @@
     <div class="fi"><span class="fl">时间范围</span>
       <input type="date" id="fStart" style="width:145px" placeholder="开始日期"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px" placeholder="结束日期">
     </div>
-    <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+    <button class="btn btnp" onclick="doQuery()">搜索</button>
     <button class="btn" onclick="doReset()">重置</button>
-    <button class="btn btnp" onclick="openCreate()">＋ 创建任务</button>
-    <button class="btn btnp" onclick="openStrat()">⚙ 策略管理</button>
+    <button class="btn btnp" onclick="openCreate()">＋ 新建任务</button>
+    <button class="btn btnp" onclick="openStrat()">策略管理</button>
   </div>
 
   <!-- 任务表格(列名严格照线上) -->
@@ -116,7 +116,7 @@
 <!-- ── 创建/编辑任务弹窗(线上 800px,取 消/确 定) ── -->
 <div class="modal" id="dlgEdit">
   <div class="dialog" style="width:800px">
-    <div class="dh"><span id="dlgEditTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="dh"><span id="dlgEditTitle">新建任务</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
     <div class="db">
       <div class="form-grid">
         <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="eName" placeholder="请输入任务名称"></div>
@@ -335,7 +335,7 @@ function fillStratOptions(){
 }
 function openCreate(){
   editId=null;
-  document.getElementById('dlgEditTitle').textContent='创建任务';
+  document.getElementById('dlgEditTitle').textContent='新建任务';
   ['eName','eStart','eEnd','eRemark'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('eRoom').value='全部房间';
   document.querySelector('input[name=eCycle][value=按天]').checked=true;

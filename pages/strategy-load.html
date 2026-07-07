@@ -31,7 +31,7 @@
   </div>
   <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
-  <button class="btn btnp" onclick="openCreate()">＋ 创建任务</button>
+  <button class="btn btnp" onclick="openCreate()">＋ 新建任务</button>
   <button class="btn btnp" onclick="openRealtime()">👁 查看实时负荷</button>
   <button class="btn btnp" onclick="$modal('dlgRange')">👁 调控范围</button>
   <button class="btn btnp" onclick="$modal('dlgStrategy')">👁 策略管理</button>
@@ -51,7 +51,7 @@
 <!-- 创建/编辑任务弹窗 -->
 <div class="modal" id="dlgTask">
   <div class="dialog" style="width:640px">
-    <div class="dh"><span id="dlgTaskTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+    <div class="dh"><span id="dlgTaskTitle">新建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
     <div class="db">
       <div class="form-grid">
         <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="tName" placeholder="请输入任务名称"></div>
@@ -203,7 +203,7 @@ function delTask(id){
 /* ── 创建/编辑 ── */
 function openCreate(){
   editId=null;
-  document.getElementById('dlgTaskTitle').textContent='创建任务';
+  document.getElementById('dlgTaskTitle').textContent='新建任务';
   ['tName','tStart','tEnd','tTarget','tRatio'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('tAcType').value='水机';
   document.getElementById('tPolicy').value='温度上调策略';
