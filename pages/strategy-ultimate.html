@@ -41,9 +41,11 @@
 .timer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .timer-head b{font-size:13px;color:var(--txw);}
 .muted{font-size:12px;color:var(--ts);line-height:1.7;}
-.preview{border:1px solid rgba(31,101,255,.3);background:var(--primary-dim);border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--tx);line-height:1.9;}
-.preview b{color:var(--txw);}
-.time-points{color:var(--primary-hover);font-family:'Roboto Mono',Consolas,monospace;}
+.help-btn{width:22px;height:22px;border-radius:50%;border:1px solid rgba(31,101,255,.45);background:var(--primary-dim);color:#8fb0ff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;}
+.help-btn:hover{border-color:var(--primary);color:#fff;background:rgba(31,101,255,.32);}
+.help-intro{margin:0 0 10px;padding:10px 12px;background:var(--primary-dim);border:1px solid rgba(31,101,255,.3);border-radius:5px;color:var(--txw);font-size:12px;line-height:1.8;}
+.help-list{margin:0;padding-left:18px;color:var(--tx);font-size:12px;line-height:1.9;}
+.help-list li{margin:3px 0;}
 
 /* ── 表单校验错误框 ── */
 .error-box{display:none;border:1px solid rgba(245,108,108,.4);background:var(--er-dim);color:var(--er);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.7;}
@@ -86,7 +88,7 @@
   </div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
   <button class="btn" onclick="doReset()">重置</button>
-  <button class="btn btnp" style="margin-left:auto" onclick="openTask('new')">＋ 创建节能任务</button>
+  <button class="btn btnp" onclick="openTask('new')">＋ 新建任务</button>
 </div>
 
 <!-- 节能任务表格 -->
@@ -94,8 +96,8 @@
   <table>
     <thead><tr>
       <th style="width:44px"><input type="checkbox" id="ckAll" onclick="checkAll(this)"></th>
-      <th>任务名称</th><th>生效时间</th><th>生效日期</th><th>控制策略</th>
-      <th>任务状态</th><th>最后修改时间</th><th style="width:220px">操作</th>
+      <th>任务名称</th><th>生效日期</th><th>生效时间</th><th>控制策略</th>
+      <th>最后修改时间</th><th>任务状态</th><th style="width:220px">操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -105,7 +107,7 @@
 <!-- 创建/编辑/复制节能任务弹窗(原版向导:左房间树 + 右任务配置) -->
 <div class="modal" id="dlgTask">
   <div class="dialog" style="width:1080px">
-    <div class="dh"><span id="modalTitle">新建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+    <div class="dh"><span style="display:inline-flex;align-items:center;gap:8px"><span id="modalTitle">新建任务</span><button type="button" class="help-btn" onclick="openUltimateHelp()" title="功能说明">?</button></span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
     <div class="db">
       <div class="cfg-body">
         <!-- 左:房间选择树(楼栋/楼层/房间三级勾选) -->
@@ -163,8 +165,8 @@
             <div class="sec-title">空调控制配置</div>
             <div class="timer-card" id="timerCard">
               <div class="form-item">
-                <div style="display:flex;align-items:center;gap:8px"><span class="fl" style="margin:0;white-space:nowrap"><span class="req">*</span>下发间隔</span><input id="interval" type="number" min="1" max="120" step="1" value="15" style="max-width:80px" oninput="updatePreview()"><span class="text-sub">分钟</span></div>
-                <div class="muted" style="margin-top:6px;white-space:nowrap">启用后，平台在任务有效日期、周运行时间和生效时间段内，每隔 N 分钟主动向所选空调下发一次控制指令。</div>
+                <div style="display:flex;align-items:center;gap:8px"><span class="fl" style="margin:0;white-space:nowrap"><span class="req">*</span>下发间隔</span><input id="interval" type="number" min="1" max="120" step="1" value="15" style="max-width:80px" oninput="updatePreview()"><span class="text-sub">分钟（ 1-120 分钟）</span></div>
+                <div class="muted" style="margin-top:6px;white-space:nowrap">示例：设定生效时间 08:00 至 12:00、下发间隔 30 分钟，则将在 <span class="time-points">08:00、08:30、09:00 … 11:30</span> 各下发一次控制指令。</div>
               </div>
               <div class="form-line" style="margin-top:10px">
                 <div class="form-item"><span class="fl">开关机</span><select id="power" onchange="updatePreview()"><option>不设置</option><option>开机</option><option>关机</option></select></div>
@@ -172,7 +174,6 @@
                 <div class="form-item"><span class="fl">温度</span><input id="temp" type="number" min="16" max="30" step="0.5" placeholder="不设置" oninput="updatePreview()"></div>
                 <div class="form-item"><span class="fl">风速</span><select id="fan" onchange="updatePreview()"><option>不设置</option><option>低</option><option>中</option><option>高</option></select></div>
               </div>
-              <div class="preview" id="previewBox"></div>
             </div>
           </section>
         </div>
@@ -186,6 +187,21 @@
 </div>
 
 <!-- 空调控制指令记录弹窗(原版日志面板,迁移为标准弹窗) -->
+<div class="modal" id="dlgUltimateHelp">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>极致节能说明</span><span class="dx" onclick="$modalClose('dlgUltimateHelp')">✕</span></div>
+    <div class="db">
+      <p class="help-intro">极致节能通过平台定时反复下发空调控制指令，将所选房间的空调持续保持在设定状态，防止人为调整导致能耗上升，实现刚性节能管控。</p>
+      <ul class="help-list">
+        <li>任务在生效日期、生效时间、周运行时间内执行，排除日期不执行。</li>
+        <li>任务启用后，平台在上述时间范围内每隔 N 分钟主动向所选空调下发一次控制指令，下发间隔可设置 1-120 分钟。</li>
+        <li>开关机、模式、温度、风速均为可选项，选择“不设置”表示不改变空调该项状态；创建任务时至少需要设置一项。</li>
+      </ul>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgUltimateHelp')">关闭</button></div>
+  </div>
+</div>
+
 <div class="modal" id="dlgLog">
   <div class="dialog" style="width:640px">
     <div class="dh"><span>空调控制指令记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
@@ -248,14 +264,14 @@ function renderTable(){
     return `<tr>
       <td><input type="checkbox" class="ck" data-i="${i}"></td>
       <td>${r.name}</td>
-      <td>${r.ts} ~ ${r.te}</td>
       <td>${r.start} 至 ${r.end}</td>
+      <td>${r.ts} ~ ${r.te}</td>
       <td>${policyText(r)}</td>
+      <td>${r.mt}</td>
       <td><span class="status-cell">
         <span class="tag ${r.status==='启用'?'tok':'tin'}">${r.status}</span>
         <span class="switch ${r.status==='启用'?'on':''}" onclick="toggleTaskStatus(${i})"></span>
       </span></td>
-      <td>${r.mt}</td>
       <td><span class="op">
         <a onclick="openTask('edit',${i})">编辑</a>
         <a onclick="openTask('copy',${i})">复制</a>
@@ -398,7 +414,7 @@ function removeExcludeDate(d){
   renderExcludeChips();updatePreview();
 }
 
-/* ══════════ 执行计划预览(原版核心交互) ══════════ */
+/* ══════════ 生效时间选择 ══════════ */
 /* 生效时间段下拉:仅提供 5 分钟倍数的时间点(00:00-23:55) */
 function populateTimeSelects(){
   const p=n=>String(n).padStart(2,'0');
@@ -431,24 +447,7 @@ function fmt(mins){
   const m=String(mins%60).padStart(2,'0');
   return `${h}:${m}`;
 }
-function updatePreview(){
-  const box=document.getElementById('previewBox');
-  if(!box) return;
-  const interval=Math.max(1,parseInt(document.getElementById('interval').value||'15',10));
-  const start=getTime('start');
-  const end=getTime('end');
-  const s=minutesFromTime(start),e=minutesFromTime(end);
-  const points=[];
-  if(e>s){for(let t=s;t<e&&points.length<12;t+=interval) points.push(fmt(t));}
-  const command=commandText(document.getElementById('power').value,document.getElementById('mode').value,
-    document.getElementById('temp').value,document.getElementById('fan').value)||'（尚未设置任何控制项）';
-  box.innerHTML=`<b>执行计划预览</b><br>
-    <b>任务名称：</b>${document.getElementById('taskName').value||'未命名任务'}<br>
-    <b>执行范围：</b>已选 ${picked.size} 个房间 / 约 ${picked.size*3} 台空调<br>
-    <b>生效时间：</b>${document.getElementById('startDate').value} 至 ${document.getElementById('endDate').value} ${weekText()} ${start} - ${end}<br>
-    <b>控制策略：</b>每 ${interval} 分钟下发一次控制指令，将空调设置为 <b>${command}</b><br>
-    <span class="time-points">执行时间点示例：${points.length?points.join(', '):'结束时间需晚于开始时间'}</span>`;
-}
+function updatePreview(){}
 
 /* ══════════ 弹窗:新建 / 查看 / 编辑 / 复制 ══════════ */
 let editIdx=-1,editMode='new';
@@ -475,6 +474,7 @@ function openTask(mode,i){
   renderTree();renderWeek();renderExcludeChips();updatePreview();
   $modal('dlgTask');
 }
+function openUltimateHelp(){$modal('dlgUltimateHelp');}
 function openLog(){$modal('dlgLog');}
 
 /* ══════════ 校验与保存(原版规则全部保留) ══════════ */
