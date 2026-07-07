@@ -77,7 +77,7 @@ function $confirm(text, onOk) {
     el.id = id; el.className = 'modal';
     el.innerHTML = '<div class="dialog" style="width:420px">' +
       '<div class="dh"><span>提示</span><span class="dx" onclick="$modalClose(\'' + id + '\')">✕</span></div>' +
-      '<div class="db" style="padding:10px 20px 20px;font-size:14px"><span style="color:var(--wn);margin-right:8px">⚠</span><span class="__ct"></span></div>' +
+      '<div class="db" style="padding:10px 20px 20px;font-size:14px"><span class="__ct"></span></div>' +
       '<div class="df"><button class="btn" onclick="$modalClose(\'' + id + '\')">取 消</button><button class="btnp btn __ok">确 定</button></div></div>';
     document.body.appendChild(el);
   }

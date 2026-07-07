@@ -7,6 +7,7 @@
 <style>
 .status-cell{display:inline-flex;align-items:center;gap:10px;justify-content:center;}
 .op a.danger{color:var(--er);}
+.op a.op-disabled{color:var(--t3,#bbb);cursor:not-allowed;}
 .cfg-body{display:flex;gap:14px;align-items:stretch;}
 .pick-pane{width:230px;flex-shrink:0;background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:10px;max-height:620px;overflow-y:auto;}
 .pick-pane .pp-title{font-size:12px;color:var(--ts);font-weight:600;margin:4px 2px 8px;}
@@ -274,13 +275,21 @@ function renderTable(){
       <td class="summary-cell" title="${strategy}">${strategy}</td>
       <td>${r.mt}</td>
       <td><span class="status-cell"><span class="tag ${r.on?'tok':'tin'}">${r.on?'启用':'停用'}</span><span class="switch ${r.on?'on':''}" onclick="toggleTask(${i})"></span></span></td>
-      <td><span class="op"><a onclick="openDlg(${i})">编辑</a><a onclick="copyTask(${i})">复制</a><a onclick="openLog(${i})">日志</a><a class="danger" onclick="delTask(${i})">删除</a></span></td>
+      <td><span class="op">${r.on?'<a class="op-disabled" title="启用状态下的任务不允许编辑，请先停用">编辑</a>':`<a onclick="openDlg(${i})">编辑</a>`}<a onclick="copyTask(${i})">复制</a><a onclick="openLog(${i})">日志</a><a class="danger" onclick="delTask(${i})">删除</a></span></td>
     </tr>`;
   }).join(''):'<tr><td colspan="7"><div class="empty"><span class="ei">□</span><span class="et">暂无数据</span></div></td></tr>';
 }
-function toggleTask(i){TASKS[i].on=!TASKS[i].on;TASKS[i].mt=now();renderTable();$msg(TASKS[i].on?'任务已启用':'任务已停用');}
+function toggleTask(i){
+  if(TASKS[i].on){
+    $confirm(`停用任务“${TASKS[i].name}”后，正在执行中的联动任务将被立即终止，确定停用吗？`,()=>{
+      TASKS[i].on=false;TASKS[i].mt=now();renderTable();$msg('任务已停用');
+    });
+  }else{
+    TASKS[i].on=true;TASKS[i].mt=now();renderTable();$msg('任务已启用');
+  }
+}
 function copyTask(i){const r=TASKS[i];TASKS.push(cloneTask({...r,name:r.name+'-副本',on:false,mt:now()}));doQuery();$msg('复制成功');}
-function delTask(i){$confirm(`确定删除任务“${TASKS[i].name}”吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});}
+function delTask(i){$confirm(`删除任务“${TASKS[i].name}”后，正在执行中的联动任务将被立即终止，且不可恢复，确定删除吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});}
 function now(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
 function cloneTask(t){return JSON.parse(JSON.stringify(t));}
 
@@ -495,6 +504,7 @@ function saveTask(){const err=validateTask();if(err){$msg(err,'warning');return;
 
 let editIdx=-1;
 function openDlg(i,mode){
+  if(mode!=='view'&&i>=0&&TASKS[i].on){$msg('启用状态下的任务不允许编辑，请先停用');return;}
   editIdx=i;
   const r=i>=0?TASKS[i]:null;
   document.getElementById('dlgTitle').textContent=mode==='view'?'查看任务':(i>=0?'编辑任务':'新建任务');
