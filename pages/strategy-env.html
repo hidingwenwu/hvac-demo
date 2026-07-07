@@ -7,350 +7,550 @@
 <style>
 .status-cell{display:inline-flex;align-items:center;gap:10px;justify-content:center;}
 .op a.danger{color:var(--er);}
-/* 配置弹窗:左树右表单 */
 .cfg-body{display:flex;gap:14px;align-items:stretch;}
-.pick-pane{width:230px;flex-shrink:0;background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:10px;max-height:540px;overflow-y:auto;}
+.pick-pane{width:230px;flex-shrink:0;background:var(--bg-input);border:1px solid var(--bd);border-radius:6px;padding:10px;max-height:620px;overflow-y:auto;}
 .pick-pane .pp-title{font-size:12px;color:var(--ts);font-weight:600;margin:4px 2px 8px;}
 .pick-pane input.search{width:100%;height:28px;margin-bottom:8px;}
 .cfg-main{flex:1;min-width:0;}
 .sec{border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px;}
 .sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--txw);margin-bottom:12px;}
 .sec-title::before{content:'';width:3px;height:13px;background:var(--primary);border-radius:2px;}
-.cond-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;background:var(--bg-panel);border:1px solid var(--bd);border-radius:5px;margin-bottom:8px;}
-.cond-row select{width:120px;}
-.cond-row input[type=number]{width:90px;}
-.cond-del{margin-left:auto;color:var(--er);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:3px;}
-.cond-del:hover{background:var(--er-dim);}
-.week-row{display:flex;gap:6px;flex-wrap:wrap;}
-.wday{height:28px;padding:0 12px;display:inline-flex;align-items:center;font-size:12px;color:var(--tx);background:var(--bg-input);border:1px solid var(--bd2);border-radius:4px;cursor:pointer;user-select:none;transition:all .15s;}
-.wday.on{background:var(--primary);border-color:var(--primary);color:#fff;}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.chip{font-size:12px;color:#5a8dff;background:var(--primary-dim);border:1px solid rgba(31,101,255,.35);border-radius:3px;padding:2px 8px;}
+.time-range{display:flex;align-items:center;gap:8px;}
+.help-btn{width:22px;height:22px;border-radius:50%;border:1px solid rgba(31,101,255,.45);background:var(--primary-dim);color:#8fb0ff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;}
+.help-btn:hover{border-color:var(--primary);color:#fff;background:rgba(31,101,255,.32);}
+.help-intro{margin:0 0 10px;padding:10px 12px;background:var(--primary-dim);border:1px solid rgba(31,101,255,.3);border-radius:5px;color:var(--txw);font-size:12px;line-height:1.8;}
+.help-list{margin:0;padding-left:18px;color:var(--tx);font-size:12px;line-height:1.9;}
+.help-list li{margin:3px 0;}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.qbtn{height:28px;padding:0 10px;border:1px solid var(--bd);border-radius:3px;background:#2b354f;color:var(--tx);font-size:12px;cursor:pointer;}
+.qbtn:hover{border-color:var(--primary);color:var(--txw);}
+.week-grid,.week-row{display:flex;gap:6px;flex-wrap:wrap;}
+.day,.wday{height:28px;padding:0 12px;display:inline-flex;align-items:center;font-size:12px;color:var(--tx);background:var(--bg-input);border:1px solid var(--bd2);border-radius:4px;cursor:pointer;user-select:none;transition:all .15s;}
+.day.on,.wday.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+.exclude-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:24px;align-items:center;}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5a8dff;background:var(--primary-dim);border:1px solid rgba(31,101,255,.35);border-radius:3px;padding:3px 6px 3px 8px;}
+.chip .cx{cursor:pointer;color:var(--ts);}
+.muted{font-size:12px;color:var(--ts);}
+.rule-hint{font-size:12px;color:var(--ts);line-height:1.7;margin-top:-4px;margin-bottom:10px;}
+.cond-row,.action-row{display:grid;grid-template-columns:auto 138px 1fr auto;gap:10px;align-items:center;padding:10px;background:var(--bg-panel);border:1px solid var(--bd);border-radius:5px;margin-bottom:8px;}
+.cond-row:first-child{grid-template-columns:32px 138px 1fr auto;}
+.cond-prefix{width:32px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;background:rgba(31,101,255,.12);border:1px solid rgba(31,101,255,.28);color:#7aa2ff;font-size:12px;}
+.cond-prefix.blank{background:transparent;border-color:transparent;color:transparent;}
+.cond-body,.action-body{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+.cond-row select,.action-row select{width:130px;}
+.cond-row input[type=number],.action-row input[type=number]{width:90px;}
+.cond-del,.action-del{color:var(--er);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:3px;}
+.cond-del:hover,.action-del:hover{background:var(--er-dim);}
+/* ── 锁定控制:紧凑下拉宽度 + 温度下拉与滑动条同组不换行 ── */
+.action-row{grid-template-columns:auto 104px 1fr auto;}
+.action-row>select{width:104px;}
+.action-row select.lock-sel{width:120px;}
+.lock-temp-group{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap;}
+
+/* ── 模式锁定:勾选式多选下拉 ── */
+.msel{position:relative;display:inline-block;}
+.msel-btn{min-width:120px;height:32px;padding:0 8px;text-align:left;border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);color:var(--tx);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:space-between;gap:6px;}
+.msel-btn:hover{border-color:var(--primary);}
+.msel-arr{color:var(--ts);font-size:10px;}
+.msel-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:30;min-width:130px;background:var(--bg-panel);border:1px solid var(--bd2);border-radius:4px;padding:4px;box-shadow:0 6px 16px rgba(0,0,0,.35);}
+.msel.open .msel-menu{display:block;}
+.msel-item{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:12px;color:var(--tx);border-radius:3px;cursor:pointer;}
+.msel-item:hover{background:var(--primary-dim);}
+
+/* ── 温度锁定:双手柄滑动条 ── */
+.dual-range{position:relative;width:180px;height:38px;display:inline-block;flex-shrink:0;}
+.dual-range .dr-lbl{position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ts);white-space:nowrap;line-height:1;}
+.dual-range .dr-track{position:absolute;left:0;right:0;bottom:10px;height:4px;border-radius:2px;background:var(--bd2);}
+.dual-range .dr-fill{position:absolute;bottom:10px;height:4px;border-radius:2px;background:var(--primary);}
+.dual-range input[type=range]{position:absolute;left:0;bottom:0;width:100%;height:24px;margin:0;background:none;-webkit-appearance:none;appearance:none;pointer-events:none;}
+.dual-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--primary);border:2px solid #fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.dual-range input[type=range]::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;background:var(--primary);border:2px solid #fff;cursor:pointer;}
+.duration-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:rgba(255,255,255,.03);border:1px dashed var(--bd2);border-radius:5px;}
+.summary-cell{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .log-row{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--tx);}
 .log-row:last-child{border-bottom:none;}
 .log-row .t{color:var(--ts);}
+@media(max-width:900px){.cfg-body{flex-direction:column}.pick-pane{width:auto}.cond-row,.action-row{grid-template-columns:1fr}.cond-prefix{width:auto}.dialog{max-width:98vw}}
 </style>
 </head>
 <body>
-<!-- 筛选栏 -->
 <div class="fb">
   <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:180px"></div>
-  <div class="fi"><span class="fl">任务时间</span>
+  <div class="fi"><span class="fl">生效日期</span>
     <input type="date" id="fStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px">
   </div>
-  <div class="fi"><span class="fl">联动策略</span>
-    <select id="fPolicy" style="width:170px">
-      <option value="">请选择联动策略</option>
-      <option>人来开空调</option><option>人走关空调</option>
-      <option>门窗开时关空调</option><option>门窗关时开空调</option>
-    </select>
+  <div class="fi"><span class="fl">最后修改时间</span>
+    <input type="date" id="fModStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fModEnd" style="width:145px">
   </div>
   <div class="fi"><span class="fl">任务状态</span>
-    <select id="fStatus" style="width:150px">
-      <option value="">请选择任务状态</option><option>启用</option><option>停用</option>
-    </select>
+    <select id="fStatus" style="width:150px"><option value="">请选择任务状态</option><option>启用</option><option>停用</option></select>
   </div>
-  <button class="btn btnp" onclick="doQuery()">🔍 搜索</button>
+  <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn btnp" onclick="openDlg(-1)">＋ 新建任务</button>
 </div>
 
-<!-- 联动任务表格 -->
 <div class="tw">
   <table>
     <thead><tr>
-      <th>任务名称</th><th>起始时间</th><th>结束时间</th><th>联动策略</th><th>创建时间</th><th>任务状态</th><th>操作</th>
+      <th>任务名称</th><th>生效日期</th><th>生效时间</th><th>控制策略</th><th>最后修改时间</th><th>任务状态</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
 <div id="pager"></div>
 
-<!-- 新建/编辑联动任务弹窗 -->
 <div class="modal" id="dlgTask">
-  <div class="dialog" style="width:920px">
-    <div class="dh"><span id="dlgTitle">新建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
+  <div class="dialog" style="width:1200px;max-width:96vw">
+    <div class="dh"><span style="display:inline-flex;align-items:center;gap:8px"><span id="dlgTitle">新建任务</span><button type="button" class="help-btn" onclick="openEnvHelp()" title="功能说明">?</button></span><span class="dx" onclick="$modalClose('dlgTask')">×</span></div>
     <div class="db">
       <div class="cfg-body">
-        <!-- 左:传感器/房间树 -->
         <aside class="pick-pane">
           <div class="pp-title">选择房间 / 传感器</div>
-          <input class="search" placeholder="搜索楼栋、楼层、房间">
+          <input class="search" id="treeSearch" placeholder="搜索楼栋、楼层、房间" oninput="renderTree()">
           <div id="roomTree"></div>
-          <div class="pp-title" style="margin-top:12px">已选范围</div>
-          <div class="chips" id="pickedChips"></div>
         </aside>
-        <!-- 右:配置区 -->
         <div class="cfg-main">
           <div class="sec">
             <div class="sec-title">基础信息</div>
             <div class="form-grid">
               <div class="form-item"><span class="fl"><span class="req">*</span>任务名称</span><input id="tName" placeholder="请输入任务名称" maxlength="30"></div>
-              <div class="form-item"><span class="fl"><span class="req">*</span>联动策略</span>
-                <select id="tPolicy" onchange="presetByPolicy()">
-                  <option>人来开空调</option><option>人走关空调</option>
-                  <option>门窗开时关空调</option><option>门窗关时开空调</option>
-                </select>
+              <div class="form-item"><span class="fl">任务描述</span><textarea id="taskDesc" maxlength="200" placeholder="请输入任务描述" style="width:100%;height:60px;resize:none;padding-top:8px;line-height:1.5"></textarea></div>
+            </div>
+            <div class="form-grid" style="margin-top:12px">
+              <div class="form-item"><span class="fl"><span class="req">*</span>生效日期</span>
+                <div class="time-range"><input type="date" id="tStart" value="2026-07-01"><span class="text-sub">至</span><input type="date" id="tEnd" value="2026-12-31"></div>
               </div>
-              <div class="form-item"><span class="fl"><span class="req">*</span>起始日期</span><input type="date" id="tStart" value="2026-07-01"></div>
-              <div class="form-item"><span class="fl"><span class="req">*</span>结束日期</span><input type="date" id="tEnd" value="2026-12-31"></div>
+              <div class="form-item"><span class="fl"><span class="req">*</span>生效时间</span>
+                <div class="time-range"><select id="tFrom"></select><span class="text-sub">至</span><select id="tTo"></select></div>
+              </div>
+            </div>
+            <div class="form-grid" style="margin-top:12px">
+              <div class="form-item"><span class="fl"><span class="req">*</span>周重复时间</span>
+                <div class="quick">
+                  <button type="button" class="qbtn" onclick="setWeek('workday')">工作日</button>
+                  <button type="button" class="qbtn" onclick="setWeek('weekend')">周末</button>
+                  <button type="button" class="qbtn" onclick="setWeek('all')">全选</button>
+                  <button type="button" class="qbtn" onclick="setWeek('none')">取消</button>
+                </div>
+                <div class="week-grid" id="weekGrid"></div>
+              </div>
+              <div class="form-item"><span class="fl">排除日期</span>
+                <div class="exclude-row">
+                  <input id="excludeDateInput" type="date">
+                  <button type="button" class="qbtn" onclick="addExcludeDate()">+ 添加</button>
+                  <button type="button" class="qbtn" onclick="excludeHolidays()">一键排除节假日</button>
+                </div>
+                <div class="chips" id="excludeChips"></div>
+              </div>
             </div>
           </div>
 
           <div class="sec">
-            <div class="sec-title">触发条件<span class="text-sub" style="font-weight:400;font-size:12px">（所有条件需同时满足）</span></div>
+            <div class="sec-title">如果满足条件</div>
             <div id="condList"></div>
-            <button class="btn btn-mini" onclick="addCond()">＋ 添加条件</button>
-          </div>
-
-          <div class="sec">
-            <div class="sec-title">执行动作</div>
-            <div class="form-grid">
-              <div class="form-item"><span class="fl">开关机</span>
-                <select id="aPower"><option value="">不控制</option><option>开机</option><option>关机</option></select>
-              </div>
-              <div class="form-item"><span class="fl">模式</span>
-                <select id="aMode"><option value="">不控制</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select>
-              </div>
-              <div class="form-item"><span class="fl">温度（16~30℃）</span><input type="number" id="aTemp" min="16" max="30" step="1" placeholder="不控制"></div>
-              <div class="form-item"><span class="fl">风速</span>
-                <select id="aFan"><option value="">不控制</option><option>高</option><option>中</option><option>低</option><option>自动</option></select>
-              </div>
+            <button type="button" class="btn btn-mini" id="addCondBtn" onclick="addCond()">＋ 且满足条件</button>
+            <div class="duration-row" style="margin-top:10px">
+              <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="durationEnabled" onchange="renderDuration()"> 持续满足条件</label>
+              <span id="durationBox"></span>
+              <span class="muted" id="durationHint">满足条件立即执行</span>
             </div>
           </div>
 
           <div class="sec" style="margin-bottom:0">
-            <div class="sec-title">生效时段</div>
-            <div class="form-row" style="margin-bottom:12px">
-              <span class="fl" style="width:80px">每日时段</span>
-              <input type="time" id="tFrom" value="08:30" style="width:130px"><span class="text-sub">至</span><input type="time" id="tTo" value="20:00" style="width:130px">
-            </div>
-            <div class="form-row">
-              <span class="fl" style="width:80px">重复</span>
-              <div class="week-row" id="weekRow"></div>
-            </div>
+            <div class="sec-title">则执行如下动作</div>
+            <div id="actionList"></div>
+            <button type="button" class="btn btn-mini" id="addActionBtn" onclick="addAction()">＋ 添加动作</button>
           </div>
         </div>
       </div>
     </div>
     <div class="df">
-      <button class="btn" onclick="$modalClose('dlgTask')">取 消</button>
-      <button class="btn btnp" onclick="saveTask()">确 定</button>
+      <button class="btn" onclick="$modalClose('dlgTask')">取消</button>
+      <button class="btn btnp" onclick="saveTask()">确定</button>
     </div>
   </div>
 </div>
 
-<!-- 执行日志弹窗 -->
-<div class="modal" id="dlgLog">
+<div class="modal" id="dlgEnvHelp">
   <div class="dialog" style="width:560px">
-    <div class="dh"><span id="logTitle">任务执行日志</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
+    <div class="dh"><span>环境感知联动说明</span><span class="dx" onclick="$modalClose('dlgEnvHelp')">×</span></div>
+    <div class="db">
+      <p class="help-intro">环境感知联动通过房间内的人体、门窗、温湿度等传感器实时感知环境变化，当环境满足设定条件时，自动对所选房间的空调执行控制动作，实现按需用能、无感节能。</p>
+      <ul class="help-list">
+        <li>任务在生效日期、生效时间、周重复时间内执行，排除日期不执行。</li>
+        <li>执行动作支持最多 16 个组合动作；相邻动作不允许相同，且不能以延时作为最后一个动作。</li>
+        <li>锁定控制中的“不锁定”表示解除对应锁定；全部不锁定表示解除全部锁定。</li>
+      </ul>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgEnvHelp')">关闭</button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgLog">
+  <div class="dialog" style="width:640px">
+    <div class="dh"><span id="logTitle">任务执行日志</span><span class="dx" onclick="$modalClose('dlgLog')">×</span></div>
     <div class="db" id="logBody"></div>
-    <div class="df"><button class="btn" onclick="$modalClose('dlgLog')">关 闭</button></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgLog')">关闭</button></div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
 <script>
-/* ── 模拟数据(形态对齐线上) ── */
-let TASKS=[
-  {name:'环境感知测试2',start:'2026-06-02',end:'2026-06-02',policy:'人走关空调',crt:'2026-06-02 17:01:33',on:false},
-  {name:'环境感知测试',start:'2026-06-02',end:'2026-06-02',policy:'人来开空调',crt:'2026-06-02 16:58:57',on:false},
-  {name:'产品部门窗感知测试',start:'2026-02-27',end:'2026-12-31',policy:'门窗开时关空调',crt:'2026-02-12 08:51:56',on:true},
-  {name:'会议室人体联动节能测试',start:'2026-02-27',end:'2026-12-31',policy:'人走关空调',crt:'2026-01-26 13:07:19',on:true},
-  {name:'人离关机-会议室',start:'2026-03-10',end:'2026-12-31',policy:'人走关空调',crt:'2026-03-10 09:14:02',on:true},
-  {name:'展厅门窗联动关机',start:'2026-04-01',end:'2026-10-31',policy:'门窗开时关空调',crt:'2026-04-01 10:22:45',on:true},
+const DEFAULT_WEEK=[1,1,1,1,1,0,0];
+const WEEK=['周一','周二','周三','周四','周五','周六','周日'];
+const HOLIDAYS=[
+  {lb:'端午节',dates:['2026-06-19','2026-06-20','2026-06-21']},
+  {lb:'中秋节',dates:['2026-09-25','2026-09-26','2026-09-27']},
+  {lb:'国庆节',dates:['2026-10-01','2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07']},
+  {lb:'元旦',dates:['2027-01-01','2027-01-02','2027-01-03']},
+];
+const COND_TYPES={presence:'人在状态',door:'门窗状态',temp:'温度',humi:'湿度'};
+const OPS=[
+  {value:'gt',label:'高于',symbol:'>'},
+  {value:'lt',label:'低于',symbol:'<'},
+  {value:'gte',label:'升高到',symbol:'≥'},
+  {value:'lte',label:'降低到',symbol:'≤'},
 ];
 
-/* ── 查询/表格/分页 ── */
+let TASKS=[
+  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'}],mt:'2026-06-30 16:58:57',on:true},
+  {name:'产品部门窗开启关机',start:'2026-07-01',end:'2026-10-31',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:10,rooms:['产品部'],conditions:[{type:'door',state:'开启'}],actions:[{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-28 10:22:45',on:true},
+  {name:'高温分段降温策略',start:'2026-07-15',end:'2026-09-15',ts:'09:00',te:'18:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:5,rooms:['运营部'],conditions:[{type:'temp',op:'gte',val:'30'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'control',power:'',mode:'',temp:'27',fan:''}],mt:'2026-06-25 09:14:02',on:false},
+];
 let filtered=TASKS.slice();
 const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
+
 function doQuery(){
   const n=document.getElementById('fName').value.trim();
-  const p=document.getElementById('fPolicy').value;
   const st=document.getElementById('fStatus').value;
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
-  filtered=TASKS.filter(r=>
-    (!n||r.name.includes(n))&&(!p||r.policy===p)&&
-    (!st||(st==='启用')===r.on)&&
-    (!s||r.end>=s)&&(!e||r.start<=e)
-  );
-  pg.page=1;pg.total=filtered.length;
-  $pager('pager',pg);renderTable();
+  const ms=document.getElementById('fModStart').value,me=document.getElementById('fModEnd').value;
+  filtered=TASKS.filter(r=>(!n||r.name.includes(n))&&(!st||(st==='启用')===r.on)&&(!s||r.end>=s)&&(!e||r.start<=e)&&(!ms||r.mt>=ms)&&(!me||r.mt<=me+' 23:59:59'));
+  pg.page=1;pg.total=filtered.length;$pager('pager',pg);renderTable();
 }
-function doReset(){
-  ['fName','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fPolicy').value='';document.getElementById('fStatus').value='';
-  doQuery();
+function doReset(){['fName','fStart','fEnd','fModStart','fModEnd'].forEach(id=>document.getElementById(id).value='');document.getElementById('fStatus').value='';doQuery();
+}
+function conditionBrief(c){
+  if(c.type==='presence')return c.state;
+  if(c.type==='door')return `门窗${c.state}`;
+  const op=OPS.find(o=>o.value===c.op)||OPS[0];
+  return `${COND_TYPES[c.type]}${op.label}${c.val}${c.type==='temp'?'°':'%'}`;
+}
+function controlBrief(a){
+  if(a.type==='delay')return `\u5ef6\u65f6${a.minutes}\u5206\u949f`;
+  if(a.type==='lock')return lockBrief(a);
+  if(a.power==='\u5173\u673a')return '\u5173\u673a';
+  const ps=[];
+  if(a.mode)ps.push(a.mode);
+  if(a.fan)ps.push(`${a.fan}\u98ce`);
+  if(a.temp)ps.push(`${a.temp}\u2103`);
+  if(a.power==='\u5f00\u673a'&&!ps.length)return '\u5f00\u673a';
+  return ps.join('')||'\u672a\u8bbe\u7f6e\u63a7\u5236\u53c2\u6570';
+}
+function actionSentence(list){
+  let text='';
+  (list||[]).forEach(a=>{
+    if(a.type==='delay'){text+=(text?'\uff0c':'')+`\u5ef6\u65f6${a.minutes}\u5206\u949f\u540e`;return;}
+    const cmd=a.type==='lock'?`\u6267\u884c\u9501\u5b9a\u63a7\u5236\uff1a${lockBrief(a)}`:`\u5c06\u7a7a\u8c03\u8bbe\u7f6e\u4e3a${controlBrief(a)}`;
+    text+=text?(text.endsWith('\u540e')?cmd:`\uff0c\u518d${cmd}`):cmd;
+  });
+  return text||'\u5c1a\u672a\u914d\u7f6e\u6267\u884c\u52a8\u4f5c';
+}
+function controlStrategy(r){
+  const cond=(r.conditions||[]).map(conditionBrief).join('且')||'条件满足';
+  const duration=r.durationOn?`并持续满足${r.duration}分钟`:'';
+  return `检测到${cond}${duration}时，${actionSentence(r.actions)}。`;
 }
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
   document.getElementById('tbody').innerHTML=rows.length?rows.map(r=>{
     const i=TASKS.indexOf(r);
+    const strategy=controlStrategy(r);
     return `<tr>
-      <td>${r.name}</td><td>${r.start}</td><td>${r.end}</td><td>${r.policy}</td><td>${r.crt}</td>
-      <td><span class="status-cell">
-        <span class="tag ${r.on?'tok':'tin'}">${r.on?'启用':'停用'}</span>
-        <span class="switch ${r.on?'on':''}" onclick="toggleTask(${i})"></span>
-      </span></td>
-      <td><span class="op">
-        <a onclick="openDlg(${i},'view')">查看</a>
-        <a onclick="openDlg(${i})">编辑</a>
-        <a onclick="copyTask(${i})">复制</a>
-        <a onclick="openLog(${i})">日志</a>
-        <a class="danger" onclick="delTask(${i})">删除</a>
-      </span></td>
-    </tr>`;}).join('')
-    :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+      <td>${r.name}</td><td>${r.start} 至 ${r.end}</td><td>${weekText(r.week)} ${r.ts} 至 ${r.te}</td>
+      <td class="summary-cell" title="${strategy}">${strategy}</td>
+      <td>${r.mt}</td>
+      <td><span class="status-cell"><span class="tag ${r.on?'tok':'tin'}">${r.on?'启用':'停用'}</span><span class="switch ${r.on?'on':''}" onclick="toggleTask(${i})"></span></span></td>
+      <td><span class="op"><a onclick="openDlg(${i})">编辑</a><a onclick="copyTask(${i})">复制</a><a onclick="openLog(${i})">日志</a><a class="danger" onclick="delTask(${i})">删除</a></span></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7"><div class="empty"><span class="ei">□</span><span class="et">暂无数据</span></div></td></tr>';
 }
-function toggleTask(i){
-  TASKS[i].on=!TASKS[i].on;
-  renderTable();
-  $msg(TASKS[i].on?'任务已启用':'任务已停用');
-}
-function copyTask(i){
-  const r=TASKS[i];
-  TASKS.push({...r,name:r.name+'-副本',on:false,crt:now()});
-  doQuery();$msg('复制成功');
-}
-function delTask(i){
-  $confirm(`确定删除任务「${TASKS[i].name}」吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});
-}
-function now(){
-  const d=new Date(),p=n=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
+function toggleTask(i){TASKS[i].on=!TASKS[i].on;TASKS[i].mt=now();renderTable();$msg(TASKS[i].on?'任务已启用':'任务已停用');}
+function copyTask(i){const r=TASKS[i];TASKS.push(cloneTask({...r,name:r.name+'-副本',on:false,mt:now()}));doQuery();$msg('复制成功');}
+function delTask(i){$confirm(`确定删除任务“${TASKS[i].name}”吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});}
+function now(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+function cloneTask(t){return JSON.parse(JSON.stringify(t));}
 
-/* ── 房间树 ── */
-const ROOMS=[
-  {lb:'青岛飞奕科技',open:true,children:[
-    {lb:'8层',open:true,children:['801会议室','803会议室','产品部','运营部']},
-    {lb:'9层',open:false,children:['901会议室','903会议室','技术部','研发部']},
-  ]},
-];
-let picked=['801会议室','803会议室'];
+const ROOMS=[{lb:'青岛飞奕科技',open:true,children:[{lb:'8层',open:true,children:['801会议室','803会议室','产品部','运营部']},{lb:'9层',open:false,children:['901会议室','903会议室','技术部','研发部']}]}];
+let picked=[];
 function renderTree(){
+  const kw=(document.getElementById('treeSearch')?.value||'').trim();
   const el=document.getElementById('roomTree');el.innerHTML='';
   ROOMS.forEach(b=>{
     el.appendChild(treeRow(b.lb,0,b,null));
     if(b.open)b.children.forEach(f=>{
+      const leaves=f.children.filter(r=>!kw||r.includes(kw)||f.lb.includes(kw)||b.lb.includes(kw));
+      if(!leaves.length&&kw)return;
       el.appendChild(treeRow(f.lb,1,f,null));
-      if(f.open)f.children.forEach(rm=>el.appendChild(treeRow(rm,2,null,rm)));
+      if(f.open)leaves.forEach(rm=>el.appendChild(treeRow(rm,2,null,rm)));
     });
   });
-  document.getElementById('pickedChips').innerHTML=
-    picked.length?picked.map(p=>`<span class="chip">${p}</span>`).join(''):'<span class="text-sub" style="font-size:12px">未选择</span>';
 }
 function treeRow(label,lv,node,leaf){
   const row=document.createElement('div');
   row.className='tree-row'+(node&&node.open?' open':'')+(leaf&&picked.includes(leaf)?' active':'');
   row.style.paddingLeft=(6+lv*16)+'px';
-  row.innerHTML=(node?'<span class="arr">▶</span>':'')+
-    (leaf?`<input type="checkbox" ${picked.includes(leaf)?'checked':''}>`:'')+`<span>${label}</span>`;
+  row.innerHTML=(node?'<span class="arr">›</span>':'')+(leaf?`<input type="checkbox" ${picked.includes(leaf)?'checked':''}>`:'')+`<span>${label}</span>`;
   if(node)row.onclick=()=>{node.open=!node.open;renderTree();};
   if(leaf)row.onclick=()=>{picked.includes(leaf)?picked=picked.filter(x=>x!==leaf):picked.push(leaf);renderTree();};
   return row;
 }
 
-/* ── 触发条件 ── */
-const COND_TYPES={presence:'人在状态',door:'门窗状态',temp:'温度',humi:'湿度'};
+let weekOn=DEFAULT_WEEK.slice();
+let excludeDates=[];
+function renderWeek(){document.getElementById('weekGrid').innerHTML=WEEK.map((w,i)=>`<span class="day ${weekOn[i]?'on':''}" onclick="weekOn[${i}]^=1;renderWeek();updatePreview()">${w}</span>`).join('');}
+function setWeek(type){weekOn=WEEK.map((_,i)=>type==='all'||(type==='workday'&&i<5)||(type==='weekend'&&i>4)?1:0);renderWeek();updatePreview();}
+function weekText(arr){arr=arr||weekOn;const active=WEEK.filter((_,i)=>arr[i]);if(active.length===7)return '每天';if(active.join(',')==='周一,周二,周三,周四,周五')return '工作日';if(active.join(',')==='周六,周日')return '周末';return active.length?active.join('、'):'未选择周重复时间';}
+function holidayName(d){const h=HOLIDAYS.find(h=>h.dates.includes(d));return h?`（${h.lb}）`:'';}
+function renderExcludeChips(){const el=document.getElementById('excludeChips');excludeDates.sort();el.innerHTML=excludeDates.length?excludeDates.map(d=>`<span class="chip">${d}${holidayName(d)}<span class="cx" onclick="removeExcludeDate('${d}')">×</span></span>`).join(''):'<span class="muted">未设置排除日期</span>';}
+function addExcludeDate(){const input=document.getElementById('excludeDateInput');const d=input.value;if(!d){$msg('请先选择要排除的日期','warning');return;}const s=document.getElementById('tStart').value,e=document.getElementById('tEnd').value;if(d<s||d>e){$msg('排除日期需在生效日期范围内','warning');return;}if(!excludeDates.includes(d))excludeDates.push(d);input.value='';renderExcludeChips();updatePreview();}
+function excludeHolidays(){const s=document.getElementById('tStart').value,e=document.getElementById('tEnd').value;const inRange=HOLIDAYS.flatMap(h=>h.dates).filter(d=>d>=s&&d<=e);if(!inRange.length){$msg('生效日期范围内没有法定节假日','warning');return;}const added=inRange.filter(d=>!excludeDates.includes(d));excludeDates.push(...added);renderExcludeChips();updatePreview();$msg(added.length?`已排除 ${added.length} 个节假日`:'范围内的节假日均已排除');}
+function removeExcludeDate(d){excludeDates=excludeDates.filter(x=>x!==d);renderExcludeChips();updatePreview();}
+
 let conds=[];
-function addCond(type){
-  if(conds.length>=4){$msg('最多配置 4 个条件','warning');return;}
-  conds.push({type:type||'presence',state:'无人',op:'高于',val:''});
-  renderConds();
-}
-function delCond(i){conds.splice(i,1);renderConds();}
-function setCond(i,k,v){conds[i][k]=v;if(k==='type'){conds[i].state=v==='door'?'开启':'无人';conds[i].val='';}renderConds();}
+function newCond(type){type=type||firstAvailableCondType();if(type==='presence')return {type,state:'无人'};if(type==='door')return {type,state:'关闭'};return {type,op:'gt',val:''};}
+function firstAvailableCondType(){return Object.keys(COND_TYPES).find(t=>!conds.some(c=>c.type===t));}
+function addCond(){const type=firstAvailableCondType();if(!type){$msg('4 类触发条件均已配置，不能继续添加','warning');return;}conds.push(newCond(type));renderConds();updatePreview();}
+function delCond(i){if(conds.length<=1){$msg('至少保留 1 个触发条件','warning');return;}conds.splice(i,1);renderConds();updatePreview();}
+function setCond(i,k,v){conds[i][k]=v;if(k==='type')conds[i]=newCond(v);renderConds();updatePreview();}
 function renderConds(){
   document.getElementById('condList').innerHTML=conds.map((c,i)=>{
+    const used=conds.map((x,idx)=>idx===i?null:x.type).filter(Boolean);
     let body='';
-    if(c.type==='presence')body=`<div class="rtabs">
-        <span class="rtab ${c.state==='有人'?'active':''}" onclick="setCond(${i},'state','有人')">有人</span>
-        <span class="rtab ${c.state==='无人'?'active':''}" onclick="setCond(${i},'state','无人')">无人</span></div>`;
-    else if(c.type==='door')body=`<div class="rtabs">
-        <span class="rtab ${c.state==='开启'?'active':''}" onclick="setCond(${i},'state','开启')">开启</span>
-        <span class="rtab ${c.state==='关闭'?'active':''}" onclick="setCond(${i},'state','关闭')">关闭</span></div>`;
-    else body=`<select onchange="setCond(${i},'op',this.value)">
-        <option ${c.op==='高于'?'selected':''}>高于</option><option ${c.op==='低于'?'selected':''}>低于</option></select>
-      <input type="number" value="${c.val}" placeholder="${c.type==='temp'?'28':'60'}" onchange="setCond(${i},'val',this.value)">
-      <span class="text-sub">${c.type==='temp'?'℃':'%'}</span>`;
-    return `<div class="cond-row">
-      <select onchange="setCond(${i},'type',this.value)">${Object.entries(COND_TYPES).map(([k,v])=>
-        `<option value="${k}" ${c.type===k?'selected':''}>${v}</option>`).join('')}</select>
-      ${body}<span class="cond-del" onclick="delCond(${i})">✕</span></div>`;
-  }).join('')||'<div class="text-sub" style="font-size:12px;margin-bottom:8px">暂未配置条件，点击下方按钮添加</div>';
+    if(c.type==='presence')body=`<div class="rtabs"><span class="rtab ${c.state==='有人'?'active':''}" onclick="setCond(${i},'state','有人')">有人</span><span class="rtab ${c.state==='无人'?'active':''}" onclick="setCond(${i},'state','无人')">无人</span></div>`;
+    else if(c.type==='door')body=`<div class="rtabs"><span class="rtab ${c.state==='开启'?'active':''}" onclick="setCond(${i},'state','开启')">开启</span><span class="rtab ${c.state==='关闭'?'active':''}" onclick="setCond(${i},'state','关闭')">关闭</span></div>`;
+    else {
+      const unit=c.type==='temp'?'℃':'%';
+      const range=c.type==='temp'?{min:-10,max:50,ph:'-10~50'}:{min:1,max:99,ph:'1~99'};
+      body=`<select onchange="setCond(${i},'op',this.value)">${OPS.map(o=>`<option value="${o.value}" ${c.op===o.value?'selected':''}>${o.label} ${o.symbol}</option>`).join('')}</select>
+        <input type="number" min="${range.min}" max="${range.max}" step="1" value="${c.val||''}" placeholder="${range.ph}" onchange="setCond(${i},'val',this.value)"><span class="text-sub">${unit}</span>`;
+    }
+    return `<div class="cond-row"><span class="cond-prefix ${i?'':'blank'}">${i?'且':''}</span><select onchange="setCond(${i},'type',this.value)">${Object.entries(COND_TYPES).map(([k,v])=>`<option value="${k}" ${c.type===k?'selected':''} ${used.includes(k)?'disabled':''}>${v}</option>`).join('')}</select><div class="cond-body">${body}</div><span class="cond-del" onclick="delCond(${i})">×</span></div>`;
+  }).join('');
+  document.getElementById('addCondBtn').disabled=conds.length>=4;
+}
+function renderDuration(){
+  const on=document.getElementById('durationEnabled').checked;
+  const box=document.getElementById('durationBox');
+  const hint=document.getElementById('durationHint');
+  box.innerHTML=on?'<input type="number" id="durationMin" min="1" max="60" step="1" value="10" style="width:80px" oninput="updateDurationHint()"><span class="text-sub">分钟</span>':'';
+  updateDurationHint();
+}
+function updateDurationHint(){
+  const hint=document.getElementById('durationHint');
+  if(!hint) return;
+  if(!document.getElementById('durationEnabled').checked){hint.textContent='满足条件立即执行';updatePreview();return;}
+  const min=document.getElementById('durationMin')?.value||'';
+  hint.textContent=min?`满足条件后 ${min} 分钟再次确认，仍然满足条件再执行`:'满足条件后再次确认，仍然满足条件再执行';
+  updatePreview();
 }
 
-/* ── 生效时段(星期) ── */
-const WEEK=['周一','周二','周三','周四','周五','周六','周日'];
-let weekOn=[1,1,1,1,1,0,0];
-function renderWeek(){
-  document.getElementById('weekRow').innerHTML=WEEK.map((w,i)=>
-    `<span class="wday ${weekOn[i]?'on':''}" onclick="weekOn[${i}]^=1;renderWeek()">${w}</span>`).join('');
+let actions=[];
+function newAction(type){
+  if(type==='delay')return {type:'delay',minutes:'10'};
+  if(type==='lock')return {type:'lock',lockPower:'',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''};
+  return {type:'control',power:'',mode:'',temp:'',fan:''};
 }
+function addAction(){
+  if(actions.length>=16){$msg('\u6267\u884c\u52a8\u4f5c\u6700\u591a\u914d\u7f6e 16 \u4e2a','warning');return;}
+  const last=actions[actions.length-1];
+  actions.push(newAction(last&&last.type==='control'?'delay':'control'));
+  renderActions();
+}
+function delAction(i){if(actions.length<=1){$msg('\u81f3\u5c11\u4fdd\u7559 1 \u4e2a\u6267\u884c\u52a8\u4f5c','warning');return;}actions.splice(i,1);renderActions();}
+function setAction(i,k,v){
+  if(k==='type')actions[i]=newAction(v);
+  else if(k==='lockTempEnabled'){
+    actions[i].lockTempEnabled=v==='1';
+    if(actions[i].lockTempEnabled){actions[i].lockTempMin=actions[i].lockTempMin||'16';actions[i].lockTempMax=actions[i].lockTempMax||'30';}
+    else{actions[i].lockTempMin='';actions[i].lockTempMax='';}
+  }else actions[i][k]=v;
+  renderActions();
+}
+function setLockMode(i,mode,on){
+  const a=actions[i];
+  if(!a||a.type!=='lock')return;
+  a.lockModes=Array.isArray(a.lockModes)?a.lockModes:[];
+  if(on){
+    if(mode==='\u5236\u70ed'&&(a.lockModes.includes('\u5236\u51b7')||a.lockModes.includes('\u9664\u6e7f'))){$msg('\u5236\u70ed\u4e0d\u80fd\u4e0e\u5236\u51b7\u6216\u9664\u6e7f\u540c\u65f6\u9501\u5b9a','warning');renderActions();return;}
+    if((mode==='\u5236\u51b7'||mode==='\u9664\u6e7f')&&a.lockModes.includes('\u5236\u70ed')){$msg('\u5236\u70ed\u4e0d\u80fd\u4e0e\u5236\u51b7\u6216\u9664\u6e7f\u540c\u65f6\u9501\u5b9a','warning');renderActions();return;}
+    if(!a.lockModes.includes(mode))a.lockModes.push(mode);
+  }else a.lockModes=a.lockModes.filter(x=>x!==mode);
+  renderActions();
+}
+/* 温度锁定滑动条:拖动手柄时约束下限≤上限,并就地刷新填充条与文字,不重绘避免打断拖动 */
+function setLockTemp(i,k,input){
+  const a=actions[i];
+  let v=+input.value;
+  if(k==='lockTempMin'&&v>+(a.lockTempMax||30))v=+(a.lockTempMax||30);
+  if(k==='lockTempMax'&&v<+(a.lockTempMin||16))v=+(a.lockTempMin||16);
+  input.value=v;a[k]=String(v);
+  const pct=x=>(x-16)/(30-16)*100;
+  const fill=document.getElementById('lockTempFill'+i);
+  if(fill){fill.style.left=pct(+a.lockTempMin)+'%';fill.style.right=(100-pct(+a.lockTempMax))+'%';}
+  const lbl=document.getElementById('lockTempLbl'+i);
+  if(lbl)lbl.textContent=`${a.lockTempMin}℃ ~ ${a.lockTempMax}℃`;
+}
+/* 模式锁定多选下拉:菜单开合状态跨重绘保留 */
+let openLockMenu=-1;
+function toggleLockMenu(i){openLockMenu=openLockMenu===i?-1:i;renderActions();}
+document.addEventListener('click',()=>{if(openLockMenu>=0){openLockMenu=-1;renderActions();}});
+function renderActions(){
+  document.getElementById('actionList').innerHTML=actions.map((a,i)=>{
+    let body='';
+    if(a.type==='delay')body=`<span class="text-sub">\u5ef6\u65f6</span><input type="number" min="1" max="240" step="1" value="${a.minutes||''}" onchange="setAction(${i},'minutes',this.value)"><span class="text-sub">\u5206\u949f</span>`;
+    else if(a.type==='lock') {
+      const modes=Array.isArray(a.lockModes)?a.lockModes:[];
+      const tempOn=a.lockTempEnabled||!!(a.lockTempMin&&a.lockTempMax);
+      const lo=a.lockTempMin||'16',hi=a.lockTempMax||'30';
+      const pct=v=>(v-16)/(30-16)*100;
+      body=`<select class="lock-sel" onchange="setAction(${i},'lockPower',this.value)"><option value="">\u5f00\u5173\u673a\u4e0d\u9501\u5b9a</option><option value="\u9501\u5b9a\u5f00\u673a" ${a.lockPower==='\u9501\u5b9a\u5f00\u673a'?'selected':''}>\u9501\u5b9a\u5f00\u673a</option><option value="\u9501\u5b9a\u5173\u673a" ${a.lockPower==='\u9501\u5b9a\u5173\u673a'?'selected':''}>\u9501\u5b9a\u5173\u673a</option></select>`
+        +`<span class="msel ${openLockMenu===i?'open':''}"><button type="button" class="msel-btn" onclick="toggleLockMenu(${i});event.stopPropagation()">${modes.length?'\u9501\u5b9a'+modes.join('\u3001'):'\u6a21\u5f0f\u4e0d\u9501\u5b9a'} <span class="msel-arr">\u25be</span></button>
+            <div class="msel-menu" onclick="event.stopPropagation()">${['\u5236\u51b7','\u5236\u70ed','\u9001\u98ce','\u9664\u6e7f'].map(m=>`<label class="msel-item"><input type="checkbox" ${modes.includes(m)?'checked':''} onchange="setLockMode(${i},'${m}',this.checked)"> ${m}</label>`).join('')}</div>
+          </span>`
+        +`<span class="lock-temp-group"><select class="lock-sel" onchange="setAction(${i},'lockTempEnabled',this.value)"><option value="0" ${!tempOn?'selected':''}>\u6e29\u5ea6\u4e0d\u9501\u5b9a</option><option value="1" ${tempOn?'selected':''}>\u9501\u5b9a\u6e29\u5ea6\u8303\u56f4</option></select>`
+        +(tempOn?`<span class="dual-range"><span class="dr-lbl" id="lockTempLbl${i}">${lo}\u2103 ~ ${hi}\u2103</span><span class="dr-track"></span><span class="dr-fill" id="lockTempFill${i}" style="left:${pct(lo)}%;right:${100-pct(hi)}%"></span>
+            <input type="range" min="16" max="30" step="1" value="${lo}" oninput="setLockTemp(${i},'lockTempMin',this)">
+            <input type="range" min="16" max="30" step="1" value="${hi}" oninput="setLockTemp(${i},'lockTempMax',this)">
+          </span>`:'')+`</span>`;
+    }else body=`<select onchange="setAction(${i},'power',this.value)"><option value="">\u5f00\u5173\u4e0d\u63a7\u5236</option><option ${a.power==='\u5f00\u673a'?'selected':''}>\u5f00\u673a</option><option ${a.power==='\u5173\u673a'?'selected':''}>\u5173\u673a</option></select>`
+      +`<select onchange="setAction(${i},'mode',this.value)"><option value="">\u6a21\u5f0f\u4e0d\u63a7\u5236</option><option ${a.mode==='\u5236\u51b7'?'selected':''}>\u5236\u51b7</option><option ${a.mode==='\u5236\u70ed'?'selected':''}>\u5236\u70ed</option><option ${a.mode==='\u9001\u98ce'?'selected':''}>\u9001\u98ce</option><option ${a.mode==='\u9664\u6e7f'?'selected':''}>\u9664\u6e7f</option></select>`
+      +`<input type="number" min="16" max="30" step="1" value="${a.temp||''}" placeholder="\u6e29\u5ea6\u4e0d\u63a7\u5236" onchange="setAction(${i},'temp',this.value)">`
+      +`<select onchange="setAction(${i},'fan',this.value)"><option value="">\u98ce\u901f\u4e0d\u63a7\u5236</option><option ${a.fan==='\u9ad8'?'selected':''}>\u9ad8</option><option ${a.fan==='\u4e2d'?'selected':''}>\u4e2d</option><option ${a.fan==='\u4f4e'?'selected':''}>\u4f4e</option></select>`;
+    return `<div class="action-row"><span class="cond-prefix">${i+1}</span><select onchange="setAction(${i},'type',this.value)"><option value="control" ${a.type==='control'?'selected':''}>\u7a7a\u8c03\u63a7\u5236</option><option value="lock" ${a.type==='lock'?'selected':''}>\u9501\u5b9a\u63a7\u5236</option><option value="delay" ${a.type==='delay'?'selected':''}>\u5ef6\u65f6</option></select><div class="action-body">${body}</div><span class="action-del" onclick="delAction(${i})">×</span></div>`;
+  }).join('');
+  document.getElementById('addActionBtn').disabled=actions.length>=16;
+}
+function numberInRange(value,min,max){if(value===''||value===null||value===undefined)return false;if(!/^-?\d+$/.test(String(value)))return false;const n=Number(value);return Number.isFinite(n)&&n>=min&&n<=max;}
+function validateConditions(){
+  if(!conds.length)return '请至少配置 1 个触发条件';
+  const seen=new Set();
+  for(const c of conds){if(seen.has(c.type))return '同一类触发条件最多配置一次';seen.add(c.type);if(c.type==='temp'&&!numberInRange(c.val,-10,50))return '温度触发值请输入 -10~50℃ 的整数';if(c.type==='humi'&&!numberInRange(c.val,1,99))return '湿度触发值请输入 1~99% 的整数';}
+  if(document.getElementById('durationEnabled').checked&&!numberInRange(document.getElementById('durationMin')?.value,1,60))return '持续满足条件时长请输入 1-60 分钟的整数';
+  return '';
+}
+function validateLockAction(a){
+  a.lockModes=Array.isArray(a.lockModes)?a.lockModes:[];
+  const tempOn=a.lockTempEnabled||!!(a.lockTempMin||a.lockTempMax);
+  const hasMin=a.lockTempMin!==''&&a.lockTempMin!==undefined,hasMax=a.lockTempMax!==''&&a.lockTempMax!==undefined;
+  if(a.lockModes.includes('\u5236\u70ed')&&(a.lockModes.includes('\u5236\u51b7')||a.lockModes.includes('\u9664\u6e7f')))return '\u5236\u70ed\u4e0d\u80fd\u4e0e\u5236\u51b7\u6216\u9664\u6e7f\u540c\u65f6\u9501\u5b9a';
+  if(tempOn&&hasMin!==hasMax)return '\u6e29\u5ea6\u4e0a\u9650\u548c\u4e0b\u9650\u5fc5\u987b\u4e00\u8d77\u8bbe\u5b9a';
+  if(tempOn&&hasMin&&hasMax){
+    if(!numberInRange(a.lockTempMin,16,30)||!numberInRange(a.lockTempMax,16,30))return '\u9501\u5b9a\u6e29\u5ea6\u4e0a\u4e0b\u9650\u8bf7\u8f93\u5165 16~30\u2103 \u7684\u6574\u6570';
+    if(Number(a.lockTempMin)>Number(a.lockTempMax))return '\u6e29\u5ea6\u4e0b\u9650\u4e0d\u80fd\u9ad8\u4e8e\u6e29\u5ea6\u4e0a\u9650';
+  }
+  return '';
+}
+function validateActions(){
+  if(!actions.length)return '\u8bf7\u81f3\u5c11\u914d\u7f6e 1 \u4e2a\u6267\u884c\u52a8\u4f5c';
+  if(actions.length>16)return '\u6267\u884c\u52a8\u4f5c\u6700\u591a\u914d\u7f6e 16 \u4e2a';
+  for(let i=0;i<actions.length;i++){
+    const a=actions[i];
+    if(i>0&&a.type===actions[i-1].type)return '\u76f8\u90bb\u4e24\u4e2a\u6267\u884c\u52a8\u4f5c\u4e0d\u5141\u8bb8\u76f8\u540c';
+    if(a.type==='delay'&&!numberInRange(a.minutes,1,240))return '\u5ef6\u65f6\u65f6\u957f\u8bf7\u8f93\u5165 1-240 \u5206\u949f\u7684\u6574\u6570';
+    if(a.type==='control'){
+      if(!a.power&&!a.mode&&!a.temp&&!a.fan)return '\u6bcf\u4e2a\u7a7a\u8c03\u63a7\u5236\u52a8\u4f5c\u81f3\u5c11\u9009\u62e9\u4e00\u4e2a\u63a7\u5236\u53c2\u6570';
+      if(a.temp&&!numberInRange(a.temp,16,30))return '\u7a7a\u8c03\u63a7\u5236\u6e29\u5ea6\u8bf7\u8f93\u5165 16~30\u2103 \u7684\u6574\u6570';
+    }
+    if(a.type==='lock'){
+      const err=validateLockAction(a);
+      if(err)return err;
+    }
+  }
+  if(actions[actions.length-1].type==='delay')return '\u6700\u540e\u4e00\u4e2a\u6267\u884c\u52a8\u4f5c\u4e0d\u80fd\u662f\u5ef6\u65f6';
+  return '';
+}
+function populateTimeSelects(){
+  const p=n=>String(n).padStart(2,'0');
+  const starts=[],ends=[];
+  for(let h=0;h<24;h++)for(let m=0;m<60;m+=5){const t=p(h)+':'+p(m);starts.push(t);ends.push(t);}
+  ends.push('24:00');
+  document.getElementById('tFrom').innerHTML=starts.map(t=>`<option value="${t}">${t}</option>`).join('');
+  document.getElementById('tTo').innerHTML=ends.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+function minutesFromTime(v){if(v==='24:00')return 1440;const p=v.split(':').map(Number);return p[0]*60+p[1];}
+function validateTask(){
+  if(!document.getElementById('tName').value.trim())return '请输入任务名称';
+  if(!picked.length)return '请选择房间/传感器';
+  if(document.getElementById('tStart').value>document.getElementById('tEnd').value)return '生效结束日期不能早于开始日期';
+  if(minutesFromTime(document.getElementById('tTo').value)<=minutesFromTime(document.getElementById('tFrom').value))return '生效结束时间必须晚于开始时间';
+  if(!weekOn.some(Boolean))return '请至少选择一个周重复时间';
+  return validateConditions()||validateActions();
+}
+function collectTask(){return {name:document.getElementById('tName').value.trim(),desc:document.getElementById('taskDesc').value.trim(),start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,ts:document.getElementById('tFrom').value,te:document.getElementById('tTo').value,week:weekOn.slice(),exclude:excludeDates.slice(),durationOn:document.getElementById('durationEnabled').checked,duration:document.getElementById('durationEnabled').checked?+document.getElementById('durationMin').value:0,rooms:picked.slice(),conditions:cloneTask(conds),actions:cloneTask(actions)};}
+function saveTask(){const err=validateTask();if(err){$msg(err,'warning');return;}const data=collectTask();if(editIdx>=0)Object.assign(TASKS[editIdx],data,{mt:now()});else TASKS.unshift({...data,on:true,mt:now()});$modalClose('dlgTask');doQuery();$msg(editIdx>=0?'保存成功':'新建任务成功');}
 
-/* ── 联动策略预设 ── */
-function presetByPolicy(){
-  const p=document.getElementById('tPolicy').value;
-  if(p==='人来开空调'){conds=[{type:'presence',state:'有人'}];setAction('开机','制冷',26,'自动');}
-  else if(p==='人走关空调'){conds=[{type:'presence',state:'无人'}];setAction('关机','','','');}
-  else if(p==='门窗开时关空调'){conds=[{type:'door',state:'开启'}];setAction('关机','','','');}
-  else{conds=[{type:'door',state:'关闭'}];setAction('开机','制冷',26,'自动');}
-  renderConds();
-}
-function setAction(power,mode,temp,fan){
-  document.getElementById('aPower').value=power;
-  document.getElementById('aMode').value=mode;
-  document.getElementById('aTemp').value=temp;
-  document.getElementById('aFan').value=fan;
-}
-
-/* ── 弹窗 ── */
 let editIdx=-1;
 function openDlg(i,mode){
   editIdx=i;
   const r=i>=0?TASKS[i]:null;
   document.getElementById('dlgTitle').textContent=mode==='view'?'查看任务':(i>=0?'编辑任务':'新建任务');
   document.getElementById('tName').value=r?r.name:'';
-  document.getElementById('tPolicy').value=r?r.policy:'人来开空调';
+  document.getElementById('taskDesc').value=r?(r.desc||''):'';
   document.getElementById('tStart').value=r?r.start:'2026-07-01';
   document.getElementById('tEnd').value=r?r.end:'2026-12-31';
-  presetByPolicy();
-  renderTree();renderWeek();
+  populateTimeSelects();
+  document.getElementById('tFrom').value=r?r.ts:'00:00';
+  document.getElementById('tTo').value=r?r.te:'24:00';
+  weekOn=r?r.week.slice():DEFAULT_WEEK.slice();
+  excludeDates=r?(r.exclude||[]).slice():[];
+  picked=r?(r.rooms||[]).slice():['801会议室'];
+  conds=r?cloneTask(r.conditions):[newCond('presence')];
+  actions=r?cloneTask(r.actions):[newAction('control')];
+  document.getElementById('durationEnabled').checked=!!(r&&r.durationOn);
+  renderDuration();
+  if(r&&r.durationOn){document.getElementById('durationMin').value=r.duration;updateDurationHint();}
+  renderTree();renderWeek();renderExcludeChips();renderConds();renderActions();
   $modal('dlgTask');
 }
-function saveTask(){
-  const name=document.getElementById('tName').value.trim();
-  if(!name){$msg('请输入任务名称','warning');return;}
-  if(!picked.length){$msg('请选择房间/传感器','warning');return;}
-  if(!conds.length){$msg('请至少配置 1 个触发条件','warning');return;}
-  const data={
-    name,policy:document.getElementById('tPolicy').value,
-    start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,
-  };
-  if(editIdx>=0)Object.assign(TASKS[editIdx],data);
-  else if(editIdx===-1)TASKS.unshift({...data,on:true,crt:now()});
-  $modalClose('dlgTask');doQuery();
-  $msg(editIdx>=0?'保存成功':'新建任务成功');
+function conditionSummary(r){const parts=(r.conditions||[]).map(c=>{if(c.type==='presence')return `人在状态=${c.state}`;if(c.type==='door')return `门窗状态=${c.state}`;const op=OPS.find(o=>o.value===c.op)||OPS[0];return `${COND_TYPES[c.type]}${op.symbol}${c.val}${c.type==='temp'?'℃':'%'}`;});return parts.join(' 且 ')+(r.durationOn?`，持续 ${r.duration} 分钟后复核`:'，立即执行');}
+function lockBrief(a){
+  const ps=[];
+  if(a.lockPower)ps.push(a.lockPower);
+  const modes=Array.isArray(a.lockModes)?a.lockModes:[];
+  if(modes.length)ps.push(`\u6a21\u5f0f\u9501\u5b9a${modes.join('\u3001')}`);
+  if((a.lockTempEnabled||!!(a.lockTempMin&&a.lockTempMax))&&a.lockTempMin&&a.lockTempMax)ps.push(`\u6e29\u5ea6\u9501\u5b9a${a.lockTempMin}-${a.lockTempMax}\u2103`);
+  return ps.join(' / ')||'\u89e3\u9664\u5168\u90e8\u9501\u5b9a';
 }
-
-/* ── 日志 ── */
-function openLog(i){
-  const r=TASKS[i];
-  document.getElementById('logTitle').textContent=`任务执行日志 - ${r.name}`;
-  const logs=[
-    ['2026-07-02 18:32:05',`检测到 801会议室 无人持续 10 分钟，执行 关机`,'tok','成功'],
-    ['2026-07-02 12:15:41',`检测到 803会议室 有人，执行 开机 制冷 26℃`,'tok','成功'],
-    ['2026-07-01 19:02:18',`门窗开启持续 60 秒，执行 关机（1 台离线）`,'twn','部分成功'],
-    ['2026-07-01 08:45:03',`检测到 产品部 有人，执行 开机 制冷 26℃`,'tok','成功'],
-  ];
-  document.getElementById('logBody').innerHTML=logs.map(l=>
-    `<div class="log-row"><span class="t">${l[0]}</span><span>${l[1]}</span><span class="tag ${l[2]}">${l[3]}</span></div>`).join('');
-  $modal('dlgLog');
+function actionText(a){
+  if(a.type==='delay')return `\u5ef6\u65f6 ${a.minutes} \u5206\u949f`;
+  if(a.type==='lock')return `\u9501\u5b9a\u63a7\u5236\uff1a${lockBrief(a)}`;
+  const ps=[];
+  if(a.power)ps.push(a.power);
+  if(a.mode)ps.push(a.mode);
+  if(a.temp)ps.push(`${a.temp}\u2103`);
+  if(a.fan)ps.push(`${a.fan}\u98ce`);
+  return `\u7a7a\u8c03\u63a7\u5236\uff1a${ps.join(' / ')}`;
 }
+function actionSummary(actions){return (actions||[]).map(actionText).join(' \u2192 ');}
+function updatePreview(){}
+function openEnvHelp(){$modal('dlgEnvHelp');}
+function openLog(i){const r=TASKS[i];document.getElementById('logTitle').textContent=`任务执行日志 - ${r.name}`;const logs=[['2026-07-02 18:32:05',`满足组合条件：${conditionSummary(r)}，执行 ${actionSummary(r.actions)}`,'tok','成功'],['2026-07-02 12:15:41','持续条件复核通过，动作队列已下发','tok','成功'],['2026-07-01 09:02:18','持续条件复核未通过，本次不执行动作','twn','跳过']];document.getElementById('logBody').innerHTML=logs.map(l=>`<div class="log-row"><span class="t">${l[0]}</span><span>${l[1]}</span><span class="tag ${l[2]}">${l[3]}</span></div>`).join('');$modal('dlgLog');}
 
 doQuery();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
