@@ -1,154 +1,289 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>添加子账号</title>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>添加子账号</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* 添加子账号页专有样式 */
-.wrap{max-width:960px;display:flex;flex-direction:column;gap:14px;}
-/* 面包屑 */
-.bc{font-size:13px;color:var(--ts);margin-bottom:14px;}
-.bc a{color:var(--ts);cursor:pointer;text-decoration:none;}
-.bc a:hover{color:var(--primary);}
-.bc .cur{color:var(--txw);}
-.bc .sep{margin:0 8px;opacity:.5;}
-/* 性别单选 */
-.radio-group{display:flex;gap:18px;align-items:center;height:32px;}
-.ri{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);cursor:pointer;}
-/* 权限勾选标签 */
-.perm-row{display:flex;flex-wrap:wrap;gap:10px;}
+.page-wrap{display:flex;gap:16px;align-items:stretch;max-width:860px;}
+.form-card{background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:24px;backdrop-filter:blur(10px);flex:1;min-width:0;}
+.fc-row{display:grid;grid-template-columns:1fr 1fr;gap:13px 28px;margin-bottom:13px;}
+.fc-full{margin-bottom:13px;}
+.fi2{display:flex;flex-direction:column;gap:5px;}
+.fi2 label{font-size:12px;color:var(--ts);}
+.req{color:var(--er);}
+.fi2 input,.fi2 select,.fi2 textarea{padding:7px 10px;border:1px solid var(--bd);border-radius:4px;background:rgba(255,255,255,.04);color:var(--tx);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;width:100%;}
+.fi2 input:focus,.fi2 select:focus,.fi2 textarea:focus{border-color:var(--hl);}
+.fi2 textarea{resize:vertical;min-height:72px;}
+.radio-group{display:flex;gap:18px;padding:7px 0;}
+.ri{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ts);cursor:pointer;}
+.ri:hover{color:var(--tx);}
+.ri input{accent-color:var(--bl);cursor:pointer;}
+.perm-wrap{margin-bottom:13px;}
+.perm-label{font-size:12px;color:var(--ts);margin-bottom:8px;}
+.perm-row{display:flex;flex-wrap:wrap;gap:8px;}
 .pb-lbl{cursor:pointer;}
 .pb-lbl input{display:none;}
-.pb-tag{display:inline-block;padding:6px 14px;border:1px solid var(--bd2);border-radius:3px;font-size:12px;color:var(--ts);transition:all .15s;white-space:nowrap;}
-.pb-lbl input:checked+.pb-tag{background:var(--primary-dim);border-color:var(--primary);color:#5a8dff;}
-.pb-lbl:hover .pb-tag{border-color:var(--primary);color:var(--tx);}
-/* 分配房间勾选 */
-.room-list{display:flex;flex-wrap:wrap;gap:10px;}
-.room-item{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-input);
-  border:1px solid var(--bd);border-radius:4px;font-size:12px;color:var(--tx);cursor:pointer;}
-.room-item:hover{border-color:var(--primary);}
-/* 底部操作条 */
-.btn-row{display:flex;justify-content:center;gap:14px;padding:6px 0 10px;}
-.btn-row .btn{min-width:96px;}
-/* 校验错误态 */
-input.err,select.err{border-color:var(--er);}
-</style>
-</head>
-<body>
+.pb-tag{display:inline-block;padding:4px 12px;border:1px solid var(--bd);border-radius:3px;font-size:12px;color:var(--ts);transition:all .15s;white-space:nowrap;}
+.pb-lbl input:checked+.pb-tag{background:rgba(41,121,255,.18);border-color:var(--bl);color:var(--tx);}
+.pb-lbl:hover .pb-tag{border-color:rgba(41,121,255,.4);color:var(--tx);}
+.btn-row{display:flex;justify-content:center;gap:14px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(30,58,110,.4);}
+.btn-row .btn{min-width:86px;}
 
-<!-- 面包屑导航 -->
-<div class="bc">
-  <a onclick="goBack()">项目及设备管理</a><span class="sep">/</span>
-  <a onclick="goBack()">子账号列表</a><span class="sep">/</span>
-  <span class="cur">添加子账号</span>
+.bc-nav{font-size:12px;color:var(--ts);margin-top:3px;}
+.bc-nav .bcs{margin:0 5px;opacity:.5;}
+.bc-nav .cur{color:var(--hl);}
+.bc-nav a{color:var(--ts);cursor:pointer;text-decoration:none;}
+.bc-nav a:hover{color:var(--hl);}
+.side-col{width:236px;min-width:236px;background:var(--bp);border:1px solid var(--bd);border-radius:var(--r);padding:14px;backdrop-filter:blur(10px);}
+.side-title{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid rgba(30,58,110,.5);}
+.side-sub{font-size:11px;color:var(--ts);margin-bottom:10px;line-height:1.5;}
+.tree-wrap{max-height:calc(100vh - 280px);overflow-y:auto;padding-right:2px;}
+.err-msg{font-size:11px;color:var(--er);margin-top:6px;display:none;}
+
+/* 树节点 */
+.tree-bld{margin-bottom:2px;}
+.bld-hd{display:flex;align-items:center;gap:6px;padding:4px 2px;cursor:pointer;border-radius:3px;}
+.bld-hd:hover{background:rgba(41,121,255,.08);}
+.bld-arr{font-size:9px;color:var(--ts);transition:transform .2s;flex-shrink:0;width:10px;text-align:center;}
+.bld-arr.open{transform:rotate(90deg);}
+.bld-cb{accent-color:var(--bl);cursor:pointer;flex-shrink:0;}
+.bld-name{font-size:12px;font-weight:600;color:var(--tx);flex:1;}
+
+.tree-fl{overflow:hidden;transition:max-height .2s ease;}
+.fl-hd{display:flex;align-items:center;gap:6px;padding:3px 2px 3px 14px;cursor:pointer;border-radius:3px;}
+.fl-hd:hover{background:rgba(41,121,255,.06);}
+.fl-arr{font-size:9px;color:var(--ts);transition:transform .2s;flex-shrink:0;width:10px;text-align:center;}
+.fl-arr.open{transform:rotate(90deg);}
+.fl-cb{accent-color:var(--bl);cursor:pointer;flex-shrink:0;}
+.fl-name{font-size:12px;color:#a0bcd8;flex:1;}
+
+.tree-rooms{overflow:hidden;transition:max-height .18s ease;}
+.room-row{display:flex;align-items:center;gap:6px;padding:2px 2px 2px 30px;}
+.room-row label{font-size:12px;color:var(--ts);cursor:pointer;}
+.room-row label:hover{color:var(--tx);}
+.room-cb{accent-color:var(--bl);cursor:pointer;flex-shrink:0;}
+</style>
+</head><body>
+
+<div class="ph">
+  <div>
+    <div class="pt">添加子账号</div>
+    <div class="bc-nav"><a onclick="goBack()">项目及设备管理</a> <span class="bcs">/</span> <a onclick="goBack()">子账号列表</a> <span class="bcs">/</span> <span class="cur">添加子账号</span></div>
+  </div>
+  <div class="pa"></div>
 </div>
 
-<div class="wrap">
-  <!-- 账号信息分组 -->
-  <div class="panel">
-    <div class="panel-title">账号信息</div>
-    <div class="form-grid">
-      <div class="form-item">
-        <span class="fl"><span class="req">*</span>登录账号</span>
-        <input id="fLogin" placeholder="英文字母、数字或下划线,4-20位">
+<div class="page-wrap">
+  <div class="form-card">
+
+    <div class="fc-row">
+      <div class="fi2">
+        <label>登录名 <span class="req">*</span></label>
+        <input id="f-login" placeholder="英文字母、数字或下划线，4-20位">
       </div>
-      <div class="form-item">
-        <span class="fl"><span class="req">*</span>姓名</span>
-        <input id="fName" placeholder="请输入姓名">
-      </div>
-      <div class="form-item">
-        <span class="fl"><span class="req">*</span>密码</span>
-        <input id="fPwd" value="zhong666@" placeholder="默认密码 zhong666@">
-      </div>
-      <div class="form-item">
-        <span class="fl"><span class="req">*</span>手机号</span>
-        <input id="fPhone" placeholder="请输入手机号码">
-      </div>
-      <div class="form-item">
-        <span class="fl">性别</span>
+      <div class="fi2">
+        <label>性别</label>
         <div class="radio-group">
-          <label class="ri"><input type="radio" name="gender" value="男" checked>男</label>
-          <label class="ri"><input type="radio" name="gender" value="女">女</label>
+          <label class="ri"><input type="radio" name="gender" value="男" checked><span>男</span></label>
+          <label class="ri"><input type="radio" name="gender" value="女"><span>女</span></label>
         </div>
       </div>
-      <div class="form-item">
-        <span class="fl">职位</span>
-        <select id="fJob"><option>默认</option><option>项目经理</option><option>运营专员</option><option>财务</option><option>技术员</option></select>
+    </div>
+
+    <div class="fc-row">
+      <div class="fi2">
+        <label>姓名 <span class="req">*</span></label>
+        <input id="f-name" placeholder="请输入真实姓名">
       </div>
-      <div class="form-item">
-        <span class="fl">邮箱</span>
-        <input id="fEmail" type="email" placeholder="请输入邮箱地址">
-      </div>
-      <div class="form-item">
-        <span class="fl">微信</span>
-        <input id="fWechat" placeholder="请输入微信号">
+      <div class="fi2">
+        <label>邮件</label>
+        <input id="f-email" type="email" placeholder="请输入邮箱地址">
       </div>
     </div>
-  </div>
 
-  <!-- 权限分组 -->
-  <div class="panel">
-    <div class="panel-title">功能权限</div>
-    <div class="perm-row">
-      <label class="pb-lbl"><input type="checkbox" checked><span class="pb-tag">空调控制</span></label>
-      <label class="pb-lbl"><input type="checkbox"><span class="pb-tag">空调锁定</span></label>
-      <label class="pb-lbl"><input type="checkbox"><span class="pb-tag">空调解锁</span></label>
-      <label class="pb-lbl"><input type="checkbox"><span class="pb-tag">空调租户</span></label>
-      <label class="pb-lbl"><input type="checkbox"><span class="pb-tag">电费查询</span></label>
-      <label class="pb-lbl"><input type="checkbox"><span class="pb-tag">记录查询</span></label>
+    <div class="fc-row">
+      <div class="fi2">
+        <label>密码 <span class="req">*</span></label>
+        <input id="f-pwd" type="text" value="zhong666@">
+      </div>
+      <div class="fi2">
+        <label>手机号 <span class="req">*</span></label>
+        <input id="f-phone" placeholder="请输入手机号码">
+      </div>
     </div>
+
+    <div class="fc-row">
+      <div class="fi2">
+        <label>微信</label>
+        <input id="f-wechat" placeholder="请输入微信号">
+      </div>
+      <div class="fi2"></div>
+    </div>
+
+    <div class="perm-wrap">
+      <div class="perm-label">权限</div>
+      <div class="perm-row">
+        <label class="pb-lbl"><input type="checkbox" id="p-ctrl"><span class="pb-tag">空调控制</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-lock"><span class="pb-tag">空调锁定</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-unlock"><span class="pb-tag">空调解锁</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-tenant"><span class="pb-tag">空调租户</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-elec"><span class="pb-tag">电费查询</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-rec"><span class="pb-tag">记录查询</span></label>
+        <label class="pb-lbl"><input type="checkbox" id="p-env"><span class="pb-tag">环境感知</span></label>
+      </div>
+    </div>
+
+    <div class="fc-full">
+      <div class="fi2">
+        <label>备注</label>
+        <textarea id="f-remark" placeholder="可选填写备注信息"></textarea>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goBack()">取消</button>
+      <button class="btn btnp" onclick="submitForm()">创建用户</button>
+    </div>
+
   </div>
 
-  <!-- 分配房间分组 -->
-  <div class="panel">
-    <div class="panel-title"><span class="req" style="color:var(--er);margin-right:3px">*</span>分配房间</div>
-    <div class="text-sub" style="font-size:12px;margin-bottom:10px">勾选该子账号可管控的房间范围(1861蔚蓝公寓B2)</div>
-    <div class="room-list" id="roomList"></div>
-  </div>
-
-  <!-- 备注分组 -->
-  <div class="panel">
-    <div class="panel-title">备注</div>
-    <textarea id="fRemark" placeholder="可选填写备注信息" style="width:100%;min-height:76px"></textarea>
-  </div>
-
-  <!-- 底部操作 -->
-  <div class="btn-row">
-    <button class="btn" onclick="goBack()">取 消</button>
-    <button class="btn btnp" onclick="submitForm()">保 存</button>
+  <!-- 右侧分配房间（可折叠树） -->
+  <div class="side-col">
+    <div class="side-title">分配房间 <span class="req">*</span></div>
+    <div class="side-sub">选择子账号可管控的房间范围</div>
+    <div class="tree-wrap" id="room-tree"></div>
+    <div class="err-msg" id="room-err">请至少选择一个房间</div>
   </div>
 </div>
 
-<script src="_ui.js"></script>
 <script>
-/* ── 房间清单(模拟) ── */
-const ROOMS=['1-701','1-702','1-707','1-713','1-714','1-715','1-716','1-717','1-718','1-719','2-1404','2-1408','2-1412','2-2302','2-2305'];
-document.getElementById('roomList').innerHTML=ROOMS.map(m=>
-  `<label class="room-item"><input type="checkbox" class="rck" value="${m}">${m}</label>`).join('');
+const BLDS=[
+  {n:'A座',fl:[
+    {f:'1F',r:['大厅','展示区A','展示区B']},
+    {f:'2F',r:['会议室A','会议室B','办公区']},
+    {f:'3F',r:['办公区A','办公区B']},
+  ]},
+  {n:'B座',fl:[
+    {f:'1F',r:['大堂','前台区']},
+    {f:'2F',r:['办公室A','办公室B','会议室']},
+  ]},
+];
 
-/* ── 必填校验 + 保存 ── */
-function mark(id,bad){document.getElementById(id).classList.toggle('err',bad);}
-function submitForm(){
-  const login=document.getElementById('fLogin').value.trim();
-  const name=document.getElementById('fName').value.trim();
-  const pwd=document.getElementById('fPwd').value.trim();
-  const phone=document.getElementById('fPhone').value.trim();
-  /* 逐项校验并标红 */
-  if(!/^\w{4,20}$/.test(login)){mark('fLogin',true);$msg('请输入4-20位登录账号(字母/数字/下划线)','warning');return;}
-  mark('fLogin',false);
-  if(!name){mark('fName',true);$msg('请输入姓名','warning');return;}
-  mark('fName',false);
-  if(!pwd){mark('fPwd',true);$msg('密码不能为空','warning');return;}
-  mark('fPwd',false);
-  if(!/^1\d{10}$/.test(phone)){mark('fPhone',true);$msg('请输入正确的11位手机号','warning');return;}
-  mark('fPhone',false);
-  if(!document.querySelectorAll('.rck:checked').length){$msg('请至少分配一个房间','warning');return;}
-  /* 保存成功后返回列表页 */
-  $msg('子账号添加成功');
-  setTimeout(()=>location.href='device-sub.html',900);
+function buildTree(){
+  const el=document.getElementById('room-tree');
+  el.innerHTML='';
+  BLDS.forEach((b,bi)=>{
+    const bldDiv=document.createElement('div');
+    bldDiv.className='tree-bld';
+
+    // 楼栋头部
+    const bldHd=document.createElement('div');
+    bldHd.className='bld-hd';
+    bldHd.innerHTML=`
+      <span class="bld-arr open" id="barr${bi}">▶</span>
+      <input type="checkbox" class="bld-cb" id="bcb${bi}" onchange="togBld(${bi},this.checked)">
+      <span class="bld-name">${b.n}</span>`;
+    bldDiv.appendChild(bldHd);
+
+    // 楼栋内容容器（可折叠）
+    const bldBody=document.createElement('div');
+    bldBody.className='tree-fl';
+    bldBody.id=`bbody${bi}`;
+    bldBody.style.maxHeight='1000px';
+
+    b.fl.forEach((fl,fi)=>{
+      // 楼层头部
+      const flHd=document.createElement('div');
+      flHd.className='fl-hd';
+      flHd.innerHTML=`
+        <span class="fl-arr open" id="farr${bi}_${fi}">▶</span>
+        <input type="checkbox" class="fl-cb" id="fcb${bi}_${fi}" onchange="togFl(${bi},${fi},this.checked)">
+        <span class="fl-name">${fl.f}</span>`;
+      bldBody.appendChild(flHd);
+
+      // 房间列表（可折叠）
+      const roomsDiv=document.createElement('div');
+      roomsDiv.className='tree-rooms';
+      roomsDiv.id=`fbody${bi}_${fi}`;
+      roomsDiv.style.maxHeight='400px';
+
+      fl.r.forEach((r,ri)=>{
+        const rRow=document.createElement('div');
+        rRow.className='room-row';
+        const cbId=`rcb${bi}_${fi}_${ri}`;
+        rRow.innerHTML=`<input type="checkbox" class="room-cb rck" id="${cbId}" onchange="syncUp()"><label for="${cbId}">${r}</label>`;
+        roomsDiv.appendChild(rRow);
+      });
+      bldBody.appendChild(roomsDiv);
+
+      // 楼层折叠点击
+      flHd.addEventListener('click',e=>{
+        if(e.target.type==='checkbox')return;
+        const arr=document.getElementById(`farr${bi}_${fi}`);
+        const body=document.getElementById(`fbody${bi}_${fi}`);
+        const open=arr.classList.contains('open');
+        arr.classList.toggle('open',!open);
+        body.style.maxHeight=open?'0':'400px';
+      });
+    });
+
+    bldDiv.appendChild(bldBody);
+
+    // 楼栋折叠点击
+    bldHd.addEventListener('click',e=>{
+      if(e.target.type==='checkbox')return;
+      const arr=document.getElementById(`barr${bi}`);
+      const body=document.getElementById(`bbody${bi}`);
+      const open=arr.classList.contains('open');
+      arr.classList.toggle('open',!open);
+      body.style.maxHeight=open?'0':'1000px';
+    });
+
+    el.appendChild(bldDiv);
+  });
 }
-function goBack(){location.href='device-sub.html';}
+
+function togBld(bi,v){
+  BLDS[bi].fl.forEach((fl,fi)=>{
+    const fc=document.getElementById(`fcb${bi}_${fi}`);if(fc)fc.checked=v;
+    fl.r.forEach((_,ri)=>{const rc=document.getElementById(`rcb${bi}_${fi}_${ri}`);if(rc)rc.checked=v;});
+  });
+}
+function togFl(bi,fi,v){
+  BLDS[bi].fl[fi].r.forEach((_,ri)=>{const rc=document.getElementById(`rcb${bi}_${fi}_${ri}`);if(rc)rc.checked=v;});
+  syncUp();
+}
+function syncUp(){
+  BLDS.forEach((b,bi)=>{
+    b.fl.forEach((fl,fi)=>{
+      const allR=fl.r.every((_,ri)=>document.getElementById(`rcb${bi}_${fi}_${ri}`)?.checked);
+      const fc=document.getElementById(`fcb${bi}_${fi}`);if(fc)fc.checked=allR;
+    });
+    const allF=b.fl.every((_,fi)=>document.getElementById(`fcb${bi}_${fi}`)?.checked);
+    const bc=document.getElementById(`bcb${bi}`);if(bc)bc.checked=allF;
+  });
+}
+
+function submitForm(){
+  const login=document.getElementById('f-login').value.trim();
+  const name=document.getElementById('f-name').value.trim();
+  const pwd=document.getElementById('f-pwd').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  if(!login){alert('请填写登录名');return;}
+  if(!name){alert('请填写姓名');return;}
+  if(!pwd){alert('密码不能为空');return;}
+  if(!phone){alert('请填写手机号');return;}
+  const rooms=[...document.querySelectorAll('.rck:checked')];
+  if(!rooms.length){
+    document.getElementById('room-err').style.display='block';
+    return;
+  }
+  document.getElementById('room-err').style.display='none';
+  alert('子账号创建成功');
+  goBack();
+}
+function goBack(){
+  if(window.history.length>1)window.history.back();
+  else window.location.href='device-sub.html';
+}
+
+buildTree();
 </script>
-</body>
-</html>
+</body></html>

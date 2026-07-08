@@ -278,6 +278,8 @@ function renderBC(){
   }).join('');
 }
 function nav(id){aid=id;fr.src='pages/'+id+'.html';render();renderBC();}
+/* 接收子页面(iframe)的跳转请求 */
+window.addEventListener('message',e=>{if(e.data&&e.data.nav)nav(e.data.nav);});
 function hasA(ch){return ch.some(c=>c.id===aid||(c.sub&&c.sub.some(s=>s.id===aid)));}
 
 function render(){

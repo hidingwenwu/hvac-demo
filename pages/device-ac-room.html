@@ -90,7 +90,7 @@ tr.acsel td{background:#0d1730!important;}
     <div class="pnl-h">
       <div class="pnl-t"><span class="num">2</span>选择空调 <span class="sub" id="acCount">(未绑定2台)</span></div>
       <div class="flex aic gap8">
-        <button class="btn btnp" onclick="acQuery()">🔍 搜索空调</button>
+        <button class="btn btnp" onclick="acQuery()">搜索空调</button>
         <button class="btn btnp" onclick="$msg('功能演示:更多操作','info')">更多操作 ▾</button>
       </div>
     </div>
@@ -133,7 +133,7 @@ tr.acsel td{background:#0d1730!important;}
   <div class="fb" style="margin-bottom:12px">
     <div class="fi"><span class="fl">内机地址</span><input id="fAddr" placeholder="请输入内机地址" style="width:200px"></div>
     <div class="fi"><span class="fl">租户</span><input id="fTenant" placeholder="请输入租户" style="width:200px"></div>
-    <button class="btn btnp" onclick="relQuery()">🔍 查询</button>
+    <button class="btn btnp" onclick="relQuery()">查询</button>
     <button class="btn" onclick="relReset()">重置</button>
     <button class="btn btnp" onclick="batchSubmit()">批量提交</button>
     <button class="btn btnp" onclick="batchUnbind()">批量解绑</button>
@@ -166,20 +166,6 @@ tr.acsel td{background:#0d1730!important;}
       <button class="btn" onclick="$modalClose('dlgNew')">取 消</button>
       <button class="btn btnp" onclick="saveNew()">确 定</button>
     </div>
-  </div>
-</div>
-
-<!-- 租户详情 -->
-<div class="modal" id="dlgTenant">
-  <div class="dialog" style="width:480px">
-    <div class="dh"><span>租户详情</span><span class="dx" onclick="$modalClose('dlgTenant')">✕</span></div>
-    <div class="db">
-      <div class="tw"><table>
-        <thead><tr><th>租户</th><th>房间数</th><th>内机数</th></tr></thead>
-        <tbody id="tenantBody"></tbody>
-      </table></div>
-    </div>
-    <div class="df"><button class="btn btnp" onclick="$modalClose('dlgTenant')">关 闭</button></div>
   </div>
 </div>
 
@@ -411,11 +397,11 @@ function batchUnbind(){
   });
 }
 function showTenantDetail(){
-  const map={};
-  RELS.forEach(r=>{map[r.tenant]=map[r.tenant]||{rooms:new Set(),n:0};map[r.tenant].rooms.add(r.room);map[r.tenant].n++;});
-  document.getElementById('tenantBody').innerHTML=Object.keys(map).slice(0,8).map(t=>
-    `<tr><td>${t}</td><td>${map[t].rooms.size}</td><td>${map[t].n}</td></tr>`).join('');
-  $modal('dlgTenant');
+  /* 跳转到 电费相关/分摊规则设置/租户管理 */
+  try{
+    if(parent!==window){parent.postMessage({nav:'elec-tenant'},'*');return;}
+  }catch(e){}
+  location.href='elec-tenant.html';
 }
 
 renderTree();renderAcs();
