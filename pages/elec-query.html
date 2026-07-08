@@ -76,31 +76,11 @@ const ROWS=(()=>{
   return rows;
 })();
 
-/* ── 建筑树(1号楼,可勾选,展开楼层) ── */
-const TREE=[{lb:'1号楼',open:false,children:['3层','7层','13层','14层','20层','21层']}];
-let treeSel='';
+/* ── 建筑树:楼栋-楼层-房间 三级(共享组件见 _ui.js) ── */
+let treeSel=null;
+let treeApi;
 function renderTree(){
-  const el=document.getElementById('tree');el.innerHTML='';
-  TREE.forEach(b=>{
-    const row=document.createElement('div');
-    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
-    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
-    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();doQuery();};
-    row.onclick=()=>{b.open=!b.open;renderTree();};
-    el.appendChild(row);
-    if(b.open){
-      const box=document.createElement('div');box.className='tree-children';
-      b.children.forEach(f=>{
-        const fr=document.createElement('div');
-        fr.className='tree-row'+(treeSel===f?' active':'');
-        fr.style.paddingLeft='30px';
-        fr.innerHTML=`<span>${f}</span>`;
-        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();doQuery();};
-        box.appendChild(fr);
-      });
-      el.appendChild(box);
-    }
-  });
+  treeApi=$tree3('tree',$tree3From(ROWS),s=>{treeSel=s;doQuery();});
 }
 
 /* ── 查询/表格/分页 ── */
@@ -110,7 +90,7 @@ function doQuery(){
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
   filtered=ROWS.filter(r=>
     (!s||r.date>=s)&&(!e||r.date<=e)&&
-    (!treeSel||treeSel==='1号楼'||r.fl===treeSel)
+    $tree3Match(treeSel,r)
   );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
@@ -118,7 +98,7 @@ function doQuery(){
 function doReset(){
   document.getElementById('fStart').value='2026-07-02';
   document.getElementById('fEnd').value='2026-07-02';
-  treeSel='';renderTree();doQuery();
+  treeSel=null;renderTree();doQuery();
 }
 function renderTable(){
   const start=(pg.page-1)*pg.size;

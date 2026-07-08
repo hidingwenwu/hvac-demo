@@ -77,6 +77,20 @@
   </div>
 </div>
 
+<!-- 编辑自定义名字弹窗(与控制器管理处理逻辑一致) -->
+<div class="modal" id="dlgName">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>电表名称设置</span><span class="dx" onclick="$modalClose('dlgName')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl"><span class="req">*</span>电表名称</span><input id="nName" class="flex1" placeholder="请输入通俗易懂的电表名称,如:13层东侧电表"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgName')">取消</button>
+      <button class="btn btnp" onclick="saveName()">提交</button>
+    </div>
+  </div>
+</div>
+
 <!-- 编辑电表弹窗 -->
 <div class="modal" id="dlgEdit">
   <div class="dialog" style="width:480px">
@@ -204,7 +218,7 @@ function renderCards(){
       <div class="card-hd">
         <input type="checkbox" ${m._ck?'checked':''} onchange="METERS[${i}]._ck=this.checked">
         <span class="card-title" onclick="showDetail(${i})">${m.name}</span>
-        <span class="card-edit" onclick="openEdit(${i})">${EDIT_SVG}</span>
+        <span class="card-edit" title="编辑自定义名字" onclick="openName(${i})">${EDIT_SVG}</span>
       </div>
       ${kv('主机编号',m.host)}${kv('通信id',m.cid)}${kv('电表地址',m.addr)}
       ${kv('运行状态',m.st==='正常运行'?m.st:'<span class="text-er">'+m.st+'</span>')}
@@ -230,6 +244,13 @@ function showDetail(i){
     ['变比后电表读数',m.after],['变比前电表读数',m.before],['通信时间',m.commTime],['创建时间',m.crtTime]];
   document.getElementById('detailGrid').innerHTML=F.map(([k,val])=>`<span class="k">${k}:</span><span class="v">${val}</span>`).join('');
   $modal('dlgDetail');
+}
+/* 编辑自定义名字(与控制器管理处理逻辑一致) */
+function openName(i){editIdx=i;document.getElementById('nName').value=METERS[i].name;$modal('dlgName');}
+function saveName(){
+  const name=document.getElementById('nName').value.trim();
+  if(!name)return $msg('请输入电表名称','warning');
+  METERS[editIdx].name=name;$modalClose('dlgName');$msg('保存成功');renderCards();
 }
 function openEdit(i){
   editIdx=i;

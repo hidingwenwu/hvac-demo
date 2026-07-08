@@ -85,3 +85,61 @@ function $confirm(text, onOk) {
   el.querySelector('.__ok').onclick = function () { $modalClose(id); if (onOk) onOk(); };
   $modal(id);
 }
+
+/* ── 建筑物三级树:楼栋-楼层-房间 ──
+   $tree3(el, data, onChange)
+   data: [{lb:'1号楼', floors:[{lb:'8层', rooms:['产品部','801会议室']}]}]
+   onChange(sel) — sel 为 null(未选)或 {bld, fl, room}(fl/room 可为 undefined,表示选中整栋/整层)
+   $tree3From(rows) — 由含 bld/fl/room 字段的记录集合构建 data
+   $tree3Match(sel, r) — 判断记录 r{fl,room} 是否命中当前选择 */
+function $tree3(el, data, onChange) {
+  if (typeof el === 'string') el = document.getElementById(el);
+  var sel = null;
+  var same = function (a, b) { return a && b && a.bld === b.bld && a.fl === b.fl && a.room === b.room; };
+  function pick(s) { sel = same(sel, s) ? null : s; render(); if (onChange) onChange(sel); }
+  function render() {
+    el.innerHTML = '';
+    data.forEach(function (b) {
+      el.appendChild(row(0, b, { bld: b.lb }, b.floors && b.floors.length));
+      if (b.open) (b.floors || []).forEach(function (f) {
+        el.appendChild(row(1, f, { bld: b.lb, fl: f.lb }, f.rooms && f.rooms.length));
+        if (f.open) (f.rooms || []).forEach(function (rm) {
+          el.appendChild(row(2, { lb: rm }, { bld: b.lb, fl: f.lb, room: rm }, false));
+        });
+      });
+    });
+  }
+  function row(depth, node, s, expandable) {
+    var r = document.createElement('div');
+    r.className = 'tree-row' + (node.open ? ' open' : '') + (same(sel, s) ? ' active' : '');
+    r.style.paddingLeft = (6 + depth * 18) + 'px';
+    r.innerHTML = (expandable ? '<span class="arr">▶</span>' : '<span class="arr" style="visibility:hidden">▶</span>') + '<span>' + node.lb + '</span>';
+    if (expandable) r.querySelector('.arr').onclick = function (e) { e.stopPropagation(); node.open = !node.open; render(); };
+    r.onclick = function () { pick(s); };
+    return r;
+  }
+  render();
+  return { reset: function () { sel = null; render(); } };
+}
+function $tree3From(rows) {
+  var data = [];
+  rows.forEach(function (r) {
+    var bl = r.bld || '1号楼', fl = String(r.fl), rm = r.room != null ? String(r.room) : null;
+    var b = data.find(function (x) { return x.lb === bl; });
+    if (!b) { b = { lb: bl, open: false, floors: [] }; data.push(b); }
+    var f = b.floors.find(function (x) { return x.lb === fl; });
+    if (!f) { f = { lb: fl, open: false, rooms: [] }; b.floors.push(f); }
+    if (rm && f.rooms.indexOf(rm) < 0) f.rooms.push(rm);
+  });
+  data.forEach(function (b) {
+    b.floors.sort(function (a, c) { return parseInt(a.lb) - parseInt(c.lb); });
+    b.floors.forEach(function (f) { f.rooms.sort(); });
+  });
+  return data;
+}
+function $tree3Match(sel, r) {
+  if (!sel) return true;
+  if (sel.fl != null && String(r.fl) !== sel.fl) return false;
+  if (sel.room != null && String(r.room) !== sel.room) return false;
+  return true;
+}

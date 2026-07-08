@@ -14,7 +14,8 @@
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px;min-height:200px;}
 .card{background:var(--bg-panel);border:1px solid var(--bd);border-radius:6px;padding:14px 14px 12px;display:flex;flex-direction:column;}
 .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.card-h .ttl{font-size:15px;font-weight:600;color:var(--txw);}
+.card-h .ttl{font-size:15px;font-weight:600;color:var(--txw);cursor:pointer;}
+.card-h .ttl:hover{color:var(--primary-hover);}
 .card-h .edit-ic{color:var(--ts);cursor:pointer;font-size:14px;}
 .card-h .edit-ic:hover{color:var(--primary);}
 .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;font-size:12px;line-height:1.5;}
@@ -70,6 +71,20 @@
       <div style="display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px" id="detailGrid"></div>
     </div>
     <div class="df"><button class="btn btnp" onclick="$modalClose('dlgDetail')">关 闭</button></div>
+  </div>
+</div>
+
+<!-- 编辑自定义名字(与控制器管理处理逻辑一致) -->
+<div class="modal" id="dlgName">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>编辑设备名称</span><span class="dx" onclick="$modalClose('dlgName')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl"><span class="req">*</span>设备名称</span><input id="nName" class="flex1" placeholder="请输入设备名称"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgName')">取 消</button>
+      <button class="btn btnp" onclick="saveName()">提 交</button>
+    </div>
   </div>
 </div>
 
@@ -144,6 +159,10 @@ const DEVICES=[
   mk('door','916会议室','860608074092673','89860827102590839217','2026-06-10 11:14:09',{door:'关闭'},'壁装')
 ];
 
+/* 自定义名字:默认按 房间+类型 生成,通过卡片右上角编辑图标修改 */
+const TYPE_NAME={th:'温湿度传感器',body:'人体感知传感器',door:'门窗感知传感器'};
+DEVICES.forEach(d=>d.cname=d.room+TYPE_NAME[d.type].slice(0,-3));
+
 /* ══════════ 标签页 / 卡片渲染 ══════════ */
 let tab='th';
 const pg={total:0,page:1,size:10,onChange:()=>renderCards()};
@@ -171,7 +190,11 @@ function renderCards(){
       <div class="kv"><span class="k">湿度</span><span class="v">${d.humi}</span></div>`;
     else mid=`<div class="kv"><span class="k">门磁状态</span><span class="v ${d.door==='打开'?'text-wn':''}">${d.door}</span></div>`;
     return `<div class="card">
-      <div class="card-h"><span class="ttl">${d.install}</span><span class="edit-ic" onclick="showDetail(${gi})">🖉</span></div>
+      <div class="card-h">
+        <span class="ttl" title="查看详情" onclick="showDetail(${gi})">${d.cname}</span>
+        <span class="edit-ic" title="编辑自定义名字" onclick="openName(${gi})">🖉</span>
+      </div>
+      <div class="kv"><span class="k">安装方式</span><span class="v">${d.install}</span></div>
       <div class="kv"><span class="k">地址</span><span class="v">${d.addr}</span></div>
       <div class="kv"><span class="k">房间</span><span class="v">${d.room}${kvEdit(gi,'room','房间')}</span></div>
       <div class="kv"><span class="k">设备SN</span><span class="v">${d.sn}</span></div>
@@ -201,6 +224,7 @@ function showDetail(gi){
     <span style="color:var(--ts);text-align:right">湿度:</span><span>${d.humi}</span>`;
   else mid=`<span style="color:var(--ts);text-align:right">门磁状态:</span><span>${d.door}</span>`;
   document.getElementById('detailGrid').innerHTML=`
+    <span style="color:var(--ts);text-align:right">设备名称:</span><span>${d.cname}</span>
     <span style="color:var(--ts);text-align:right">设备类型:</span><span>${typeName}</span>
     <span style="color:var(--ts);text-align:right">安装方式:</span><span>${d.install}</span>
     <span style="color:var(--ts);text-align:right">地址:</span><span>${d.addr}</span>
@@ -212,6 +236,14 @@ function showDetail(gi){
     <span style="color:var(--ts);text-align:right">设备在线状态:</span><span class="text-ok">${d.status}</span>
     <span style="color:var(--ts);text-align:right">通信时间:</span><span>${d.time}</span>`;
   $modal('dlgDetail');
+}
+/* 编辑自定义名字(与控制器管理处理逻辑一致) */
+let nameIdx=-1;
+function openName(gi){nameIdx=gi;document.getElementById('nName').value=DEVICES[gi].cname;$modal('dlgName');}
+function saveName(){
+  const name=document.getElementById('nName').value.trim();
+  if(!name)return $msg('请输入设备名称','warning');
+  DEVICES[nameIdx].cname=name;$modalClose('dlgName');$msg('保存成功');renderCards();
 }
 let editCtx=null;
 function openEdit(gi,field,label){

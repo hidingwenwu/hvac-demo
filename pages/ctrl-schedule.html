@@ -149,31 +149,17 @@ let TASKS=[
 let nextId=7;
 const DAY_NAMES=['周日','周一','周二','周三','周四','周五','周六'];
 
-/* ── 建筑树 ── */
-const TREE=[{lb:'1号楼',open:false,children:['3层','7层','9层','14层','23层']}];
-let treeSel='';
+/* ── 建筑树:楼栋-楼层-房间 三级(共享组件见 _ui.js) ── */
+const TREE3=[{lb:'1号楼',open:false,floors:[
+  {lb:'3层', open:false,rooms:['303','305','308']},
+  {lb:'7层', open:false,rooms:['701会议室','707','713','软件研发','运营部','产品部']},
+  {lb:'9层', open:false,rooms:['903','908','909']},
+  {lb:'14层',open:false,rooms:['1404','1408']},
+  {lb:'23层',open:false,rooms:['2302','2305']},
+]}];
+let treeSel=null;
 function renderTree(){
-  const el=document.getElementById('tree');el.innerHTML='';
-  TREE.forEach(b=>{
-    const row=document.createElement('div');
-    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
-    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
-    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();};
-    row.onclick=()=>{b.open=!b.open;renderTree();};
-    el.appendChild(row);
-    if(b.open){
-      const box=document.createElement('div');box.className='tree-children';
-      b.children.forEach(f=>{
-        const fr=document.createElement('div');
-        fr.className='tree-row'+(treeSel===f?' active':'');
-        fr.style.paddingLeft='30px';
-        fr.innerHTML=`<span>${f}</span>`;
-        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();};
-        box.appendChild(fr);
-      });
-      el.appendChild(box);
-    }
-  });
+  $tree3('tree',TREE3,s=>{treeSel=s;doQuery();});
 }
 
 /* ── 查询/表格/分页 ── */
@@ -191,7 +177,7 @@ function doQuery(){
 }
 function doReset(){
   ['f1s','f1e','f2s','f2e','f3s','f3e'].forEach(id=>document.getElementById(id).value='');
-  treeSel='';renderTree();doQuery();
+  treeSel=null;renderTree();doQuery();
 }
 function renderTable(){
   const start=(pg.page-1)*pg.size;

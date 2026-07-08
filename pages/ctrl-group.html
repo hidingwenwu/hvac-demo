@@ -65,9 +65,32 @@
 .lk-val{font-size:16px;font-weight:700;color:#fff;width:44px;text-align:right;white-space:nowrap;flex-shrink:0;}
 .lk-ck{display:inline-flex;align-items:center;gap:4px;color:var(--tx);cursor:pointer;white-space:nowrap;}
 
-/* ── 弹窗内设备选择列表 ── */
-.dev-box{border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);max-height:180px;overflow-y:auto;padding:6px 10px;}
-.dev-box label{display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:13px;color:var(--tx);cursor:pointer;}
+/* ── 编辑弹窗:左侧房间树 + 右侧表单(对齐截图) ── */
+.ed-body{display:flex;gap:24px;align-items:flex-start;}
+.pick-tree{width:220px;flex-shrink:0;max-height:440px;overflow-y:auto;}
+.pick-tree .pt-title{font-size:13px;color:var(--tx);margin-bottom:8px;}
+.pick-tree .tree-row input[type=checkbox]{flex-shrink:0;}
+.ed-form{flex:1;min-width:0;}
+.ed-fl{font-size:13px;color:var(--tx);margin:0 0 8px;}
+.ed-fl .req{color:var(--er,#f56c6c);margin-right:2px;}
+.cnt-wrap{position:relative;margin-bottom:16px;}
+.cnt-wrap input{width:100%;padding-right:52px;}
+.cnt-wrap .cnt{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--ts);}
+/* 联动控制行 + 问号提示 */
+.link-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.qmark{width:16px;height:16px;border-radius:50%;background:var(--ts);color:var(--bg-panel);font-size:11px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
+.link-tip{display:none;position:absolute;z-index:30;width:360px;padding:12px 14px;font-size:12px;line-height:1.8;color:var(--tx);
+  background:var(--bg-panel-2,#1c2438);border:1px solid var(--bd2);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.45);}
+.link-tip.show{display:block;}
+/* 已选择空调内机表格 */
+.sel-title{font-size:13px;color:var(--tx);margin-bottom:10px;}
+.sel-tw{max-height:280px;overflow-y:auto;}
+.sel-tw table{width:100%;border-collapse:collapse;font-size:13px;}
+.sel-tw th{text-align:left;padding:9px 12px;color:var(--ts);background:var(--bg-panel-2);font-weight:500;}
+.sel-tw td{padding:9px 12px;color:var(--tx);border-bottom:1px solid var(--bd);}
+.sel-tw tr:nth-child(odd) td{background:rgba(255,255,255,.02);}
+.sel-tw a{color:var(--primary);cursor:pointer;}
 </style>
 </head>
 <body>
@@ -158,26 +181,46 @@
 <!-- 底部分页(线上居中于内容区底部) -->
 <div id="pager" style="margin-top:20px"></div>
 
-<!-- 添加/编辑群组弹窗 -->
+<!-- 添加/编辑群组弹窗:左侧房间三级树 + 右侧表单(对齐截图) -->
 <div class="modal" id="dlgEdit">
-  <div class="dialog" style="width:560px">
-    <div class="dh"><span id="dlgEditTitle">添加群组</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
-    <div class="db">
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>群组名称</span>
-        <input id="eName" placeholder="请输入群组名称" style="flex:1">
+  <div class="dialog" style="width:880px">
+    <div class="dh"><span id="dlgEditTitle">建筑物群组编辑</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
+    <div class="db ed-body">
+      <div class="pick-tree">
+        <div class="pt-title">选择房间</div>
+        <div id="eTree"></div>
       </div>
-      <div class="form-row" style="margin-bottom:14px;align-items:flex-start">
-        <span class="fl" style="padding-top:6px">描述</span>
-        <textarea id="eDesc" rows="2" placeholder="请输入描述" style="flex:1"></textarea>
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl">联动模式</span>
-        <span class="switch" id="eLink" onclick="this.classList.toggle('on')"></span>
-      </div>
-      <div class="form-row" style="align-items:flex-start">
-        <span class="fl" style="padding-top:6px"><span class="req">*</span>选择空调设备</span>
-        <div class="dev-box" style="flex:1" id="eDevs"></div>
+      <div class="ed-form">
+        <div class="ed-fl"><span class="req">*</span>群组名称</div>
+        <div class="cnt-wrap">
+          <input id="eName" maxlength="10" placeholder="请输入群组名称" oninput="renderCnt()">
+          <span class="cnt" id="eNameCnt">0/10</span>
+        </div>
+        <div class="ed-fl">群组描述</div>
+        <div class="cnt-wrap">
+          <input id="eDesc" maxlength="20" placeholder="请输入群组描述" oninput="renderCnt()">
+          <span class="cnt" id="eDescCnt">0/20</span>
+        </div>
+        <div class="link-row" style="position:relative">
+          <span class="ed-fl" style="margin:0">联动控制</span>
+          <span class="switch" id="eLink" onclick="toggleLink()"></span>
+          <span class="qmark" onclick="event.stopPropagation();document.getElementById('linkTip').classList.toggle('show')">?</span>
+          <div class="link-tip" id="linkTip" style="top:26px;left:60px">
+            启用此功能后,群组内可指定一台室内机为主控制源,被标记为主控制源的内机,其状态变化会自动同步到群组的其他内机,
+            未被标记为主控制源的内机,仍可通过线控器独立操作,但会接收主控制源的状态同步,同步内容包括:
+            开关机、运行模式、温度、风速。
+          </div>
+        </div>
+        <!-- 已选择空调内机:仅联动控制开启时展示 -->
+        <div id="eDevWrap" style="display:none">
+          <div class="sel-title">已选择空调内机</div>
+          <div class="sel-tw">
+            <table>
+              <thead><tr><th>房间</th><th>空调地址</th><th>主控制源</th><th>操作</th></tr></thead>
+              <tbody id="eDevBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     <div class="df">
@@ -200,13 +243,57 @@
 
 <script src="_ui.js"></script>
 <script>
-/* ── 模拟数据(与线上数据形态一致) ── */
-const DEVICES=['1-1-7-1(707室)','1-1-7-2(713室)','1-1-7-3(714室)','1-1-9-1(903室)','1-1-9-2(909室)',
-  '1-1-14-1(1404室)','1-1-14-2(1408室)','1-1-23-1(2302室)','1-1-23-2(2305室)','1-2-3-1(303室)'];
+/* ── 模拟数据:建筑物 楼栋-楼层-房间 三级结构,房间下挂空调内机 ── */
+const BUILDING={lb:'东华软件园博研楼',open:true,floors:[
+  {lb:'8层',open:true,rooms:[
+    {name:'老板办公室',devs:['1-2-1-2']},
+    {name:'801会议室',devs:['1-2-1-4']},
+    {name:'财务部',   devs:['1-2-1-5']},
+    {name:'产品部',   devs:['1-2-1-9','1-2-1-12']},
+    {name:'运营部',   devs:['1-2-1-1','1-2-1-3','1-2-1-8','1-2-1-11']},
+    {name:'质量部',   devs:['1-2-1-6']},
+    {name:'制造部',   devs:['1-2-1-7']},
+    {name:'硬件研发', devs:['1-2-1-10']},
+    {name:'软件研发', devs:['1-2-1-13','1-2-1-14']},
+    {name:'测试部',   devs:['1-2-1-15']},
+    {name:'硬件焊接室',devs:['1-2-1-16']},
+    {name:'803会议室',devs:['1-2-1-17']},
+    {name:'806会议室',devs:['1-2-1-18']},
+    {name:'808会议室',devs:['1-2-1-19']},
+    {name:'810会议室',devs:['1-2-1-20']},
+    {name:'812会议室',devs:['1-2-1-21']},
+    {name:'816会议室',devs:['1-2-1-22']},
+    {name:'8层电梯厅',devs:['1-2-1-23']},
+  ]},
+  {lb:'9层',open:false,rooms:[
+    {name:'903会议室',devs:['1-2-2-1']},
+    {name:'研发中心', devs:['1-2-2-2','1-2-2-3']},
+    {name:'9层电梯厅',devs:['1-2-2-4']},
+  ]},
+  {lb:'B1层',open:false,rooms:[
+    {name:'食堂',devs:['1-2-0-1','1-2-0-2']},
+    {name:'库房',devs:['1-2-0-3']},
+  ]},
+]};
+/* 群组设备:{room,addr,master} */
 let GROUPS=[
-  {id:1,name:'联动控制测试',desc:'',link:true, devs:['1-1-7-1(707室)','1-1-7-2(713室)','1-1-14-1(1404室)']},
-  {id:2,name:'测试',desc:'',link:false,devs:['1-1-9-1(903室)','1-1-9-2(909室)']},
-  {id:3,name:'dingwenwu',desc:'培训测试用',link:false,devs:['1-1-23-1(2302室)','1-1-23-2(2305室)','1-2-3-1(303室)']},
+  {id:1,name:'产品运营群组联动控制',desc:'8楼东1东2共4台内机联动控制测试',link:true,devs:[
+    {room:'产品部',addr:'1-2-1-9', master:true},
+    {room:'产品部',addr:'1-2-1-12',master:false},
+    {room:'运营部',addr:'1-2-1-1', master:false},
+    {room:'运营部',addr:'1-2-1-3', master:false},
+    {room:'运营部',addr:'1-2-1-8', master:false},
+    {room:'运营部',addr:'1-2-1-11',master:false},
+  ]},
+  {id:2,name:'测试',desc:'',link:false,devs:[
+    {room:'903会议室',addr:'1-2-2-1',master:false},
+    {room:'研发中心', addr:'1-2-2-2',master:false},
+  ]},
+  {id:3,name:'dingwenwu',desc:'培训测试用',link:false,devs:[
+    {room:'食堂',addr:'1-2-0-1',master:false},
+    {room:'食堂',addr:'1-2-0-2',master:false},
+    {room:'库房',addr:'1-2-0-3',master:false},
+  ]},
 ];
 let nextId=4;
 
@@ -239,28 +326,107 @@ function selGroup(id){selId=selId===id?-1:id;renderGrid();}
 
 /* ── 添加/编辑弹窗 ── */
 let editId=-1;
+let eDevs=[];          // 弹窗内已选内机 [{room,addr,master}]
+let eLinkOn=false;     // 联动控制开关
+
 function openEdit(id){
   editId=id||-1;
   const g=GROUPS.find(x=>x.id===id);
-  document.getElementById('dlgEditTitle').textContent=g?'编辑群组':'添加群组';
+  document.getElementById('dlgEditTitle').textContent=g?'建筑物群组编辑':'建筑物群组添加';
   document.getElementById('eName').value=g?g.name:'';
   document.getElementById('eDesc').value=g?g.desc:'';
-  document.getElementById('eLink').classList.toggle('on',!!(g&&g.link));
-  document.getElementById('eDevs').innerHTML=DEVICES.map(d=>
-    `<label><input type="checkbox" value="${d}"${g&&g.devs.includes(d)?' checked':''}> ${d}</label>`).join('');
+  eLinkOn=!!(g&&g.link);
+  eDevs=g?g.devs.map(d=>({...d})):[];
+  document.getElementById('eLink').classList.toggle('on',eLinkOn);
+  document.getElementById('linkTip').classList.remove('show');
+  renderCnt();renderETree();renderEDevs();
   $modal('dlgEdit');
 }
+
+/* 输入框字数统计 */
+function renderCnt(){
+  document.getElementById('eNameCnt').textContent=document.getElementById('eName').value.length+'/10';
+  document.getElementById('eDescCnt').textContent=document.getElementById('eDesc').value.length+'/20';
+}
+
+/* 联动控制开关:开启才展示"已选择空调内机"表格 */
+function toggleLink(){
+  eLinkOn=!eLinkOn;
+  document.getElementById('eLink').classList.toggle('on',eLinkOn);
+  renderEDevs();
+}
+
+/* 左侧房间三级树:楼栋-楼层-房间,勾选房间添加其全部内机 */
+function roomChecked(r){return r.devs.every(a=>eDevs.some(d=>d.addr===a));}
+function toggleRoom(fi,ri){
+  const r=BUILDING.floors[fi].rooms[ri];
+  if(roomChecked(r)){eDevs=eDevs.filter(d=>!r.devs.includes(d.addr));}
+  else r.devs.forEach(a=>{if(!eDevs.some(d=>d.addr===a))eDevs.push({room:r.name,addr:a,master:false});});
+  renderETree();renderEDevs();
+}
+function toggleFloor(fi){
+  const f=BUILDING.floors[fi];
+  const all=f.rooms.every(roomChecked);
+  f.rooms.forEach((r,ri)=>{if(roomChecked(r)===all)toggleRoom(fi,ri);});
+}
+function toggleBld(){
+  const all=BUILDING.floors.every(f=>f.rooms.every(roomChecked));
+  BUILDING.floors.forEach((f,fi)=>f.rooms.forEach((r,ri)=>{if(roomChecked(r)===all)toggleRoom(fi,ri);}));
+}
+function renderETree(){
+  const allB=BUILDING.floors.every(f=>f.rooms.every(roomChecked))&&eDevs.length>0;
+  let h=`<div class="tree-row ${BUILDING.open?'open':''}">
+    <span class="arr" onclick="BUILDING.open=!BUILDING.open;renderETree()">▶</span>
+    <input type="checkbox" ${allB?'checked':''} onclick="toggleBld()"><span>${BUILDING.lb}</span></div>`;
+  if(BUILDING.open)BUILDING.floors.forEach((f,fi)=>{
+    const allF=f.rooms.every(roomChecked)&&f.rooms.length>0;
+    h+=`<div class="tree-row ${f.open?'open':''}" style="padding-left:22px">
+      <span class="arr" onclick="BUILDING.floors[${fi}].open=!BUILDING.floors[${fi}].open;renderETree()">▶</span>
+      <input type="checkbox" ${allF?'checked':''} onclick="toggleFloor(${fi})"><span>${f.lb}</span></div>`;
+    if(f.open)f.rooms.forEach((r,ri)=>{
+      h+=`<div class="tree-row" style="padding-left:44px" onclick="toggleRoom(${fi},${ri})">
+        <input type="checkbox" ${roomChecked(r)?'checked':''} onclick="event.stopPropagation();toggleRoom(${fi},${ri})"><span>${r.name}</span></div>`;
+    });
+  });
+  document.getElementById('eTree').innerHTML=h;
+}
+
+/* 已选择空调内机表格:仅联动控制开启时展示;主控制源单选 */
+function setMaster(addr){
+  eDevs.forEach(d=>d.master=d.addr===addr?!d.master:false);
+  renderEDevs();
+}
+function removeDev(addr){
+  eDevs=eDevs.filter(d=>d.addr!==addr);
+  renderETree();renderEDevs();
+}
+function renderEDevs(){
+  document.getElementById('eDevWrap').style.display=eLinkOn?'':'none';
+  if(!eLinkOn)return;
+  document.getElementById('eDevBody').innerHTML=eDevs.length?eDevs.map(d=>`
+    <tr>
+      <td>${d.room}</td><td>${d.addr}</td>
+      <td><input type="checkbox" ${d.master?'checked':''} onclick="setMaster('${d.addr}')"></td>
+      <td><a onclick="removeDev('${d.addr}')">移除</a></td>
+    </tr>`).join('')
+    :'<tr><td colspan="4" style="text-align:center;color:var(--ts)">请在左侧勾选房间</td></tr>';
+}
+
 function saveGroup(){
   const name=document.getElementById('eName').value.trim();
   if(!name)return $msg('请输入群组名称','error');
-  const devs=[...document.querySelectorAll('#eDevs input:checked')].map(i=>i.value);
-  if(!devs.length)return $msg('请选择空调设备','error');
-  const data={name,desc:document.getElementById('eDesc').value.trim(),
-    link:document.getElementById('eLink').classList.contains('on'),devs};
+  if(!eDevs.length)return $msg('请在左侧选择房间','error');
+  if(eLinkOn&&!eDevs.some(d=>d.master))return $msg('联动控制已开启,请指定一台主控制源内机','error');
+  const devs=eDevs.map(d=>({...d,master:eLinkOn?d.master:false}));
+  const data={name,desc:document.getElementById('eDesc').value.trim(),link:eLinkOn,devs};
   if(editId>-1)Object.assign(GROUPS.find(x=>x.id===editId),data);
   else GROUPS.push(Object.assign({id:nextId++},data));
   $modalClose('dlgEdit');$msg('保存成功');doQuery();
 }
+/* 点击弹窗其它区域时收起问号提示 */
+document.addEventListener('click',e=>{
+  if(!e.target.classList.contains('qmark'))document.getElementById('linkTip').classList.remove('show');
+});
 
 /* ── 查看弹窗 ── */
 function viewGroup(id){
@@ -268,9 +434,9 @@ function viewGroup(id){
   document.getElementById('viewGrid').innerHTML=`
     <span style="color:var(--ts);text-align:right">群组名称:</span><span>${g.name}</span>
     <span style="color:var(--ts);text-align:right">描述:</span><span>${g.desc||'-'}</span>
-    <span style="color:var(--ts);text-align:right">联动模式:</span><span>${g.link?'开启':'关闭'}</span>
+    <span style="color:var(--ts);text-align:right">联动控制:</span><span>${g.link?'开启':'关闭'}</span>
     <span style="color:var(--ts);text-align:right">设备数量:</span><span>${g.devs.length} 台</span>
-    <span style="color:var(--ts);text-align:right">包含设备:</span><span>${g.devs.join('、')}</span>`;
+    <span style="color:var(--ts);text-align:right">包含设备:</span><span>${g.devs.map(d=>`${d.addr}(${d.room})${d.master?' ★主控制源':''}`).join('、')}</span>`;
   $modal('dlgView');
 }
 

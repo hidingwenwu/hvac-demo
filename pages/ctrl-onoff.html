@@ -94,31 +94,11 @@ const RECORDS=(()=>{
   return rows.sort((a,b)=>b.time.localeCompare(a.time));
 })();
 
-/* ── 建筑树 ── */
-const TREE=[{lb:'1号楼',open:false,children:['3层','4层','5层','7层','9层','14层','18层','22层']}];
-let treeSel='';
+/* ── 建筑树:楼栋-楼层-房间 三级(由记录集合动态构建,共享组件见 _ui.js) ── */
+let treeSel=null;
+let treeApi;
 function renderTree(){
-  const el=document.getElementById('tree');el.innerHTML='';
-  TREE.forEach(b=>{
-    const row=document.createElement('div');
-    row.className='tree-row'+(b.open?' open':'')+(treeSel===b.lb?' active':'');
-    row.innerHTML=`<span class="arr">▶</span><input type="checkbox" ${treeSel===b.lb?'checked':''}><span>${b.lb}</span>`;
-    row.querySelector('input').onclick=e=>{e.stopPropagation();treeSel=e.target.checked?b.lb:'';renderTree();doQuery();};
-    row.onclick=()=>{b.open=!b.open;renderTree();};
-    el.appendChild(row);
-    if(b.open){
-      const box=document.createElement('div');box.className='tree-children';
-      b.children.forEach(f=>{
-        const fr=document.createElement('div');
-        fr.className='tree-row'+(treeSel===f?' active':'');
-        fr.style.paddingLeft='30px';
-        fr.innerHTML=`<span>${f}</span>`;
-        fr.onclick=()=>{treeSel=treeSel===f?'':f;renderTree();doQuery();};
-        box.appendChild(fr);
-      });
-      el.appendChild(box);
-    }
-  });
+  treeApi=$tree3('tree',$tree3From(RECORDS),s=>{treeSel=s;doQuery();});
 }
 
 /* ── 查询/表格/分页 ── */
@@ -130,7 +110,7 @@ function doQuery(){
   filtered=RECORDS.filter(r=>
     (!addr||r.addr.includes(addr))&&
     (!s||r.time>=s)&&(!e||r.time<=e+' 23:59:59')&&
-    (!treeSel||treeSel==='1号楼'||r.fl===treeSel)
+    $tree3Match(treeSel,r)
   );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
@@ -140,7 +120,7 @@ function doReset(){
   // 线上默认发生时间为当天
   document.getElementById('fStart').value=today;
   document.getElementById('fEnd').value=today;
-  treeSel='';renderTree();doQuery();
+  treeSel=null;renderTree();doQuery();
 }
 function doExport(){$msg('导出任务已提交,请稍后在下载中心查看');}
 function renderTable(){

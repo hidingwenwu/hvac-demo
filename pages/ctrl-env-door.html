@@ -14,6 +14,10 @@
 .scd.mini .sc-v{font-size:16px;}
 .scd.mini.hi{background:var(--primary);border-color:var(--primary);}          /* 首卡高亮蓝(线上形态) */
 .scd.mini.hi .sc-lb{color:rgba(255,255,255,.85);}
+/* 可点击筛选的统计卡 */
+.scd.mini.ck{cursor:pointer;transition:border-color .15s;}
+.scd.mini.ck:hover{border-color:var(--primary);}
+.scd.mini.ck.act{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset;}
 /* 传感器卡片网格 */
 .env-grid{display:grid;grid-template-columns:repeat(auto-fill,250px);gap:12px;align-content:start;min-height:calc(100vh - 300px);}   /* 线上为固定宽卡片、左对齐 */
 .ec{border-radius:10px;padding:14px 16px;min-height:158px;display:flex;flex-direction:column;
@@ -67,23 +71,35 @@ const SENSORS=[
   {name:'综合办公室',dev:'门磁感知-B105', s:null,   time:'2025-12-05 11:41:39'},  // 无数据:状态 --
 ];
 
-/* ── 统计卡:监测房间总数 / 当前开启 / 当前关闭 / 设备异常 ── */
+/* ── 统计卡:除均值外均可点击筛选相应状态房间(再次点击取消) ── */
+let statFilter='';                 // ''=全部  open=开启  close=关闭  bad=异常
+function viewRows(){
+  if(statFilter==='open')return SENSORS.filter(s=>s.s==='open');
+  if(statFilter==='close')return SENSORS.filter(s=>s.s==='close');
+  if(statFilter==='bad')return SENSORS.filter(s=>s.s==null);
+  return SENSORS;
+}
+function setStat(f){
+  statFilter=statFilter===f?'':f;
+  pg.page=1;pg.total=viewRows().length;
+  renderStats();$pager('pager',pg);renderGrid();
+}
 function renderStats(){
   const openN=SENSORS.filter(s=>s.s==='open').length;
   const closeN=SENSORS.filter(s=>s.s==='close').length;
   const bad=SENSORS.filter(s=>s.s==null).length;
   document.getElementById('stats').innerHTML=`
-    <div class="scd mini hi"><div class="sc-lb">监测房间总数</div><div class="sc-v">${SENSORS.length}</div></div>
-    <div class="scd mini"><div class="sc-lb">当前开启</div><div class="sc-v">${openN}</div></div>
-    <div class="scd mini"><div class="sc-lb">当前关闭</div><div class="sc-v">${closeN}</div></div>
-    <div class="scd mini"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
+    <div class="scd mini hi ck" onclick="setStat('')"><div class="sc-lb">监测房间总数</div><div class="sc-v">${SENSORS.length}</div></div>
+    <div class="scd mini ck${statFilter==='open'?' act':''}" onclick="setStat('open')"><div class="sc-lb">当前开启</div><div class="sc-v">${openN}</div></div>
+    <div class="scd mini ck${statFilter==='close'?' act':''}" onclick="setStat('close')"><div class="sc-lb">当前关闭</div><div class="sc-v">${closeN}</div></div>
+    <div class="scd mini ck${statFilter==='bad'?' act':''}" onclick="setStat('bad')"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
 }
 
 /* ── 卡片列表 + 分页(开启蓝卡,关闭/无数据灰卡) ── */
 const pg={total:SENSORS.length,page:1,size:10,onChange:()=>renderGrid()};
 function renderGrid(){
   const start=(pg.page-1)*pg.size;
-  const rows=SENSORS.slice(start,start+pg.size);
+  const rows=viewRows().slice(start,start+pg.size);
   document.getElementById('grid').innerHTML=rows.map(s=>{
     const st=s.s==='open'?'开启':s.s==='close'?'关闭':'--';
     return`

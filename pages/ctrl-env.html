@@ -14,6 +14,10 @@
 .scd.mini .sc-v{font-size:16px;}
 .scd.mini.hi{background:var(--primary);border-color:var(--primary);}          /* 首卡高亮蓝(线上形态) */
 .scd.mini.hi .sc-lb{color:rgba(255,255,255,.85);}
+/* 可点击筛选的统计卡 */
+.scd.mini.ck{cursor:pointer;transition:border-color .15s;}
+.scd.mini.ck:hover{border-color:var(--primary);}
+.scd.mini.ck.act{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset;}
 /* 传感器卡片网格 */
 .env-grid{display:grid;grid-template-columns:repeat(auto-fill,250px);gap:12px;align-content:start;min-height:calc(100vh - 300px);}   /* 线上为固定宽卡片、左对齐 */
 .ec{border-radius:10px;padding:14px 16px;min-height:150px;display:flex;flex-direction:column;
@@ -73,24 +77,33 @@ const SENSORS=[
   {name:'',          id:'21123574',t:null,h:null,time:'2025-12-05 11:41:39'},   // 无数据传感器:读数 --
 ];
 
-/* ── 统计卡:传感器总数 / 平均温度 / 平均湿度 / 设备异常 ── */
+/* ── 统计卡:总数/异常可点击筛选相应状态房间;平均温湿度仅展示 ── */
+let statFilter='';                 // ''=全部  bad=设备异常
+function viewRows(){
+  return statFilter==='bad'?SENSORS.filter(s=>s.t==null):SENSORS;
+}
+function setStat(f){
+  statFilter=statFilter===f?'':f;
+  pg.page=1;pg.total=viewRows().length;
+  renderStats();$pager('pager',pg);renderGrid();
+}
 function renderStats(){
   const ok=SENSORS.filter(s=>s.t!=null);
   const avgT=(ok.reduce((a,s)=>a+s.t,0)/ok.length).toFixed(1);
   const avgH=(ok.reduce((a,s)=>a+s.h,0)/ok.length).toFixed(2);
   const bad=SENSORS.length-ok.length;
   document.getElementById('stats').innerHTML=`
-    <div class="scd mini hi"><div class="sc-lb">传感器总数</div><div class="sc-v">${SENSORS.length}</div></div>
+    <div class="scd mini hi ck${statFilter===''?'':''}" onclick="setStat('')"><div class="sc-lb">传感器总数</div><div class="sc-v">${SENSORS.length}</div></div>
     <div class="scd mini"><div class="sc-lb">平均温度</div><div class="sc-v">${avgT}℃</div></div>
     <div class="scd mini"><div class="sc-lb">平均湿度</div><div class="sc-v">${avgH}%</div></div>
-    <div class="scd mini"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
+    <div class="scd mini ck${statFilter==='bad'?' act':''}" onclick="setStat('bad')"><div class="sc-lb">设备异常</div><div class="sc-v scr">${bad}</div></div>`;
 }
 
 /* ── 卡片列表 + 分页(有数据蓝卡,无数据灰卡显示 --) ── */
 const pg={total:SENSORS.length,page:1,size:10,onChange:()=>renderGrid()};
 function renderGrid(){
   const start=(pg.page-1)*pg.size;
-  const rows=SENSORS.slice(start,start+pg.size);
+  const rows=viewRows().slice(start,start+pg.size);
   document.getElementById('grid').innerHTML=rows.map(s=>`
     <div class="ec ${s.t!=null?'on':''}">
       <div class="ech"><span class="ecn">${s.name}</span><span class="ecid">${s.id}</span></div>

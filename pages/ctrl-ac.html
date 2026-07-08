@@ -285,14 +285,10 @@ let filtered=ACS.slice();
 const sel=new Set();
 const pg={total:0,page:1,size:12,sizes:[12,60,120],onChange:()=>renderCards()};
 
-/* ── 建筑树 ── */
-let treeFl=0;
-let treeOpen=true;
+/* ── 建筑树:楼栋-楼层-房间 三级(由空调数据动态构建,共享组件见 _ui.js) ── */
+let treeSel=null;
 function renderTree(){
-  const el=document.getElementById('tree');
-  el.innerHTML=`<div class="tree-row ${treeOpen?'open':''}" onclick="treeOpen=!treeOpen;renderTree()">
-      <span class="arr">▶</span><input type="checkbox" ${treeFl===0?'':'checked'} onclick="event.stopPropagation();treeFl=0;renderTree();applyFilter()"><span>1号楼</span></div>`+
-    (treeOpen?FLOORS.map(f=>`<div class="tree-row ${treeFl===f?'active':''}" style="padding-left:30px" onclick="treeFl=treeFl===${f}?0:${f};renderTree();applyFilter()"><span>${f}层</span></div>`).join(''):'');
+  $tree3('tree',$tree3From(ACS.map(a=>({bld:'1号楼',fl:a.fl+'层',room:a.room}))),s=>{treeSel=s;applyFilter();});
 }
 
 /* ── 筛选 ── */
@@ -303,7 +299,7 @@ function applyFilter(){
   const ft=document.getElementById('fFault').value;
   filtered=ACS.filter(a=>
     (!kw||a.room.includes(kw))&&
-    (!treeFl||a.fl===treeFl)&&
+    $tree3Match(treeSel,{fl:a.fl+'层',room:a.room})&&
     (!oo||(oo==='开机')===a.on)&&
     (!ol||(ol==='在线')===a.online)&&
     (!ft||(ft==='故障')===a.lost)
@@ -314,7 +310,7 @@ function applyFilter(){
 function resetFilter(){
   document.getElementById('roomSearch').value='';
   ['fOnOff','fOnline','fFault'].forEach(id=>document.getElementById(id).value='');
-  treeFl=0;renderTree();applyFilter();
+  treeSel=null;renderTree();applyFilter();
 }
 function toggleMore(){
   document.getElementById('moreFilters').classList.toggle('show');

@@ -155,20 +155,20 @@ function now(){
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-/* ══ 左侧树:1号楼 → 楼层 → 内机地址;其它未绑定 ══ */
+/* ══ 左侧树:楼栋 → 楼层 → 房间(点击房间选中其内机);其它未绑定 ══ */
 const FLOORS=[
-  {lb:'3层',units:['1-1-3-1','1-1-3-2']},
-  {lb:'7层',units:['1-1-7-1','1-1-7-2','1-1-7-3']},
-  {lb:'9层',units:['1-2-9-1','1-2-9-2']},
-  {lb:'14层',units:['1-2-14-1','1-2-14-2']},
-  {lb:'23层',units:['1-3-23-1','1-3-23-2']},
+  {lb:'3层', units:[{room:'303室', addr:'1-1-3-1'},{room:'305室', addr:'1-1-3-2'}]},
+  {lb:'7层', units:[{room:'707室', addr:'1-1-7-1'},{room:'713室', addr:'1-1-7-2'},{room:'714室',addr:'1-1-7-3'}]},
+  {lb:'9层', units:[{room:'903室', addr:'1-2-9-1'},{room:'909室', addr:'1-2-9-2'}]},
+  {lb:'14层',units:[{room:'1404室',addr:'1-2-14-1'},{room:'1408室',addr:'1-2-14-2'}]},
+  {lb:'23层',units:[{room:'2302室',addr:'1-3-23-1'},{room:'2305室',addr:'1-3-23-2'}]},
 ];
 const UNBIND=['9-1-0-1','9-1-0-2','9-1-0-3'];
 const treeState={bld:false,floors:{},unbind:false};
 let inSel='';                      /* 当前选中内机地址 */
 
 /* 内机地址下拉:全部内机 */
-const ALL_UNITS=FLOORS.flatMap(f=>f.units);
+const ALL_UNITS=FLOORS.flatMap(f=>f.units.map(u=>u.addr));
 document.getElementById('inAddr').innerHTML='<option value=""></option>'+ALL_UNITS.map(u=>`<option>${u}</option>`).join('');
 
 function renderTree(){
@@ -190,10 +190,10 @@ function renderTree(){
       if(treeState.floors[f.lb]){
         f.units.forEach(u=>{
           const ur=document.createElement('div');
-          ur.className='tree-row'+(inSel===u?' active':'');
+          ur.className='tree-row'+(inSel===u.addr?' active':'');
           ur.style.paddingLeft='44px';
-          ur.innerHTML='<span>'+u+'</span>';
-          ur.onclick=()=>{inSel=u;document.getElementById('inAddr').value=u;renderTree();loadIn(true);};
+          ur.innerHTML='<span>'+u.room+'</span>';
+          ur.onclick=()=>{inSel=u.addr;document.getElementById('inAddr').value=u.addr;renderTree();loadIn(true);};
           el.appendChild(ur);
         });
       }
