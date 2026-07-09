@@ -122,6 +122,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <span>当前查看项目为:</span>
           <select id="projSel">
             <option>1861蔚蓝公寓B2</option>
+            <option>平台产品测试-预付费</option>
+            <option>平台产品测试-后付费</option>
             <option>烟台开发区智慧园区</option>
             <option>青岛云飞科技大厦</option>
             <option>1861蔚蓝公寓A1</option>
@@ -345,8 +347,29 @@ function $msgTop(t){
   m.textContent=t;w.appendChild(m);
   setTimeout(()=>m.remove(),2000);
 }
-/* 项目切换提示 */
-document.getElementById('projSel').onchange=function(){$msgTop('已切换到项目:'+this.value);fr.contentWindow.location.reload();};
+/* 项目切换:计费元数据写入 localStorage,子页面按此决定形态
+   pay: pre=预付费 post=后付费 | unit: hour=按小时 day=按天 */
+const PROJ_META={
+  '1861蔚蓝公寓B2':{pay:'post',unit:'day'},
+  '平台产品测试-预付费':{pay:'pre',unit:'hour'},
+  '平台产品测试-后付费':{pay:'post',unit:'day'},
+  '烟台开发区智慧园区':{pay:'post',unit:'day'},
+  '青岛云飞科技大厦':{pay:'post',unit:'day'},
+  '1861蔚蓝公寓A1':{pay:'post',unit:'day'},
+};
+const projSel=document.getElementById('projSel');
+function saveProj(name){
+  localStorage.setItem('fyProj',JSON.stringify(Object.assign({name},PROJ_META[name]||{pay:'post',unit:'day'})));
+}
+(function(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('fyProj')||'null');
+    if(saved&&PROJ_META[saved.name])projSel.value=saved.name;
+  }catch(e){}
+  saveProj(projSel.value);
+})();
+/* file:// 下 contentWindow.location 跨域受限,改用重设 src 刷新 */
+projSel.onchange=function(){saveProj(this.value);$msgTop('已切换到项目:'+this.value);fr.setAttribute('src',fr.getAttribute('src'));};
 
 /* ── 公告跑马灯(读取公告管理原型的 localStorage 配置) ── */
 const ANN_KEY='announcement_config';

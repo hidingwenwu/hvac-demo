@@ -25,6 +25,14 @@
 #chart svg{display:block;width:100%;height:auto;}
 .seg-edit select{width:96px;height:26px;font-size:12px;padding:0 22px 0 8px;}
 .seg-edit input{width:80px;height:26px;font-size:12px;padding:0 8px;}
+/* 指定日期电价弹窗 */
+.date-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg-panel);
+  border-radius:4px;padding:12px;margin-bottom:12px;}
+.date-form input[type=date]{width:150px;}
+.date-form input.pr{width:110px;}
+.rule-edit input[type=date]{width:130px;height:26px;font-size:12px;padding:0 6px;}
+.rule-edit input.pr{width:76px;height:26px;font-size:12px;padding:0 8px;}
+.proto-note{font-size:12px;color:var(--tw3);margin-top:14px;}
 </style>
 </head>
 <body>
@@ -34,17 +42,17 @@
   <div class="sec-title">默认电价设定</div>
   <div class="desc"><b>设定说明:</b> 当前功能可以为项目设置电价，用于电费分摊计算的依据，请务必仔细确认后输入电价并提交</div>
   <div class="price-row">
-    <input id="defInput" placeholder="请输入电价" value="0.918" style="width:250px">
+    <input id="defInput" placeholder="请输入电价" style="width:250px">
     <span class="unit">元/度</span>
     <button class="btn btnp" onclick="submitDefault()">提交</button>
     <button class="btn" onclick="resetDefault()">↻ 重置</button>
-    <button class="btn" onclick="$modal('dlgDate')">指定日期电价设定</button>
+    <button class="btn" id="btnDate" onclick="openDateDlg()">指定日期电价设定</button>
   </div>
   <div class="note">(若未单独设定某时段电价，则默认为此电价)</div>
 </div>
 
-<!-- ── 峰谷电价设定 ── -->
-<div class="panel">
+<!-- ── 峰谷电价设定(仅按小时计费项目) ── -->
+<div class="panel" id="touPanel">
   <div class="sec-title">峰谷电价设定</div>
   <div class="desc"><b>设定说明:</b> 当前功能可以为不同时间段(整点)设置计费费率，第一个选择框选择开始时间值，第二个选择框<br>
     选择截止时间值，第三个输入框输入电费的价格。<br>
@@ -81,38 +89,64 @@
   </div>
 </div>
 
-<!-- 指定日期电价设定弹窗 -->
+<div class="proto-note" id="protoNote"></div>
+
+<!-- 指定日期电价设定弹窗(仅按天计费且后付费项目) -->
 <div class="modal" id="dlgDate">
-  <div class="dialog" style="width:460px">
+  <div class="dialog" style="width:650px">
     <div class="dh"><span>指定日期电价设定</span><span class="dx" onclick="$modalClose('dlgDate')">✕</span></div>
     <div class="db">
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>指定日期</span>
-        <input type="date" id="dDate" style="flex:1">
+      <div class="desc" style="margin-bottom:10px"><b>设定说明:</b> 可为指定日期范围(如节假日)单独设置电价，生效期间按此电价计费，优先于默认电价；
+        各日期范围不可重叠。仅按天计费且后付费的项目支持此功能。</div>
+      <div class="date-form">
+        <input type="date" id="dStart" title="开始日期">
+        <span class="dash">至</span>
+        <input type="date" id="dEnd" title="结束日期">
+        <input id="dPrice" class="pr" placeholder="输入电价">
+        <span class="unit">元/度</span>
+        <button class="btn btnp" onclick="addRule()">＋ 新增规则</button>
       </div>
-      <div class="form-row">
-        <span class="fl"><span class="req">*</span>电价(元/度)</span>
-        <input id="dPrice" placeholder="请输入电价" style="flex:1">
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th class="tl" style="padding-left:14px">生效日期范围</th><th>电价(元/度)</th><th>最后修改时间</th><th style="width:120px">操作</th>
+          </tr></thead>
+          <tbody id="ruleBody"></tbody>
+        </table>
       </div>
     </div>
     <div class="df">
       <button class="btn" onclick="$modalClose('dlgDate')">取 消</button>
-      <button class="btn btnp" onclick="submitDate()">提 交</button>
+      <button class="btn btnp" onclick="submitRules()">提 交</button>
     </div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
 <script>
+/* ── 项目上下文(壳写入 localStorage;独立打开时默认后付费按天项目) ── */
+const PROJ=(()=>{try{const p=JSON.parse(localStorage.getItem('fyProj')||'null');if(p&&p.pay)return p;}catch(e){}
+  return {name:'1861蔚蓝公寓B2',pay:'post',unit:'day'};})();
+const HOURLY=PROJ.unit==='hour';
+const DATE_PRICE_ON=PROJ.unit==='day'&&PROJ.pay==='post'; /* 指定日期电价:仅按天计费且后付费 */
+
 /* ── 状态 ── */
-let DEF=0.918;                                   // 默认电价(线上值)
-let SEGS=[                                       // 分时电价时段(对齐线上截图)
+let DEF=HOURLY?1.3:0.918;                        // 默认电价(对齐线上:预付费按小时项目1.3 / 按天项目0.918)
+let SEGS=[                                       // 峰谷时段(对齐"平台产品测试-预付费"线上截图)
   {s:0,e:5,p:0.8},{s:5,e:9,p:1},{s:9,e:10,p:0.85},{s:10,e:13,p:0.35},
   {s:14,e:15,p:0.5},{s:16,e:20,p:2},{s:20,e:23,p:1.5},{s:23,e:24,p:0.5}
 ];
 let editIdx=-1;
 const hh=h=>String(h).padStart(2,'0')+':00';
 const fmtP=p=>String(+(+p).toFixed(4));
+
+/* ── 形态分流 ── */
+document.getElementById('defInput').value=DEF;
+if(!DATE_PRICE_ON)document.getElementById('btnDate').style.display='none';
+if(!HOURLY)document.getElementById('touPanel').style.display='none';
+document.getElementById('protoNote').textContent=
+  `当前项目:${PROJ.name}(${PROJ.pay==='pre'?'预付费':'后付费'}·${HOURLY?'按小时':'按天'}计费)。`+
+  '原型标注:峰谷电价设定仅按小时计费项目支持;指定日期电价设定仅按天计费且后付费项目支持。';
 
 /* ── 时间下拉 ── */
 function fillTimeSel(el,from,to,ph){
@@ -122,7 +156,7 @@ function fillTimeSel(el,from,to,ph){
 fillTimeSel(document.getElementById('selStart'),0,23,'请选择开始时间');
 fillTimeSel(document.getElementById('selEnd'),1,24,'请选择结束时间');
 
-/* ── 校验 ── */
+/* ── 峰谷:校验 ── */
 function overlap(s,e,skip){return SEGS.some((g,i)=>i!==skip&&s<g.e&&e>g.s);}
 function checkSeg(s,e,p,skip){
   if(isNaN(s)||isNaN(e)){$msg('请选择开始和结束时间','warning');return false;}
@@ -132,7 +166,7 @@ function checkSeg(s,e,p,skip){
   return true;
 }
 
-/* ── 添加时段 ── */
+/* ── 峰谷:添加时段 ── */
 function addSeg(){
   const s=parseInt(document.getElementById('selStart').value,10);
   const e=parseInt(document.getElementById('selEnd').value,10);
@@ -146,7 +180,7 @@ function addSeg(){
   editIdx=-1;renderAll();$msg('添加成功');
 }
 
-/* ── 时段表(行内编辑/删除) ── */
+/* ── 峰谷:时段表(行内编辑/删除) ── */
 function renderSegs(){
   const tb=document.getElementById('segBody');
   tb.innerHTML=SEGS.length?SEGS.map((g,i)=>{
@@ -234,13 +268,85 @@ function submitDefault(){
 }
 function resetDefault(){document.getElementById('defInput').value=DEF;}
 
-/* ── 指定日期电价设定 ── */
-function submitDate(){
-  const d=document.getElementById('dDate').value;
+/* ── 指定日期电价设定(参照 codex 分时计费原型"特殊计费规则"交互) ──
+   规则:日期范围+电价,范围间不可重叠,行内编辑,提交统一保存 */
+let RULES=[
+  {s:'2026-05-01',e:'2026-05-05',p:0.40,upd:'2026-01-15 09:00:00'},
+  {s:'2026-06-01',e:'2026-09-30',p:1.20,upd:'2026-01-14 10:00:00'},
+  {s:'2026-12-01',e:'2027-02-28',p:1.35,upd:'2026-01-14 11:20:00'},
+];
+let ruleEdit=-1;
+function nowTs(){
+  const n=new Date(),p=v=>String(v).padStart(2,'0');
+  return `${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+}
+function ruleOverlap(s,e,skip){return RULES.some((r,i)=>i!==skip&&s<=r.e&&e>=r.s);}
+function checkRule(s,e,p,skip){
+  if(!s||!e){$msg('请选择开始和结束日期','warning');return false;}
+  if(s>e){$msg('结束日期不能早于开始日期','warning');return false;}
+  if(!(p>0)){$msg('请输入正确的电价','warning');return false;}
+  if(ruleOverlap(s,e,skip)){$msg('该日期范围与已有规则重叠','error');return false;}
+  return true;
+}
+function openDateDlg(){
+  document.getElementById('dStart').value='';
+  document.getElementById('dEnd').value='';
+  document.getElementById('dPrice').value='';
+  ruleEdit=-1;renderRules();
+  $modal('dlgDate');
+}
+function addRule(){
+  const s=document.getElementById('dStart').value;
+  const e=document.getElementById('dEnd').value;
   const p=parseFloat(document.getElementById('dPrice').value);
-  if(!d){$msg('请选择指定日期','warning');return;}
-  if(!(p>0)){$msg('请输入正确的电价','warning');return;}
-  $modalClose('dlgDate');$msg(`${d} 电价已设定为 ${fmtP(p)}元/度`);
+  if(!checkRule(s,e,p,-1))return;
+  RULES.push({s,e,p,upd:nowTs()});
+  RULES.sort((a,b)=>a.s<b.s?-1:1);
+  document.getElementById('dStart').value='';
+  document.getElementById('dEnd').value='';
+  document.getElementById('dPrice').value='';
+  ruleEdit=-1;renderRules();$msg('规则新增成功');
+}
+function renderRules(){
+  const tb=document.getElementById('ruleBody');
+  tb.innerHTML=RULES.length?RULES.map((r,i)=>{
+    if(i===ruleEdit)return `<tr class="rule-edit">
+      <td class="tl" style="padding-left:14px;white-space:nowrap">
+        <input type="date" id="rs" value="${r.s}"> 至 <input type="date" id="re" value="${r.e}"></td>
+      <td><input id="rp" class="pr" value="${fmtP(r.p)}"></td>
+      <td>${r.upd}</td>
+      <td><span class="op" style="gap:6px">
+        <button class="btn btnp btn-mini" onclick="saveRule(${i})">保存</button>
+        <button class="btn btn-mini" onclick="ruleEdit=-1;renderRules()">取消</button></span></td>
+    </tr>`;
+    return `<tr>
+      <td class="tl" style="padding-left:14px">${r.s} 至 ${r.e}</td>
+      <td>${fmtP(r.p)}</td>
+      <td>${r.upd}</td>
+      <td><span class="op" style="gap:6px">
+        <button class="btn btnp btn-mini" onclick="ruleEdit=${i};renderRules()">编辑</button>
+        <button class="btn btnd btn-mini" onclick="delRule(${i})">删除</button></span></td>
+    </tr>`;
+  }).join('')
+  :'<tr><td colspan="4"><div class="empty" style="padding:26px"><span class="et">暂无指定日期电价,请在上方新增规则</span></div></td></tr>';
+}
+function saveRule(i){
+  const s=document.getElementById('rs').value;
+  const e=document.getElementById('re').value;
+  const p=parseFloat(document.getElementById('rp').value);
+  if(!checkRule(s,e,p,i))return;
+  RULES[i]={s,e,p,upd:nowTs()};
+  RULES.sort((a,b)=>a.s<b.s?-1:1);
+  ruleEdit=-1;renderRules();$msg('规则修改成功');
+}
+function delRule(i){
+  $confirm(`确定删除 ${RULES[i].s} 至 ${RULES[i].e} 的电价规则?`,()=>{
+    RULES.splice(i,1);ruleEdit=-1;renderRules();$msg('删除成功');
+  });
+}
+function submitRules(){
+  $modalClose('dlgDate');
+  $msg(`指定日期电价已保存,共 ${RULES.length} 条规则`);
 }
 
 function renderAll(){
