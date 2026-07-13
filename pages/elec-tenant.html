@@ -186,7 +186,7 @@ if(!PRE)document.querySelectorAll('.pre-only').forEach(el=>el.style.display='non
    后付费:对齐线上(数字型租户名、余额0.00、同批创建时间,共621条) */
 const fmt2=v=>(+v).toFixed(2);
 /* 项目全局默认阈值:未单独配置(custom)的租户使用此值 */
-let DEF_TH={remind:20,lock:0,lockOn:true};
+let DEF_TH={remind:100,lock:0,lockOn:true};
 const eff=t=>t.custom?t:DEF_TH;
 let TENANTS;
 if(PRE){
