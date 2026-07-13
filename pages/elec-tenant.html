@@ -277,11 +277,8 @@ function balCell(r){
     return `<span class="bal-low">${fmt2(r.balance)}</span>`;
   return fmt2(r.balance);
 }
-/* 阈值列:未单独配置的租户显示项目默认值(灰色+默认标记) */
 function remindCell(r){
-  const th=eff(r);
-  return r.custom?fmt2(th.remind)
-    :`<span class="sub-val">${fmt2(th.remind)}</span> <span class="tag tin">默认</span>`;
+  return fmt2(eff(r).remind);
 }
 function lockCell(r){
   const th=eff(r);
