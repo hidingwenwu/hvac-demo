@@ -24,6 +24,19 @@
 .range-box{display:flex;align-items:center;gap:7px;}
 .range-box input{width:88px;}
 .range-sep{color:var(--ts);}
+.room-bind-summary{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:10px;background:var(--bg-panel-2);border:1px solid var(--bd);border-radius:4px;font-size:13px;}
+.room-bind-tree{max-height:430px;overflow:auto;border:1px solid var(--bd);border-radius:4px;padding:8px;background:rgba(12,18,32,.35);}
+.room-bind-tree .tree-row{padding:7px 8px;}
+.room-bind-tree .room-tree-floor{padding-left:30px;}
+.room-bind-tree .room-tree-room{padding-left:54px;}
+.room-bind-tree input[type="checkbox"]{margin:0;}
+.room-bind-tree .tree-meta{margin-left:auto;color:var(--ts);font-size:12px;}
+.change-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.change-toolbar-main{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.change-filter-group{display:inline-flex;align-items:center;gap:6px;}
+.change-filter-btn{height:26px;padding:0 10px;border:1px solid var(--bd2);border-radius:3px;background:transparent;color:var(--ts);font-size:12px;cursor:pointer;}
+.change-filter-btn:hover{color:var(--txw);border-color:var(--primary);}
+.change-filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
 /* 阈值弹窗 */
 .th-hint{font-size:12px;color:var(--ts);line-height:1.7;margin:4px 0 0 110px;}
 .th-row{display:flex;align-items:center;gap:10px;}
@@ -37,8 +50,8 @@
 <!-- 筛选栏 -->
 <div class="filter-shell">
   <div class="fb">
-    <div class="fi"><span class="fl">账户租户名称</span><input id="fName" placeholder="请输入账户租户名称" style="width:180px"></div>
-    <div class="fi"><span class="fl">联系人真实名称</span><input id="fContact" placeholder="请输入联系人真实名称" style="width:180px"></div>
+    <div class="fi"><span class="fl">租户名称</span><input id="fName" placeholder="请输入租户名称" style="width:180px"></div>
+    <div class="fi"><span class="fl">联系人名称</span><input id="fContact" placeholder="请输入联系人名称" style="width:180px"></div>
     <div class="fi pre-only"><span class="fl">充值状态</span><select id="fRecharge" style="width:120px"><option value="">全部</option><option value="recharged">充值过</option><option value="never">未充值过</option></select></div>
     <div class="fi pre-only"><span class="fl">余额范围</span><span class="range-box"><input id="fBalanceMin" type="number" step="0.01" placeholder="下限" oninput="clearQuickMode()"><span class="range-sep">—</span><input id="fBalanceMax" type="number" step="0.01" placeholder="上限" oninput="clearQuickMode()"></span></div>
     <div class="fi pre-only"><span class="fl">提醒阈值范围</span><span class="range-box"><input id="fRemindMin" type="number" step="0.01" placeholder="下限"><span class="range-sep">—</span><input id="fRemindMax" type="number" step="0.01" placeholder="上限"></span></div>
@@ -49,8 +62,7 @@
     <button class="btn btnp" id="btnQuery" onclick="doQuery()">查询</button>
     <button class="btn" id="btnReset" onclick="doReset()">重置</button>
     <button class="btn btnp" onclick="openAdd()">＋ 新增</button>
-    <button class="btn pre-only" onclick="exportRecords('pay')">导出充值记录</button>
-    <button class="btn pre-only" onclick="exportRecords('use')">导出消费记录</button>
+    <button class="btn pre-only" onclick="exportRecords()">导出变动记录</button>
     <button class="btn pre-only" id="btnBatchTh" onclick="openThBatch()">阈值设置</button>
     <button class="btn pre-only" onclick="openThDefault()">默认阈值设置</button>
   </div>
@@ -77,12 +89,12 @@
     <div class="dh"><span id="dlgEditTitle">新增</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
     <div class="db">
       <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>账户租户名称</span>
-        <input id="eName" placeholder="请输入账户租户名称" style="flex:1">
+        <span class="fl"><span class="req">*</span>租户名称</span>
+        <input id="eName" placeholder="请输入租户名称" style="flex:1">
       </div>
       <div class="form-row" style="margin-bottom:14px">
-        <span class="fl">联系人真实名称</span>
-        <input id="eContact" placeholder="请输入联系人真实名称" style="flex:1">
+        <span class="fl">联系人名称</span>
+        <input id="eContact" placeholder="请输入联系人名称" style="flex:1">
       </div>
       <div class="form-row" id="rowBalance">
         <span class="fl" id="lbBalance">余额</span>
@@ -96,16 +108,23 @@
   </div>
 </div>
 
-<!-- 查看详情弹窗(预付费含充值/消费记录页签) -->
+<!-- 查看详情弹窗(预付费含统一变动记录) -->
 <div class="modal" id="dlgView">
-  <div class="dialog" style="width:620px">
+  <div class="dialog" style="width:860px">
     <div class="dh"><span>查看</span><span class="dx" onclick="$modalClose('dlgView')">✕</span></div>
     <div class="db">
       <div class="detail-grid" id="viewGrid"></div>
       <div class="pre-only" id="viewRecWrap" style="margin-top:16px">
-        <div class="tabs" style="margin-bottom:10px">
-          <div class="tab active" onclick="viewTab(this,'pay')">充值记录</div>
-          <div class="tab" onclick="viewTab(this,'use')">消费记录</div>
+        <div class="change-toolbar">
+          <div class="change-toolbar-main">
+            <div id="viewRecTitle" style="font-size:14px;font-weight:600;color:var(--txw)">变动记录</div>
+            <div class="change-filter-group" aria-label="变动记录快速筛选">
+              <button class="change-filter-btn active" id="changeFilterAll" aria-pressed="true" onclick="setViewChangeFilter('all')">全部记录</button>
+              <button class="change-filter-btn" id="changeFilterPay" aria-pressed="false" onclick="setViewChangeFilter('pay')">只看充值记录</button>
+              <button class="change-filter-btn" id="changeFilterUse" aria-pressed="false" onclick="setViewChangeFilter('use')">只看消费记录</button>
+            </div>
+          </div>
+          <button class="btn btn-mini" id="btnExportTenantChanges" onclick="exportTenantChanges()">导出</button>
         </div>
         <div class="tw"><table id="viewRecTable"></table></div>
       </div>
@@ -116,18 +135,13 @@
 
 <!-- 房间信息弹窗 -->
 <div class="modal" id="dlgRoom">
-  <div class="dialog" style="width:560px">
+  <div class="dialog" style="width:720px">
     <div class="dh"><span>房间信息</span><span class="dx" onclick="$modalClose('dlgRoom')">✕</span></div>
     <div class="db">
-      <div class="tw"><table>
-        <thead><tr><th>序号</th><th>楼栋</th><th>楼层</th><th>房间</th><th>绑定时间</th></tr></thead>
-        <tbody id="roomBody"></tbody>
-      </table></div>
+      <div class="room-bind-summary"><span>勾选房间即完成绑定</span><span>已绑定 <b id="roomPickedCnt">0</b> 间</span></div>
+      <div class="room-bind-tree" id="tenantRoomTree"></div>
     </div>
-    <div class="df">
-      <button class="btn" onclick="$modalClose('dlgRoom')">关闭</button>
-      <button class="btn btnp" onclick="$modalClose('dlgRoom');$msg('绑定成功')">绑定</button>
-    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgRoom')">关闭</button></div>
   </div>
 </div>
 
@@ -137,7 +151,7 @@
     <div class="dh"><span>充值</span><span class="dx" onclick="$modalClose('dlgPay')">✕</span></div>
     <div class="db">
       <div class="form-row" style="margin-bottom:14px">
-        <span class="fl">账户租户名称</span>
+        <span class="fl">租户名称</span>
         <span id="payName" style="color:var(--txw)"></span>
       </div>
       <div class="form-row" style="margin-bottom:14px">
@@ -205,10 +219,12 @@ const fmt2=v=>(+v).toFixed(2);
 /* 项目全局默认阈值:未单独配置(custom)的租户使用此值 */
 let DEF_TH={remind:100,lock:0,lockOn:true};
 const eff=t=>t.custom?t:DEF_TH;
+let NEXT_TENANT_ID=1;
+function nextTenantId(){return `T${String(NEXT_TENANT_ID++).padStart(6,'0')}`;}
 let TENANTS;
 if(PRE){
   const T=(name,balance,contact,thr)=>Object.assign(
-    {name,contact:contact||'',balance,recharged:false,crt:'2026-01-05 14:20:29',upd:'2026-01-05 14:20:29'},
+    {id:nextTenantId(),name,contact:contact||'',balance,recharged:false,records:[],rooms:[],crt:'2026-01-05 14:20:29',upd:'2026-01-05 14:20:29'},
     thr?Object.assign({custom:true,remind:DEF_TH.remind,lock:DEF_TH.lock,lockOn:DEF_TH.lockOn},thr):{});
   TENANTS=[
     T('801会议室',222.00),
@@ -231,7 +247,6 @@ if(PRE){
     T('保洁间',60.00),T('前台区域',180.00),T('大堂咖啡区',15.20),
     T('负一层车库值班室',77.00),T('顶层设备间',0.00),T('消控室',450.00),
   ];
-  TENANTS.forEach((tenant,index)=>tenant.recharged=index%3!==1);
 }else{
   const CRT='2025-06-24 16:48:25';
   const CONTACTS=['','','','','','','','','','','王芳','李建国','张伟','刘敏','陈静'];
@@ -241,9 +256,11 @@ if(PRE){
     for(let r=1;r<=19;r++)names.push(''+(4000+r));
     names.sort();
     return names.map((n,i)=>({
+      id:nextTenantId(),
       name:n,
       contact:i<40?'':CONTACTS[i%CONTACTS.length],
       balance:(i>0&&i%37===0)?(i%74===0?-5.37:222.00):0,
+      records:[],rooms:[],
       crt:CRT,upd:CRT
     }));
   })();
@@ -252,10 +269,10 @@ if(PRE){
 /* ── 表头(预付费含阈值列) ── */
 document.getElementById('thead').innerHTML=
   '<th style="width:44px"><input type="checkbox" id="chkAll" onclick="toggleAll(this)"></th>'+
-  '<th>序号</th><th>账户租户名称</th><th>联系人真实名称</th><th>余额</th>'+
-  (PRE?'<th>提醒阈值</th><th>锁定阈值</th>':'')+
+  '<th>序号</th><th>租户名称</th><th>联系人名称</th><th>余额</th>'+
+  (PRE?'<th>提醒阈值</th><th>锁定阈值</th><th>欠费锁定</th>':'')+
   '<th>创建时间</th><th>修改时间</th><th>操作</th>';
-const COLS=PRE?10:8;
+const COLS=PRE?11:8;
 
 /* ── 选中集合(跨页保留,供批量阈值设置) ── */
 const selSet=new Set();
@@ -290,15 +307,40 @@ const ROOM_TREE=[
 ];
 const ROOM_OPTIONS=ROOM_TREE.flatMap(building=>building.floors.flatMap(floor=>
   floor.rooms.map(room=>({building:building.building,floor:floor.floor,room}))));
+function seedChangeRecords(tenant,index){
+  if(!tenant.recharged)return [];
+  const seed=seedOf(tenant.name);
+  const firstSpend=60+seed%30;
+  const secondSpend=40+seed%20;
+  const afterRecharge=+(tenant.balance+firstSpend+secondSpend).toFixed(2);
+  return [
+    {type:'消费',way:'线上',amount:-secondSpend,after:tenant.balance,note:'空调电费扣款',time:'2026-06-03 18:20:00'},
+    {type:'消费',way:'线上',amount:-firstSpend,after:+(tenant.balance+secondSpend).toFixed(2),note:'空调电费扣款',time:'2026-06-02 18:20:00'},
+    {type:'充值',way:index%2===0?'线下充值':'自助充值',amount:afterRecharge,after:afterRecharge,note:index%2===0?'物业线下收款':'微信小程序自助充值',time:'2026-06-01 09:30:00'}
+  ];
+}
+function initializeTenantData(){
+  TENANTS.forEach((tenant,index)=>{
+    const namedIndex=ROOM_OPTIONS.findIndex(item=>item.room===tenant.name);
+    const roomStart=namedIndex>=0?namedIndex:seedOf(tenant.name)%ROOM_OPTIONS.length;
+    tenant.rooms=tenant.rooms.length?tenant.rooms:[
+      ROOM_OPTIONS[roomStart].room,
+      ROOM_OPTIONS[(roomStart+3)%ROOM_OPTIONS.length].room
+    ].filter((room,pos,list)=>list.indexOf(room)===pos);
+    if(PRE){
+      tenant.recharged=tenant.balance!==0||index%2===0;
+      tenant.records=seedChangeRecords(tenant,index);
+    }
+  });
+}
+function hasRecharged(tenant){return tenant.records.some(record=>record.type==='充值');}
 function populateFilterRooms(){
   document.getElementById('fRoom').innerHTML='<option value="">全部房间</option>'+ROOM_TREE.map(building=>
     building.floors.map(floor=>`<optgroup label="${building.building} - ${floor.floor}">${floor.rooms.map(room=>`<option value="${room}">${room}</option>`).join('')}</optgroup>`).join('')
   ).join('');
 }
 function tenantRooms(r){
-  const namedIndex=ROOM_OPTIONS.findIndex(item=>item.room===r.name);
-  const start=namedIndex>=0?namedIndex:seedOf(r.name)%ROOM_OPTIONS.length;
-  return [ROOM_OPTIONS[start],ROOM_OPTIONS[(start+3)%ROOM_OPTIONS.length]];
+  return r.rooms.map(room=>ROOM_OPTIONS.find(item=>item.room===room)).filter(Boolean);
 }
 function doQuery(){
   const n=document.getElementById('fName').value.trim();
@@ -314,7 +356,7 @@ function doQuery(){
   filtered=TENANTS.filter(r=>{
     const th=PRE?eff(r):null;
     return (!n||r.name.includes(n))&&(!c||r.contact.includes(c))
-      &&(!recharge||(recharge==='recharged'?r.recharged:!r.recharged))
+      &&(!recharge||(recharge==='recharged'?hasRecharged(r):!hasRecharged(r)))
       &&matchesRange(r.balance,balanceRange)
       &&(!PRE||matchesRange(th.remind,remindRange))
       &&(!PRE||matchesRange(th.lock,lockRange))
@@ -356,7 +398,7 @@ function balCell(r){
   if(!PRE)return fmt2(r.balance);
   const th=eff(r);
   if(isLocked(r))
-    return `<span class="bal-lock">${fmt2(r.balance)}</span> <span class="tag ter">已锁定</span>`;
+    return `<span class="bal-lock">${fmt2(r.balance)}</span>`;
   if(r.balance<=th.remind)
     return `<span class="bal-low">${fmt2(r.balance)}</span>`;
   return fmt2(r.balance);
@@ -365,10 +407,9 @@ function remindCell(r){
   return fmt2(eff(r).remind);
 }
 function lockCell(r){
-  const th=eff(r);
-  const v=r.custom?fmt2(th.lock):`<span class="sub-val">${fmt2(th.lock)}</span>`;
-  return th.lockOn?v:`${v} <span class="tag tin">停用</span>`;
+  return fmt2(eff(r).lock);
 }
+function lockOnCell(r){return eff(r).lockOn?'开启':'关闭';}
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
@@ -377,7 +418,7 @@ function renderTable(){
       <td><input type="checkbox" class="row-chk" data-n="${r.name}" ${selSet.has(r.name)?'checked':''} onclick="rowChk(this)"></td>
       <td>${start+i+1}</td><td>${r.name}</td><td>${r.contact}</td>
       <td>${balCell(r)}</td>
-      ${PRE?`<td>${remindCell(r)}</td><td>${lockCell(r)}</td>`:''}
+      ${PRE?`<td>${remindCell(r)}</td><td>${lockCell(r)}</td><td>${lockOnCell(r)}</td>`:''}
       <td>${r.crt}</td><td>${r.upd}</td>
       <td><span class="op">
         <a onclick="doView('${r.name}')">查看</a>
@@ -408,58 +449,59 @@ function syncChkAll(){
 }
 function findT(name){return TENANTS.find(t=>t.name===name);}
 
-/* ── 查看(预付费含记录页签) ── */
+/* ── 查看(预付费含统一变动记录) ── */
 let viewName='';
+let viewChangeFilter='all';
 function doView(name){
   viewName=name;
+  viewChangeFilter='all';
   const r=findT(name);
   document.getElementById('viewGrid').innerHTML=`
-    <span class="k">账户租户名称:</span><span class="v">${r.name}</span>
-    <span class="k">联系人真实名称:</span><span class="v">${r.contact||'-'}</span>
+    <span class="k">租户ID:</span><span class="v">${r.id}</span>
+    <span class="k">租户名称:</span><span class="v">${r.name}</span>
+    <span class="k">联系人名称:</span><span class="v">${r.contact||'-'}</span>
     <span class="k">余额:</span><span class="v${r.balance<0?' text-er':''}">${fmt2(r.balance)}</span>
     ${PRE?`
-    <span class="k">提醒阈值:</span><span class="v">${fmt2(eff(r).remind)}${r.custom?'':'(项目默认)'}</span>
-    <span class="k">锁定阈值:</span><span class="v">${fmt2(eff(r).lock)}${r.custom?'':'(项目默认)'}${eff(r).lockOn?'':'(锁定已停用)'}</span>
+    <span class="k">提醒阈值:</span><span class="v">${fmt2(eff(r).remind)}</span>
+    <span class="k">锁定阈值:</span><span class="v">${fmt2(eff(r).lock)}</span>
     <span class="k">欠费锁定:</span><span class="v">${eff(r).lockOn?'已启用':'已停用'}</span>`:''}
     <span class="k">创建时间:</span><span class="v">${r.crt}</span>
     <span class="k">修改时间:</span><span class="v">${r.upd}</span>`;
-  if(PRE){
-    const tabs=document.querySelectorAll('#viewRecWrap .tab');
-    tabs.forEach((t,i)=>t.classList.toggle('active',i===0));
-    renderViewRec('pay');
-  }
+  if(PRE)renderChangeRecords(r);
   $modal('dlgView');
-}
-function viewTab(el,kind){
-  document.querySelectorAll('#viewRecWrap .tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderViewRec(kind);
 }
 /* 由租户名生成稳定的演示记录 */
 function seedOf(name){let s=0;for(const ch of name)s=(s*31+ch.charCodeAt(0))%997;return s;}
-function recRows(name,kind){
-  if(kind==='pay'&&!findT(name).recharged)return [];
-  const s=seedOf(name);
-  return [0,1,2].map(i=>{
-    const d=`2026-0${(s+i)%6+1}-${String((s*3+i*7)%27+1).padStart(2,'0')}`;
-    if(kind==='pay')return {t:`${d} 10:2${i}:00`,amt:(50+(s+i*37)%450).toFixed(2),way:['微信','支付宝','线下'][(s+i)%3],op:'物业管理员'};
-    const kwh=(2+((s+i*13)%80)/10).toFixed(1);
-    return {t:d,kwh,amt:(kwh*0.918).toFixed(2)};
+function changeAmount(record){return `${record.amount>0?'+':''}${fmt2(record.amount)}`;}
+function setViewChangeFilter(filter){
+  viewChangeFilter=filter;
+  renderChangeRecords(findT(viewName));
+}
+function syncViewChangeFilter(){
+  [['changeFilterAll','all'],['changeFilterPay','pay'],['changeFilterUse','use']].forEach(([id,filter])=>{
+    const button=document.getElementById(id);
+    const active=viewChangeFilter===filter;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
   });
 }
-function renderViewRec(kind){
-  const rows=recRows(viewName,kind);
-  document.getElementById('viewRecTable').innerHTML=kind==='pay'
-    ?'<thead><tr><th>充值时间</th><th>充值金额(元)</th><th>支付方式</th><th>操作人</th></tr></thead><tbody>'+
-      rows.map(r=>`<tr><td>${r.t}</td><td>${r.amt}</td><td>${r.way}</td><td>${r.op}</td></tr>`).join('')+'</tbody>'
-    :'<thead><tr><th>日期</th><th>用电量(kWh)</th><th>扣费金额(元)</th></tr></thead><tbody>'+
-      rows.map(r=>`<tr><td>${r.t}</td><td>${r.kwh}</td><td>${r.amt}</td></tr>`).join('')+'</tbody>';
+function renderChangeRecords(tenant){
+  const rows=tenant.records.filter(record=>viewChangeFilter==='all'||(viewChangeFilter==='pay'?record.type==='充值':record.type==='消费'));
+  document.getElementById('viewRecTable').innerHTML=
+    '<thead><tr><th>变动类型</th><th>变动方式</th><th>变动金额</th><th>变动后余额</th><th>备注</th><th>时间</th></tr></thead><tbody>'+
+    (rows.length?rows.map(record=>`<tr><td>${record.type}</td><td>${record.way}</td><td class="${record.amount<0?'text-er':'text-ok'}">${changeAmount(record)}</td><td>${fmt2(record.after)}</td><td>${record.note||'-'}</td><td>${record.time}</td></tr>`).join(''):
+      '<tr><td colspan="6"><div class="empty" style="padding:28px"><span class="et">暂无变动记录</span></div></td></tr>')+
+    '</tbody>';
+  syncViewChangeFilter();
+}
+function exportTenantChanges(){
+  const tenant=findT(viewName);
+  $msg(`已导出租户“${tenant.name}”的全部变动记录`);
 }
 
-/* ── 导出充值/消费记录(勾选则导出所选租户,否则导出全部) ── */
-function exportRecords(kind){
-  const lb=kind==='pay'?'充值记录':'消费记录';
-  $msg(selSet.size?`已导出所选 ${selSet.size} 个租户的${lb}`:`${lb}导出成功`);
+/* ── 导出变动记录(勾选则导出所选租户,否则导出全部) ── */
+function exportRecords(){
+  $msg(selSet.size?`已导出所选 ${selSet.size} 个租户的变动记录`:'变动记录导出成功');
 }
 
 /* ── 新增 / 编辑 ── */
@@ -490,8 +532,8 @@ function nowTs(){
 }
 function submitEdit(){
   const name=document.getElementById('eName').value.trim();
-  if(!name){$msg('请输入账户租户名称','warning');return;}
-  if(TENANTS.some(t=>t.name===name&&t!==editing)){$msg('账户租户名称已存在','error');return;}
+  if(!name){$msg('请输入租户名称','warning');return;}
+  if(TENANTS.some(t=>t.name===name&&t!==editing)){$msg('租户名称已存在','error');return;}
   const contact=document.getElementById('eContact').value.trim();
   const ts=nowTs();
   if(editing){
@@ -500,8 +542,10 @@ function submitEdit(){
     $msg('修改成功');
   }else{
     const balance=parseFloat(document.getElementById('eBalance').value)||0;
+    if(balance<0){$msg('初始余额不能小于 0','warning');return;}
     /* 新租户不单独配置阈值,跟随项目默认 */
-    TENANTS.push({name,contact,balance,crt:ts,upd:ts});
+    const records=PRE&&balance>0?[{type:'充值',way:'线下充值',amount:balance,after:balance,note:'新建租户初始余额',time:ts}]:[];
+    TENANTS.push({id:nextTenantId(),name,contact,balance,recharged:records.length>0,records,rooms:[],crt:ts,upd:ts});
     TENANTS.sort((a,b)=>a.name<b.name?-1:1);
     $msg('新增成功');
   }
@@ -525,6 +569,10 @@ function submitPay(){
   payTarget.balance=+(payTarget.balance+amt).toFixed(2);
   payTarget.recharged=true;
   payTarget.upd=nowTs();
+  payTarget.records.unshift({
+    type:'充值',way:'线下充值',amount:amt,after:payTarget.balance,
+    note:document.getElementById('payNote').value.trim()||'物业线下充值',time:payTarget.upd
+  });
   $modalClose('dlgPay');
   $msg(`充值成功,当前余额 ${fmt2(payTarget.balance)} 元`);
   doQuery();
@@ -591,11 +639,54 @@ function submitTh(){
   doQuery();
 }
 
-/* ── 房间信息 ── */
+/* ── 房间信息:建筑物 > 楼层 > 房间三级勾选,勾选即绑定 ── */
+let roomTarget=null;
+let roomPicked=new Set();
+function groupRooms(buildingIndex,floorIndex){
+  const building=ROOM_TREE[buildingIndex];
+  return floorIndex<0?building.floors.flatMap(floor=>floor.rooms):building.floors[floorIndex].rooms;
+}
+function roomGroupState(rooms){
+  const count=rooms.filter(room=>roomPicked.has(room)).length;
+  return {checked:count===rooms.length,partial:count>0&&count<rooms.length};
+}
+function persistRoomBinding(){
+  roomTarget.rooms=[...roomPicked];
+  roomTarget.upd=nowTs();
+  renderTenantRoomTree();
+}
+function toggleRoomGroup(buildingIndex,floorIndex,checked){
+  groupRooms(buildingIndex,floorIndex).forEach(room=>checked?roomPicked.add(room):roomPicked.delete(room));
+  persistRoomBinding();
+}
+function toggleTenantRoom(room,checked){
+  checked?roomPicked.add(room):roomPicked.delete(room);
+  persistRoomBinding();
+}
+function renderTenantRoomTree(){
+  document.getElementById('roomPickedCnt').textContent=roomPicked.size;
+  document.getElementById('tenantRoomTree').innerHTML=ROOM_TREE.map((building,buildingIndex)=>{
+    const buildingRooms=groupRooms(buildingIndex,-1);
+    const buildingState=roomGroupState(buildingRooms);
+    return `<div class="tree-row room-tree-building active"><input type="checkbox" data-group="b-${buildingIndex}" ${buildingState.checked?'checked':''} onchange="toggleRoomGroup(${buildingIndex},-1,this.checked)"><strong>${building.building}</strong><span class="tree-meta">${building.floors.length} 层 / ${buildingRooms.length} 间</span></div>`+
+      building.floors.map((floor,floorIndex)=>{
+        const floorState=roomGroupState(floor.rooms);
+        return `<div class="tree-row room-tree-floor"><input type="checkbox" data-group="f-${buildingIndex}-${floorIndex}" ${floorState.checked?'checked':''} onchange="toggleRoomGroup(${buildingIndex},${floorIndex},this.checked)"><span>${floor.floor}</span><span class="tree-meta">${floor.rooms.length} 间</span></div>`+
+          floor.rooms.map(room=>`<label class="tree-row room-tree-room${roomPicked.has(room)?' active':''}"><input type="checkbox" data-room="${room}" ${roomPicked.has(room)?'checked':''} onchange="toggleTenantRoom('${room}',this.checked)"><span>${room}</span></label>`).join('');
+      }).join('');
+  }).join('');
+  ROOM_TREE.forEach((building,buildingIndex)=>{
+    const buildingInput=document.querySelector(`[data-group="b-${buildingIndex}"]`);
+    buildingInput.indeterminate=roomGroupState(groupRooms(buildingIndex,-1)).partial;
+    building.floors.forEach((floor,floorIndex)=>{
+      document.querySelector(`[data-group="f-${buildingIndex}-${floorIndex}"]`).indeterminate=roomGroupState(floor.rooms).partial;
+    });
+  });
+}
 function doRoom(name){
-  const rooms=tenantRooms(findT(name)).map((item,i)=>`
-    <tr><td>${i+1}</td><td>${item.building}</td><td>${item.floor}</td><td>${item.room}</td><td>${TENANTS[0].crt}</td></tr>`);
-  document.getElementById('roomBody').innerHTML=rooms.join('');
+  roomTarget=findT(name);
+  roomPicked=new Set(roomTarget.rooms);
+  renderTenantRoomTree();
   $modal('dlgRoom');
 }
 
@@ -609,6 +700,7 @@ function doDel(name){
   });
 }
 
+initializeTenantData();
 populateFilterRooms();
 doQuery();
 </script>

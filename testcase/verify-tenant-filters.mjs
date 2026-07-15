@@ -31,6 +31,55 @@ try {
   assert.equal(await page.evaluate(() =>
     document.getElementById('btnQuery').parentElement===document.getElementById('fRoom').closest('.fb')
   ), true, '查询按钮应紧随筛选框放在同一容器');
+  const filterLabels = await page.locator('.filter-shell .fl').allTextContents();
+  assert.ok(filterLabels.includes('租户名称'));
+  assert.ok(filterLabels.includes('联系人名称'));
+  assert.equal(filterLabels.includes('账户租户名称'), false);
+  assert.equal(filterLabels.includes('联系人真实名称'), false);
+  const headers = await page.locator('#thead th').allTextContents();
+  assert.ok(headers.includes('租户名称'));
+  assert.ok(headers.includes('联系人名称'));
+  assert.ok(headers.includes('欠费锁定'));
+  assert.equal(await page.locator('.filter-shell .btn:has-text("导出变动记录")').count(), 1);
+  assert.equal(await page.locator('.filter-shell .btn:has-text("导出充值记录")').count(), 0);
+  assert.equal(await page.locator('.filter-shell .btn:has-text("导出消费记录")').count(), 0);
+
+  await page.locator('#tbody a:has-text("查看")').first().click();
+  const detailText = await page.locator('#viewGrid').innerText();
+  assert.match(detailText, /租户ID:/);
+  assert.equal(detailText.includes('项目默认'), false);
+  assert.equal(detailText.includes('锁定已停用'), false);
+  assert.equal(await page.locator('#viewRecTitle').textContent(), '变动记录');
+  assert.deepEqual(await page.locator('#viewRecTable th').allTextContents(), ['变动类型','变动方式','变动金额','变动后余额','备注','时间']);
+  assert.equal(await page.locator('#viewRecWrap .tabs').count(), 0);
+  const changeTypes = await page.locator('#viewRecTable tbody td:first-child').allTextContents();
+  const changeWays = await page.locator('#viewRecTable tbody td:nth-child(2)').allTextContents();
+  assert.ok(changeTypes.includes('充值')&&changeTypes.includes('消费'));
+  assert.ok(changeWays.includes('线上'));
+  assert.ok(changeWays.some(value=>value==='线下充值'||value==='自助充值'));
+  assert.equal(await page.locator('#changeFilterAll').getAttribute('aria-pressed'), 'true');
+  await page.locator('#changeFilterPay').click();
+  assert.ok((await page.locator('#viewRecTable tbody td:first-child').allTextContents()).every(value=>value==='充值'));
+  await page.locator('#changeFilterUse').click();
+  assert.ok((await page.locator('#viewRecTable tbody td:first-child').allTextContents()).every(value=>value==='消费'));
+  await page.locator('#btnExportTenantChanges').click();
+  assert.match(await page.locator('.msg').last().innerText(), /已导出租户“801会议室”的全部变动记录/);
+  await page.locator('.msg').evaluateAll(elements => elements.forEach(element => element.remove()));
+  await page.locator('#dlgView .dialog').screenshot({ path: 'D:/workspace/hvac-demo/testcase/租户详情变动记录.png' });
+  await page.locator('#dlgView .dx').click();
+
+  await page.fill('#fName', '物业办公室');
+  await query(page);
+  let rowCells = await page.locator('#tbody tr').first().locator('td').allTextContents();
+  assert.equal(rowCells[headers.indexOf('余额')], '-36.20', '余额列只显示数值');
+  assert.equal(rowCells[headers.indexOf('欠费锁定')], '关闭');
+  await reset(page);
+  await page.fill('#fName', '812会议室');
+  await query(page);
+  rowCells = await page.locator('#tbody tr').first().locator('td').allTextContents();
+  assert.equal(rowCells[headers.indexOf('余额')], '-5.37', '锁定租户的余额后不显示已锁定备注');
+  assert.equal(rowCells[headers.indexOf('欠费锁定')], '开启');
+  await reset(page);
 
   await page.fill('#fBalanceMin', '0');
   await page.fill('#fBalanceMax', '0');
@@ -40,7 +89,7 @@ try {
   await reset(page);
   await page.selectOption('#fRecharge', 'never');
   await query(page);
-  assert.equal(await totalCount(page), 12);
+  assert.equal(await totalCount(page), 3);
 
   await reset(page);
   await page.fill('#fRemindMin', '50');
@@ -83,6 +132,35 @@ try {
   assert.equal(await totalCount(page), Number(await page.locator('#lowCnt').textContent()));
   assert.equal(await page.locator('#quickLow').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#quickDebt').getAttribute('aria-pressed'), 'false');
+
+  await reset(page);
+  await page.locator('.filter-shell .btn:has-text("新增")').click();
+  await page.fill('#eName', '测试初始充值租户');
+  await page.fill('#eContact', '测试联系人');
+  await page.fill('#eBalance', '123.45');
+  await page.locator('#dlgEdit .btnp').click();
+  await page.fill('#fName', '测试初始充值租户');
+  await query(page);
+  await page.locator('#tbody a:has-text("查看")').first().click();
+  const createdDetail = await page.locator('#viewGrid').innerText();
+  assert.match(createdDetail, /租户ID:\s*T\d{6}/);
+  const firstChange = await page.locator('#viewRecTable tbody tr').first().locator('td').allTextContents();
+  assert.deepEqual(firstChange, ['充值','线下充值','+123.45','123.45','新建租户初始余额',firstChange[5]]);
+  await page.locator('#dlgView .dx').click();
+
+  await page.locator('#tbody a:has-text("房间信息")').first().click();
+  assert.ok(await page.locator('#tenantRoomTree .room-tree-building').count() > 0);
+  assert.ok(await page.locator('#tenantRoomTree .room-tree-floor').count() > 0);
+  assert.ok(await page.locator('#tenantRoomTree input[data-room]').count() > 0);
+  await page.locator('.msg').evaluateAll(elements => elements.forEach(element => element.remove()));
+  await page.locator('#dlgRoom .dialog').screenshot({ path: 'D:/workspace/hvac-demo/testcase/租户房间绑定.png' });
+  const roomCheckbox = page.locator('#tenantRoomTree input[data-room]:not(:checked)').first();
+  const roomName = await roomCheckbox.getAttribute('data-room');
+  await page.locator(`#tenantRoomTree input[data-room="${roomName}"]`).check();
+  await page.locator('#dlgRoom .dx').click();
+  await page.locator('#tbody a:has-text("房间信息")').first().click();
+  assert.equal(await page.locator(`#tenantRoomTree input[data-room="${roomName}"]`).isChecked(), true, '勾选后应立即保存房间绑定');
+  await page.locator('#dlgRoom .dx').click();
 
   await reset(page);
   await page.locator('.msg').evaluateAll(elements => elements.forEach(element => element.remove()));
