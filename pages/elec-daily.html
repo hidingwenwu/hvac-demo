@@ -9,6 +9,12 @@
 .layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
 .side-tree{min-height:100%;}
 .main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.view-switch{display:inline-flex;margin-left:auto;}
+.view-btn{height:32px;padding:0 14px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx);cursor:pointer;font-size:12px;}
+.view-btn:first-child{border-radius:3px 0 0 3px;}
+.view-btn+ .view-btn{border-left:0;}
+.view-btn:last-child{border-radius:0 3px 3px 0;}
+.view-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
@@ -30,14 +36,17 @@
       <button class="btn" onclick="doReset()">重置</button>
       <button class="btn btnp" onclick="$msg('导出任务已生成,请稍候下载')">⬆ 导出</button>
       <button class="btn btnp" onclick="manualFetch()">手动获取</button>
+      <div class="view-switch" role="group" aria-label="查看方式">
+        <button class="view-btn active" id="dailyUnit" onclick="switchDailyMode('unit')">按内机</button>
+        <button class="view-btn" id="dailyRoom" onclick="switchDailyMode('room')">按房间</button>
+        <button class="view-btn" id="dailyTenant" onclick="switchDailyMode('tenant')">按租户</button>
+      </div>
     </div>
 
     <!-- 表格:序号/租户/房间/内机地址/用量(度)/费用/生成时间(与线上 7 列一致) -->
     <div class="tw">
       <table>
-        <thead><tr>
-          <th>序号</th><th>租户</th><th>房间</th><th>内机地址</th><th>用量(度)</th><th>费用</th><th>生成时间</th>
-        </tr></thead>
+        <thead id="thead"></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -46,7 +55,10 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_allocation.js"></script>
 <script>
+const allocation=window.HvacAllocation;
+let dailyMode='unit';
 /* ── 模拟数据(租户为房号、内机地址"2-3-15-7"式、用量两位小数、按日生成) ── */
 const ROWS=(()=>{
   const rows=[];
@@ -83,12 +95,20 @@ function renderTree(){
 /* ── 查询/表格/分页 ── */
 let filtered=ROWS.slice();
 const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function switchDailyMode(mode){
+  dailyMode=['unit','room','tenant'].includes(mode)?mode:'unit';
+  document.getElementById('dailyUnit').classList.toggle('active',dailyMode==='unit');
+  document.getElementById('dailyRoom').classList.toggle('active',dailyMode==='room');
+  document.getElementById('dailyTenant').classList.toggle('active',dailyMode==='tenant');
+  doQuery();
+}
 function doQuery(){
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
-  filtered=ROWS.filter(r=>
+  const rows=ROWS.filter(r=>
     (!s||r.date>=s)&&(!e||r.date<=e)&&
     $tree3Match(treeSel,r)
   );
+  filtered=allocation.aggregateDaily(rows,dailyMode);
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
@@ -100,12 +120,18 @@ function doReset(){
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
-  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
-    <tr>
-      <td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${r.addr}</td>
-      <td>${r.use}</td><td>${r.fee}</td><td>${r.date}</td>
-    </tr>`).join('')
-    :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  const room=dailyMode==='room',tenant=dailyMode==='tenant';
+  document.getElementById('thead').innerHTML=tenant
+    ?'<tr><th>序号</th><th>租户</th><th>用量(度)</th><th>费用</th><th>日期</th></tr>'
+    :room
+      ?'<tr><th>序号</th><th>租户</th><th>房间</th><th>用量(度)</th><th>费用</th><th>日期</th></tr>'
+      :'<tr><th>序号</th><th>租户</th><th>房间</th><th>内机地址</th><th>用量(度)</th><th>费用</th><th>生成时间</th></tr>';
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>tenant
+    ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
+    :room
+      ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
+      :`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${r.addr}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`).join('')
+    :`<tr><td colspan="${tenant?5:room?6:7}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
 }
 /* 手动获取:线上点击后弹确认框(取消/确定) */
 function manualFetch(){

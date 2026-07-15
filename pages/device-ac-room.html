@@ -38,6 +38,10 @@
 .cell-name .arr{font-size:10px;color:var(--ts);width:12px;flex-shrink:0;cursor:pointer;transition:transform .15s;text-align:center;}
 .cell-name .arr.open{transform:rotate(90deg);}
 .cell-name .arr.hid{visibility:hidden;}
+.pub-mark{display:inline-flex;align-items:center;justify-content:center;}
+.pub-mark .switch{border:0;padding:0;vertical-align:middle;}
+.pub-mark .switch:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+.pub-placeholder{color:var(--ts);}
 
 /* 面板2 筛选栅格 */
 .acf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
@@ -79,7 +83,7 @@ tr.acsel td{background:#0d1730!important;}
     </div>
     <div class="pnl-body tw">
       <table>
-        <thead><tr><th class="tl" style="padding-left:24px">建筑物名称</th><th>建筑物类型</th><th style="width:170px">操作</th></tr></thead>
+        <thead><tr><th class="tl" style="padding-left:24px">建筑物名称</th><th>建筑物类型</th><th style="width:120px">公区标记</th><th style="width:170px">操作</th></tr></thead>
         <tbody id="treeBody"></tbody>
       </table>
     </div>
@@ -170,15 +174,18 @@ tr.acsel td{background:#0d1730!important;}
 </div>
 
 <script src="_ui.js"></script>
+<script src="_allocation.js"></script>
 <script>
 /* ══════════ 模拟数据 ══════════ */
+const allocation=window.HvacAllocation;
 /* 建筑物树:1号楼 > 楼层 > 房间 */
 const FLOOR_ROOMS={
   '3层':['301','302','303','304','305','306','307','308'],
   '7层':['707','713','714','715','716','717','718','719'],
-  '9层':['903','905','906','908','909','912'],
+  '8层':['801','802','803会议室','8层电梯厅'],
+  '9层':['901','903','905','906','908','909','912','9层电梯厅'],
   '13层':['1301','1302','1303','1304','1305','1306','1307','中走廊','1310','1311'],
-  '14层':['1404','1406','1408','1410','1412'],
+  '14层':['1404','1406','1408','1410','1412','14层走廊'],
   '23层':['2302','2303','2305','2308']
 };
 const TREE=[{name:'1号楼',type:'楼栋',open:false,children:Object.keys(FLOOR_ROOMS).map(f=>({
@@ -232,29 +239,37 @@ const boundRooms=new Set(RELS.slice(0,60).map(r=>r.room));
 function renderTree(){
   const tb=document.getElementById('treeBody');
   const rows=[];
+  const publicRooms=new Set(allocation.getState().publicRoomIds);
   const ops=`<span class="op"><span class="tb tb-edit" onclick="event.stopPropagation();editNode(this)" title="编辑">✎</span><span class="tb tb-del" onclick="event.stopPropagation();delNode(this)" title="删除">🗑</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已上移')" title="上移">▲</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已下移')" title="下移">▼</span></span>`;
   TREE.forEach((b,bi)=>{
     rows.push(`<tr><td class="tl" style="padding-left:12px"><span class="cell-name">
       <span class="arr ${b.open?'open':''}" onclick="toggleNode(${bi})">▶</span>
       <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${b.name}</span></span></td>
-      <td>${b.type}</td><td>${ops}</td></tr>`);
+      <td>${b.type}</td><td class="pub-placeholder">&mdash;</td><td>${ops}</td></tr>`);
     if(b.open) b.children.forEach((f,fi)=>{
       if(seg==='un'&&f.children.every(r=>boundRooms.has(r.name))) return;
       rows.push(`<tr><td class="tl" style="padding-left:34px"><span class="cell-name">
         <span class="arr ${f.open?'open':''}" onclick="toggleNode(${bi},${fi})">▶</span>
         <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${f.name}</span></span></td>
-        <td>${f.type}</td><td>${ops}</td></tr>`);
+        <td>${f.type}</td><td class="pub-placeholder">&mdash;</td><td>${ops}</td></tr>`);
       if(f.open) f.children.forEach(r=>{
         if(seg==='un'&&boundRooms.has(r.name)) return;
         const sel=selRoom&&selRoom.name===r.name&&selRoom.fl===f.name;
+        const roomId=`1号楼|${f.name}|${r.name}`;
+        const isPublic=publicRooms.has(roomId);
         rows.push(`<tr><td class="tl" style="padding-left:58px"><span class="cell-name">
           <span class="arr hid">▶</span>
           <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();pickRoom('${f.name}|${r.name}',this)"><span>${r.name}</span></span></td>
-          <td>${r.type}</td><td>${ops}</td></tr>`);
+          <td>${r.type}</td><td><span class="pub-mark"><button type="button" class="switch ${isPublic?'on':''}" role="switch" aria-checked="${isPublic}" aria-label="${isPublic?'取消':'标记'}${r.name}为公区" onclick="event.stopPropagation();togglePublicRoom('${f.name}','${r.name}',${!isPublic})"></button></span></td><td>${ops}</td></tr>`);
       });
     });
   });
   tb.innerHTML=rows.join('');
+}
+function togglePublicRoom(floor,room,enabled){
+  allocation.setPublicRoom(`1号楼|${floor}|${room}`,enabled);
+  $msg(enabled?`“${room}”已标记为公区`:`已取消“${room}”公区标记`);
+  renderTree();
 }
 function toggleNode(bi,fi){
   if(fi===undefined) TREE[bi].open=!TREE[bi].open;
@@ -265,7 +280,7 @@ function pickRoom(key,el){
   if(!key){ el.checked=false; $msg('请勾选房间进行绑定','warning'); return; }
   const [fl,name]=key.split('|');
   selRoom=el.checked?{fl,name}:null;
-  renderTree();renderSlots();
+  renderTree();renderSlots();relQuery();
 }
 function sortTree(){ $msg('一键排序完成'); }
 let editing=null;
@@ -341,7 +356,8 @@ const pg={total:RELS.length,page:1,size:10,onChange:()=>renderRel()};
 function relQuery(){
   const addr=document.getElementById('fAddr').value.trim();
   const ten=document.getElementById('fTenant').value.trim();
-  relFiltered=RELS.filter(r=>(!addr||r.addr.includes(addr))&&(!ten||r.tenant.includes(ten)));
+  relFiltered=RELS.filter(r=>(!selRoom||(r.fl===selRoom.fl&&r.room===selRoom.name))&&
+    (!addr||r.addr.includes(addr))&&(!ten||r.tenant.includes(ten)));
   pg.page=1;pg.total=relFiltered.length;
   $pager('pager',pg);renderRel();
 }
@@ -406,6 +422,7 @@ function showTenantDetail(){
 
 renderTree();renderAcs();
 $pager('pager',pg);renderRel();
+allocation.subscribe(()=>renderTree());
 </script>
 </body>
 </html>

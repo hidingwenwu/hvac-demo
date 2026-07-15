@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>公区空调分摊</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+body{padding-top:12px;}
+.page-band{min-height:calc(100vh - 28px);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px;}
+.section-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--txw);}
+.rule-help{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 24px;padding:12px 14px;margin-bottom:14px;background:rgba(31,101,255,.08);border:1px solid rgba(31,101,255,.25);border-radius:4px;color:var(--ts);font-size:12px;line-height:1.55;}
+.help-line{display:flex;gap:7px;align-items:flex-start;}.help-no{color:#6f9cff;flex:none;}
+.rule-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.rule-card{background:var(--bg-panel);border:1px solid var(--bd);border-radius:6px;overflow:hidden;transition:border-color .15s,background .15s;}
+.rule-card:hover{border-color:rgba(31,101,255,.45);background:#182036;}
+.rule-card-head{height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);}
+.rule-name{font-size:14px;font-weight:600;color:var(--txw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rule-card-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 22px;padding:14px;}
+.rule-field{min-width:0;}.rule-field.wide{grid-column:1/-1;}
+.rule-label{font-size:11px;color:var(--tw3);margin-bottom:5px;}
+.rule-value{font-size:13px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rule-card-foot{height:38px;padding:0 9px 0 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bd);color:var(--tw3);font-size:11px;}
+.rule-actions{display:flex;gap:4px;}
+.rule-empty{grid-column:1/-1;background:var(--bg-panel-2);border-radius:6px;}
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0 14px;}
+.dim-choice{border:1px solid var(--bd2);border-radius:5px;background:var(--bg-input);padding:16px;cursor:pointer;transition:all .15s;}
+.dim-choice.active{border-color:var(--primary);background:var(--primary-dim);box-shadow:0 0 0 1px var(--primary) inset;}
+.dim-choice-title{display:flex;align-items:center;gap:8px;color:var(--txw);font-weight:600;margin-bottom:6px;}
+.dim-choice-desc{font-size:12px;line-height:1.55;color:var(--ts);padding-left:22px;}
+.warn-box{font-size:12px;line-height:1.6;color:var(--wn);background:var(--wn-dim);border:1px solid rgba(230,162,60,.3);padding:9px 12px;border-radius:4px;}
+.rule-form{display:flex;flex-direction:column;gap:16px;}
+.form-section{border-top:1px solid var(--bd);padding-top:14px;}
+.form-section:first-child{border-top:none;padding-top:0;}
+.form-section-title{font-size:13px;font-weight:600;color:var(--txw);margin-bottom:10px;}
+.form-line{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.form-line:last-child{margin-bottom:0;}
+.form-label{width:104px;text-align:right;line-height:32px;color:var(--tx);flex:none;}
+.form-label .req{color:var(--er);margin-right:3px;}
+.form-control{flex:1;min-width:0;}.form-control input[type=text]{width:100%;}
+.input-count{font-size:11px;color:var(--tw3);text-align:right;margin-top:4px;}
+.locked-value{height:32px;display:flex;align-items:center;gap:8px;color:var(--tx);}
+.lock-icon{color:var(--wn);font-size:13px;}
+.radio-row{display:flex;align-items:center;gap:22px;height:32px;}
+.radio-item{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--tx);}
+.hint{font-size:11px;color:var(--tw3);margin-top:3px;line-height:1.5;}
+.transfer{display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);gap:8px;align-items:center;}
+.transfer-box{height:216px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:4px;display:flex;flex-direction:column;overflow:hidden;}
+.transfer-head{height:36px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);font-size:12px;color:var(--tx);background:rgba(255,255,255,.02);}
+.transfer-list{flex:1;overflow:auto;padding:5px;}
+.transfer-item{min-height:32px;padding:6px 8px;border-radius:3px;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx);cursor:pointer;line-height:1.4;}
+.transfer-item:hover{background:var(--bg-hover);}.transfer-item.selected{background:var(--primary-dim);color:#8fb1ff;}
+.transfer-item.disabled{opacity:.45;cursor:not-allowed;}.transfer-item.disabled:hover{background:transparent;}
+.transfer-item input{pointer-events:none;}.transfer-note{margin-left:auto;color:var(--wn);font-size:10px;white-space:nowrap;}
+.transfer-empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--tw3);font-size:12px;}
+.transfer-actions{display:flex;flex-direction:column;gap:8px;}.transfer-actions .btn{width:36px;padding:0;font-size:16px;}
+.tree-group{padding:5px 8px 3px;color:var(--tw3);font-size:11px;}
+.ratio-wrap{background:var(--bg-input);border:1px solid var(--bd);border-radius:4px;overflow:hidden;}
+.ratio-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:12px;min-height:42px;padding:5px 12px;border-bottom:1px solid var(--bd);}
+.ratio-row:last-child{border-bottom:none;}.ratio-name{font-size:12px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ratio-input{display:flex;align-items:center;gap:6px;justify-content:flex-end;}.ratio-input input{width:100px;text-align:right;}
+.ratio-total{height:40px;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 12px;font-size:12px;background:rgba(255,255,255,.02);}
+.ratio-total strong{font-size:14px;}.ratio-total.ok strong{color:var(--ok);}.ratio-total.bad strong{color:var(--er);}
+.detail-filter{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;margin-bottom:14px;}
+.detail-mode{display:inline-flex;}.detail-mode .rtab{min-width:128px;justify-content:center;}
+.result-placeholder{background:var(--bg-panel-2);border-radius:6px;}
+.summary-bar{height:42px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:var(--bg-panel);border:1px solid var(--bd);border-bottom:none;border-radius:6px 6px 0 0;color:var(--ts);font-size:12px;}
+.summary-value{color:var(--txw);font-weight:600;margin-left:4px;}
+@media(max-width:1100px){.rule-list{grid-template-columns:1fr}.rule-help{grid-template-columns:1fr}.transfer{grid-template-columns:1fr}.transfer-actions{flex-direction:row;justify-content:center}.transfer-actions .btn:first-child{transform:rotate(90deg)}.transfer-actions .btn:last-child{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<div class="page-band">
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tabRules" role="tab" aria-selected="true" onclick="switchTab('rules')">规则配置</button>
+    <button class="tab" id="tabDetails" role="tab" aria-selected="false" onclick="switchTab('details')">分摊明细</button>
+  </div>
+
+  <section class="tab-panel active" id="panelRules">
+    <div class="section-head">
+      <div class="section-title">公区空调分摊规则配置 <span class="tag thl" id="dimensionBadge" style="display:none"></span></div>
+      <button class="btn btnp" id="btnAddRule" onclick="openCreate()"><span aria-hidden="true">＋</span> 新增分摊规则</button>
+    </div>
+    <div class="rule-help">
+      <div class="help-line"><span class="help-no">01</span><span>首次分摊按照空调实际使用情况分摊相应电量，公区空调可通过本规则进行二次分摊。</span></div>
+      <div class="help-line"><span class="help-no">02</span><span>同一公区房间只能配置在一条规则中，不允许重复分摊。</span></div>
+      <div class="help-line"><span class="help-no">03</span><span>首条规则确定项目分摊维度，存在规则时不能在按租户和按房间之间切换。</span></div>
+      <div class="help-line"><span class="help-no">04</span><span>规则新增或修改后立即生效；按比例分摊时，参与对象比例合计必须为 100%。</span></div>
+    </div>
+    <div class="rule-list" id="ruleList"></div>
+    <div id="rulePager"></div>
+  </section>
+
+  <section class="tab-panel" id="panelDetails">
+    <div class="section-head"><div class="section-title">公区空调分摊明细查询</div></div>
+    <div class="detail-filter">
+      <div class="fi"><span class="fl">分摊时间</span><input type="date" id="detailStart" value="2026-07-09" style="width:150px"><span class="text-sub">至</span><input type="date" id="detailEnd" value="2026-07-15" style="width:150px"></div>
+      <div class="fi"><span class="fl">查询方式</span><div class="detail-mode rtabs"><button class="rtab active" id="detailModePublic" onclick="switchDetailMode('public')">按公区房间查</button><button class="rtab" id="detailModeParticipant" onclick="switchDetailMode('participant')">按参与对象查</button></div></div>
+      <div class="fi"><span class="fl" id="detailTargetLabel">公区房间</span><select id="detailTarget" style="width:230px"><option value="">请选择</option></select></div>
+      <button class="btn btnp" id="btnDetailQuery" onclick="runDetailQuery()">查询</button>
+      <button class="btn" onclick="resetDetailQuery()">重置</button>
+    </div>
+    <div id="detailResult" class="result-placeholder">
+      <div class="empty"><span class="ei">▤</span><span class="et">请选择查询对象并点击查询</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="dlgDimension" role="dialog" aria-modal="true" aria-labelledby="dimensionTitle">
+  <div class="dialog" style="width:620px">
+    <div class="dh"><span id="dimensionTitle">分摊维度确认</span><button class="dx" aria-label="关闭" onclick="$modalClose('dlgDimension')">×</button></div>
+    <div class="db">
+      <div style="font-size:13px;color:var(--tx);line-height:1.6">请选择本项目公区空调二次分摊的统一维度：</div>
+      <div class="dim-grid">
+        <div class="dim-choice active" data-dimension="tenant" onclick="selectDimension('tenant')"><div class="dim-choice-title"><input type="radio" name="dimensionChoice" value="tenant" checked>按租户</div><div class="dim-choice-desc">将公区空调用量分摊至选定租户账户，适用于按租户统一结算的项目。</div></div>
+        <div class="dim-choice" data-dimension="room" onclick="selectDimension('room')"><div class="dim-choice-title"><input type="radio" name="dimensionChoice" value="room">按房间</div><div class="dim-choice-desc">将公区空调用量分摊至选定普通房间，适用于房间独立结算的项目。</div></div>
+      </div>
+      <div class="warn-box">维度将在首条规则保存后锁定。若需重新选择，必须先删除本项目全部分摊规则。</div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDimension')">取 消</button><button class="btn btnp" id="dimensionConfirm" onclick="confirmDimension()">确 定</button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgRule" role="dialog" aria-modal="true" aria-labelledby="ruleDialogTitle">
+  <div class="dialog" style="width:900px">
+    <div class="dh"><span id="ruleDialogTitle">新增分摊规则</span><button class="dx" aria-label="关闭" onclick="$modalClose('dlgRule')">×</button></div>
+    <div class="db"><div class="rule-form" id="ruleFormBody"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgRule')">取 消</button><button class="btn btnp" id="ruleSubmit" onclick="submitRule()">确 定</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script src="_allocation.js"></script>
+<script>
+var allocation = window.HvacAllocation;
+var draft = null;
+var selectedDimension = 'tenant';
+var detailMode = 'public';
+var transferSelection = { public: {}, participant: {} };
+
+function esc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+  });
+}
+function labelForId(id) {
+  if (id.indexOf('tenant:') === 0) return id.slice(7);
+  if (id.indexOf('room:') === 0) id = id.slice(5);
+  var room = allocation.rooms.find(function (item) { return item.id === id; });
+  return room ? room.bld + ' / ' + room.fl + ' / ' + room.room : id;
+}
+function switchTab(name) {
+  var rules = name === 'rules';
+  document.getElementById('tabRules').classList.toggle('active', rules);
+  document.getElementById('tabDetails').classList.toggle('active', !rules);
+  document.getElementById('tabRules').setAttribute('aria-selected', String(rules));
+  document.getElementById('tabDetails').setAttribute('aria-selected', String(!rules));
+  document.getElementById('panelRules').classList.toggle('active', rules);
+  document.getElementById('panelDetails').classList.toggle('active', !rules);
+  if (!rules) refreshDetailTargets();
+}
+function renderRules() {
+  var state = allocation.getState();
+  var badge = document.getElementById('dimensionBadge');
+  if (state.projectDimension) {
+    badge.style.display = '';
+    badge.textContent = '项目分摊维度：' + (state.projectDimension === 'tenant' ? '按租户' : '按房间');
+  } else {
+    badge.style.display = 'none';
+  }
+  var list = document.getElementById('ruleList');
+  if (!state.rules.length) {
+    list.innerHTML = '<div class="rule-empty"><div class="empty"><span class="ei">▤</span><span class="et">暂无分摊规则</span></div></div>';
+  } else {
+    list.innerHTML = state.rules.map(function (rule) {
+      return '<article class="rule-card" data-rule-id="' + esc(rule.id) + '">' +
+        '<div class="rule-card-head"><div class="rule-name" title="' + esc(rule.name) + '">' + esc(rule.name) + '</div><span class="tag ' + (rule.dimension === 'tenant' ? 'thl' : 'twn') + '">分摊维度：' + (rule.dimension === 'tenant' ? '按租户' : '按房间') + '</span></div>' +
+        '<div class="rule-card-body">' +
+          '<div class="rule-field wide"><div class="rule-label">公区空调房间（' + rule.publicRoomIds.length + '个）</div><div class="rule-value" title="' + esc(rule.publicRoomIds.map(labelForId).join('、')) + '">' + esc(rule.publicRoomIds.map(labelForId).join('、')) + '</div></div>' +
+          '<div class="rule-field"><div class="rule-label">分摊方式</div><div class="rule-value">分摊方式：' + (rule.method === 'usage' ? '按使用量' : '按比例') + '</div></div>' +
+          '<div class="rule-field"><div class="rule-label">参与分摊对象（' + rule.participantIds.length + '个）</div><div class="rule-value" title="' + esc(rule.participantIds.map(labelForId).join('、')) + '">' + esc(rule.participantIds.map(labelForId).join('、')) + '</div></div>' +
+        '</div>' +
+        '<div class="rule-card-foot"><span>更新时间：' + esc(rule.updatedAt || '-') + '</span><div class="rule-actions"><button class="btn btn-mini btn-plain edit-rule" data-rule-id="' + esc(rule.id) + '" onclick="openEdit(\'' + esc(rule.id) + '\')">编辑</button><button class="btn btn-mini delete-rule" data-rule-id="' + esc(rule.id) + '" onclick="openDelete(\'' + esc(rule.id) + '\')">删除</button></div></div>' +
+      '</article>';
+    }).join('');
+  }
+  $pager('rulePager', { total: state.rules.length, page: 1, size: 10, sizes: [10, 20, 50] });
+}
+function blankDraft(dimension) {
+  return { id: 'rule-' + Date.now(), name: '', dimension: dimension, method: 'usage', publicRoomIds: [], participantIds: [], ratios: {} };
+}
+function openCreate() {
+  var state = allocation.getState();
+  if (!state.projectDimension) {
+    selectedDimension = 'tenant';
+    selectDimension('tenant');
+    $modal('dlgDimension');
+    return;
+  }
+  draft = blankDraft(state.projectDimension);
+  transferSelection = { public: {}, participant: {} };
+  document.getElementById('ruleDialogTitle').textContent = '新增分摊规则';
+  renderRuleForm();
+  $modal('dlgRule');
+}
+function selectDimension(dimension) {
+  selectedDimension = dimension;
+  document.querySelectorAll('.dim-choice').forEach(function (item) {
+    var active = item.dataset.dimension === dimension;
+    item.classList.toggle('active', active);
+    item.querySelector('input').checked = active;
+  });
+}
+function confirmDimension() {
+  draft = blankDraft(selectedDimension);
+  transferSelection = { public: {}, participant: {} };
+  $modalClose('dlgDimension');
+  document.getElementById('ruleDialogTitle').textContent = '新增分摊规则';
+  renderRuleForm();
+  $modal('dlgRule');
+}
+function openEdit(ruleId) {
+  var saved = allocation.getState().rules.find(function (rule) { return rule.id === ruleId; });
+  if (!saved) return $msg('未找到该分摊规则', 'error');
+  draft = JSON.parse(JSON.stringify(saved));
+  transferSelection = { public: {}, participant: {} };
+  document.getElementById('ruleDialogTitle').textContent = '编辑分摊规则';
+  renderRuleForm();
+  $modal('dlgRule');
+}
+function openDelete(ruleId) {
+  var saved = allocation.getState().rules.find(function (rule) { return rule.id === ruleId; });
+  if (!saved) return;
+  $confirm('确定删除分摊规则「' + saved.name + '」吗？', function () {
+    allocation.deleteRule(ruleId);
+    renderRules();
+    refreshDetailTargets();
+    $msg('删除成功');
+  });
+}
+function renderTransferItems(group, items, selectedIds) {
+  if (!items.length) return '<div class="transfer-empty">暂无数据</div>';
+  var lastFloor = '';
+  return items.map(function (item) {
+    var groupTitle = '';
+    if (group === 'participant' && draft.dimension === 'room' && item.fl !== lastFloor) {
+      lastFloor = item.fl;
+      groupTitle = '<div class="tree-group">▾ ' + esc(item.bld + ' / ' + item.fl) + '</div>';
+    }
+    var selected = Boolean(transferSelection[group][item.id]);
+    return groupTitle + '<div class="transfer-item' + (selected ? ' selected' : '') + (item.disabled ? ' disabled' : '') + '" data-group="' + group + '" data-id="' + esc(item.id) + '" onclick="selectTransferItem(\'' + group + '\',\'' + esc(item.id) + '\')">' +
+      '<input type="checkbox" tabindex="-1" ' + (selected ? 'checked ' : '') + (item.disabled ? 'disabled ' : '') + '><span>' + esc(item.label) + '</span>' + (item.occupiedBy ? '<span class="transfer-note">已被规则占用</span>' : '') + '</div>';
+  }).join('');
+}
+function renderRuleForm() {
+  if (!draft) return;
+  var publicOptions = allocation.getAvailablePublicRooms(draft.id);
+  var participantOptions = allocation.getParticipants(draft.dimension);
+  var publicAvailable = publicOptions.filter(function (item) { return draft.publicRoomIds.indexOf(item.id) < 0; });
+  var publicSelected = draft.publicRoomIds.map(function (id) {
+    return publicOptions.find(function (item) { return item.id === id; }) || { id: id, label: labelForId(id) };
+  });
+  var participantAvailable = participantOptions.filter(function (item) { return draft.participantIds.indexOf(item.id) < 0; });
+  var participantSelected = draft.participantIds.map(function (id) {
+    return participantOptions.find(function (item) { return item.id === id; }) || { id: id, label: labelForId(id) };
+  });
+  document.getElementById('ruleFormBody').innerHTML =
+    '<div class="form-section">' +
+      '<div class="form-line"><label class="form-label" for="ruleName"><span class="req">*</span>规则名称</label><div class="form-control"><input id="ruleName" type="text" maxlength="30" placeholder="请输入规则名称" value="' + esc(draft.name) + '" oninput="updateRuleName(this.value)"><div class="input-count"><span id="ruleNameCount">' + draft.name.length + '</span>/30</div></div></div>' +
+      '<div class="form-line"><div class="form-label"><span class="req">*</span>分摊维度</div><div class="form-control"><div class="locked-value"><span class="lock-icon">▣</span><strong id="ruleDimension">' + (draft.dimension === 'tenant' ? '按租户' : '按房间') + '</strong><span class="text-sub">项目维度已锁定</span></div></div></div>' +
+      '<div class="form-line"><div class="form-label"><span class="req">*</span>分摊方式</div><div class="form-control"><div class="radio-row"><label class="radio-item"><input type="radio" name="ruleMethod" value="usage" ' + (draft.method === 'usage' ? 'checked' : '') + ' onchange="setRuleMethod(\'usage\')">按使用量</label><label class="radio-item"><input type="radio" name="ruleMethod" value="ratio" ' + (draft.method === 'ratio' ? 'checked' : '') + ' onchange="setRuleMethod(\'ratio\')">按比例</label></div><div class="hint">' + (draft.method === 'usage' ? '根据参与对象的实际用量自动计算承担比例。' : '手动设置参与对象比例，合计必须为 100%。') + '</div></div></div>' +
+    '</div>' +
+    '<div class="form-section"><div class="form-section-title">选择公区空调房间</div><div class="hint" style="margin-bottom:9px">同一公区房间只能加入一条规则，已被其他规则使用的房间不可选择。</div>' +
+      '<div class="transfer"><div class="transfer-box"><div class="transfer-head"><span>可选公区房间</span><span>' + publicAvailable.length + ' 个</span></div><div class="transfer-list" id="publicAvailable">' + renderTransferItems('public', publicAvailable) + '</div></div><div class="transfer-actions"><button class="btn" id="publicMoveRight" title="添加" onclick="moveTransfer(\'public\',\'right\')">›</button><button class="btn" id="publicMoveLeft" title="移除" onclick="moveTransfer(\'public\',\'left\')">‹</button></div><div class="transfer-box"><div class="transfer-head"><span>已选公区房间</span><span>' + publicSelected.length + ' 个</span></div><div class="transfer-list" id="publicSelected">' + renderTransferItems('public', publicSelected) + '</div></div></div>' +
+    '</div>' +
+    '<div class="form-section"><div class="form-section-title">选择参与分摊' + (draft.dimension === 'tenant' ? '租户' : '房间') + '</div><div class="hint" style="margin-bottom:9px">' + (draft.dimension === 'tenant' ? '从租户列表选择需要承担公区空调用量的租户。' : '公区房间已从可选普通房间中自动排除。') + '</div>' +
+      '<div class="transfer"><div class="transfer-box"><div class="transfer-head"><span>可选' + (draft.dimension === 'tenant' ? '租户' : '房间') + '</span><span>' + participantAvailable.length + ' 个</span></div><div class="transfer-list" id="participantAvailable">' + renderTransferItems('participant', participantAvailable) + '</div></div><div class="transfer-actions"><button class="btn" id="participantMoveRight" title="添加" onclick="moveTransfer(\'participant\',\'right\')">›</button><button class="btn" id="participantMoveLeft" title="移除" onclick="moveTransfer(\'participant\',\'left\')">‹</button></div><div class="transfer-box"><div class="transfer-head"><span>已选' + (draft.dimension === 'tenant' ? '租户' : '房间') + '</span><span>' + participantSelected.length + ' 个</span></div><div class="transfer-list" id="participantSelected">' + renderTransferItems('participant', participantSelected) + '</div></div></div>' +
+    '</div>' +
+    '<div class="form-section" id="ratioSection" style="display:' + (draft.method === 'ratio' ? 'block' : 'none') + '"><div class="form-section-title">比例分摊设置</div><div id="ratioContent"></div></div>';
+  updateTransferButtons();
+  renderRatioSection();
+}
+function updateRuleName(value) {
+  draft.name = value.slice(0, 30);
+  document.getElementById('ruleNameCount').textContent = draft.name.length;
+}
+function setRuleMethod(method) {
+  draft.method = method;
+  renderRuleForm();
+}
+function selectTransferItem(group, id) {
+  var item = document.querySelector('.transfer-item[data-group="' + group + '"][data-id="' + CSS.escape(id) + '"]');
+  if (item && item.classList.contains('disabled')) return;
+  transferSelection[group][id] = !transferSelection[group][id];
+  renderRuleForm();
+}
+function updateTransferButtons() {
+  ['public', 'participant'].forEach(function (group) {
+    var ids = Object.keys(transferSelection[group]).filter(function (id) { return transferSelection[group][id]; });
+    var selectedList = group === 'public' ? draft.publicRoomIds : draft.participantIds;
+    document.getElementById(group + 'MoveRight').disabled = !ids.some(function (id) { return selectedList.indexOf(id) < 0; });
+    document.getElementById(group + 'MoveLeft').disabled = !ids.some(function (id) { return selectedList.indexOf(id) >= 0; });
+  });
+}
+function moveTransfer(group, direction) {
+  var ids = Object.keys(transferSelection[group]).filter(function (id) { return transferSelection[group][id]; });
+  var key = group === 'public' ? 'publicRoomIds' : 'participantIds';
+  if (direction === 'right') {
+    ids.forEach(function (id) { if (draft[key].indexOf(id) < 0) draft[key].push(id); });
+  } else {
+    draft[key] = draft[key].filter(function (id) { return ids.indexOf(id) < 0; });
+    if (group === 'participant') ids.forEach(function (id) { delete draft.ratios[id]; });
+  }
+  transferSelection[group] = {};
+  renderRuleForm();
+}
+function renderRatioSection() {
+  if (!draft || draft.method !== 'ratio') return;
+  var target = document.getElementById('ratioContent');
+  if (!draft.participantIds.length) {
+    target.innerHTML = '<div class="transfer-empty" style="height:72px">请先选择参与分摊对象</div>';
+    return;
+  }
+  var total = draft.participantIds.reduce(function (value, id) { return value + Number(draft.ratios[id] || 0); }, 0);
+  target.innerHTML = '<div class="ratio-wrap">' + draft.participantIds.map(function (id) {
+    return '<div class="ratio-row"><div class="ratio-name">' + esc(labelForId(id)) + '</div><div class="ratio-input"><input type="number" min="0" max="100" step="0.01" data-ratio-id="' + esc(id) + '" value="' + esc(draft.ratios[id] == null ? '' : draft.ratios[id]) + '" oninput="updateRatio(\'' + esc(id) + '\',this.value)"><span>%</span></div></div>';
+  }).join('') + '<div class="ratio-total ' + (Math.abs(total - 100) < .001 ? 'ok' : 'bad') + '"><span>比例合计</span><strong id="ratioTotal">' + total.toFixed(2) + '%</strong><span>' + (Math.abs(total - 100) < .001 ? '校验通过' : '须等于 100%') + '</span></div></div>';
+}
+function updateRatio(id, value) {
+  draft.ratios[id] = value === '' ? 0 : Number(value);
+  renderRatioSection();
+}
+function submitRule() {
+  draft.name = document.getElementById('ruleName').value.trim();
+  var check = allocation.validateRule(draft, draft.id);
+  if (!check.ok) return $msg(check.message, 'error');
+  try {
+    allocation.saveRule(draft);
+    $modalClose('dlgRule');
+    renderRules();
+    refreshDetailTargets();
+    $msg('保存成功');
+  } catch (error) {
+    $msg(error.message || '保存失败', 'error');
+  }
+}
+function switchDetailMode(mode) {
+  var state = allocation.getState();
+  if (mode === 'participant' && !state.rules.length) {
+    $msg('请先配置分摊规则', 'warning');
+    return;
+  }
+  detailMode = mode;
+  document.getElementById('detailModePublic').classList.toggle('active', mode === 'public');
+  document.getElementById('detailModeParticipant').classList.toggle('active', mode === 'participant');
+  document.getElementById('detailTargetLabel').textContent = mode === 'public' ? '公区房间' : '参与对象';
+  refreshDetailTargets();
+  renderDetailPlaceholder();
+}
+function refreshDetailTargets() {
+  var state = allocation.getState();
+  var select = document.getElementById('detailTarget');
+  var ids = [];
+  state.rules.forEach(function (rule) {
+    (detailMode === 'public' ? rule.publicRoomIds : rule.participantIds).forEach(function (id) {
+      if (ids.indexOf(id) < 0) ids.push(id);
+    });
+  });
+  select.innerHTML = '<option value="">请选择</option>' + ids.map(function (id) { return '<option value="' + esc(id) + '">' + esc(labelForId(id)) + '</option>'; }).join('');
+}
+function renderDetailPlaceholder() {
+  document.getElementById('detailResult').innerHTML = '<div class="empty"><span class="ei">▤</span><span class="et">请选择查询对象并点击查询</span></div>';
+}
+function runDetailQuery() {
+  var start = document.getElementById('detailStart').value;
+  var end = document.getElementById('detailEnd').value;
+  var targetId = document.getElementById('detailTarget').value;
+  if (!start || !end || start > end) return $msg('请选择正确的时间范围', 'warning');
+  if (!targetId) return $msg(detailMode === 'public' ? '请选择公区房间' : '请选择参与对象', 'warning');
+  var result = allocation.queryDetails({ mode: detailMode, start: start, end: end, targetId: targetId });
+  var box = document.getElementById('detailResult');
+  if (!result.rows.length) {
+    box.innerHTML = '<div class="empty"><span class="ei">▤</span><span class="et">暂无数据</span></div>';
+    return;
+  }
+  var totalUse = result.rows.reduce(function (sum, row) { return sum + row.use; }, 0);
+  var totalFee = result.rows.reduce(function (sum, row) { return sum + row.fee; }, 0);
+  box.innerHTML = '<div class="summary-bar"><span>查询对象：<span class="summary-value">' + esc(labelForId(targetId)) + '</span></span><span>承担用量合计 <span class="summary-value">' + totalUse.toFixed(2) + ' kWh</span>　费用合计 <span class="summary-value">' + totalFee.toFixed(2) + ' 元</span></span></div><div class="tw" style="border-radius:0 0 6px 6px"><table><thead id="detailHead"><tr><th>序号</th>' + result.headers.map(function (header) { return '<th>' + esc(header) + '</th>'; }).join('') + '</tr></thead><tbody>' + result.rows.map(function (row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + esc(row.target) + '</td><td>' + Number(row.ratio).toFixed(2) + '%</td><td>' + Number(row.use).toFixed(2) + '</td><td>' + Number(row.fee).toFixed(2) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+}
+function resetDetailQuery() {
+  document.getElementById('detailStart').value = '2026-07-09';
+  document.getElementById('detailEnd').value = '2026-07-15';
+  switchDetailMode('public');
+}
+
+allocation.subscribe(function () {
+  renderRules();
+  refreshDetailTargets();
+});
+renderRules();
+refreshDetailTargets();
+</script>
+</body>
+</html>

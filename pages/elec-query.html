@@ -9,6 +9,11 @@
 .layout{display:flex;gap:14px;align-items:stretch;min-height:calc(100vh - 32px);}
 .side-tree{min-height:100%;}
 .main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.view-switch{display:inline-flex;margin-left:auto;}
+.view-btn{height:32px;padding:0 14px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx);cursor:pointer;font-size:12px;}
+.view-btn:first-child{border-radius:3px 0 0 3px;}
+.view-btn:last-child{border-left:0;border-radius:0 3px 3px 0;}
+.view-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
@@ -29,14 +34,16 @@
       <button class="btn btnp" onclick="doQuery()">查询</button>
       <button class="btn" onclick="doReset()">重置</button>
       <button class="btn btnp" onclick="$msg('导出任务已生成,请稍候下载')">⬆ 导出</button>
+      <div class="view-switch" role="group" aria-label="汇总方式">
+        <button class="view-btn active" id="billingRoom" onclick="switchBillingMode('room')">按房间</button>
+        <button class="view-btn" id="billingTenant" onclick="switchBillingMode('tenant')">按租户</button>
+      </div>
     </div>
 
     <!-- 表格:序号/租户/房间/用量(度)/费用(与线上 5 列一致) -->
     <div class="tw">
       <table>
-        <thead><tr>
-          <th>序号</th><th>租户</th><th>房间</th><th>用量(度)</th><th>费用</th>
-        </tr></thead>
+        <thead id="thead"></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -45,7 +52,10 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_allocation.js"></script>
 <script>
+const allocation=window.HvacAllocation;
+let billingMode='room';
 /* ── 模拟数据(形态贴线上:租户为房号、房间"1号楼 X层 XXX"、公区为中走廊) ── */
 const ROWS=(()=>{
   const rows=[];
@@ -86,12 +96,24 @@ function renderTree(){
 /* ── 查询/表格/分页 ── */
 let filtered=ROWS.slice();
 const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+function roomId(row){
+  const parts=row.room.split(' ');
+  return parts.length>=3?`${parts[0]}|${parts[1]}|${parts.slice(2).join(' ')}`:'';
+}
+function switchBillingMode(mode){
+  billingMode=mode==='tenant'?'tenant':'room';
+  document.getElementById('billingRoom').classList.toggle('active',billingMode==='room');
+  document.getElementById('billingTenant').classList.toggle('active',billingMode==='tenant');
+  doQuery();
+}
 function doQuery(){
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
-  filtered=ROWS.filter(r=>
+  const publicRooms=new Set(allocation.getState().publicRoomIds);
+  const rows=ROWS.filter(r=>
     (!s||r.date>=s)&&(!e||r.date<=e)&&
-    $tree3Match(treeSel,r)
+    $tree3Match(treeSel,r)&&!publicRooms.has(roomId(r))
   );
+  filtered=allocation.aggregateBilling(rows,billingMode);
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
@@ -103,14 +125,18 @@ function doReset(){
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
-  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
-    <tr>
-      <td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${r.use}</td><td>${r.fee}</td>
-    </tr>`).join('')
-    :'<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  const tenant=billingMode==='tenant';
+  document.getElementById('thead').innerHTML=tenant
+    ?'<tr><th>序号</th><th>租户</th><th>用量(度)</th><th>费用</th></tr>'
+    :'<tr><th>序号</th><th>房间</th><th>租户</th><th>用量(度)</th><th>费用</th></tr>';
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>tenant
+    ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`
+    :`<tr><td>${start+i+1}</td><td>${r.room}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`).join('')
+    :`<tr><td colspan="${tenant?4:5}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
 }
 
 renderTree();doQuery();
+allocation.subscribe(()=>doQuery());
 </script>
 </body>
 </html>
