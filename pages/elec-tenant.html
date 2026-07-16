@@ -41,6 +41,9 @@
 .th-hint{font-size:12px;color:var(--ts);line-height:1.7;margin:4px 0 0 110px;}
 .th-row{display:flex;align-items:center;gap:10px;}
 .th-row .fl{width:100px;text-align:right;flex-shrink:0;}
+.threshold-value-wrap{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;}
+.threshold-custom-tag{height:19px;padding:0 6px;font-size:11px;font-weight:500;cursor:help;}
+#thResetDefault{margin-right:auto;}
 .bal-lock{color:var(--er);}
 .bal-low{color:var(--wn);}
 .sub-val{color:var(--ts);}
@@ -198,8 +201,21 @@
       <div class="th-hint">余额低于该值时锁定内机不允许开机</div>
     </div>
     <div class="df">
+      <button class="btn btn-plain" id="thResetDefault" style="display:none" onclick="resetThToDefault()">恢复项目默认值</button>
       <button class="btn" onclick="$modalClose('dlgTh')">取 消</button>
       <button class="btn btnp" onclick="submitTh()">提 交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 阈值变更二次确认(与编辑弹窗互斥显示) -->
+<div class="modal" id="dlgThConfirm" onclick="if(event.target===this)cancelThConfirm()">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="thConfirmTitle" style="width:440px">
+    <div class="dh"><span id="thConfirmTitle">确认修改</span><span class="dx" onclick="cancelThConfirm()">✕</span></div>
+    <div class="db" id="thConfirmText" style="padding:10px 20px 20px;font-size:14px;line-height:1.7"></div>
+    <div class="df">
+      <button class="btn" onclick="cancelThConfirm()">取 消</button>
+      <button class="btn btnp" onclick="acceptThConfirm()">确 定</button>
     </div>
   </div>
 </div>
@@ -404,12 +420,18 @@ function balCell(r){
   return fmt2(r.balance);
 }
 function remindCell(r){
-  return fmt2(eff(r).remind);
+  return thresholdValueCell(fmt2(eff(r).remind),r);
 }
 function lockCell(r){
-  return fmt2(eff(r).lock);
+  return thresholdValueCell(fmt2(eff(r).lock),r);
 }
-function lockOnCell(r){return eff(r).lockOn?'开启':'关闭';}
+function lockOnCell(r){return thresholdValueCell(eff(r).lockOn?'开启':'关闭',r);}
+function thresholdValueCell(value,r){
+  const tag=r.custom
+    ?'<span class="tag twn threshold-custom-tag" title="该租户使用单独设置的阈值，不随项目默认阈值变化">自定义</span>'
+    :'';
+  return `<span class="threshold-value-wrap"><span>${value}</span>${tag}</span>`;
+}
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
@@ -584,6 +606,28 @@ function submitPay(){
    默认模式修改项目全局阈值,未单独配置的租户即时生效 */
 let thTargets=[];
 let thMode='one'; /* one | batch | default */
+let thConfirmAction=null;
+function followingDefaultCount(){return TENANTS.filter(t=>!t.custom).length;}
+function sameThreshold(a,b){
+  return +a.remind===+b.remind&&+a.lock===+b.lock&&a.lockOn===b.lockOn;
+}
+function openThConfirm(text,onOk){
+  thConfirmAction=onOk;
+  document.getElementById('thConfirmText').textContent=text;
+  $modalClose('dlgTh');
+  $modal('dlgThConfirm');
+}
+function cancelThConfirm(){
+  thConfirmAction=null;
+  $modalClose('dlgThConfirm');
+  $modal('dlgTh');
+}
+function acceptThConfirm(){
+  const onOk=thConfirmAction;
+  thConfirmAction=null;
+  $modalClose('dlgThConfirm');
+  if(onOk)onOk();
+}
 function setLockOnUI(on){
   const sw=document.getElementById('thLockOn');
   sw.classList.toggle('on',on);
@@ -598,6 +642,7 @@ function openTh(mode,title,val){
   thMode=mode;
   document.getElementById('thTitle').textContent=title;
   document.getElementById('thDefHint').style.display=mode==='default'?'':'none';
+  document.getElementById('thResetDefault').style.display=mode==='one'&&thTargets[0]&&thTargets[0].custom?'':'none';
   document.getElementById('thRemind').value=val.remind;
   document.getElementById('thLock').value=val.lock;
   setLockOnUI(val.lockOn);
@@ -617,6 +662,17 @@ function openThDefault(){
   thTargets=[];
   openTh('default','默认阈值设置',DEF_TH);
 }
+function resetThToDefault(){
+  const t=thTargets[0];
+  if(thMode!=='one'||!t||!t.custom)return;
+  openThConfirm(`确认将租户“${t.name}”恢复为项目默认阈值？恢复后将跟随项目默认阈值变化。`,()=>{
+    delete t.custom;delete t.remind;delete t.lock;delete t.lockOn;
+    t.upd=nowTs();
+    $modalClose('dlgTh');
+    $msg('已恢复项目默认阈值');
+    doQuery();
+  });
+}
 function submitTh(){
   const remind=parseFloat(document.getElementById('thRemind').value);
   const lockOn=document.getElementById('thLockOn').classList.contains('on');
@@ -627,10 +683,16 @@ function submitTh(){
   if(remind<-1000||remind>1000){$msg('提醒阈值范围为 -1000 ~ 1000','warning');return;}
   if(lock>remind){$msg('锁定阈值不能超过提醒阈值','error');return;}
   if(thMode==='default'){
-    DEF_TH={remind,lock,lockOn};
-    $modalClose('dlgTh');
-    $msg('默认阈值设置成功,未单独配置阈值的租户已生效');
-    doQuery();return;
+    const next={remind,lock,lockOn};
+    if(sameThreshold(next,DEF_TH)){$msg('阈值未发生变化','info');return;}
+    const affected=followingDefaultCount();
+    openThConfirm(`本次修改将同步应用于当前项目中${affected} 个未单独配置阈值的租户，并会按修改后的阈值对相关租户执行锁定或提醒动作。确认修改？`,()=>{
+      DEF_TH=next;
+      $modalClose('dlgTh');
+      $msg(`默认阈值设置成功，已同步应用于 ${affected} 个租户`);
+      doQuery();
+    });
+    return;
   }
   const ts=nowTs();
   thTargets.forEach(t=>Object.assign(t,{remind,lock,lockOn,custom:true,upd:ts}));

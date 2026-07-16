@@ -72,13 +72,17 @@ try {
   await query(page);
   let rowCells = await page.locator('#tbody tr').first().locator('td').allTextContents();
   assert.equal(rowCells[headers.indexOf('余额')], '-36.20', '余额列只显示数值');
-  assert.equal(rowCells[headers.indexOf('欠费锁定')], '关闭');
+  let lockStateCell = page.locator('#tbody tr').first().locator('td').nth(headers.indexOf('欠费锁定'));
+  assert.equal(await lockStateCell.locator('.threshold-value-wrap > span').first().textContent(), '关闭');
+  assert.equal(await lockStateCell.locator('.threshold-custom-tag').textContent(), '自定义');
   await reset(page);
   await page.fill('#fName', '812会议室');
   await query(page);
   rowCells = await page.locator('#tbody tr').first().locator('td').allTextContents();
   assert.equal(rowCells[headers.indexOf('余额')], '-5.37', '锁定租户的余额后不显示已锁定备注');
-  assert.equal(rowCells[headers.indexOf('欠费锁定')], '开启');
+  lockStateCell = page.locator('#tbody tr').first().locator('td').nth(headers.indexOf('欠费锁定'));
+  assert.equal(await lockStateCell.locator('.threshold-value-wrap > span').first().textContent(), '开启');
+  assert.equal(await lockStateCell.locator('.threshold-custom-tag').textContent(), '自定义');
   await reset(page);
 
   await page.fill('#fBalanceMin', '0');
