@@ -42,7 +42,11 @@
 .th-row{display:flex;align-items:center;gap:10px;}
 .th-row .fl{width:100px;text-align:right;flex-shrink:0;}
 .threshold-value-wrap{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;}
-.threshold-custom-tag{height:19px;padding:0 6px;font-size:11px;font-weight:500;cursor:help;}
+.threshold-custom-value{color:var(--wn);cursor:help;}
+.threshold-tooltip{position:fixed;z-index:3000;max-width:320px;padding:7px 10px;border:1px solid var(--bd2);
+  border-radius:4px;background:var(--bg-panel-2);box-shadow:0 8px 24px rgba(0,0,0,.45);color:var(--tx);
+  font-size:12px;line-height:1.5;white-space:normal;pointer-events:none;visibility:hidden;opacity:0;transition:opacity .12s;}
+.threshold-tooltip.show{visibility:visible;opacity:1;}
 #thResetDefault{margin-right:auto;}
 .bal-lock{color:var(--er);}
 .bal-low{color:var(--wn);}
@@ -76,6 +80,7 @@
   <span class="banner-main"><span><span class="bang">!</span>当前有 <b id="lowCnt">0</b> 个租户的余额小于等于提醒阈值，<a id="quickLow" role="button" aria-pressed="false" onclick="quickLow()">快捷筛选</a></span><span class="banner-divider">；</span><span>已欠费 <b id="debtCnt">0</b> 个，<a id="quickDebt" role="button" aria-pressed="false" onclick="quickDebt()">快捷筛选</a></span></span>
   <span class="bx" onclick="document.getElementById('lowBanner').style.display='none'">✕</span>
 </div>
+<div class="threshold-tooltip" id="thresholdTooltip"></div>
 
 <!-- 表格 -->
 <div class="tw">
@@ -427,11 +432,29 @@ function lockCell(r){
 }
 function lockOnCell(r){return thresholdValueCell(eff(r).lockOn?'开启':'关闭',r);}
 function thresholdValueCell(value,r){
-  const tag=r.custom
-    ?'<span class="tag twn threshold-custom-tag" title="该租户使用单独设置的阈值，不随项目默认阈值变化">自定义</span>'
+  const customClass=r.custom?' class="threshold-custom-value"':'';
+  const tooltip=r.custom
+    ?' data-tooltip="该租户使用单独设置的阈值，不随项目默认阈值变化。" onmouseenter="showThresholdTooltip(this,event)" onmousemove="moveThresholdTooltip(event)" onmouseleave="hideThresholdTooltip()"'
     :'';
-  return `<span class="threshold-value-wrap"><span>${value}</span>${tag}</span>`;
+  return `<span class="threshold-value-wrap"><span${customClass}${tooltip}>${value}</span></span>`;
 }
+function moveThresholdTooltip(event){
+  const tooltip=document.getElementById('thresholdTooltip');
+  if(!tooltip.classList.contains('show'))return;
+  const gap=12,rect=tooltip.getBoundingClientRect();
+  let left=event.clientX+gap,top=event.clientY-rect.height-gap;
+  if(left+rect.width>window.innerWidth-8)left=event.clientX-rect.width-gap;
+  if(top<8)top=event.clientY+gap;
+  tooltip.style.left=`${Math.max(8,left)}px`;
+  tooltip.style.top=`${Math.max(8,top)}px`;
+}
+function showThresholdTooltip(el,event){
+  const tooltip=document.getElementById('thresholdTooltip');
+  tooltip.textContent=el.dataset.tooltip||'';
+  tooltip.classList.add('show');
+  moveThresholdTooltip(event);
+}
+function hideThresholdTooltip(){document.getElementById('thresholdTooltip').classList.remove('show');}
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
@@ -445,8 +468,7 @@ function renderTable(){
       <td><span class="op">
         <a onclick="doView('${r.name}')">查看</a>
         <a onclick="openEdit('${r.name}')">编辑</a>
-        ${PRE?`<a onclick="openPay('${r.name}')">充值</a>
-        <a onclick="openThOne('${r.name}')">阈值设置</a>`:''}
+        ${PRE?`<a onclick="openPay('${r.name}')">充值</a>`:''}
         <a onclick="doRoom('${r.name}')">房间信息</a>
         <a class="danger" onclick="doDel('${r.name}')">删除</a>
       </span></td>
@@ -642,16 +664,12 @@ function openTh(mode,title,val){
   thMode=mode;
   document.getElementById('thTitle').textContent=title;
   document.getElementById('thDefHint').style.display=mode==='default'?'':'none';
-  document.getElementById('thResetDefault').style.display=mode==='one'&&thTargets[0]&&thTargets[0].custom?'':'none';
+  const canReset=(mode==='one'||mode==='batch')&&thTargets.length>0&&thTargets.every(t=>t&&t.custom);
+  document.getElementById('thResetDefault').style.display=canReset?'':'none';
   document.getElementById('thRemind').value=val.remind;
   document.getElementById('thLock').value=val.lock;
   setLockOnUI(val.lockOn);
   $modal('dlgTh');
-}
-function openThOne(name){
-  const r=findT(name);
-  thTargets=[r];
-  openTh('one',`阈值设置 - ${r.name}`,eff(r));
 }
 function openThBatch(){
   if(!selSet.size){$msg('请先勾选需要设置的租户','warning');return;}
@@ -663,13 +681,17 @@ function openThDefault(){
   openTh('default','默认阈值设置',DEF_TH);
 }
 function resetThToDefault(){
-  const t=thTargets[0];
-  if(thMode!=='one'||!t||!t.custom)return;
-  openThConfirm(`确认将租户“${t.name}”恢复为项目默认阈值？恢复后将跟随项目默认阈值变化。`,()=>{
-    delete t.custom;delete t.remind;delete t.lock;delete t.lockOn;
-    t.upd=nowTs();
+  const targets=thTargets.filter(Boolean);
+  if(!targets.length||(thMode!=='one'&&thMode!=='batch')||!targets.every(t=>t.custom))return;
+  const targetText=targets.length>1?`选中的 ${targets.length} 个租户`:`租户“${targets[0].name}”`;
+  openThConfirm(`确认将${targetText}恢复为项目默认阈值？恢复后将跟随项目默认阈值变化。`,()=>{
+    const ts=nowTs();
+    targets.forEach(t=>{
+      delete t.custom;delete t.remind;delete t.lock;delete t.lockOn;
+      t.upd=ts;
+    });
     $modalClose('dlgTh');
-    $msg('已恢复项目默认阈值');
+    $msg(targets.length>1?`已恢复 ${targets.length} 个租户的项目默认阈值`:'已恢复项目默认阈值');
     doQuery();
   });
 }

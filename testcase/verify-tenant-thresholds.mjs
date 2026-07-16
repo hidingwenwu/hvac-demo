@@ -14,7 +14,9 @@ function tenantRow(page, name) {
 }
 
 async function openThreshold(page, name) {
-  await tenantRow(page, name).locator('a:has-text("阈值设置")').click();
+  const checkbox = tenantRow(page, name).locator('input.row-chk');
+  if (!await checkbox.isChecked()) await checkbox.check();
+  await page.locator('#btnBatchTh').click();
 }
 
 try {
@@ -29,21 +31,39 @@ try {
 
   const defaultRow = tenantRow(page, '801会议室');
   const customRow = tenantRow(page, '812会议室');
-  assert.equal(await defaultRow.locator('.threshold-custom-tag').count(), 0, '跟随项目默认值的租户不显示醒目标识');
-  assert.equal(await customRow.locator('td').nth(2).locator('.threshold-custom-tag').count(), 0, '租户名称后不显示自定义标识');
-  assert.equal(await customRow.locator('.threshold-custom-tag').count(), 3, '三个阈值相关字段分别显示自定义标识');
+  assert.equal(await customRow.locator('a:has-text("阈值设置")').count(), 0, '行内操作不显示单独阈值设置');
+  assert.equal(await page.locator('#btnBatchTh').textContent(), '阈值设置', '顶部统一阈值设置按钮存在');
+  assert.equal(await defaultRow.locator('.threshold-custom-value').count(), 0, '跟随项目默认值的租户不显示自定义颜色');
+  assert.equal(await customRow.locator('td').nth(2).locator('.threshold-custom-value').count(), 0, '租户名称后不显示自定义颜色');
+  assert.equal(await customRow.locator('.threshold-custom-value').count(), 3, '三个阈值相关字段使用自定义颜色');
   for (const cellIndex of [5, 6, 7]) {
-    const tag = customRow.locator('td').nth(cellIndex).locator('.threshold-custom-tag');
-    assert.equal(await tag.textContent(), '自定义');
+    const value = customRow.locator('td').nth(cellIndex).locator('.threshold-custom-value');
+    assert.equal(await value.textContent(), cellIndex === 7 ? '开启' : cellIndex === 5 ? '100.00' : '10.00');
     assert.equal(
-      await tag.getAttribute('title'),
-      '该租户使用单独设置的阈值，不随项目默认阈值变化'
+      await value.getAttribute('data-tooltip'),
+      '该租户使用单独设置的阈值，不随项目默认阈值变化。'
     );
+    await value.hover();
+    const tooltip = page.locator('#thresholdTooltip');
+    assert.equal(await tooltip.isVisible(), true, '悬停自定义数值时显示提示');
+    assert.equal(await tooltip.textContent(), '该租户使用单独设置的阈值，不随项目默认阈值变化。');
+    const valueBox = await value.boundingBox();
+    const tooltipBox = await tooltip.boundingBox();
+    assert.ok(
+      tooltipBox.x >= valueBox.x && tooltipBox.y + tooltipBox.height <= valueBox.y + valueBox.height + 4,
+      '提示位于数值右上方'
+    );
+    await page.mouse.move(0, 0);
   }
 
   await openThreshold(page, '812会议室');
   assert.equal(await page.locator('#thResetDefault').isVisible(), true, '自定义租户可恢复项目默认值');
   await page.locator('#dlgTh .dx').click();
+  await defaultRow.locator('input.row-chk').check();
+  await page.locator('#btnBatchTh').click();
+  assert.equal(await page.locator('#thResetDefault').isVisible(), false, '混合选择时不显示恢复项目默认值');
+  await page.locator('#dlgTh .dx').click();
+  await defaultRow.locator('input.row-chk').uncheck();
 
   await page.locator('button:has-text("默认阈值设置")').click();
   assert.equal(
@@ -81,7 +101,7 @@ try {
   await page.locator('#thResetDefault').click();
   assert.match(await page.locator('#thConfirmText').innerText(), /恢复后将跟随项目默认阈值变化/);
   await page.locator('#dlgThConfirm .btnp').click();
-  assert.equal(await customRow.locator('.threshold-custom-tag').count(), 0, '恢复默认后移除自定义标识');
+  assert.equal(await customRow.locator('.threshold-custom-value').count(), 0, '恢复默认后移除自定义颜色');
   assert.equal(await customRow.locator('td').nth(5).textContent(), '120.00', '恢复后立即使用当前项目默认阈值');
 
   assert.deepEqual(consoleErrors, [], '页面不应产生控制台错误');
