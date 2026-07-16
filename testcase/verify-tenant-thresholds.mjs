@@ -36,6 +36,10 @@ try {
   assert.equal(await defaultRow.locator('.threshold-custom-value').count(), 0, '跟随项目默认值的租户不显示自定义颜色');
   assert.equal(await customRow.locator('td').nth(2).locator('.threshold-custom-value').count(), 0, '租户名称后不显示自定义颜色');
   assert.equal(await customRow.locator('.threshold-custom-value').count(), 3, '三个阈值相关字段使用自定义颜色');
+  const customThresholdColor = await customRow.locator('td').nth(5).locator('.threshold-custom-value').evaluate(element => getComputedStyle(element).color);
+  const lowBalanceColor = await tenantRow(page, '808会议室').locator('.bal-low').evaluate(element => getComputedStyle(element).color);
+  assert.equal(customThresholdColor, 'rgb(77, 182, 172)', '自定义阈值使用蓝绿色');
+  assert.notEqual(customThresholdColor, lowBalanceColor, '自定义阈值颜色应区别于低余额提醒颜色');
   for (const cellIndex of [5, 6, 7]) {
     const value = customRow.locator('td').nth(cellIndex).locator('.threshold-custom-value');
     assert.equal(await value.textContent(), cellIndex === 7 ? '开启' : cellIndex === 5 ? '100.00' : '10.00');
