@@ -84,12 +84,13 @@
 /* 底部分页行 */
 .pgline{display:flex;justify-content:center;}
 /* 新功能推广弹窗 */
-.promo .dialog{width:720px;background:linear-gradient(150deg,#e9efff,#cfd9f5);color:#1b2340;border-radius:14px;overflow:hidden;}
+.promo .dialog{width:720px;background:linear-gradient(150deg,#e9efff,#cfd9f5);color:#1b2340;border-radius:14px;overflow:visible;}
 .promo-hd{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 0 10px 30px;}
 .promo-hd .pt2{font-size:24px;font-weight:800;color:#101736;}
 .promo-ribbon{background:linear-gradient(90deg,#2f7bff,#6ea8ff);color:#fff;font-size:13px;font-weight:600;padding:7px 18px 7px 22px;border-radius:0 0 0 18px;display:flex;gap:8px;align-items:center;}
 .promo-ribbon .nb{background:#fff;color:#1f65ff;font-size:11px;font-weight:800;border-radius:9px;padding:1px 8px;}
-.promo-body{display:flex;gap:20px;padding:6px 30px 26px;}
+.promo-body{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;padding:6px 30px 26px;align-items:stretch;}
+.promo-left,.promo-right{display:flex;flex-direction:column;min-width:0;}
 .promo-img{width:330px;height:220px;background:#f7f8fb;border-radius:10px;border:1px solid #d5dcee;position:relative;overflow:hidden;flex-shrink:0;}
 .promo-img .pr{position:absolute;background:#fff;border:1.5px solid #c4cbdb;border-radius:4px;}
 .promo-img .pf{position:absolute;color:#1f65ff;font-size:15px;transform:translate(-50%,-50%);}
@@ -98,11 +99,13 @@
 .promo-pt .n{width:22px;height:22px;border-radius:6px;background:#1f65ff;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .promo-pt .h{font-size:15px;font-weight:700;color:#141b38;}
 .promo-pt .s{font-size:12px;color:#59648a;margin-top:2px;}
-.promo-cta{margin:0 30px 26px;position:relative;}
+.promo-tip{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:4px;color:#59648a;font-size:12px;line-height:1.5;}
+.promo-guide-icon{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.promo-cta{margin-top:16px;position:relative;}
 .promo-cta button{width:100%;height:46px;border:none;border-radius:8px;background:#1f65ff;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
 .promo-cta button:hover{background:#4080ff;}
 .promo-cta .free{position:absolute;top:-12px;right:14px;background:#3dd68c;color:#06341a;font-size:11px;font-weight:800;padding:2px 10px;border-radius:10px;}
-.promo-close{position:absolute;left:50%;transform:translateX(-50%);bottom:-52px;width:34px;height:34px;border-radius:50%;border:1.5px solid #ffffffaa;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;}
+.promo-close{position:absolute;left:50%;transform:translateX(-50%);bottom:-52px;width:34px;height:34px;padding:0;border-radius:50%;border:1.5px solid #ffffffaa;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font:inherit;font-size:15px;}
 </style>
 </head>
 <body>
@@ -132,7 +135,7 @@
       <span class="view-toggle">
         <span class="rtab active" id="vtCard" onclick="setView('card')">▦ 普通布局</span>
         <span class="rtab" id="vtPlan" onclick="setView('plan')">◉ 可视化布局</span>
-        <span class="new-badge">New</span>
+        <span class="new-badge" id="visualNewBadge">New</span>
       </span>
     </div>
     <div class="more-filters" id="moreFilters">
@@ -229,7 +232,7 @@
   </aside>
 </div>
 
-<!-- 可视化空调管理·新功能推广弹窗(线上进入页面时弹出) -->
+<!-- 可视化空调管理·新功能推广弹窗(首次进入可视化布局时弹出) -->
 <div class="modal promo" id="dlgPromo">
   <div class="dialog" style="position:relative">
     <div class="promo-hd">
@@ -237,18 +240,23 @@
       <span class="promo-ribbon">新功能上线 <span class="nb">NEW</span></span>
     </div>
     <div class="promo-body">
-      <div class="promo-img" id="promoImg"></div>
-      <div class="promo-pts">
-        <div class="promo-pt"><span class="n">1</span><div><div class="h">直观展现</div><div class="s">房间与空调位置关系一目了然</div></div></div>
-        <div class="promo-pt"><span class="n">2</span><div><div class="h">AI智能绘图</div><div class="s">上传建筑平面图,秒变3D鸟瞰图</div></div></div>
-        <div class="promo-pt"><span class="n">3</span><div><div class="h">限时免费</div><div class="s">0门槛操作,仅需设置1次</div></div></div>
+      <div class="promo-left">
+        <div class="promo-img" id="promoImg"></div>
+        <div class="promo-tip"><span>请点击右上角</span><svg class="promo-guide-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.8.3-1 .9-1 1.8"/><circle cx="12" cy="16.6" r=".4" fill="currentColor"/></svg><span>参考操作指引页面内视频说明</span></div>
+      </div>
+      <div class="promo-right">
+        <div class="promo-pts">
+          <div class="promo-pt"><span class="n">1</span><div><div class="h">直观展现</div><div class="s">房间与空调位置关系一目了然</div></div></div>
+          <div class="promo-pt"><span class="n">2</span><div><div class="h">AI智能绘图</div><div class="s">上传建筑平面图,秒变3D鸟瞰图</div></div></div>
+          <div class="promo-pt"><span class="n">3</span><div><div class="h">限时免费</div><div class="s">0门槛操作,仅需设置1次</div></div></div>
+        </div>
+        <div class="promo-cta">
+          <span class="free">限时免费</span>
+          <button onclick="closeVisualPromo()">立即体验</button>
+        </div>
       </div>
     </div>
-    <div class="promo-cta">
-      <span class="free">限时免费</span>
-      <button onclick="$modalClose('dlgPromo');setView('plan')">立即体验</button>
-    </div>
-    <div class="promo-close" onclick="$modalClose('dlgPromo')">✕</div>
+    <button type="button" class="promo-close" onclick="closeVisualPromo()" aria-label="关闭功能介绍" title="关闭">✕</button>
   </div>
 </div>
 
@@ -385,13 +393,27 @@ function renderPlan(){
     return `<div class="room" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px"><span class="rlb">${r.lb}</span></div>`+fans;
   }).join('');
 }
+const AC_VISUAL_PROMO_KEY='acVisualPromoSeen';
+function syncVisualNewBadge(){
+  const badge=document.getElementById('visualNewBadge');
+  badge.style.display=localStorage.getItem(AC_VISUAL_PROMO_KEY)?'none':'';
+}
+function showVisualPromoOnce(){
+  if(localStorage.getItem(AC_VISUAL_PROMO_KEY))return;
+  localStorage.setItem(AC_VISUAL_PROMO_KEY,'1');
+  syncVisualNewBadge();
+  $modal('dlgPromo');
+}
+function closeVisualPromo(){
+  $modalClose('dlgPromo');
+}
 function setView(v){
   view=v;
   document.getElementById('vtCard').classList.toggle('active',v==='card');
   document.getElementById('vtPlan').classList.toggle('active',v==='plan');
   document.getElementById('gridWrap').style.display=v==='card'?'':'none';
   document.getElementById('planWrap').style.display=v==='plan'?'block':'none';
-  if(v==='plan')renderPlan();
+  if(v==='plan'){renderPlan();showVisualPromoOnce();}
 }
 
 /* ── 右侧控制面板 ── */
@@ -463,11 +485,7 @@ function fillInfo(a){
 renderTree();
 applyFilter();
 setPow(false);
-/* 每次进入弹一次新功能推广(与线上一致);会话内不重复 */
-if(!sessionStorage.getItem('acPromoShown')){
-  $modal('dlgPromo');
-  sessionStorage.setItem('acPromoShown','1');
-}
+syncVisualNewBadge();
 </script>
 </body>
 </html>
