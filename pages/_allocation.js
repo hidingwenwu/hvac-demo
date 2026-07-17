@@ -13,9 +13,16 @@
     { id: '1号楼|8层|802', bld: '1号楼', fl: '8层', room: '802' },
     { id: '1号楼|9层|901', bld: '1号楼', fl: '9层', room: '901' },
     { id: '1号楼|13层|1301', bld: '1号楼', fl: '13层', room: '1301' },
-    { id: '1号楼|14层|1404', bld: '1号楼', fl: '14层', room: '1404' }
+    { id: '1号楼|14层|1404', bld: '1号楼', fl: '14层', room: '1404' },
+    { id: '1号楼|9层|中间北区', bld: '1号楼', fl: '9层', room: '中间北区' }
   ];
-  var TENANTS = ['产品部', '运营部', '财务部', '物业', '801会议室', '803会议室'];
+  var TENANTS = [
+    '物业', '901会议室', '916会议室', '912会议室', '910会议室', '908会议室', '人资部', '818',
+    '816会议室', '808会议室', '801会议室内', '801会议室', '803会议室', '老板办公室', '硬件焊接室818',
+    '产品部', '中弘网关事业部', '工业节能事业部', '应用技术部', '飞奕事业部', '中间北区', '西北区',
+    '电梯厅', '906会议室', '8层电梯厅', '806会议室', '810会议室', '812会议室', '软件研发',
+    '硬件研发', '财务部', '质量部', '运营部', '东1排', '制造部', '测试部', '车库实验室'
+  ];
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -49,27 +56,35 @@
     return [
       {
         id: 'rule-office',
-        name: '办公区域公区空调分摊',
+        name: '公区分摊规则测试1',
         dimension: 'tenant',
-        method: 'usage',
-        publicRoomIds: [ROOMS[0].id, ROOMS[1].id],
-        participantIds: ['tenant:产品部', 'tenant:运营部', 'tenant:财务部'],
-        ratios: {},
-        updatedAt: '2026-07-14 16:20:08'
+        method: 'ratio',
+        publicRoomIds: ['1号楼|9层|中间北区'],
+        participantIds: ['tenant:应用技术部', 'tenant:飞奕事业部', 'tenant:硬件研发'],
+        ratios: {
+          'tenant:应用技术部': 40,
+          'tenant:飞奕事业部': 50,
+          'tenant:硬件研发': 10
+        },
+        createdAt: '2026-07-15 13:14:11',
+        updatedAt: '2026-07-15 13:14:11'
       },
       {
         id: 'rule-property',
-        name: '物业及会议区分摊',
+        name: '9楼电梯厅公区分摊规则',
         dimension: 'tenant',
         method: 'ratio',
-        publicRoomIds: [ROOMS[2].id, ROOMS[3].id],
-        participantIds: ['tenant:物业', 'tenant:801会议室', 'tenant:803会议室'],
+        publicRoomIds: ['1号楼|9层|9层电梯厅'],
+        participantIds: ['tenant:人资部', 'tenant:中弘网关事业部', 'tenant:工业节能事业部', 'tenant:应用技术部', 'tenant:飞奕事业部'],
         ratios: {
-          'tenant:物业': 50,
-          'tenant:801会议室': 25,
-          'tenant:803会议室': 25
+          'tenant:人资部': 20,
+          'tenant:中弘网关事业部': 20,
+          'tenant:工业节能事业部': 20,
+          'tenant:应用技术部': 20,
+          'tenant:飞奕事业部': 20
         },
-        updatedAt: '2026-07-14 16:35:42'
+        createdAt: '2026-07-15 13:15:11',
+        updatedAt: '2026-07-15 13:15:11'
       }
     ];
   }
@@ -122,7 +137,7 @@
     return {
       version: 1,
       projectDimension: 'tenant',
-      publicRoomIds: ROOMS.slice(0, 4).map(function (room) { return room.id; }),
+      publicRoomIds: ['1号楼|9层|中间北区', '1号楼|9层|9层电梯厅'],
       rules: seedRules(),
       usage: seedUsage()
     };
@@ -197,6 +212,9 @@
     var state = load();
     if (!state.projectDimension) state.projectDimension = savedRule.dimension;
     var index = state.rules.findIndex(function (item) { return item.id === savedRule.id; });
+    savedRule.createdAt = index < 0
+      ? (savedRule.createdAt || nowText())
+      : (savedRule.createdAt || state.rules[index].createdAt || state.rules[index].updatedAt || nowText());
     savedRule.updatedAt = nowText();
     if (index < 0) state.rules.push(savedRule); else state.rules[index] = savedRule;
     var ruleIndex = index < 0 ? state.rules.length - 1 : index;

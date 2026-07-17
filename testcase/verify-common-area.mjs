@@ -129,6 +129,18 @@ assert.match(dailyPage, /按房间/);
 assert.match(dailyPage, /按租户/);
 assert.match(dailyPage, /aggregateDaily/);
 
+const commonAreaPage = read('pages/elec-common-area.html');
+assert.match(commonAreaPage, /class="rule-overview"/);
+assert.match(commonAreaPage, /class="rule-meta-grid"/);
+assert.match(commonAreaPage, /class="rule-basic-grid"/);
+assert.match(commonAreaPage, /新增公区分摊规则/);
+assert.match(commonAreaPage, /function setRuleDimension\(dimension\)/);
+assert.match(commonAreaPage, /class="detail-toolbar"/);
+assert.match(commonAreaPage, /<th>参与分摊对象<\/th><th>分摊比例<\/th><th>承担用量\(kWh\)<\/th><th>承担费用\(元\)<\/th>/);
+assert.doesNotMatch(commonAreaPage, /function openCreate\(\)[\s\S]*?\$modal\('dlgDimension'\)/);
+assert.doesNotMatch(commonAreaPage, /class="summary-bar"/);
+assert.doesNotMatch(commonAreaPage, /<th>序号<\/th>/);
+
 for (const file of [
   'hvac-demo.html',
   'pages/elec-common-area.html',
