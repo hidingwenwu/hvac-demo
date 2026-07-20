@@ -4,6 +4,12 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 
 const { findConflictRooms } = require('../pages/ctrl-schedule-conflict.js');
+const {
+  roomsForSelection,
+  enabledWeekdays,
+  applyWeekPreset,
+  validateDraft,
+} = require('../pages/ctrl-schedule-form.js');
 
 function task(overrides = {}) {
   return {
@@ -15,6 +21,71 @@ function task(overrides = {}) {
     ...overrides,
   };
 }
+
+const buildingTree = [{
+  lb: '博研楼',
+  floors: [
+    { lb: '8F', rooms: ['806', '808', '810', '812'] },
+    { lb: '9F', rooms: ['903', '906'] },
+  ],
+}];
+
+function validDraft(overrides = {}) {
+  return {
+    name: '工作日开机',
+    vs: '2026-07-20',
+    ve: '2026-07-31',
+    hour: '08',
+    minute: '00',
+    rooms: ['博研楼/8F/806'],
+    act: '关机',
+    mode: '',
+    wind: '',
+    ...overrides,
+  };
+}
+
+test('楼层选择预选该层全部房间', () => {
+  assert.deepEqual(roomsForSelection({ bld: '博研楼', fl: '8F' }, buildingTree), [
+    '博研楼/8F/806',
+    '博研楼/8F/808',
+    '博研楼/8F/810',
+    '博研楼/8F/812',
+  ]);
+});
+
+test('单个房间选择只预选该房间', () => {
+  assert.deepEqual(roomsForSelection({ bld: '博研楼', fl: '8F', room: '806' }, buildingTree), [
+    '博研楼/8F/806',
+  ]);
+  assert.deepEqual(roomsForSelection(null, buildingTree), []);
+  assert.deepEqual(roomsForSelection({ bld: '博研楼' }, buildingTree), []);
+});
+
+test('日期范围只启用其中实际出现的星期', () => {
+  assert.deepEqual(enabledWeekdays('2026-07-20', '2026-07-21'), [1, 2]);
+  assert.deepEqual(enabledWeekdays('2026-07-20', '2026-07-26'), [0, 1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(enabledWeekdays('', '2026-07-21'), []);
+});
+
+test('星期快捷操作只选择当前已启用星期', () => {
+  assert.deepEqual(applyWeekPreset([2], [1, 2, 6], 'workdays'), [1, 2]);
+  assert.deepEqual(applyWeekPreset([1], [1, 2, 6], 'weekend'), [6]);
+  assert.deepEqual(applyWeekPreset([1, 2], [1, 2, 6], 'clear'), []);
+});
+
+test('表单校验顺序与现网一致', () => {
+  assert.equal(validateDraft(validDraft({ name: '' })), '请填写任务名称');
+  assert.equal(validateDraft(validDraft({ vs: '' })), '请选择执行日期');
+  assert.equal(validateDraft(validDraft({ hour: '' })), '请选择执行时间的小时');
+  assert.equal(validateDraft(validDraft({ minute: '' })), '请选择执行时间的分钟');
+  assert.equal(validateDraft(validDraft({ rooms: [] })), '请选择房间');
+});
+
+test('开机要求模式但不要求风速', () => {
+  assert.equal(validateDraft(validDraft({ act: '开机', mode: '' })), '请选择空调模式');
+  assert.equal(validateDraft(validDraft({ act: '开机', mode: '制冷', wind: '' })), '');
+});
 
 test('同一时间、共同执行日和重叠房间会返回冲突房间', () => {
   const candidate = task({ rooms: ['1号楼/7层/707'] });
