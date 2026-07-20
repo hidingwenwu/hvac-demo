@@ -19,6 +19,11 @@
 .detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
 .detail-grid .k{color:var(--ts);text-align:right;}
 .detail-grid .v{color:var(--tx);}
+.conflict-content{display:flex;gap:14px;align-items:flex-start;padding-top:4px;}
+.conflict-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  flex:none;background:var(--wn-dim);border:1px solid rgba(230,162,60,.45);color:var(--wn);font-size:20px;font-weight:700;}
+.conflict-copy{color:var(--tx);font-size:14px;line-height:1.75;overflow-wrap:anywhere;}
+.conflict-copy p+p{margin-top:10px;}
 </style>
 </head>
 <body>
@@ -120,6 +125,26 @@
   </div>
 </div>
 
+<!-- 创建任务冲突提示 -->
+<div class="modal" id="dlgConflict">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>提示</span><span class="dx" onclick="cancelConflictCreation()">✕</span></div>
+    <div class="db">
+      <div class="conflict-content">
+        <span class="conflict-icon">!</span>
+        <div class="conflict-copy">
+          <p>您当前设置的时间已存在其他日程任务，继续创建可能出现空调控制指令冲突，涉及房间[<span id="conflictRooms"></span>]。</p>
+          <p>请核对后确认：是否仍要继续创建当前日程任务？</p>
+        </div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="cancelConflictCreation()">取消</button>
+      <button class="btn btnp" onclick="continueConflictCreation()">继续创建</button>
+    </div>
+  </div>
+</div>
+
 <!-- 查看任务弹窗 -->
 <div class="modal" id="dlgView">
   <div class="dialog" style="width:500px">
@@ -130,21 +155,22 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="ctrl-schedule-conflict.js"></script>
 <script>
 /* ── 模拟数据(与线上数据形态一致) ── */
 let TASKS=[
   {id:1,name:'啊大地方',act:'开机',mode:'制冷',sw:'开',wind:'高风',temp:'25',lock:'-',
-   time:'09:05:00',vs:'2026-05-21',ve:'2026-08-19',expired:false,sync:'同步失败',crt:'2026-05-21 14:31:23',days:[1,2,3,4,5]},
+   time:'09:05:00',vs:'2026-05-21',ve:'2026-08-19',expired:false,sync:'同步失败',crt:'2026-05-21 14:31:23',days:[1,2,3,4,5],rooms:['1号楼/7层/707','1号楼/7层/产品部']},
   {id:2,name:'手机测试',act:'开机',mode:'制冷',sw:'开',wind:'中风',temp:'26',lock:'-',
-   time:'08:00:00',vs:'2026-04-28',ve:'2026-04-30',expired:true,sync:'同步完成',crt:'2026-04-28 08:51:46',days:[1,2,3,4,5]},
+   time:'08:00:00',vs:'2026-04-28',ve:'2026-04-30',expired:true,sync:'同步完成',crt:'2026-04-28 08:51:46',days:[1,2,3,4,5],rooms:['1号楼/7层/707']},
   {id:3,name:'0427测试创建定时关机任务',act:'关机',mode:'-',sw:'关',wind:'-',temp:'-',lock:'-',
-   time:'18:30:00',vs:'2026-04-27',ve:'2026-04-27',expired:true,sync:'同步完成',crt:'2026-04-27 14:41:06',days:[6,0]},
+   time:'18:30:00',vs:'2026-04-27',ve:'2026-04-27',expired:true,sync:'同步完成',crt:'2026-04-27 14:41:06',days:[6,0],rooms:['1号楼/3层/303']},
   {id:4,name:'0310测试3',act:'开机',mode:'制热',sw:'开',wind:'中风',temp:'25',lock:'-',
-   time:'14:10:00',vs:'2026-03-10',ve:'2026-03-12',expired:true,sync:'同步完成',crt:'2026-03-10 13:53:06',days:[1,3,5]},
+   time:'14:10:00',vs:'2026-03-10',ve:'2026-03-12',expired:true,sync:'同步完成',crt:'2026-03-10 13:53:06',days:[1,3,5],rooms:['1号楼/9层/903']},
   {id:5,name:'0310测试2解锁开关',act:'锁定设定',mode:'制热&送风',sw:'-',wind:'-',temp:'-',lock:'模式锁定',
-   time:'14:05:00',vs:'2026-03-10',ve:'2026-03-10',expired:true,sync:'同步完成',crt:'2026-03-10 13:34:58',days:[2,4]},
+   time:'14:05:00',vs:'2026-03-10',ve:'2026-03-10',expired:true,sync:'同步完成',crt:'2026-03-10 13:34:58',days:[2,4],rooms:['1号楼/14层/1404']},
   {id:6,name:'0310测试01',act:'锁定设定',mode:'制热&送风',sw:'关',wind:'-',temp:'-',lock:'开关/模式锁定',
-   time:'14:00:00',vs:'2026-02-04',ve:'2026-02-28',expired:true,sync:'同步完成',crt:'2026-02-04 13:23:16',days:[1,2,3,4,5,6,0]},
+   time:'14:00:00',vs:'2026-02-04',ve:'2026-02-28',expired:true,sync:'同步完成',crt:'2026-02-04 13:23:16',days:[1,2,3,4,5,6,0],rooms:['1号楼/23层/2302']},
 ];
 let nextId=7;
 const DAY_NAMES=['周日','周一','周二','周三','周四','周五','周六'];
@@ -160,6 +186,13 @@ const TREE3=[{lb:'1号楼',open:false,floors:[
 let treeSel=null;
 function renderTree(){
   $tree3('tree',TREE3,s=>{treeSel=s;doQuery();});
+}
+function roomsForSelection(selection){
+  if(!selection||!selection.fl)return [];
+  if(selection.room)return [selection.bld+'/'+selection.fl+'/'+selection.room];
+  const building=TREE3.find(item=>item.lb===selection.bld);
+  const floor=building&&building.floors.find(item=>item.lb===selection.fl);
+  return floor?floor.rooms.map(room=>selection.bld+'/'+selection.fl+'/'+room):[];
 }
 
 /* ── 查询/表格/分页 ── */
@@ -203,6 +236,7 @@ function toggleAll(el){document.querySelectorAll('.row-ck').forEach(c=>c.checked
 
 /* ── 创建/编辑任务弹窗 ── */
 let editId=-1;
+let pendingCreateTask=null;
 function setSw(v){
   document.getElementById('swOn').classList.toggle('active',v==='开');
   document.getElementById('swOff').classList.toggle('active',v==='关');
@@ -233,6 +267,9 @@ function saveTask(){
   const name=gv('tName').trim();
   if(!name)return $msg('请输入任务名称','error');
   if(!gv('tVs')||!gv('tVe'))return $msg('请选择有效日期','error');
+  const existing=editId>-1?TASKS.find(x=>x.id===editId):null;
+  const rooms=existing?existing.rooms:roomsForSelection(treeSel);
+  if(!existing&&!rooms.length)return $msg('请先选择楼层或房间','error');
   const days=[...document.querySelectorAll('#tDays .day-btn.sel')].map(b=>+b.dataset.d);
   if(!days.length)return $msg('请选择重复执行的星期','error');
   const act=gv('tAct');
@@ -243,7 +280,29 @@ function saveTask(){
     temp:act==='开机'?gv('tTemp'):'-',
     lock:act==='锁定设定'?'模式锁定':'-',
     time:gv('tTime')+':00',vs:gv('tVs'),ve:gv('tVe'),
-    expired:gv('tVe')<'2026-07-03',days};
+    expired:gv('tVe')<'2026-07-03',days,rooms:rooms};
+  if(editId>-1)return persistTask(data);
+  const conflictRooms=ScheduleConflict.findConflictRooms(data,TASKS);
+  if(conflictRooms.length)return showConflictWarning(data,conflictRooms);
+  persistTask(data);
+}
+function showConflictWarning(data,rooms){
+  pendingCreateTask=data;
+  document.getElementById('conflictRooms').textContent=rooms.join('、');
+  $modal('dlgConflict');
+}
+function cancelConflictCreation(){
+  pendingCreateTask=null;
+  $modalClose('dlgConflict');
+}
+function continueConflictCreation(){
+  if(!pendingCreateTask)return;
+  const data=pendingCreateTask;
+  pendingCreateTask=null;
+  $modalClose('dlgConflict');
+  persistTask(data);
+}
+function persistTask(data){
   if(editId>-1)Object.assign(TASKS.find(x=>x.id===editId),data);
   else TASKS.unshift(Object.assign({id:nextId++,sync:'未同步',
     crt:new Date().toISOString().slice(0,19).replace('T',' ')},data));
