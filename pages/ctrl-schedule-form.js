@@ -10,13 +10,26 @@
   }
 
   function roomsForSelection(selection, tree) {
-    if (!selection || !selection.fl) return [];
+    if (!selection || !selection.bld) return [];
     if (selection.room) return [selection.bld + '/' + selection.fl + '/' + selection.room];
     var building = (tree || []).find(function (item) { return item.lb === selection.bld; });
+    if (!selection.fl) return building ? (building.floors || []).flatMap(function (floor) {
+      return floor.rooms.map(function (room) {
+        return selection.bld + '/' + floor.lb + '/' + room;
+      });
+    }) : [];
     var floor = building && (building.floors || []).find(function (item) { return item.lb === selection.fl; });
     return floor ? floor.rooms.map(function (room) {
       return selection.bld + '/' + selection.fl + '/' + room;
     }) : [];
+  }
+
+  function filterTasksBySelection(tasks, selection, tree) {
+    if (!selection) return (tasks || []).slice();
+    var selectedRooms = new Set(roomsForSelection(selection, tree));
+    return (tasks || []).filter(function (task) {
+      return (task.rooms || []).some(function (room) { return selectedRooms.has(room); });
+    });
   }
 
   function enabledWeekdays(startValue, endValue) {
@@ -44,12 +57,19 @@
     if (!draft.hour) return '请选择执行时间的小时';
     if (!draft.minute) return '请选择执行时间的分钟';
     if (!(draft.rooms || []).length) return '请选择房间';
+    if (!draft.act) return '请选择指令动作';
     if (draft.act === '开机' && !draft.mode) return '请选择空调模式';
+    if (draft.act === '锁定设定') {
+      if (!(draft.lockTypes || []).length) return '请选择至少一个锁定项';
+      if (draft.lockTypes.includes('onOff') && !draft.lockOnOff) return '请选择锁定开机或者关机';
+      if (draft.lockTypes.includes('mode') && !(draft.lockModes || []).length) return '请选择锁定制冷或制热或送风或除湿';
+    }
     return '';
   }
 
   return {
     roomsForSelection: roomsForSelection,
+    filterTasksBySelection: filterTasksBySelection,
     enabledWeekdays: enabledWeekdays,
     applyWeekPreset: applyWeekPreset,
     validateDraft: validateDraft,

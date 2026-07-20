@@ -11,14 +11,91 @@
 .main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 /* 同步失败(线上为蓝色可点样式) */
 .sync-fail{color:var(--primary);cursor:pointer;}
-/* 弹窗内星期选择按钮 */
-.day-btn{height:28px;padding:0 12px;display:inline-flex;align-items:center;border:1px solid var(--bd2);
-  border-radius:4px;background:var(--bg-input);font-size:12px;color:var(--tx);cursor:pointer;user-select:none;transition:all .15s;}
-.day-btn.sel{background:var(--primary);border-color:var(--primary);color:#fff;}
 /* 查看详情栅格 */
 .detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
 .detail-grid .k{color:var(--ts);text-align:right;}
 .detail-grid .v{color:var(--tx);}
+.schedule-modal{padding:36px 20px 0;align-items:flex-start;}
+.schedule-task-dialog{position:relative;width:920px;max-width:calc(100vw - 40px);height:690px;display:flex;flex-direction:column;overflow:hidden;background:#1a2233;border-radius:4px;}
+.schedule-task-dialog .dh{height:58px;padding:0 20px;border-bottom:none;font-size:18px;}
+.schedule-task-body{flex:1;min-height:0;display:grid;grid-template-columns:222px minmax(0,1fr);gap:30px;padding:28px 20px 20px;max-height:none;overflow-y:auto;}
+.schedule-task-side,.schedule-task-main{min-width:0;}
+.schedule-field{margin-bottom:24px;}
+.schedule-label{display:flex;align-items:center;min-height:20px;margin-bottom:8px;color:#fff;font-size:14px;font-weight:500;}
+.schedule-label .req{color:var(--er);margin-right:4px;}
+.schedule-label .hint{color:var(--er);font-size:12px;font-weight:400;margin-left:5px;}
+.schedule-main-field{width:300px;}
+.schedule-textarea{width:300px;height:54px;min-height:54px;resize:none;}
+.schedule-count-wrap{position:relative;width:300px;}
+.schedule-count{position:absolute;right:10px;bottom:8px;color:var(--ts);font-size:12px;pointer-events:none;}
+.schedule-count-wrap input{padding-right:48px;}
+.schedule-count-wrap textarea{padding-right:50px;padding-bottom:22px;}
+.schedule-group-select{width:222px;}
+.schedule-room-tree{height:450px;overflow:auto;padding:2px 0 8px;color:var(--tx);}
+.task-tree-row{display:flex;align-items:center;gap:7px;height:32px;border-radius:3px;font-size:13px;cursor:pointer;user-select:none;}
+.task-tree-row:hover{background:var(--bg-hover);}
+.task-tree-arrow{width:12px;color:var(--ts);font-size:10px;text-align:center;transition:transform .15s;}
+.task-tree-arrow.open{transform:rotate(90deg);}
+.task-tree-row input{width:14px;height:14px;}
+.schedule-date-range{display:flex;align-items:center;width:300px;height:32px;border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);}
+.schedule-date-range input{width:130px;border:0;background:transparent;text-align:center;padding:0 7px;}
+.schedule-date-range span{color:var(--ts);font-size:12px;}
+.schedule-time-row{display:flex;align-items:center;gap:12px;}
+.schedule-time-row select{width:132px;}
+.schedule-time-colon{color:var(--ts);font-size:16px;}
+.schedule-actions{display:flex;gap:9px;flex-wrap:wrap;}
+.schedule-action{height:32px;padding:0 11px;display:inline-flex;align-items:center;border:1px solid var(--bd2);border-radius:3px;background:transparent;color:var(--tx);font-size:12px;cursor:pointer;}
+.schedule-action input{display:none;}
+.schedule-action::before{content:'';width:12px;height:12px;margin-right:7px;border:1px solid #65718d;border-radius:50%;}
+.schedule-action.active{border-color:var(--primary);color:#fff;background:rgba(31,101,255,.08);}
+.schedule-action.active::before{border:4px solid var(--primary);}
+.ac-settings{display:none;margin:-6px 0 24px;}
+.ac-settings.show{display:block;}
+.temperature-control{display:flex;align-items:center;gap:15px;width:390px;margin-bottom:12px;}
+.temperature-step{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd2);border-radius:50%;color:var(--tx);cursor:pointer;}
+.temperature-step.disabled{opacity:.35;cursor:not-allowed;}
+.temperature-control input[type=range]{width:185px;}
+.temperature-value{min-width:92px;color:#fff;white-space:nowrap;}
+.temperature-value strong{font-size:40px;font-weight:500;line-height:1;}
+.temperature-value span{font-size:16px;margin-left:3px;}
+.ac-card-row{display:flex;gap:4px;margin-bottom:15px;}
+.ac-card{width:74px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:15px;color:#bdcae6;cursor:pointer;transition:all .15s;}
+.ac-card.wind{width:100px;}
+.ac-card:hover,.ac-card.active{background:rgba(31,101,255,.18);color:#fff;}
+.ac-card.active{box-shadow:inset 0 0 0 1px var(--primary);}
+.ac-card-icon{font-size:28px;line-height:1;}
+.ac-card-text{font-size:12px;}
+.cancel-ac{height:30px;padding:0 12px;border:1px solid var(--bd2);border-radius:3px;background:transparent;color:var(--tx);cursor:pointer;}
+.lock-settings{display:none;width:620px;min-height:162px;margin:-6px 0 24px;padding:16px;background:#0b1426;border-radius:6px;}
+.lock-settings.show{display:block;}
+.lock-setting-row{display:flex;align-items:flex-start;gap:24px;min-height:32px;margin-bottom:16px;}
+.lock-setting-row:last-child{margin-bottom:0;}
+.lock-setting-toggle{width:121px;height:32px;flex:none;display:flex;align-items:center;padding:0 10px;border:1px solid var(--bd2);border-radius:3px;color:var(--tx);font-size:12px;cursor:pointer;}
+.lock-setting-toggle input{width:14px;height:14px;margin-right:8px;}
+.lock-setting-detail{min-height:32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.lock-choice{height:32px;display:inline-flex;align-items:center;padding:0 11px;border:1px solid var(--bd2);border-radius:3px;color:var(--tx);font-size:12px;cursor:pointer;}
+.lock-choice input{width:13px;height:13px;margin-right:7px;}
+.lock-setting-toggle input[type=checkbox],.lock-choice input[type=checkbox],.lock-choice input[type=radio]{appearance:none;display:inline-grid;place-content:center;border:1px solid #65718d;background:#172033;}
+.lock-setting-toggle input[type=checkbox],.lock-choice input[type=checkbox]{border-radius:2px;}
+.lock-choice input[type=radio]{border-radius:50%;}
+.lock-setting-toggle input[type=checkbox]:checked,.lock-choice input[type=checkbox]:checked,.lock-choice input[type=radio]:checked{border-color:var(--primary);background:var(--primary);}
+.lock-setting-toggle input[type=checkbox]:checked::after,.lock-choice input[type=checkbox]:checked::after{content:'✓';color:#fff;font-size:10px;line-height:1;}
+.lock-choice input[type=radio]:checked::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff;}
+.lock-temp-stack{width:420px;display:flex;flex-direction:column;gap:8px;}
+.lock-temp-row{display:grid;grid-template-columns:62px 24px 220px 24px 54px;align-items:center;gap:8px;color:var(--tx);font-size:12px;}
+.lock-temp-row input[type=range]{width:220px;}
+.lock-temp-step{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--tx);font-size:16px;cursor:pointer;}
+.lock-temp-value{color:#fff;text-align:right;white-space:nowrap;}
+.schedule-weekdays{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:10px;}
+.schedule-weekday{width:74px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd2);border-radius:3px;background:transparent;color:var(--tx);font-size:12px;cursor:pointer;}
+.schedule-weekday.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+.schedule-weekday.disabled{opacity:.35;cursor:not-allowed;}
+.schedule-shortcuts{display:flex;gap:10px;}
+.schedule-exclude-row{display:flex;align-items:center;gap:10px;}
+.schedule-exclude-row input{width:300px;}
+.exclude-table{width:100%;margin-top:12px;border:1px solid var(--bd);border-radius:3px;overflow:hidden;}
+.exclude-table th,.exclude-table td{height:36px;}
+.schedule-task-footer{height:64px;flex:none;display:flex;justify-content:flex-end;align-items:flex-start;gap:10px;padding:12px 20px 16px;}
 .conflict-content{display:flex;gap:14px;align-items:flex-start;padding-top:4px;}
 .conflict-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   flex:none;background:var(--wn-dim);border:1px solid rgba(230,162,60,.45);color:var(--wn);font-size:20px;font-weight:700;}
@@ -71,54 +148,95 @@
 </div>
 
 <!-- 创建/编辑任务弹窗 -->
-<div class="modal" id="dlgTask">
-  <div class="dialog" style="width:620px">
+<div class="modal schedule-modal" id="dlgTask">
+  <div class="dialog schedule-task-dialog">
     <div class="dh"><span id="dlgTaskTitle">创建任务</span><span class="dx" onclick="$modalClose('dlgTask')">✕</span></div>
-    <div class="db">
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>任务名称</span>
-        <input id="tName" placeholder="请输入定时任务名称" style="flex:1">
+    <div class="schedule-task-body">
+      <div class="schedule-task-side">
+        <div class="schedule-field">
+          <div class="schedule-label">选择群组</div>
+          <select id="tGroup" class="schedule-group-select">
+            <option value="">请选择群组</option>
+          </select>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label">选择房间</div>
+          <div class="schedule-room-tree" id="taskRoomTree"></div>
+        </div>
       </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>指令动作</span>
-        <select id="tAct" style="width:180px" onchange="onActChange()">
-          <option>开机</option><option>关机</option><option>锁定设定</option>
-        </select>
-        <span class="fl" style="width:60px">开关</span>
-        <span class="rtabs">
-          <span class="rtab active" id="swOn" onclick="setSw('开')">开</span>
-          <span class="rtab" id="swOff" onclick="setSw('关')">关</span>
-        </span>
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl">模式</span>
-        <select id="tMode" style="width:180px">
-          <option>制冷</option><option>制热</option><option>送风</option><option>除湿</option><option>制热&送风</option>
-        </select>
-        <span class="fl" style="width:60px">风速</span>
-        <select id="tWind" style="width:150px">
-          <option>高风</option><option>中风</option><option>低风</option>
-        </select>
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl">设定温度</span>
-        <input type="range" id="tTemp" min="16" max="31" value="25" style="width:220px;height:auto" oninput="document.getElementById('tTempV').textContent=this.value+'°C'">
-        <span id="tTempV" style="font-weight:700;color:var(--txw)">25°C</span>
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>执行时间</span>
-        <input type="time" id="tTime" value="08:00" style="width:140px">
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>有效日期</span>
-        <input type="date" id="tVs" style="width:150px"><span class="text-sub">至</span><input type="date" id="tVe" style="width:150px">
-      </div>
-      <div class="form-row" style="align-items:flex-start">
-        <span class="fl" style="padding-top:5px">重复执行</span>
-        <span style="display:flex;gap:6px;flex-wrap:wrap" id="tDays"></span>
+      <div class="schedule-task-main">
+        <div class="schedule-field">
+          <div class="schedule-label"><span class="req">*</span>任务名称</div>
+          <div class="schedule-count-wrap">
+            <input id="tName" class="schedule-main-field" maxlength="30" placeholder="请输入任务名称" oninput="updateTaskCounters()">
+            <span class="schedule-count" id="tNameCount">0/30</span>
+          </div>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label">任务描述</div>
+          <div class="schedule-count-wrap">
+            <textarea id="tDesc" class="schedule-textarea" maxlength="100" placeholder="请输入内容" oninput="updateTaskCounters()"></textarea>
+            <span class="schedule-count" id="tDescCount">0/100</span>
+          </div>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label"><span class="req">*</span>执行日期</div>
+          <div class="schedule-date-range">
+            <input type="date" id="tVs" aria-label="开始日期" onchange="updateWeekdays()">
+            <span>至</span>
+            <input type="date" id="tVe" aria-label="结束日期" onchange="updateWeekdays()">
+          </div>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label"><span class="req">*</span>执行时间</div>
+          <div class="schedule-time-row">
+            <select id="tHour" aria-label="请选择小时"><option value="">请选择小时</option></select>
+            <span class="schedule-time-colon">:</span>
+            <select id="tMinute" aria-label="请选择分钟"><option value="">请选择分钟</option></select>
+          </div>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label"><span class="req">*</span>指令动作 <span class="hint">(部分空调不支持锁定相关动作)</span></div>
+          <div class="schedule-actions" id="taskActions"></div>
+        </div>
+        <div class="ac-settings" id="acSettings">
+          <div class="temperature-control">
+            <button type="button" class="temperature-step" id="tempMinus" onclick="stepTaskTemp(-1)">−</button>
+            <input type="range" id="tTemp" min="16" max="31" value="16" oninput="setTaskTemp(this.value)">
+            <button type="button" class="temperature-step" id="tempPlus" onclick="stepTaskTemp(1)">＋</button>
+            <div class="temperature-value"><strong id="tTempV">16</strong><span>°C</span></div>
+          </div>
+          <div class="ac-card-row" id="modeCards"></div>
+          <div class="ac-card-row" id="windCards"></div>
+          <button type="button" class="cancel-ac" onclick="clearAcSelection()">取消选中</button>
+        </div>
+        <div class="lock-settings" id="lockSettings"></div>
+        <div class="schedule-field">
+          <div class="schedule-label">周运行时间</div>
+          <div class="schedule-weekdays" id="taskWeekdays"></div>
+          <div class="schedule-shortcuts">
+            <button type="button" class="btn" onclick="setWeekPreset('workdays')">工作日</button>
+            <button type="button" class="btn" onclick="setWeekPreset('weekend')">周末</button>
+            <button type="button" class="btn" onclick="setWeekPreset('clear')">取消</button>
+          </div>
+        </div>
+        <div class="schedule-field">
+          <div class="schedule-label">排除日期</div>
+          <div class="schedule-exclude-row">
+            <input type="date" id="excludeDate" aria-label="选择日期">
+            <button type="button" class="btn btnp" onclick="addExcludeDate()">排除</button>
+            <button type="button" class="btn" onclick="excludeHolidays()">排除节假日</button>
+          </div>
+          <div class="exclude-table">
+            <table>
+              <thead><tr><th>序号</th><th>排除时间</th><th>操作</th></tr></thead>
+              <tbody id="excludeBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="df">
+    <div class="schedule-task-footer">
       <button class="btn" onclick="$modalClose('dlgTask')">取消</button>
       <button class="btn btnp" onclick="saveTask()">保存</button>
     </div>
@@ -128,19 +246,19 @@
 <!-- 创建任务冲突提示 -->
 <div class="modal" id="dlgConflict">
   <div class="dialog" style="width:520px">
-    <div class="dh"><span>提示</span><span class="dx" onclick="cancelConflictCreation()">✕</span></div>
+    <div class="dh"><span>提示</span><span class="dx" onclick="cancelConflictSave()">✕</span></div>
     <div class="db">
       <div class="conflict-content">
         <span class="conflict-icon">!</span>
         <div class="conflict-copy">
-          <p>您当前设置的时间已存在其他日程任务，继续创建可能出现空调控制指令冲突，涉及房间[<span id="conflictRooms"></span>]。</p>
-          <p>请核对后确认：是否仍要继续创建当前日程任务？</p>
+          <p>您当前设置的时间已存在其他日程任务，继续保存可能出现空调控制指令冲突，涉及房间[<span id="conflictRooms"></span>]。</p>
+          <p>请核对后确认：是否仍要继续保存当前日程任务？</p>
         </div>
       </div>
     </div>
     <div class="df">
-      <button class="btn" onclick="cancelConflictCreation()">取消</button>
-      <button class="btn btnp" onclick="continueConflictCreation()">继续创建</button>
+      <button class="btn" onclick="cancelConflictSave()">取消</button>
+      <button class="btn btnp" onclick="continueConflictSave()">继续保存</button>
     </div>
   </div>
 </div>
@@ -155,44 +273,35 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="ctrl-schedule-form.js"></script>
 <script src="ctrl-schedule-conflict.js"></script>
 <script>
 /* ── 模拟数据(与线上数据形态一致) ── */
 let TASKS=[
-  {id:1,name:'啊大地方',act:'开机',mode:'制冷',sw:'开',wind:'高风',temp:'25',lock:'-',
-   time:'09:05:00',vs:'2026-05-21',ve:'2026-08-19',expired:false,sync:'同步失败',crt:'2026-05-21 14:31:23',days:[1,2,3,4,5],rooms:['1号楼/7层/707','1号楼/7层/产品部']},
-  {id:2,name:'手机测试',act:'开机',mode:'制冷',sw:'开',wind:'中风',temp:'26',lock:'-',
-   time:'08:00:00',vs:'2026-04-28',ve:'2026-04-30',expired:true,sync:'同步完成',crt:'2026-04-28 08:51:46',days:[1,2,3,4,5],rooms:['1号楼/7层/707']},
-  {id:3,name:'0427测试创建定时关机任务',act:'关机',mode:'-',sw:'关',wind:'-',temp:'-',lock:'-',
-   time:'18:30:00',vs:'2026-04-27',ve:'2026-04-27',expired:true,sync:'同步完成',crt:'2026-04-27 14:41:06',days:[6,0],rooms:['1号楼/3层/303']},
-  {id:4,name:'0310测试3',act:'开机',mode:'制热',sw:'开',wind:'中风',temp:'25',lock:'-',
-   time:'14:10:00',vs:'2026-03-10',ve:'2026-03-12',expired:true,sync:'同步完成',crt:'2026-03-10 13:53:06',days:[1,3,5],rooms:['1号楼/9层/903']},
-  {id:5,name:'0310测试2解锁开关',act:'锁定设定',mode:'制热&送风',sw:'-',wind:'-',temp:'-',lock:'模式锁定',
-   time:'14:05:00',vs:'2026-03-10',ve:'2026-03-10',expired:true,sync:'同步完成',crt:'2026-03-10 13:34:58',days:[2,4],rooms:['1号楼/14层/1404']},
-  {id:6,name:'0310测试01',act:'锁定设定',mode:'制热&送风',sw:'关',wind:'-',temp:'-',lock:'开关/模式锁定',
-   time:'14:00:00',vs:'2026-02-04',ve:'2026-02-28',expired:true,sync:'同步完成',crt:'2026-02-04 13:23:16',days:[1,2,3,4,5,6,0],rooms:['1号楼/23层/2302']},
+  {id:1,name:'工作日开机',description:'办公时段制冷',act:'开机',mode:'制冷',sw:'开',wind:'高风',temp:'25',lock:'-',
+   time:'09:05:00',hour:'09',minute:'05',vs:'2026-05-21',ve:'2026-08-19',expired:false,sync:'同步失败',crt:'2026-05-21 14:31:23',days:[1,2,3,4,5],excludeDates:[],rooms:['博研楼/8F/806','博研楼/8F/808']},
+  {id:2,name:'早间开机',description:'',act:'开机',mode:'制冷',sw:'开',wind:'中风',temp:'26',lock:'-',
+   time:'08:00:00',hour:'08',minute:'00',vs:'2026-04-28',ve:'2026-07-31',expired:true,sync:'同步完成',crt:'2026-04-28 08:51:46',days:[1,2,3,4,5],excludeDates:[],rooms:['博研楼/8F/806']},
+  {id:3,name:'晚间关机',description:'',act:'关机',mode:'-',sw:'关',wind:'-',temp:'-',lock:'-',
+   time:'18:30:00',hour:'18',minute:'30',vs:'2026-04-27',ve:'2026-08-27',expired:false,sync:'同步完成',crt:'2026-04-27 14:41:06',days:[1,2,3,4,5],excludeDates:[],rooms:['博研楼/8F/810']},
+  {id:4,name:'会议室制热',description:'',act:'开机',mode:'制热',sw:'开',wind:'中风',temp:'25',lock:'-',
+   time:'14:10:00',hour:'14',minute:'10',vs:'2026-03-10',ve:'2026-08-12',expired:false,sync:'同步完成',crt:'2026-03-10 13:53:06',days:[1,3,5],excludeDates:[],rooms:['博研楼/9F/903']},
+  {id:5,name:'夜间锁定',description:'',act:'关机并锁定',mode:'-',sw:'关',wind:'-',temp:'-',lock:'开关锁定',
+   time:'22:05:00',hour:'22',minute:'05',vs:'2026-03-10',ve:'2026-09-10',expired:false,sync:'同步完成',crt:'2026-03-10 13:34:58',days:[],excludeDates:[],rooms:['博研楼/9F/906']},
+  {id:6,name:'晨间解锁',description:'',act:'解锁开关',mode:'-',sw:'-',wind:'-',temp:'-',lock:'解锁',
+   time:'07:00:00',hour:'07',minute:'00',vs:'2026-02-04',ve:'2026-09-28',expired:false,sync:'同步完成',crt:'2026-02-04 13:23:16',days:[1,2,3,4,5,6,0],excludeDates:[],rooms:['博研楼/9F/908']},
 ];
 let nextId=7;
 const DAY_NAMES=['周日','周一','周二','周三','周四','周五','周六'];
 
 /* ── 建筑树:楼栋-楼层-房间 三级(共享组件见 _ui.js) ── */
-const TREE3=[{lb:'1号楼',open:false,floors:[
-  {lb:'3层', open:false,rooms:['303','305','308']},
-  {lb:'7层', open:false,rooms:['701会议室','707','713','软件研发','运营部','产品部']},
-  {lb:'9层', open:false,rooms:['903','908','909']},
-  {lb:'14层',open:false,rooms:['1404','1408']},
-  {lb:'23层',open:false,rooms:['2302','2305']},
+const TREE3=[{lb:'博研楼',open:false,floors:[
+  {lb:'8F',open:false,rooms:['806','808','810','812']},
+  {lb:'9F',open:false,rooms:['903','906','908','909']},
 ]}];
 let treeSel=null;
 function renderTree(){
   $tree3('tree',TREE3,s=>{treeSel=s;doQuery();});
-}
-function roomsForSelection(selection){
-  if(!selection||!selection.fl)return [];
-  if(selection.room)return [selection.bld+'/'+selection.fl+'/'+selection.room];
-  const building=TREE3.find(item=>item.lb===selection.bld);
-  const floor=building&&building.floors.find(item=>item.lb===selection.fl);
-  return floor?floor.rooms.map(room=>selection.bld+'/'+selection.fl+'/'+room):[];
 }
 
 /* ── 查询/表格/分页 ── */
@@ -200,7 +309,7 @@ let filtered=TASKS.slice();
 const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
 function gv(id){return document.getElementById(id).value;}
 function doQuery(){
-  filtered=TASKS.filter(r=>
+  filtered=ScheduleForm.filterTasksBySelection(TASKS,treeSel,TREE3).filter(r=>
     (!gv('f1s')||r.vs>=gv('f1s'))&&(!gv('f1e')||r.vs<=gv('f1e'))&&
     (!gv('f2s')||r.ve>=gv('f2s'))&&(!gv('f2e')||r.ve<=gv('f2e'))&&
     (!gv('f3s')||r.crt>=gv('f3s'))&&(!gv('f3e')||r.crt<=gv('f3e')+' 23:59:59')
@@ -237,50 +346,253 @@ function toggleAll(el){document.querySelectorAll('.row-ck').forEach(c=>c.checked
 /* ── 创建/编辑任务弹窗 ── */
 let editId=-1;
 let pendingCreateTask=null;
-function setSw(v){
-  document.getElementById('swOn').classList.toggle('active',v==='开');
-  document.getElementById('swOff').classList.toggle('active',v==='关');
+let selectedTaskRooms=[];
+let selectedWeekDays=[];
+let taskExcludeDates=[];
+let taskAction='';
+let taskMode='';
+let taskWind='';
+let taskTemp=16;
+let selectedLockTypes=[];
+let lockOnOff='';
+let selectedLockModes=[];
+let lockTempLow=16;
+let lockTempHigh=31;
+let taskTreeOpen={b0:true,'f0-0':true,'f0-1':false};
+const TASK_ACTIONS=['关机','关机并锁定','解锁开关','开机','解锁并开机','锁定设定'];
+const MODE_OPTIONS=[['制冷','❄'],['制热','☀'],['送风','◌'],['除湿','◆']];
+const WIND_OPTIONS=[['高风','≋'],['中风','≈'],['低风','~']];
+const WEEK_ORDER=[1,2,3,4,5,6,0];
+function pad2(value){return String(value).padStart(2,'0');}
+function renderTimeOptions(){
+  document.getElementById('tHour').innerHTML='<option value="">请选择小时</option>'+Array.from({length:24},(_,i)=>`<option>${pad2(i)}</option>`).join('');
+  document.getElementById('tMinute').innerHTML='<option value="">请选择分钟</option>'+Array.from({length:60},(_,i)=>`<option>${pad2(i)}</option>`).join('');
 }
-function onActChange(){/* 关机时开关自动置关 */if(gv('tAct')==='关机')setSw('关');}
-function renderDays(sel){
-  document.getElementById('tDays').innerHTML=[1,2,3,4,5,6,0].map(d=>
-    `<span class="day-btn${sel.includes(d)?' sel':''}" data-d="${d}" onclick="this.classList.toggle('sel')">${DAY_NAMES[d]}</span>`).join('');
+function roomPathsForFloor(building,floor){return floor.rooms.map(room=>building.lb+'/'+floor.lb+'/'+room);}
+function toggleTaskTreeNode(key){taskTreeOpen[key]=!taskTreeOpen[key];renderTaskRoomTree();}
+function toggleTaskRoomSet(input){
+  const rooms=JSON.parse(decodeURIComponent(input.dataset.rooms));
+  if(input.checked)rooms.forEach(room=>{if(!selectedTaskRooms.includes(room))selectedTaskRooms.push(room);});
+  else selectedTaskRooms=selectedTaskRooms.filter(room=>!rooms.includes(room));
+  renderTaskRoomTree();
+}
+function toggleTaskRoom(input){
+  const room=input.dataset.room;
+  if(input.checked&&!selectedTaskRooms.includes(room))selectedTaskRooms.push(room);
+  if(!input.checked)selectedTaskRooms=selectedTaskRooms.filter(item=>item!==room);
+  renderTaskRoomTree();
+}
+function renderTaskRoomTree(){
+  const html=TREE3.map((building,bi)=>{
+    const buildingRooms=building.floors.flatMap(floor=>roomPathsForFloor(building,floor));
+    const buildingOpen=taskTreeOpen['b'+bi];
+    return `<div>
+      <div class="task-tree-row" style="padding-left:2px">
+        <span class="task-tree-arrow${buildingOpen?' open':''}" onclick="toggleTaskTreeNode('b${bi}')">▶</span>
+        <input type="checkbox" data-rooms="${encodeURIComponent(JSON.stringify(buildingRooms))}" onchange="toggleTaskRoomSet(this)">
+        <span>${building.lb}</span>
+      </div>
+      ${buildingOpen?building.floors.map((floor,fi)=>{
+        const floorKey='f'+bi+'-'+fi;
+        const floorOpen=taskTreeOpen[floorKey];
+        const floorRooms=roomPathsForFloor(building,floor);
+        return `<div>
+          <div class="task-tree-row" style="padding-left:22px">
+            <span class="task-tree-arrow${floorOpen?' open':''}" onclick="toggleTaskTreeNode('${floorKey}')">▶</span>
+            <input type="checkbox" data-rooms="${encodeURIComponent(JSON.stringify(floorRooms))}" onchange="toggleTaskRoomSet(this)">
+            <span>${floor.lb}</span>
+          </div>
+          ${floorOpen?floor.rooms.map(room=>{
+            const path=building.lb+'/'+floor.lb+'/'+room;
+            return `<label class="task-tree-row" style="padding-left:44px">
+              <span class="task-tree-arrow" style="visibility:hidden">▶</span>
+              <input type="checkbox" data-room="${path}" onchange="toggleTaskRoom(this)"${selectedTaskRooms.includes(path)?' checked':''}>
+              <span>${room}</span>
+            </label>`;
+          }).join(''):''}
+        </div>`;
+      }).join(''):''}
+    </div>`;
+  }).join('');
+  const tree=document.getElementById('taskRoomTree');
+  tree.innerHTML=html;
+  tree.querySelectorAll('input[data-rooms]').forEach(input=>{
+    const rooms=JSON.parse(decodeURIComponent(input.dataset.rooms));
+    const selected=rooms.filter(room=>selectedTaskRooms.includes(room)).length;
+    input.checked=selected===rooms.length&&rooms.length>0;
+    input.indeterminate=selected>0&&selected<rooms.length;
+  });
+}
+function updateTaskCounters(){
+  document.getElementById('tNameCount').textContent=gv('tName').length+'/30';
+  document.getElementById('tDescCount').textContent=gv('tDesc').length+'/100';
+}
+function resetLockSettings(){selectedLockTypes=[];lockOnOff='';selectedLockModes=[];lockTempLow=16;lockTempHigh=31;}
+function setTaskAction(action){
+  if(taskAction!==action&&(taskAction==='锁定设定'||action==='锁定设定'))resetLockSettings();
+  taskAction=action;renderTaskActions();renderAcSettings();renderLockSettings();
+}
+function renderTaskActions(){
+  document.getElementById('taskActions').innerHTML=TASK_ACTIONS.map(action=>
+    `<label class="schedule-action${taskAction===action?' active':''}" onclick="setTaskAction('${action}')"><input type="radio" name="taskAction"${taskAction===action?' checked':''}>${action}</label>`
+  ).join('');
+}
+function selectTaskMode(mode){taskMode=taskMode===mode?'':mode;renderAcSettings();}
+function selectTaskWind(wind){taskWind=taskWind===wind?'':wind;renderAcSettings();}
+function setTaskTemp(value){taskTemp=Math.max(16,Math.min(31,+value));renderAcSettings();}
+function stepTaskTemp(step){setTaskTemp(taskTemp+step);}
+function clearAcSelection(){taskMode='';taskWind='';taskTemp=16;renderAcSettings();}
+function renderAcSettings(){
+  const wrap=document.getElementById('acSettings');
+  wrap.classList.toggle('show',taskAction==='开机');
+  if(taskAction!=='开机')return;
+  document.getElementById('tTemp').value=taskTemp;
+  document.getElementById('tTempV').textContent=taskTemp;
+  document.getElementById('tempMinus').classList.toggle('disabled',taskTemp<=16);
+  document.getElementById('tempPlus').classList.toggle('disabled',taskTemp>=31);
+  document.getElementById('modeCards').innerHTML=MODE_OPTIONS.map(([mode,icon])=>
+    `<div class="ac-card${taskMode===mode?' active':''}" onclick="selectTaskMode('${mode}')"><span class="ac-card-icon">${icon}</span><span class="ac-card-text">${mode}</span></div>`
+  ).join('');
+  document.getElementById('windCards').innerHTML=WIND_OPTIONS.map(([wind,icon])=>
+    `<div class="ac-card wind${taskWind===wind?' active':''}" onclick="selectTaskWind('${wind}')"><span class="ac-card-icon">${icon}</span><span class="ac-card-text">${wind}</span></div>`
+  ).join('');
+}
+function toggleLockType(type){
+  selectedLockTypes=selectedLockTypes.includes(type)?selectedLockTypes.filter(item=>item!==type):selectedLockTypes.concat(type);
+  if(type==='onOff'&&!selectedLockTypes.includes(type))lockOnOff='';
+  if(type==='mode'&&!selectedLockTypes.includes(type))selectedLockModes=[];
+  renderLockSettings();
+}
+function setLockOnOff(value){lockOnOff=value;renderLockSettings();}
+function toggleLockMode(mode){
+  selectedLockModes=selectedLockModes.includes(mode)?selectedLockModes.filter(item=>item!==mode):selectedLockModes.concat(mode);
+  renderLockSettings();
+}
+function setLockTemp(bound,value){
+  const next=Math.max(16,Math.min(31,+value));
+  if(bound==='low')lockTempLow=next;
+  else lockTempHigh=next;
+  renderLockSettings();
+}
+function stepLockTemp(bound,step){setLockTemp(bound,(bound==='low'?lockTempLow:lockTempHigh)+step);}
+function renderLockSettings(){
+  const wrap=document.getElementById('lockSettings');
+  wrap.classList.toggle('show',taskAction==='锁定设定');
+  if(taskAction!=='锁定设定')return;
+  const checked=type=>selectedLockTypes.includes(type);
+  wrap.innerHTML=`
+    <div class="lock-setting-row">
+      <label class="lock-setting-toggle"><input type="checkbox" onchange="toggleLockType('onOff')"${checked('onOff')?' checked':''}>是否开关锁定</label>
+      ${checked('onOff')?`<div class="lock-setting-detail">
+        ${[['开','锁定开机'],['关','锁定关机']].map(([value,label])=>`<label class="lock-choice"><input type="radio" name="lockOnOff" onchange="setLockOnOff('${value}')"${lockOnOff===value?' checked':''}>${label}</label>`).join('')}
+      </div>`:''}
+    </div>
+    <div class="lock-setting-row">
+      <label class="lock-setting-toggle"><input type="checkbox" onchange="toggleLockType('mode')"${checked('mode')?' checked':''}>是否模式锁定</label>
+      ${checked('mode')?`<div class="lock-setting-detail">
+        ${['制冷','制热','送风','除湿'].map(mode=>`<label class="lock-choice"><input type="checkbox" onchange="toggleLockMode('${mode}')"${selectedLockModes.includes(mode)?' checked':''}>${mode}</label>`).join('')}
+      </div>`:''}
+    </div>
+    <div class="lock-setting-row">
+      <label class="lock-setting-toggle"><input type="checkbox" onchange="toggleLockType('temperature')"${checked('temperature')?' checked':''}>是否温度锁定</label>
+      ${checked('temperature')?`<div class="lock-temp-stack">
+        <div class="lock-temp-row"><span>温度上限</span><button type="button" class="lock-temp-step" onclick="stepLockTemp('high',-1)">−</button><input type="range" min="16" max="31" value="${lockTempHigh}" oninput="setLockTemp('high',this.value)"><button type="button" class="lock-temp-step" onclick="stepLockTemp('high',1)">＋</button><span class="lock-temp-value">${lockTempHigh}°C</span></div>
+        <div class="lock-temp-row"><span>温度下限</span><button type="button" class="lock-temp-step" onclick="stepLockTemp('low',-1)">−</button><input type="range" min="16" max="31" value="${lockTempLow}" oninput="setLockTemp('low',this.value)"><button type="button" class="lock-temp-step" onclick="stepLockTemp('low',1)">＋</button><span class="lock-temp-value">${lockTempLow}°C</span></div>
+      </div>`:''}
+    </div>`;
+}
+function updateWeekdays(){
+  const enabled=ScheduleForm.enabledWeekdays(gv('tVs'),gv('tVe'));
+  selectedWeekDays=selectedWeekDays.filter(day=>enabled.includes(day));
+  document.getElementById('taskWeekdays').innerHTML=WEEK_ORDER.map(day=>
+    `<button type="button" class="schedule-weekday${selectedWeekDays.includes(day)?' active':''}${enabled.includes(day)?'':' disabled'}" onclick="toggleWeekday(${day})">${DAY_NAMES[day]}</button>`
+  ).join('');
+}
+function toggleWeekday(day){
+  const enabled=ScheduleForm.enabledWeekdays(gv('tVs'),gv('tVe'));
+  if(!enabled.includes(day))return;
+  selectedWeekDays=selectedWeekDays.includes(day)?selectedWeekDays.filter(item=>item!==day):selectedWeekDays.concat(day);
+  updateWeekdays();
+}
+function setWeekPreset(preset){
+  const enabled=ScheduleForm.enabledWeekdays(gv('tVs'),gv('tVe'));
+  selectedWeekDays=ScheduleForm.applyWeekPreset(selectedWeekDays,enabled,preset);
+  updateWeekdays();
+}
+function renderExcludeDates(){
+  document.getElementById('excludeBody').innerHTML=taskExcludeDates.length?taskExcludeDates.map((date,index)=>`
+    <tr><td>${index+1}</td><td>${date}</td><td><span class="op"><a class="danger" onclick="removeExcludeDate('${date}')">删除</a></span></td></tr>`).join('')
+    :'<tr><td colspan="3"><div class="empty" style="padding:28px 10px"><span class="et">暂无数据</span></div></td></tr>';
+}
+function addExcludeDate(){
+  const date=gv('excludeDate');
+  if(!date)return $msg('请选择排除日期','error');
+  if(gv('tVs')&&gv('tVe')&&(date<gv('tVs')||date>gv('tVe')))return $msg('排除日期需在执行日期范围内','error');
+  if(!taskExcludeDates.includes(date))taskExcludeDates.push(date);
+  taskExcludeDates.sort();document.getElementById('excludeDate').value='';renderExcludeDates();
+}
+function removeExcludeDate(date){taskExcludeDates=taskExcludeDates.filter(item=>item!==date);renderExcludeDates();}
+function excludeHolidays(){
+  const holidays=['2026-10-01','2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07','2027-01-01'];
+  if(!gv('tVs')||!gv('tVe'))return $msg('请选择执行日期','error');
+  holidays.filter(date=>date>=gv('tVs')&&date<=gv('tVe')).forEach(date=>{if(!taskExcludeDates.includes(date))taskExcludeDates.push(date);});
+  taskExcludeDates.sort();renderExcludeDates();
 }
 function openTask(id){
   editId=id||-1;
   const r=TASKS.find(x=>x.id===id);
+  const initialRooms=r?(r.rooms||[]).slice():[];
   document.getElementById('dlgTaskTitle').textContent=r?'编辑任务':'创建任务';
   document.getElementById('tName').value=r?r.name:'';
-  document.getElementById('tAct').value=r&&r.act!=='-'?r.act:'开机';
-  document.getElementById('tMode').value=r&&r.mode!=='-'?r.mode:'制冷';
-  document.getElementById('tWind').value=r&&r.wind!=='-'?r.wind:'高风';
-  const t=r&&r.temp!=='-'?r.temp:'25';
-  document.getElementById('tTemp').value=t;document.getElementById('tTempV').textContent=t+'°C';
-  document.getElementById('tTime').value=r?r.time.slice(0,5):'08:00';
+  document.getElementById('tDesc').value=r&&r.description?r.description:'';
   document.getElementById('tVs').value=r?r.vs:'';
   document.getElementById('tVe').value=r?r.ve:'';
-  setSw(r&&r.sw==='关'?'关':'开');
-  renderDays(r?r.days:[1,2,3,4,5]);
+  document.getElementById('tHour').value=r?(r.hour||r.time.slice(0,2)):'';
+  document.getElementById('tMinute').value=r?(r.minute||r.time.slice(3,5)):'';
+  document.getElementById('excludeDate').value='';
+  selectedTaskRooms=initialRooms;
+  selectedWeekDays=r?(r.days||[]).slice():[];
+  taskExcludeDates=r?(r.excludeDates||[]).slice():[];
+  taskAction=r?r.act:'';
+  taskMode=r&&r.mode!=='-'?r.mode:'';
+  taskWind=r&&r.wind!=='-'?r.wind:'';
+  taskTemp=r&&r.temp!=='-'?+r.temp:16;
+  selectedLockTypes=r?(r.lockTypes||[]).slice():[];
+  lockOnOff=r&&r.lockOnOff?r.lockOnOff:'';
+  selectedLockModes=r?(r.lockModes||[]).slice():[];
+  lockTempLow=r&&r.lockTempLow!=null?r.lockTempLow:16;
+  lockTempHigh=r&&r.lockTempHigh!=null?r.lockTempHigh:31;
+  taskTreeOpen={b0:Boolean(r),'f0-0':initialRooms.some(room=>room.includes('/8F/')),'f0-1':initialRooms.some(room=>room.includes('/9F/'))};
+  renderTaskRoomTree();renderTaskActions();renderAcSettings();renderLockSettings();updateWeekdays();renderExcludeDates();updateTaskCounters();
   $modal('dlgTask');
 }
+function readTaskDraft(){
+  const hour=gv('tHour'),minute=gv('tMinute');
+  const derived={mode:'-',sw:'-',wind:'-',temp:'-',lock:'-'};
+  if(taskAction==='关机')derived.sw='关';
+  if(taskAction==='关机并锁定'){derived.sw='关';derived.lock='开关锁定';}
+  if(taskAction==='解锁开关')derived.lock='解锁';
+  if(taskAction==='解锁并开机'){derived.sw='开';derived.lock='解锁';}
+  if(taskAction==='开机'){derived.mode=taskMode||'-';derived.sw='开';derived.wind=taskWind||'-';derived.temp=String(taskTemp);}
+  if(taskAction==='锁定设定'){
+    if(selectedLockTypes.includes('onOff'))derived.sw=lockOnOff||'-';
+    if(selectedLockTypes.includes('mode'))derived.mode=selectedLockModes.join('、')||'-';
+    if(selectedLockTypes.includes('temperature'))derived.temp=lockTempLow+'-'+lockTempHigh;
+    derived.lock=selectedLockTypes.map(type=>({onOff:'开关锁定',mode:'模式锁定',temperature:'温度锁定'})[type]).join('、')||'-';
+  }
+  const today=new Date().toISOString().slice(0,10);
+  return Object.assign({
+    name:gv('tName').trim(),description:gv('tDesc').trim(),act:taskAction,
+    hour,minute,time:hour&&minute?hour+':'+minute+':00':'',vs:gv('tVs'),ve:gv('tVe'),
+    expired:Boolean(gv('tVe')&&gv('tVe')<today),days:selectedWeekDays.slice(),excludeDates:taskExcludeDates.slice(),
+    rooms: selectedTaskRooms.slice(),lockTypes:selectedLockTypes.slice(),lockOnOff,
+    lockModes:selectedLockModes.slice(),lockTempLow,lockTempHigh
+  },derived);
+}
 function saveTask(){
-  const name=gv('tName').trim();
-  if(!name)return $msg('请输入任务名称','error');
-  if(!gv('tVs')||!gv('tVe'))return $msg('请选择有效日期','error');
-  const existing=editId>-1?TASKS.find(x=>x.id===editId):null;
-  const rooms=existing?existing.rooms:roomsForSelection(treeSel);
-  if(!existing&&!rooms.length)return $msg('请先选择楼层或房间','error');
-  const days=[...document.querySelectorAll('#tDays .day-btn.sel')].map(b=>+b.dataset.d);
-  if(!days.length)return $msg('请选择重复执行的星期','error');
-  const act=gv('tAct');
-  const data={name,act,
-    mode:act==='关机'?'-':gv('tMode'),
-    sw:document.getElementById('swOn').classList.contains('active')?'开':'关',
-    wind:act==='开机'?gv('tWind'):'-',
-    temp:act==='开机'?gv('tTemp'):'-',
-    lock:act==='锁定设定'?'模式锁定':'-',
-    time:gv('tTime')+':00',vs:gv('tVs'),ve:gv('tVe'),
-    expired:gv('tVe')<'2026-07-03',days,rooms:rooms};
+  const data=readTaskDraft();
+  const error=ScheduleForm.validateDraft(data);
+  if(error)return $msg(error,'error');
   if(editId>-1)return persistTask(data);
   const conflictRooms=ScheduleConflict.findConflictRooms(data,TASKS);
   if(conflictRooms.length)return showConflictWarning(data,conflictRooms);
@@ -291,11 +603,11 @@ function showConflictWarning(data,rooms){
   document.getElementById('conflictRooms').textContent=rooms.join('、');
   $modal('dlgConflict');
 }
-function cancelConflictCreation(){
+function cancelConflictSave(){
   pendingCreateTask=null;
   $modalClose('dlgConflict');
 }
-function continueConflictCreation(){
+function continueConflictSave(){
   if(!pendingCreateTask)return;
   const data=pendingCreateTask;
   pendingCreateTask=null;
@@ -314,6 +626,8 @@ function viewTask(id){
   const r=TASKS.find(x=>x.id===id);
   document.getElementById('viewGrid').innerHTML=`
     <span class="k">定时任务名称:</span><span class="v">${r.name}</span>
+    <span class="k">任务描述:</span><span class="v">${r.description||'-'}</span>
+    <span class="k">选择房间:</span><span class="v">${(r.rooms||[]).join('、')||'-'}</span>
     <span class="k">指令动作:</span><span class="v">${r.act}</span>
     <span class="k">模式:</span><span class="v">${r.mode}</span>
     <span class="k">开关:</span><span class="v">${r.sw}</span>
@@ -321,7 +635,8 @@ function viewTask(id){
     <span class="k">设定温度:</span><span class="v">${r.temp==='-'?'-':r.temp+'°C'}</span>
     <span class="k">锁定状态:</span><span class="v">${r.lock}</span>
     <span class="k">执行时间:</span><span class="v">${r.time}</span>
-    <span class="k">重复执行:</span><span class="v">${r.days.map(d=>DAY_NAMES[d]).join('、')}</span>
+    <span class="k">周运行时间:</span><span class="v">${r.days.length?r.days.map(d=>DAY_NAMES[d]).join('、'):'每天'}</span>
+    <span class="k">排除日期:</span><span class="v">${(r.excludeDates||[]).join('、')||'-'}</span>
     <span class="k">有效日期:</span><span class="v">${r.vs} 至 ${r.ve}${r.expired?'(已过期)':''}</span>
     <span class="k">同步状态:</span><span class="v ${r.sync==='同步失败'?'text-er':''}">${r.sync}</span>
     <span class="k">创建时间:</span><span class="v">${r.crt}</span>`;
@@ -338,7 +653,7 @@ function delTask(id){
 }
 function doSync(){$msg('同步指令已下发,请稍后刷新查看同步状态');}
 
-renderTree();doQuery();
+renderTimeOptions();renderTree();doQuery();
 </script>
 </body>
 </html>
