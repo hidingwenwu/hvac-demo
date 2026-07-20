@@ -15,6 +15,20 @@
     return new Date(parts[0], parts[1] - 1, parts[2], 12);
   }
 
+  function formatDate(date) {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+  }
+
+  function runsOn(task, date, dateKey) {
+    if ((task.excludeDates || []).indexOf(dateKey) >= 0) return false;
+    var days = task.days || [];
+    return !days.length || days.indexOf(date.getDay()) >= 0;
+  }
+
   function hasSharedOccurrence(left, right) {
     var leftStart = parseDate(left.vs);
     var leftEnd = parseDate(left.ve);
@@ -26,11 +40,9 @@
     var end = new Date(Math.min(leftEnd.getTime(), rightEnd.getTime()));
     if (start > end) return false;
 
-    var leftDays = new Set(left.days || []);
-    var rightDays = new Set(right.days || []);
     for (var date = start; date <= end; date.setDate(date.getDate() + 1)) {
-      var day = date.getDay();
-      if (leftDays.has(day) && rightDays.has(day)) return true;
+      var dateKey = formatDate(date);
+      if (runsOn(left, date, dateKey) && runsOn(right, date, dateKey)) return true;
     }
     return false;
   }

@@ -146,6 +146,42 @@ test('无有效日期交集时不构成冲突', () => {
   assert.deepEqual(findConflictRooms(candidate, [existing]), []);
 });
 
+test('未选择周运行时间时按日期范围内每天执行', () => {
+  const candidate = task({
+    days: [],
+    rooms: ['博研楼/8F/806'],
+    vs: '2026-07-20',
+    ve: '2026-07-20',
+  });
+  const existing = task({
+    days: [],
+    rooms: ['博研楼/8F/806'],
+    vs: '2026-07-20',
+    ve: '2026-07-20',
+  });
+
+  assert.deepEqual(findConflictRooms(candidate, [existing]), ['博研楼/8F/806']);
+});
+
+test('任一任务排除的日期不参与冲突', () => {
+  const candidate = task({
+    days: [1],
+    rooms: ['博研楼/8F/806'],
+    vs: '2026-07-20',
+    ve: '2026-07-20',
+    excludeDates: ['2026-07-20'],
+  });
+  const existing = task({
+    days: [1],
+    rooms: ['博研楼/8F/806'],
+    vs: '2026-07-20',
+    ve: '2026-07-20',
+  });
+
+  assert.deepEqual(findConflictRooms(candidate, [existing]), []);
+  assert.deepEqual(findConflictRooms(existing, [{ ...candidate, excludeDates: ['2026-07-20'] }]), []);
+});
+
 test('日程页面包含非阻断冲突确认流程', () => {
   const html = readFileSync(join(__dirname, '..', 'pages', 'ctrl-schedule.html'), 'utf8');
 
