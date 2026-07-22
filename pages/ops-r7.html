@@ -2,325 +2,351 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>R7参数</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>R7设备详情</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* ── 顶部卡片:居中标题 + 网关SN行(对齐线上截图) ── */
-.head-card{background:var(--bg-panel);border-radius:var(--r);padding:14px 16px 16px;margin-bottom:14px;}
-.hc-title{text-align:center;font-size:20px;font-weight:600;color:var(--txw);margin-bottom:14px;}
-.hc-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.hc-row .fl{font-size:14px;color:var(--tx);}
-/* ── 历史参数工具条:左下拉 | 中标题 | 右前后包+日期 ── */
-.his-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-.his-title{flex:1;text-align:center;font-size:16px;color:var(--txw);}
-.his-right{display:flex;align-items:center;gap:10px;}
-/* 实时参数包展示:网格卡片(参数名/值+单位) */
-.pkt-info{font-size:13px;color:var(--ts);margin-bottom:10px;}
-.pkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;}
-.pkt-cell{background:var(--bg-panel-2);border-radius:6px;padding:12px 14px;}
-.pkt-k{font-size:12px;color:var(--ts);margin-bottom:6px;}
-.pkt-v{font-size:18px;font-weight:600;color:var(--txw);}
-.pkt-v .u{font-size:12px;color:var(--ts);font-weight:400;margin-left:3px;}
-/* 参数曲线画布 */
-.curve-box{background:var(--bg-panel-2);border-radius:var(--r);padding:14px;}
-#curve{width:100%;height:320px;display:block;}
-/* 参数筛选弹窗:复选框列表 */
-.chk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;}
-.chk-grid label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);cursor:pointer;}
+.detail-head{background:var(--bg-panel);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:12px;overflow:hidden}.detail-title{height:52px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--bd);font-size:20px;font-weight:600;color:var(--txw)}.gateway-row{display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap}.gateway-row input{width:320px}.gateway-row .pull{margin-left:auto}
+.basic-card{background:var(--bg-panel);border:1px solid var(--bd);border-radius:var(--r);padding:15px 16px;margin-bottom:12px}.basic-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.basic-head h2{font-size:15px;color:var(--txw);font-weight:600}.basic-head div{display:flex;align-items:center;gap:10px}.refresh-time{color:var(--tw3);font-size:11px}.basic-grid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));border-top:1px solid var(--bd);border-left:1px solid var(--bd)}.basic-item{min-height:72px;padding:12px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);display:flex;flex-direction:column;justify-content:center;gap:7px}.basic-item span{color:var(--ts);font-size:11px}.basic-item b{color:var(--txw);font-size:13px;font-weight:500;min-width:0}.mono{font-family:Consolas,monospace}.state{display:inline-flex;align-items:center;gap:6px}.state i{width:7px;height:7px;border-radius:50%;background:var(--info)}.state.online{color:var(--ok)}.state.online i{background:var(--ok)}.badge{display:inline-flex;align-items:center;min-height:21px;padding:0 7px;border:1px solid #3c4b66;border-radius:3px;background:#121d31;color:#aebbd0;font-size:11px}.badge.max{border-color:#2b69c7;background:#102f61;color:#82b4ff}.badge.warn{border-color:#7e5d2b;background:#3a2a15;color:#ffc76b}.badge.ok{border-color:#23765d;background:#123b31;color:#69dcad}.badge.error{border-color:#873543;background:#421c29;color:#ff8b98;margin-right:4px}.traffic b{display:block}.traffic em{font-style:normal;color:var(--ok);font-size:11px}.traffic.warning em{color:var(--wn)}
+.detail-tabs{margin-bottom:0;background:var(--bg-panel);padding:0 6px}.tab-pane{background:#081022;border:1px solid var(--bd);border-top:0;min-height:420px;padding:16px}.pane-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}.pane-toolbar .left,.pane-toolbar .right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.pane-toolbar select{min-width:190px}.packet-time{height:32px;min-width:194px;padding:0 11px;border:1px solid var(--bd2);border-radius:4px;background:var(--bg-input);color:var(--tx);display:flex;align-items:center;font:12px Consolas,monospace}
+.history-group+.history-group{margin-top:18px}.history-group h3{margin:0 0 9px;color:var(--tx);font-size:14px;font-weight:500}.history-wrap{overflow-x:auto}.history-table{min-width:1500px;table-layout:fixed}.history-table th{height:34px}.history-table td{height:37px;font-size:12px}.history-table td:nth-child(4n+1){text-align:left;padding-left:16px}.history-table td.abnormal{color:var(--er);font-weight:600}
+.curve-box{height:390px;padding:12px;background:var(--bg-panel-2);border-radius:var(--r)}#curveCanvas{width:100%;height:100%;display:block}.curve-empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--tw3)}
+.filter-table{overflow-x:auto}.filter-table table{min-width:1250px}.filter-table th,.filter-table td{height:39px}.param-count{font-size:12px;color:var(--ts)}.param-count b{color:var(--primary)}
+.checkbox-sections{display:grid;gap:22px}.checkbox-section h3{margin-bottom:12px;color:var(--txw);font-size:14px}.checkbox-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:12px 18px}.checkbox-grid label{display:flex;align-items:center;gap:7px;color:var(--tx);font-size:12px;cursor:pointer}.wide-dialog{width:1180px}.wide-dialog .db{max-height:70vh;overflow:auto;padding-bottom:26px}
+.setting-form{display:grid;grid-template-columns:95px 1fr;align-items:center;gap:18px 14px;padding:16px 28px 70px}.setting-form input{width:100%}.setting-form .interval-row{display:grid;grid-template-columns:1fr 36px;align-items:center;gap:8px}.setting-switch{display:flex;align-items:center;gap:10px}.setting-switch .switch{margin:0}.setting-switch b{font-size:12px;color:var(--ts);font-weight:400}
+.detail-empty{min-height:360px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;border:1px dashed #2c3b56;border-radius:var(--r);background:linear-gradient(180deg,rgba(18,29,49,.7),rgba(8,16,34,.82));color:var(--tw3)}.detail-empty[hidden],#detailContent[hidden],#pullSettingsButton[hidden]{display:none}.detail-empty-mark{width:58px;height:58px;display:grid;place-items:center;border:1px solid #2f548f;border-radius:50%;background:#102344;color:#71a5ff;font-size:26px}.detail-empty strong{color:var(--txw);font-size:15px;font-weight:500}.detail-empty span{font-size:12px}
+.gateway-filter-dialog{width:min(1080px,calc(100vw - 44px))}.gateway-filter-dialog .db{padding:20px 22px 8px}.gateway-query{display:flex;align-items:center;gap:12px;margin-bottom:18px}.gateway-query select{width:280px}.gateway-query-note{margin-left:auto;color:var(--tw3);font-size:11px}.gateway-select-table{max-height:52vh;overflow:auto;border:1px solid var(--bd);border-radius:4px;background:#0a1325}.gateway-select-table table{min-width:780px}.gateway-select-table thead{position:sticky;top:0;z-index:1}.gateway-select-table th{height:43px}.gateway-select-table td{height:41px}.gateway-select-table tr.selected td{background:rgba(45,112,245,.13);color:#dce9ff}.gateway-select-table input[type="radio"]{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}.gateway-sn{font:12px Consolas,monospace;color:#cfe0fb}.gateway-name{color:var(--ts)}.gateway-empty-row{height:180px!important;color:var(--tw3)}#gatewayDevicePager{min-height:60px;padding-top:14px}.gateway-filter-dialog .df{padding-top:12px}
+@media(max-width:1200px){.basic-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.gateway-row input{width:100%;order:2}.gateway-row .pull{margin-left:0}.basic-grid{grid-template-columns:repeat(2,1fr)}.pane-toolbar{align-items:stretch;flex-direction:column}.pane-toolbar .left,.pane-toolbar .right{width:100%}.pane-toolbar select{flex:1}.checkbox-grid{grid-template-columns:repeat(2,minmax(150px,1fr))}.gateway-filter-dialog{width:calc(100vw - 24px)}.gateway-filter-dialog .db{padding:16px 14px 6px}.gateway-query{align-items:stretch;flex-direction:column}.gateway-query select{width:100%}.gateway-query .btn{align-self:flex-end}.gateway-query-note{margin-left:0}.gateway-select-table{max-height:48vh}}@media(max-width:480px){.basic-grid{grid-template-columns:1fr}.checkbox-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<!-- 顶部:内外机参数信息 + 当前网关SN -->
-<div class="head-card">
-  <div class="hc-title">内外机参数信息</div>
-  <div class="hc-row">
+<section class="detail-head">
+  <div class="detail-title">内外机参数信息</div>
+  <div class="gateway-row">
     <span class="fl">当前网关SN:</span>
-    <input id="snInput" placeholder="请输入" style="width:280px">
-    <button class="btn btnp" onclick="doSnFilter()">筛选</button>
-    <button class="btn btnp" onclick="doRead()">读取</button>
-    <div style="flex:1"></div>
-    <button class="btn btnp" onclick="doPull()">拉取设定</button>
+    <input id="snInput" aria-label="当前网关SN" placeholder="请通过筛选选择R7设备" readonly>
+    <button class="btn btnp" onclick="filterGateway()">筛选</button>
+    <button class="btn btnp" onclick="readGateway()">读取</button>
+    <button class="btn btnp pull" id="pullSettingsButton" onclick="openPullSettings()" hidden>拉取设定</button>
   </div>
+</section>
+
+<section class="detail-empty" id="detailEmptyState">
+  <div class="detail-empty-mark">⌕</div>
+  <strong>请先筛选并读取 R7 设备</strong>
+  <span>选择所属项目和设备 SN 后，点击“读取”查看历史参数等数据</span>
+</section>
+
+<div id="detailContent" hidden>
+<section class="basic-card">
+  <div class="basic-head"><h2>R7网关基本信息</h2><div><span class="refresh-time" id="refreshTime"></span><button class="btn btnp" onclick="refreshDevice()">↻ 刷新</button></div></div>
+  <div class="basic-grid" id="basicGrid"></div>
+</section>
+
+<div class="tabs detail-tabs" id="tabs">
+  <div class="tab active" data-tab="history">历史参数</div>
+  <div class="tab" data-tab="curve">参数曲线</div>
+  <div class="tab" data-tab="filter">参数筛选</div>
+  <div class="tab" data-tab="warning">预警列表</div>
 </div>
 
-<!-- 标签页:历史参数 / 参数曲线 / 参数筛选 / 预警列表 -->
-<div class="tabs" id="tabs">
-  <div class="tab active" data-t="his">历史参数</div>
-  <div class="tab" data-t="curve">参数曲线</div>
-  <div class="tab" data-t="flt">参数筛选</div>
-  <div class="tab" data-t="warn">预警列表</div>
+<section class="tab-pane" id="pane-history">
+  <div class="pane-toolbar">
+    <div class="left"><select id="historyScope" onchange="renderHistoryPacket()"><option value="all">全部内外机</option><option value="outdoor">仅外机</option><option value="indoor">仅内机</option></select></div>
+    <div class="right"><input id="historyLocator" type="datetime-local" aria-label="历史参数时间点" onchange="locateHistoryPacket()"><button class="btn btnp" onclick="previousPacket()">‹ 前1包</button><span class="packet-time" id="historyTime"></span><button class="btn btnp" onclick="nextPacket()">后1包 ›</button></div>
+  </div>
+  <div id="historyGroups"></div>
+</section>
+
+<section class="tab-pane" id="pane-curve" style="display:none">
+  <div class="pane-toolbar">
+    <div class="left"><select id="curveUnit"><option value="">请选择内外机</option></select><select id="curveParam"><option value="">请选择参数</option></select><input type="date" id="curveDate" value="2026-07-22"></div>
+    <div class="right"><button class="btn btnp" onclick="drawCurve()">查询</button></div>
+  </div>
+  <div class="curve-box" id="curveBox"><div class="curve-empty">请选择内外机、参数和日期后查询曲线</div></div>
+</section>
+
+<section class="tab-pane" id="pane-filter" style="display:none">
+  <div class="pane-toolbar">
+    <div class="left"><span class="fl">时间范围:</span><input type="datetime-local" id="filterStart" value="2026-07-07T23:30"><span class="fl">至</span><input type="datetime-local" id="filterEnd" value="2026-07-07T23:59"></div>
+    <div class="right"><span class="param-count">已选 <b id="selectedCount">0</b> 项</span><button class="btn btnp" onclick="queryFilteredParams()">查询</button><button class="btn btnp" onclick="openParamFilter()">参数筛选</button></div>
+  </div>
+  <div class="filter-table tw"><table><thead id="filterHead"></thead><tbody id="filterBody"><tr><td><div class="empty"><span class="et">请选择参数并查询</span></div></td></tr></tbody></table></div>
+</section>
+
+<section class="tab-pane" id="pane-warning" style="display:none">
+  <div class="pane-toolbar"><div class="left"><span class="fl">参数名称</span><select id="warningParam"><option value="">全部</option></select></div><div class="right"><button class="btn btnp" onclick="queryWarnings()">查询</button></div></div>
+  <div class="tw"><table><thead><tr><th>空调地址</th><th>参数名称</th><th>参数范围</th><th>实际值</th><th>预警内容</th><th>创建时间</th><th>更新时间</th><th>是否首次预警</th></tr></thead><tbody id="warningBody"></tbody></table></div>
+  <div id="warningPager"></div>
+</section>
 </div>
 
-<!-- ── Tab1 历史参数 ── -->
-<div class="tab-pane" id="pane-his">
-  <div class="his-bar">
-    <select id="hisUnit" style="width:200px" onchange="pktIdx=PKTS.length-1;renderPkt()"><option value="">请选择</option></select>
-    <div class="his-title">实时参数展示</div>
-    <div class="his-right">
-      <button class="btn btnp" onclick="prevPkt()">‹ 前1包</button>
-      <input type="date" id="hisDate" style="width:170px" onchange="gotoDate()">
-      <button class="btn btnp" onclick="nextPkt()">后1包 ›</button>
+<div class="modal" id="gatewayFilterDialog">
+  <div class="dialog gateway-filter-dialog">
+    <div class="dh"><span>筛选列表</span><span class="dx" onclick="$modalClose('gatewayFilterDialog')">✕</span></div>
+    <div class="db">
+      <div class="gateway-query">
+        <span class="fl">选择项目:</span>
+        <select id="gatewayProjectSelect" aria-label="选择项目"><option value="">请选择项目</option></select>
+        <button class="btn btnp" onclick="queryGatewayDevices()">查询</button>
+        <span class="gateway-query-note">选择项目后查询当前项目内的 R7 设备</span>
+      </div>
+      <div class="gateway-select-table">
+        <table>
+          <thead><tr><th style="width:54px"></th><th style="width:80px">序号</th><th>设备SN编码</th><th style="width:180px">名称</th><th style="width:240px">项目名称</th></tr></thead>
+          <tbody id="gatewayDeviceBody"><tr><td colspan="5" class="gateway-empty-row">请选择项目并点击查询</td></tr></tbody>
+        </table>
+      </div>
+      <div id="gatewayDevicePager"></div>
     </div>
-  </div>
-  <div class="pkt-info" id="pktInfo"></div>
-  <div id="pktBox"></div>
-</div>
-
-<!-- ── Tab2 参数曲线 ── -->
-<div class="tab-pane" id="pane-curve" style="display:none">
-  <div class="fb">
-    <div class="fi"><span class="fl">内外机列表</span><select id="cvUnit" style="width:200px"><option value="">请选择内外机列表</option></select></div>
-    <div class="fi"><span class="fl">内外机参数</span><select id="cvParam" style="width:200px"><option value="">请选择内外机参数</option></select></div>
-    <div class="fi"><span class="fl">日期</span><input type="date" id="cvDate" value="2026-07-02" style="width:160px"></div>
-    <button class="btn btnp" onclick="drawCurve()">查询</button>
-  </div>
-  <div class="curve-box" id="curveBox"><div class="empty"><span class="ei">📈</span><span class="et">请选择内外机与参数后查询曲线</span></div></div>
-</div>
-
-<!-- ── Tab3 参数筛选 ── -->
-<div class="tab-pane" id="pane-flt" style="display:none">
-  <div class="fb">
-    <div class="fi"><span class="fl">内外机</span><select id="fltUnit" style="width:200px"><option value="">请选择</option></select></div>
-    <button class="btn btnp" onclick="openFltDlg()">参数筛选</button>
-    <button class="btn btnp" onclick="doFltQuery()">查询</button>
-  </div>
-  <div class="tw">
-    <table>
-      <thead><tr><th>序号</th><th>参数名称</th><th>参数值</th><th>单位</th><th>更新时间</th></tr></thead>
-      <tbody id="fltBody"><tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr></tbody>
-    </table>
+    <div class="df"><button class="btn" onclick="$modalClose('gatewayFilterDialog')">取消</button><button class="btn btnp" onclick="confirmGatewaySelection()">确定</button></div>
   </div>
 </div>
 
-<!-- ── Tab4 预警列表 ── -->
-<div class="tab-pane" id="pane-warn" style="display:none">
-  <div class="fb">
-    <div class="fi"><span class="fl">参数名称</span>
-      <select id="warnParam" style="width:200px"><option value="">全部</option></select>
-    </div>
-    <button class="btn btnp" onclick="doWarnQuery()">查询</button>
+<div class="modal" id="pullSettingsDialog">
+  <div class="dialog" style="width:440px">
+    <div class="dh"><span>参数设置</span><span class="dx" onclick="$modalClose('pullSettingsDialog')">✕</span></div>
+    <div class="db"><div class="setting-form">
+      <span class="fl">开始时间</span><input type="date" id="settingStart">
+      <span class="fl">结束时间</span><input type="date" id="settingEnd">
+      <span class="fl">更新间隔</span><div class="interval-row"><input type="number" id="settingInterval" min="1" step="1"><span>分钟</span></div>
+      <span class="fl">是否启用</span><div class="setting-switch"><span class="switch on" id="settingEnabled" role="switch" aria-checked="true" onclick="toggleSetting()"></span><b id="settingEnabledText">已启用</b></div>
+    </div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('pullSettingsDialog')">取消</button><button class="btn btnp" onclick="savePullSettings()">确定</button></div>
   </div>
-  <div class="tw">
-    <table>
-      <thead><tr>
-        <th>空调地址</th><th>参数名称</th><th>参数范围</th><th>实际值</th>
-        <th>预警内容</th><th>创建时间</th><th>更新时间</th><th>是否首次预警</th>
-      </tr></thead>
-      <tbody id="warnBody"></tbody>
-    </table>
-  </div>
-  <div id="warnPager"></div>
 </div>
 
-<!-- 参数筛选弹窗(取消/确定) -->
-<div class="modal" id="dlgFlt">
-  <div class="dialog" style="width:560px">
-    <div class="dh"><span>参数筛选</span><span class="dx" onclick="$modalClose('dlgFlt')">✕</span></div>
-    <div class="db"><div class="chk-grid" id="chkGrid"></div></div>
-    <div class="df">
-      <button class="btn" onclick="$modalClose('dlgFlt')">取消</button>
-      <button class="btn btnp" onclick="applyFlt()">确定</button>
-    </div>
+<div class="modal" id="paramFilterDialog">
+  <div class="dialog wide-dialog">
+    <div class="dh"><span>参数筛选</span><span class="dx" onclick="$modalClose('paramFilterDialog')">✕</span></div>
+    <div class="db"><div class="checkbox-sections"><section class="checkbox-section"><h3>外机参数选择</h3><div class="checkbox-grid" id="outdoorChecks"></div></section><section class="checkbox-section"><h3>内机参数选择</h3><div class="checkbox-grid" id="indoorChecks"></div></section></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('paramFilterDialog')">取消</button><button class="btn btnp" onclick="applyParamFilter()">确定</button></div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
+<script src="_r7-data.js"></script>
 <script>
-/* ══ 基础字典:内外机列表 + R7 参数(名称/单位) ══ */
-const UNITS=['内机 1-1-3-1','内机 1-1-7-1','内机 1-1-7-2','内机 1-2-9-1','内机 1-2-14-1','外机 主0','外机 主1'];
-const R7_PARAMS=[
-  ['回气温度','℃'],['排气温度','℃'],['压缩机运转频率','Hz'],['压缩机电流','A'],
-  ['高压压力','MPa'],['低压压力','MPa'],['电子膨胀阀开度','pls'],['环境温度','℃'],
-  ['目标过热度','℃'],['实际过热度','℃'],['风机转速','rps'],['除霜状态','']
+var device=null;
+var pendingDevice=null;
+var requestedSn=new URLSearchParams(window.location.search).get('sn');
+var lastRefreshAt='';
+var packetIndex=4;
+var settingEnabled=true;
+var defaultSelectedParams=['R7&外机系统号','外机故障代码','环境温度','高压压力','蒸发温度(低压压力饱和温度)','内机地址','控制开关状态','液管温度','中管温度','气管温度'];
+var selectedParams=defaultSelectedParams.slice();
+var gatewayDevices=[];
+var selectedGatewaySn='';
+var gatewayPage={total:0,page:1,size:10,sizes:[10,20,50],onChange:function(){selectedGatewaySn='';renderGatewayDevices();}};
+var packetTimes=['2026-07-22 14:36:00','2026-07-22 14:37:00','2026-07-22 14:38:00','2026-07-22 14:39:00','2026-07-22 14:40:00'];
+var historyPackets=packetTimes.map(function(time){return {time:time,date:new Date(time.replace(' ','T'))};});
+var units=['室外机参数 18-1-0','室内机参数 18-1-0-1','室内机参数 18-1-0-2'];
+var outdoorParams=[
+  ['R7&外机系统号','0','-',''],['R7&内机系统号','49','-',''],['运转模式','开机制冷','-',''],['特殊模式','无','-',''],['外机故障代码','-','-',''],['外机保护代码或停机原因','-','-',''],['压缩机目标运转频率(总)','0','-',''],['压缩机实际运转频率(总)','15','-',''],['环境温度','36','℃',''],['压机排气温度(平均)','110','℃','0-115'],['换热器液侧温度','36','℃',''],['换热器气侧温度','0','℃',''],['高压压力','2.1','MPa','1.3-3.504'],['低压压力','0.6','MPa','0.15-1.291'],['压缩比','3.5','-','2.5-9'],['压力差','1.5','MPa','0.4-3.5'],['冷凝温度(高压压力饱和温度)','35.9','℃',''],['排气过热度','74.1','℃','11-45',true],['蒸发温度(低压压力饱和温度)','-4.1','℃',''],['外机地址','18-1-0','-',''],['外机电流(总)','2','A',''],['外机容量(总)','392','百瓦',''],['电子膨胀阀开度1','79','-',''],['电子膨胀阀开度2','0','-',''],['电子膨胀阀开度3','66','-',''],['风扇电机等级或转速','0','-',''],['四通阀状态','制冷','-','']
 ];
-/* 各下拉填充选项 */
-const unitOpts=UNITS.map(u=>`<option>${u}</option>`).join('');
-document.getElementById('hisUnit').innerHTML='<option value="">请选择</option>'+unitOpts;
-document.getElementById('cvUnit').innerHTML='<option value="">请选择内外机列表</option>'+unitOpts;
-document.getElementById('fltUnit').innerHTML='<option value="">请选择</option>'+unitOpts;
-document.getElementById('cvParam').innerHTML='<option value="">请选择内外机参数</option>'+R7_PARAMS.map(p=>`<option>${p[0]}</option>`).join('');
-document.getElementById('warnParam').innerHTML='<option value="">全部</option>'+R7_PARAMS.map(p=>`<option>${p[0]}</option>`).join('');
-
-function seedOf(str){let s=0;for(const c of str)s=(s*31+c.charCodeAt(0))%997;return s;}
-/* 生成某内外机某包的参数值(参数名/参数值/单位) */
-function pktVals(unit,i){
-  const s=seedOf(unit)+i*7;
-  return R7_PARAMS.map(([k,u])=>{
-    let v;
-    if(k==='除霜状态')v='否';
-    else if(k==='压缩机运转频率')v=String(52+(s*3)%22);
-    else if(k==='电子膨胀阀开度')v=String(400+(s*5)%80);
-    else if(k==='风机转速')v=String(4+(s%4));
-    else if(k==='高压压力')v=(2.3+(s%8)/10).toFixed(2);
-    else if(k==='低压压力')v=(0.7+(s%5)/10).toFixed(2);
-    else if(k==='压缩机电流')v=(10+(s%8)+(s%10)/10).toFixed(1);
-    else if(k==='排气温度')v=(72+(s%12)+(s%10)/10).toFixed(1);
-    else v=(5+(s%30)+(s%10)/10).toFixed(1);
-    return {k,v,u};
-  });
-}
-
-/* ══ 标签页切换 ══ */
-document.querySelectorAll('#tabs .tab').forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('active',x===t));
-    ['his','curve','flt','warn'].forEach(k=>{
-      document.getElementById('pane-'+k).style.display=(t.dataset.t===k?'':'none');
-    });
-  };
-});
-
-/* ══ 顶部按钮:筛选 / 读取 / 拉取设定 ══ */
-function doSnFilter(){
-  const sn=document.getElementById('snInput').value.trim();
-  if(!sn)return $msg('请输入网关SN','warning');
-  $msg('已按网关 '+sn+' 筛选内外机列表');
-}
-function doRead(){
-  $confirm('确认向当前网关下发实时参数读取指令?',()=>{
-    /* 读取成功:定位到最新一包 */
-    if(!document.getElementById('hisUnit').value)document.getElementById('hisUnit').value=UNITS[1];
-    pktIdx=PKT_TIMES.length-1;renderPkt();
-    $msg('读取指令已下发,已获取最新参数包');
-  });
-}
-function doPull(){
-  $confirm('确认从网关拉取当前设定参数?',()=>$msg('拉取设定成功'));
-}
-
-/* ══ Tab1 历史参数:参数包浏览(前1包/后1包/按日期) ══ */
-const PKT_TIMES=[
-  '2026-07-01 09:00:15','2026-07-01 15:30:15','2026-07-02 08:05:30',
-  '2026-07-02 12:35:30','2026-07-02 16:05:30','2026-07-02 16:10:30'
+var indoorParams=[
+  ['R7虚拟内机地址','1','-',''],['实际内机地址','1','-',''],['内机集控地址或工程编号','1','-',''],['控制开关状态','0','-',''],['控制运行模式','自动','-',''],['控制设置温度','24','℃',''],['控制风机档位','自动','-',''],['控制上下风向','0','-',''],['控制左右风向','0','-',''],['实际开关状态','0','-',''],['实际运行模式','自动','-',''],['实际风机档位','关闭','-',''],['实际左右风向','0','-',''],['实际上下风向','0','-',''],['实际需求频率','0','-',''],['实际能需开关','0','-',''],['实际回油','0','-',''],['回风温度','27','℃',''],['出风温度','27','℃',''],['液管温度','28','℃',''],['中管温度','0','℃',''],['气管温度','28','℃',''],['遥控器传感器温度','27','℃',''],['实际内机故障码','-','-',''],['实际湿度','0','-',''],['实机内机停机原因','0','-',''],['实际内机回读电子膨胀阀值','0','-',''],['外机要求内机电子膨胀阀开度(转换后)','40','-',''],['强制运行模式','无','-',''],['强制风机档位','无','-',''],['强制需求频率','0','-',''],['强制能需开关','0','-',''],['强制试运转','关','-',''],['强制回油','关','-',''],['强制水泵开关','关','-',''],['外机要求内机电子膨胀阀开度(转换前)','0','-',''],['内机型号','9','-',''],['内机容量','28','百瓦',''],['主遥控器(冷热选择权)','有','-',''],['内机是否有线控器','1','-',''],['内机Mac地址','00:00:00:00:00:00','-',''],['设备类型','0','-','']
 ];
-const PKTS=PKT_TIMES;               /* 包序列(时间戳) */
-let pktIdx=-1;                      /* 当前包下标,-1=未读取 */
-function renderPkt(){
-  const unit=document.getElementById('hisUnit').value;
-  const info=document.getElementById('pktInfo'),box=document.getElementById('pktBox');
-  if(!unit||pktIdx<0){
-    info.textContent='';
-    box.innerHTML='<div class="empty"><span class="ei">📄</span><span class="et">请选择内外机并读取参数包</span></div>';
-    return;
-  }
-  info.textContent=`${unit} · 第 ${pktIdx+1} 包 / 共 ${PKT_TIMES.length} 包 · 包时间:${PKT_TIMES[pktIdx]}`;
-  box.innerHTML='<div class="pkt-grid">'+pktVals(unit,pktIdx).map(p=>`
-    <div class="pkt-cell"><div class="pkt-k">${p.k}</div><div class="pkt-v">${p.v}<span class="u">${p.u}</span></div></div>`).join('')+'</div>';
-}
-function prevPkt(){
-  if(!document.getElementById('hisUnit').value)return $msg('请先选择内外机','warning');
-  if(pktIdx<=0)return $msg('已是最早一包','warning');
-  pktIdx--;renderPkt();
-}
-function nextPkt(){
-  if(!document.getElementById('hisUnit').value)return $msg('请先选择内外机','warning');
-  if(pktIdx>=PKT_TIMES.length-1)return $msg('已是最新一包','warning');
-  pktIdx++;renderPkt();
-}
-function gotoDate(){
-  const d=document.getElementById('hisDate').value;
-  if(!d)return;
-  if(!document.getElementById('hisUnit').value)return $msg('请先选择内外机','warning');
-  /* 定位到该日期最后一包 */
-  let idx=-1;PKT_TIMES.forEach((t,i)=>{if(t.startsWith(d))idx=i;});
-  if(idx<0)return $msg(d+' 无历史参数包','warning');
-  pktIdx=idx;renderPkt();$msg('已定位到 '+d+' 最近一包','info');
-}
-renderPkt();
+var warnings=[
+  {addr:'18-1-0',name:'排气过热度',range:'11-45',value:'74.1℃',message:'排气过热度超出参考范围',created:'2026-07-22 14:40:00',updated:'2026-07-22 14:40:00',first:'是'},
+  {addr:'18-1-0',name:'高压压力',range:'1.3-3.504',value:'3.72MPa',message:'高压压力超出参考范围',created:'2026-07-22 12:36:00',updated:'2026-07-22 12:36:00',first:'否'},
+  {addr:'18-1-0-1',name:'回风温度',range:'16-32',value:'34℃',message:'回风温度超出参考范围',created:'2026-07-22 11:08:00',updated:'2026-07-22 11:10:00',first:'是'},
+  {addr:'18-1-0-2',name:'液管温度',range:'0-55',value:'58℃',message:'液管温度超出参考范围',created:'2026-07-21 18:25:00',updated:'2026-07-21 18:25:00',first:'否'},
+  {addr:'18-1-0',name:'外机电流(总)',range:'0-25',value:'26.8A',message:'外机电流超出参考范围',created:'2026-07-21 16:10:00',updated:'2026-07-21 16:11:00',first:'否'},
+  {addr:'18-1-0-1',name:'实际内机故障码',range:'-',value:'H4',message:'内机上报故障码 H4',created:'2026-07-20 09:20:00',updated:'2026-07-20 09:20:00',first:'是'},
+  {addr:'18-1-0',name:'排气过热度',range:'11-45',value:'69.8℃',message:'排气过热度超出参考范围',created:'2026-07-19 15:30:00',updated:'2026-07-19 15:31:00',first:'否'},
+  {addr:'18-1-0-1',name:'排气过热度',range:'11-45',value:'66.2℃',message:'排气过热度超出参考范围',created:'2026-07-18 10:12:00',updated:'2026-07-18 10:13:00',first:'是'},
+  {addr:'18-1-0-2',name:'高压压力',range:'1.3-3.504',value:'3.65MPa',message:'高压压力超出参考范围',created:'2026-07-17 17:05:00',updated:'2026-07-17 17:05:00',first:'否'},
+  {addr:'18-1-0-1',name:'回风温度',range:'16-32',value:'33℃',message:'回风温度超出参考范围',created:'2026-07-16 14:22:00',updated:'2026-07-16 14:23:00',first:'否'},
+  {addr:'18-1-0-2',name:'液管温度',range:'0-55',value:'57℃',message:'液管温度超出参考范围',created:'2026-07-15 09:48:00',updated:'2026-07-15 09:48:00',first:'是'},
+  {addr:'18-1-0',name:'外机电流(总)',range:'0-25',value:'25.8A',message:'外机电流超出参考范围',created:'2026-07-14 08:36:00',updated:'2026-07-14 08:37:00',first:'否'}
+];
+var filteredWarnings=warnings.slice();
+var warningPage={total:warnings.length,page:1,size:10,sizes:[10,20,50],onChange:function(){renderWarnings();}};
 
-/* ══ Tab2 参数曲线:canvas 绘制 24h 模拟曲线 ══ */
-function drawCurve(){
-  const unit=document.getElementById('cvUnit').value,param=document.getElementById('cvParam').value;
-  if(!unit)return $msg('请选择内外机列表','warning');
-  if(!param)return $msg('请选择内外机参数','warning');
-  const box=document.getElementById('curveBox');
-  box.innerHTML='<canvas id="curve" width="1100" height="320"></canvas>';
-  const cv=document.getElementById('curve'),ctx=cv.getContext('2d');
-  const s=seedOf(unit+param);
-  /* 生成 24 个整点模拟值 */
-  const data=Array.from({length:24},(_,i)=>40+18*Math.sin((i+s%12)/3.4)+(s*i)%7);
-  const min=Math.min(...data)-5,max=Math.max(...data)+5;
-  const L=52,R=20,T=18,B=34,W=cv.width-L-R,H=cv.height-T-B;
-  const x=i=>L+W*i/23,y=v=>T+H*(1-(v-min)/(max-min));
-  /* 网格与坐标轴 */
-  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.fillStyle='#a0aec0';ctx.font='11px sans-serif';ctx.textAlign='center';
-  for(let g=0;g<=4;g++){
-    const gy=T+H*g/4;
-    ctx.beginPath();ctx.moveTo(L,gy);ctx.lineTo(L+W,gy);ctx.stroke();
-    ctx.textAlign='right';ctx.fillText((max-(max-min)*g/4).toFixed(1),L-6,gy+4);ctx.textAlign='center';
-  }
-  for(let i=0;i<24;i+=3)ctx.fillText(String(i).padStart(2,'0')+':00',x(i),cv.height-12);
-  /* 曲线 */
-  ctx.strokeStyle='#1f65ff';ctx.lineWidth=2;ctx.beginPath();
-  data.forEach((v,i)=>i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)));
-  ctx.stroke();
-  /* 数据点 */
-  ctx.fillStyle='#1f65ff';
-  data.forEach((v,i)=>{ctx.beginPath();ctx.arc(x(i),y(v),2.5,0,7);ctx.fill();});
-  /* 标题 */
-  ctx.fillStyle='#d1d3d8';ctx.textAlign='left';ctx.font='12px sans-serif';
-  ctx.fillText(unit+' · '+param+' · '+document.getElementById('cvDate').value,L,12);
-  $msg('曲线查询成功');
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char];});}
+function statusCodes(codes){return codes.length?codes.map(function(code){return '<span class="badge error">'+escapeHtml(code)+'</span>';}).join(''):'<span class="badge ok">无故障</span>';}
+function setDetailVisibility(visible){
+  document.getElementById('detailContent').hidden=!visible;
+  document.getElementById('detailEmptyState').hidden=visible;
+  document.getElementById('pullSettingsButton').hidden=!visible;
 }
 
-/* ══ Tab3 参数筛选:勾选参数 → 查询表格 ══ */
-let fltChecked=R7_PARAMS.map(p=>p[0]);   /* 默认全选 */
-function openFltDlg(){
-  document.getElementById('chkGrid').innerHTML=R7_PARAMS.map(([k])=>`
-    <label><input type="checkbox" value="${k}" ${fltChecked.includes(k)?'checked':''}>${k}</label>`).join('');
-  $modal('dlgFlt');
-}
-function applyFlt(){
-  fltChecked=[...document.querySelectorAll('#chkGrid input:checked')].map(i=>i.value);
-  $modalClose('dlgFlt');
-  $msg('已选择 '+fltChecked.length+' 个参数','info');
-}
-function doFltQuery(){
-  const unit=document.getElementById('fltUnit').value;
-  if(!unit)return $msg('请选择内外机','warning');
-  if(!fltChecked.length)return $msg('请先通过参数筛选勾选参数','warning');
-  const rows=pktVals(unit,5).filter(p=>fltChecked.includes(p.k));
-  document.getElementById('fltBody').innerHTML=rows.map((p,i)=>`
-    <tr><td>${i+1}</td><td>${p.k}</td><td>${p.v}</td><td>${p.u||'—'}</td><td>2026-07-02 16:10:30</td></tr>`).join('');
-  $msg('查询成功');
+function resetDeviceViews(){
+  packetIndex=packetTimes.length-1;
+  document.getElementById('historyScope').value='all';
+  document.querySelectorAll('#tabs .tab').forEach(function(tab){tab.classList.toggle('active',tab.dataset.tab==='history');});
+  ['history','curve','filter','warning'].forEach(function(name){document.getElementById('pane-'+name).style.display=name==='history'?'':'none';});
+  document.getElementById('curveUnit').value='';document.getElementById('curveParam').value='';
+  document.getElementById('curveBox').innerHTML='<div class="curve-empty">请选择内外机、参数和日期后查询曲线</div>';
+  selectedParams=defaultSelectedParams.slice();document.getElementById('selectedCount').textContent=selectedParams.length;
+  document.getElementById('filterHead').innerHTML='';
+  document.getElementById('filterBody').innerHTML='<tr><td><div class="empty"><span class="et">请选择参数并查询</span></div></td></tr>';
+  document.getElementById('warningParam').value='';filteredWarnings=warnings.slice();warningPage.page=1;warningPage.total=filteredWarnings.length;
 }
 
-/* ══ Tab4 预警列表:查询 + 分页(数据形态贴线上表头) ══ */
-const WARNS=(()=>{
-  const rows=[];
-  const defs=[
-    ['排气温度','≤115','118.5','排气温度超出参考范围'],
-    ['高压压力','0.5~4.0','4.12','高压压力超出参考范围'],
-    ['低压压力','0.2~2.5','0.15','低压压力低于参考范围'],
-    ['压缩机电流','0~25','26.8','压缩机电流超出参考范围'],
-    ['实际过热度','3~15','1.6','过热度低于参考范围'],
+function activateGateway(nextDevice,notify){
+  device=nextDevice;pendingDevice=nextDevice;R7Store.selectDevice(device.sn);lastRefreshAt=device.lastCommunicationAt;
+  resetDeviceViews();renderBasicInfo();renderHistoryPacket();$pager('warningPager',warningPage);renderWarnings();setDetailVisibility(true);
+  if(notify)$msg('读取指令已下发，已获取最新参数包');
+}
+
+function renderBasicInfo(){
+  var traffic=R7Store.traffic(device),latest=device.version===device.latestVersion;
+  var items=[
+    ['产品SN','<span class="mono">'+device.sn+'</span>'],['所属项目',device.project||'暂未绑定项目'],['流量情况','<span class="traffic '+traffic.state+'"><b>'+traffic.label+'</b><em>剩余 '+traffic.remain+'</em></span>'],['软件版本','<span class="mono">'+device.version+'</span> <span class="badge '+(latest?'ok':'warn')+'">'+(latest?'最新版本':'可升级')+'</span>'],['产品版本','<span class="badge '+(device.productVersion==='MAX版'?'max':'')+'">'+device.productVersion+'</span>'],['外机品牌',device.outdoorBrand],['内机品牌',device.indoorBrand],['在线状态','<span class="state '+(device.online?'online':'')+'"><i></i>'+(device.online?'在线':'离线')+'</span>'],['项目地址',device.address],['系统状态','<span class="badge '+(device.systemStatus==='开机'?'max':'')+'">'+device.systemStatus+'</span>'],['外机故障',statusCodes(device.outdoorErrors)],['内机故障',statusCodes(device.indoorErrors)],['系统模式',device.systemModes.length?device.systemModes.join(' / '):'--'],['最近通信时间','<span class="mono">'+device.lastCommunicationAt+'</span>'],['最近刷新时间','<span class="mono">'+lastRefreshAt+'</span>']
   ];
-  const addrs=['1-1-3-1','1-1-7-1','1-1-7-2','1-2-9-1','1-2-14-1','主0','主1'];
-  const times=['2026-07-02 16:10:30','2026-07-02 12:35:30','2026-07-01 15:30:15','2026-06-30 10:20:05','2026-06-28 08:41:52'];
-  for(let i=0;i<13;i++){
-    const d=defs[i%defs.length],t=times[i%times.length];
-    rows.push({addr:addrs[i%addrs.length],name:d[0],rng:d[1],val:d[2],msg:d[3],
-      crt:t,upd:t.slice(0,15)+String(30+i%29),first:i%3?'否':'是'});
-  }
-  return rows;
-})();
-let warnFiltered=WARNS.slice();
-const warnPg={total:WARNS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderWarn()};
-function doWarnQuery(){
-  const p=document.getElementById('warnParam').value;
-  warnFiltered=WARNS.filter(r=>!p||r.name===p);
-  warnPg.page=1;warnPg.total=warnFiltered.length;
-  $pager('warnPager',warnPg);renderWarn();
+  document.getElementById('basicGrid').innerHTML=items.map(function(item){return '<div class="basic-item"><span>'+item[0]+'</span><b>'+item[1]+'</b></div>';}).join('');
+  document.getElementById('refreshTime').textContent='最近刷新 '+lastRefreshAt;
+  document.getElementById('snInput').value=device.sn;
 }
-function renderWarn(){
-  const st=(warnPg.page-1)*warnPg.size;
-  const rows=warnFiltered.slice(st,st+warnPg.size);
-  document.getElementById('warnBody').innerHTML=rows.length?rows.map(r=>`
-    <tr><td>${r.addr}</td><td>${r.name}</td><td>${r.rng}</td><td class="text-er">${r.val}</td>
-        <td>${r.msg}</td><td>${r.crt}</td><td>${r.upd}</td><td>${r.first}</td></tr>`).join('')
-    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+
+function refreshDevice(){
+  if(!device)return $msg('请先筛选并读取R7设备','warning');
+  device=R7Store.getDevice(device.sn)||device;
+  var now=new Date();
+  lastRefreshAt=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+  renderBasicInfo();
+  $msg('设备信息刷新成功');
 }
-$pager('warnPager',warnPg);renderWarn();
+
+function filterGateway(){
+  var projectSelect=document.getElementById('gatewayProjectSelect');
+  var projects=R7Store.projects();
+  projectSelect.innerHTML='<option value="">请选择项目</option>'+projects.map(function(project){return '<option value="'+escapeHtml(project)+'">'+escapeHtml(project)+'</option>';}).join('');
+  gatewayDevices=[];selectedGatewaySn='';gatewayPage.page=1;gatewayPage.total=0;
+  document.getElementById('gatewayDeviceBody').innerHTML='<tr><td colspan="5" class="gateway-empty-row">请选择项目并点击查询</td></tr>';
+  $pager('gatewayDevicePager',gatewayPage);$modal('gatewayFilterDialog');
+  if(projects.length===1){projectSelect.value=projects[0];queryGatewayDevices();}
+}
+
+function queryGatewayDevices(){
+  var project=document.getElementById('gatewayProjectSelect').value;
+  if(!project)return $msg('请选择项目','warning');
+  gatewayDevices=R7Store.devices().filter(function(item){return item.project===project;});
+  selectedGatewaySn='';gatewayPage.page=1;gatewayPage.total=gatewayDevices.length;$pager('gatewayDevicePager',gatewayPage);renderGatewayDevices();
+}
+
+function renderGatewayDevices(){
+  var start=(gatewayPage.page-1)*gatewayPage.size,rows=gatewayDevices.slice(start,start+gatewayPage.size);
+  document.getElementById('gatewayDeviceBody').innerHTML=rows.length?rows.map(function(item,index){
+    var selected=item.sn===selectedGatewaySn;
+    return '<tr class="'+(selected?'selected':'')+'"><td><input type="radio" name="gatewayDevice" value="'+escapeHtml(item.sn)+'" '+(selected?'checked':'')+' onchange="selectGatewayDevice(this.value)"></td><td>'+(start+index+1)+'</td><td><span class="gateway-sn">'+escapeHtml(item.sn)+'</span></td><td><span class="gateway-name">R7网关 · '+escapeHtml(item.productVersion)+'</span></td><td>'+escapeHtml(item.project)+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" class="gateway-empty-row">当前项目暂无 R7 设备</td></tr>';
+}
+
+function selectGatewayDevice(sn){
+  selectedGatewaySn=sn;
+  document.querySelectorAll('#gatewayDeviceBody tr').forEach(function(row){var input=row.querySelector('input[type="radio"]');row.classList.toggle('selected',Boolean(input&&input.value===sn));});
+}
+
+function confirmGatewaySelection(){
+  var selected=R7Store.getDevice(selectedGatewaySn);
+  if(!selected)return $msg('请选择R7设备','warning');
+  pendingDevice=selected;document.getElementById('snInput').value=selected.sn;setDetailVisibility(false);$modalClose('gatewayFilterDialog');
+}
+
+function readGateway(){
+  var sn=document.getElementById('snInput').value.trim();
+  if(!sn)return $msg('请先筛选选择R7设备','warning');
+  var selected=R7Store.getDevice(sn);
+  if(!selected)return $msg('未找到指定的R7设备','warning');
+  activateGateway(selected,true);
+}
+
+function initializeGateway(){
+  var requested=requestedSn&&R7Store.getDevice(requestedSn);
+  if(requested)activateGateway(requested,false);
+  else{device=null;pendingDevice=null;document.getElementById('snInput').value='';setDetailVisibility(false);if(requestedSn)$msg('未找到指定的R7设备','warning');}
+}
+
+function openPullSettings(){
+  if(!device)return $msg('请先筛选并读取R7设备','warning');
+  var saved={start:'2025-11-01',end:'2026-12-31',interval:1,enabled:true};
+  try{saved=Object.assign(saved,JSON.parse(localStorage.getItem('hvac:r7:pullSettings:'+device.sn)||'{}'));}catch(error){}
+  document.getElementById('settingStart').value=saved.start;document.getElementById('settingEnd').value=saved.end;document.getElementById('settingInterval').value=saved.interval;settingEnabled=saved.enabled!==false;renderSettingSwitch();$modal('pullSettingsDialog');
+}
+
+function toggleSetting(){settingEnabled=!settingEnabled;renderSettingSwitch();}
+function renderSettingSwitch(){var node=document.getElementById('settingEnabled');node.classList.toggle('on',settingEnabled);node.setAttribute('aria-checked',String(settingEnabled));document.getElementById('settingEnabledText').textContent=settingEnabled?'已启用':'未启用';}
+function savePullSettings(){
+  var start=document.getElementById('settingStart').value,end=document.getElementById('settingEnd').value,interval=Number(document.getElementById('settingInterval').value);
+  if(!start||!end)return $msg('请选择开始时间和结束时间','warning');
+  if(start>end)return $msg('开始时间不能晚于结束时间','warning');
+  if(!Number.isInteger(interval)||interval<=0)return $msg('更新间隔必须为大于0的整数','warning');
+  localStorage.setItem('hvac:r7:pullSettings:'+device.sn,JSON.stringify({start:start,end:end,interval:interval,enabled:settingEnabled}));$modalClose('pullSettingsDialog');$msg('参数设置保存成功');
+}
+
+function valueAt(param,groupIndex,index){
+  var value=param[1];
+  if(!isNaN(Number(value))&&value!==''&&param[2]!=='-'){var delta=((packetIndex+groupIndex+index)%3-1)*0.2;return (Number(value)+delta).toFixed(value.indexOf('.')>-1?1:0);}
+  return value;
+}
+
+function renderParamGroup(title,params,groupIndex){
+  var rows=[];
+  for(var index=0;index<params.length;index+=3){rows.push(params.slice(index,index+3));}
+  return '<article class="history-group"><h3>'+title+'</h3><div class="history-wrap"><table class="history-table"><thead><tr>'+Array(3).fill('<th>参数名</th><th>参数值</th><th>单位</th><th>参考范围</th>').join('')+'</tr></thead><tbody>'+rows.map(function(row,rowIndex){
+    while(row.length<3)row.push(['','','','']);
+    return '<tr>'+row.map(function(param,column){var abnormal=param[4]?' class="abnormal"':'';return '<td>'+escapeHtml(param[0])+'</td><td'+abnormal+'>'+escapeHtml(valueAt(param,groupIndex,rowIndex*3+column))+'</td><td>'+escapeHtml(param[2])+'</td><td>'+escapeHtml(param[3])+'</td>';}).join('')+'</tr>';
+  }).join('')+'</tbody></table></div></article>';
+}
+
+function renderHistoryPacket(){
+  var scope=document.getElementById('historyScope').value,html='';
+  if(scope!=='indoor')html+=renderParamGroup('室外机参数 18-1-0',outdoorParams,0);
+  if(scope!=='outdoor'){html+=renderParamGroup('室内机参数 18-1-0-1',indoorParams,1);var second=indoorParams.map(function(param,index){var copy=param.slice();if(!isNaN(Number(copy[1])))copy[1]=String(Number(copy[1])+(index%4===0?1:0));return copy;});html+=renderParamGroup('室内机参数 18-1-0-2',second,2);}
+  document.getElementById('historyGroups').innerHTML=html;document.getElementById('historyTime').textContent=packetTimes[packetIndex];document.getElementById('historyLocator').value=packetTimes[packetIndex].replace(' ','T');
+}
+function locateHistoryPacket(){
+  var value=document.getElementById('historyLocator').value;
+  if(!value)return;
+  var target=new Date(value);
+  packetIndex=historyPackets.reduce(function(closestIndex,packet,index){return Math.abs(packet.date-target)<Math.abs(historyPackets[closestIndex].date-target)?index:closestIndex;},0);
+  renderHistoryPacket();
+}
+function previousPacket(){if(packetIndex===0)return $msg('已是最早一包','warning');packetIndex--;renderHistoryPacket();}
+function nextPacket(){if(packetIndex===packetTimes.length-1)return $msg('已是最新一包','warning');packetIndex++;renderHistoryPacket();}
+
+function seedOf(text){var seed=0;for(var index=0;index<text.length;index++)seed=(seed*31+text.charCodeAt(index))%997;return seed;}
+function drawCurve(){
+  var unit=document.getElementById('curveUnit').value,param=document.getElementById('curveParam').value,date=document.getElementById('curveDate').value;
+  if(!unit)return $msg('请选择内外机','warning');if(!param)return $msg('请选择参数','warning');if(!date)return $msg('请选择日期','warning');
+  document.getElementById('curveBox').innerHTML='<canvas id="curveCanvas" width="1400" height="360"></canvas>';
+  var canvas=document.getElementById('curveCanvas'),context=canvas.getContext('2d'),seed=seedOf(unit+param+date),values=Array.from({length:24},function(_,index){return 24+Math.sin((index+seed%8)/3)*8+(seed*index%9)/5;});
+  var left=48,right=20,top=28,bottom=34,width=canvas.width-left-right,height=canvas.height-top-bottom,min=Math.min.apply(null,values)-3,max=Math.max.apply(null,values)+3;
+  context.font='12px sans-serif';context.strokeStyle='rgba(255,255,255,.1)';context.fillStyle='#8796ae';
+  for(var line=0;line<=4;line++){var y=top+height*line/4;context.beginPath();context.moveTo(left,y);context.lineTo(left+width,y);context.stroke();context.textAlign='right';context.fillText((max-(max-min)*line/4).toFixed(1),left-7,y+4);}
+  context.textAlign='center';for(var hour=0;hour<24;hour+=3)context.fillText(String(hour).padStart(2,'0')+':00',left+width*hour/23,canvas.height-11);
+  context.strokeStyle='#3f82ff';context.lineWidth=2;context.beginPath();values.forEach(function(value,index){var x=left+width*index/23,y=top+height*(1-(value-min)/(max-min));if(index)context.lineTo(x,y);else context.moveTo(x,y);});context.stroke();
+  context.fillStyle='#5b9aff';values.forEach(function(value,index){var x=left+width*index/23,y=top+height*(1-(value-min)/(max-min));context.beginPath();context.arc(x,y,3,0,Math.PI*2);context.fill();});
+  context.textAlign='left';context.fillStyle='#d1d3d8';context.fillText(unit+'  /  '+param+'  /  '+date,left,15);$msg('参数曲线查询成功');
+}
+
+function allParameterNames(){return outdoorParams.concat(indoorParams).map(function(param){return param[0];}).filter(function(name,index,list){return name&&list.indexOf(name)===index;});}
+function openParamFilter(){
+  function checks(params){return params.map(function(param){return '<label><input type="checkbox" value="'+escapeHtml(param[0])+'" '+(selectedParams.indexOf(param[0])>-1?'checked':'')+'>'+escapeHtml(param[0])+'</label>';}).join('');}
+  document.getElementById('outdoorChecks').innerHTML=checks(outdoorParams);document.getElementById('indoorChecks').innerHTML=checks(indoorParams);$modal('paramFilterDialog');
+}
+function applyParamFilter(){selectedParams=Array.from(document.querySelectorAll('#paramFilterDialog input:checked')).map(function(input){return input.value;});document.getElementById('selectedCount').textContent=selectedParams.length;$modalClose('paramFilterDialog');$msg('已选择 '+selectedParams.length+' 项参数','info');}
+function paramDefinition(name){return outdoorParams.concat(indoorParams).find(function(param){return param[0]===name;})||[name,'-','-',''];}
+function queryFilteredParams(){
+  var start=document.getElementById('filterStart').value,end=document.getElementById('filterEnd').value;if(!start||!end)return $msg('请选择时间范围','warning');if(start>end)return $msg('开始时间不能晚于结束时间','warning');if(!selectedParams.length)return $msg('请先选择参数','warning');
+  document.getElementById('filterHead').innerHTML='<tr><th>时间点</th>'+selectedParams.map(function(name){return '<th>'+escapeHtml(name)+'</th>';}).join('')+'</tr>';
+  var startAt=new Date(start),point=new Date(end),rows=[];
+  while(point>=startAt&&rows.length<20){var time=point.getFullYear()+'-'+String(point.getMonth()+1).padStart(2,'0')+'-'+String(point.getDate()).padStart(2,'0')+' '+String(point.getHours()).padStart(2,'0')+':'+String(point.getMinutes()).padStart(2,'0')+':00';rows.push('<tr><td class="mono">'+time+'</td>'+selectedParams.map(function(name,index){var param=paramDefinition(name);return '<td>'+escapeHtml(valueAt(param,index%3,point.getMinutes()))+'</td>';}).join('')+'</tr>');point.setMinutes(point.getMinutes()-1);}
+  document.getElementById('filterBody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="'+(selectedParams.length+1)+'"><div class="empty"><span class="et">该时间范围内暂无可展示参数</span></div></td></tr>';$msg('参数查询成功');
+}
+
+function queryWarnings(){var name=document.getElementById('warningParam').value;filteredWarnings=warnings.filter(function(item){return !name||item.name===name;});warningPage.page=1;warningPage.total=filteredWarnings.length;$pager('warningPager',warningPage);renderWarnings();}
+function renderWarnings(){var start=(warningPage.page-1)*warningPage.size,rows=filteredWarnings.slice(start,start+warningPage.size);document.getElementById('warningBody').innerHTML=rows.length?rows.map(function(item){return '<tr><td>'+item.addr+'</td><td>'+item.name+'</td><td>'+item.range+'</td><td class="text-er">'+item.value+'</td><td>'+item.message+'</td><td>'+item.created+'</td><td>'+item.updated+'</td><td>'+item.first+'</td></tr>';}).join(''):'<tr><td colspan="8"><div class="empty"><span class="et">暂无预警数据</span></div></td></tr>';}
+
+document.querySelectorAll('#tabs .tab').forEach(function(tab){tab.onclick=function(){document.querySelectorAll('#tabs .tab').forEach(function(item){item.classList.toggle('active',item===tab);});['history','curve','filter','warning'].forEach(function(name){document.getElementById('pane-'+name).style.display=tab.dataset.tab===name?'':'none';});};});
+document.getElementById('curveUnit').innerHTML+='<option>'+units.join('</option><option>')+'</option>';
+document.getElementById('curveParam').innerHTML+='<option>'+allParameterNames().join('</option><option>')+'</option>';
+document.getElementById('warningParam').innerHTML+='<option>'+warnings.map(function(item){return item.name;}).filter(function(name,index,list){return list.indexOf(name)===index;}).join('</option><option>')+'</option>';
+document.getElementById('selectedCount').textContent=selectedParams.length;
+$pager('warningPager',warningPage);renderWarnings();initializeGateway();
 </script>
 </body>
 </html>

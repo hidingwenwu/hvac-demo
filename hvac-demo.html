@@ -231,7 +231,9 @@ const MENU=[
   ]},
   {t:'g',ic:'ops',lb:'智慧运维',ch:[
     {id:'ops-ac',lb:'空调参数'},
-    {id:'ops-r7',lb:'R7参数'},
+    {id:'ops-r7-dashboard',lb:'R7仪表盘'},
+    {id:'ops-r7-list',lb:'R7设备列表'},
+    {id:'ops-r7',lb:'R7设备详情'},
   ]},
   {t:'g',ic:'sys',lb:'系统管理',ch:[
     {id:'sys-account',lb:'账号管理'},
@@ -280,9 +282,9 @@ function renderBC(){
     return `<span class="${cls}">${s}</span>`+(i<p.length-1?'<span class="sep">/</span>':'');
   }).join('');
 }
-function nav(id){aid=id;fr.src='pages/'+id+'.html';render();renderBC();}
+function nav(id,query){aid=id;fr.src='pages/'+id+'.html'+(query?'?'+query:'');render();renderBC();}
 /* 接收子页面(iframe)的跳转请求 */
-window.addEventListener('message',e=>{if(e.data&&e.data.nav)nav(e.data.nav);});
+window.addEventListener('message',e=>{if(e.data&&e.data.nav)nav(e.data.nav,e.data.sn?'sn='+encodeURIComponent(e.data.sn):'');});
 function hasA(ch){return ch.some(c=>c.id===aid||(c.sub&&c.sub.some(s=>s.id===aid)));}
 
 function render(){

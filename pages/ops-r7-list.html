@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>R7设备列表</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.list-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:14px}.list-head h1{font-size:20px;color:var(--txw);font-weight:600}.list-head p{margin-top:5px;color:var(--ts);font-size:12px}.summary-strip{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;justify-content:flex-end}.summary-strip button{position:relative;min-width:104px;height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:8px;padding:0 15px;border:0;border-radius:4px;background:transparent;color:var(--ts);font-size:11px;cursor:pointer;transition:background .18s,color .18s}.summary-strip button+button::before{content:"";position:absolute;left:0;top:10px;width:1px;height:20px;background:var(--bd)}.summary-strip button::after{content:"";position:absolute;left:15px;right:15px;bottom:0;height:2px;border-radius:2px;background:var(--primary);transform:scaleX(0);transition:transform .18s}.summary-strip button:hover{background:rgba(40,108,255,.08);color:var(--txw)}.summary-strip button.active{background:linear-gradient(180deg,rgba(40,108,255,.13),rgba(40,108,255,.03));color:var(--txw)}.summary-strip button.active::after{transform:scaleX(1)}.summary-strip b{display:inline;margin:0;font-size:24px;line-height:1;color:var(--txw)}.summary-label{white-space:nowrap}.summary-strip .online b{color:var(--ok)}.summary-strip .running b{color:#65a1ff}.summary-strip .fault b{color:var(--er)}.summary-strip .traffic b{color:var(--wn)}
+.filter-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px;background:var(--bg-panel);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:12px}.filter-grid{display:contents}.filter-grid input,.filter-grid select{width:100%;box-sizing:border-box}.filter-grid>.sn-field{flex:1 1 230px;min-width:190px}.filter-grid>select{flex:1 1 120px;min-width:120px}#projectFilter{flex-basis:180px}#versionFilter{flex-basis:130px}.filter-actions{display:flex;gap:10px;margin:0}.sn-field{position:relative}.sn-field::before{content:"⌕";position:absolute;left:11px;top:5px;color:var(--tw3);font-size:18px;pointer-events:none}.sn-field input{padding-left:34px}
+.table-scroll{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bd)}.table-scroll table{min-width:1660px}.table-scroll th{height:42px}.table-scroll td{height:56px}.sn{font-family:Consolas,monospace;color:#d9e5f8;font-weight:600;white-space:nowrap}.product-chip,.version-chip,.fault-chip,.power-chip,.traffic-chip{display:inline-flex;align-items:center;justify-content:center;border-radius:3px;font-size:11px;white-space:nowrap}.product-chip{height:20px;padding:0 6px;margin-top:4px;border:1px solid #3c4b66;background:#121d31;color:#aab9d0}.product-chip.max{border-color:#2b69c7;background:#102f61;color:#82b4ff}.version-stack,.sn-stack,.traffic-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.version-chip{height:20px;padding:0 6px;border:1px solid #7e5d2b;background:#3a2a15;color:#ffc76b}.version-chip.latest{border-color:#23765d;background:#123b31;color:#69dcad}.traffic-stack b{color:var(--txw);font-weight:500}.traffic-stack em{font-style:normal;font-size:11px;color:var(--ok)}.traffic-stack.warning em{color:var(--wn);font-weight:600}.status{display:inline-flex;align-items:center;gap:6px}.status i{width:7px;height:7px;border-radius:50%;background:var(--info)}.status.online{color:var(--ok)}.status.online i{background:var(--ok)}.power-chip,.fault-chip{height:24px;min-width:38px;padding:0 7px;border:1px solid #3a475f;background:#151e30;color:var(--ts)}.power-chip.on{border-color:#285eaf;background:#112c55;color:#72aaff}.fault-chip.fault{border-color:#873543;background:#421c29;color:#ff8b98}.fault-chip.normal{border-color:#27715c;background:#112f28;color:#66d6ac}.address{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bind-btn{height:26px;padding:0 9px;border:1px solid var(--wn);border-radius:3px;background:var(--wn);color:#211404;font-weight:600;font-size:11px;cursor:pointer}.detail-link{display:inline-flex;align-items:center;gap:3px;border:0;background:transparent;color:#6fa2ff;font-size:12px;cursor:pointer}.detail-link:hover{color:#9fc0ff}.sticky{position:sticky;right:0;background:#141c31;box-shadow:-8px 0 12px rgba(4,9,22,.38)}tbody td.sticky{background:#151d30}.empty-row{height:180px!important;color:var(--tw3)}
+.bind-note{margin:0 0 14px;color:var(--ts);font-size:12px}.bind-device{padding:10px 12px;margin-bottom:14px;border:1px solid var(--bd);border-radius:4px;background:var(--bg-input);color:var(--txw);font-family:Consolas,monospace}.bind-form{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px}.bind-form select{width:100%}
+@media(max-width:1200px){.list-head{align-items:flex-start;flex-direction:column}.summary-strip{justify-content:flex-start}}@media(max-width:760px){.summary-strip button{min-width:82px}.filter-actions{justify-content:stretch}.filter-actions button{flex:1}}@media(max-width:500px){.summary-strip{display:grid;grid-template-columns:1fr 1fr;width:100%}.summary-strip button{width:100%}.summary-strip button:last-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="list-head">
+  <div><h1>R7设备列表</h1><p>集中查看 R7 网关的连接、流量、版本与系统状态</p></div>
+  <div class="summary summary-strip" aria-label="设备快捷筛选">
+    <button id="summaryTotal" class="active" aria-pressed="true" onclick="quickFilter('all')"><b>0</b><span class="summary-label">设备总数</span></button>
+    <button id="summaryOnline" class="online" aria-pressed="false" onclick="quickFilter('online')"><b>0</b><span class="summary-label">在线</span></button>
+    <button id="summaryRunning" class="running" aria-pressed="false" onclick="quickFilter('running')"><b>0</b><span class="summary-label">运行系统</span></button>
+    <button id="summaryFault" class="fault" aria-pressed="false" onclick="quickFilter('fault')"><b>0</b><span class="summary-label">故障系统</span></button>
+    <button id="summaryTraffic" class="traffic" aria-pressed="false" onclick="quickFilter('traffic')"><b>0</b><span class="summary-label">流量预警</span></button>
+  </div>
+</div>
+
+<section class="filter-panel">
+  <div class="filter-grid">
+    <div class="sn-field"><input id="snFilter" type="text" placeholder="请输入设备SN，支持模糊匹配"></div>
+    <select id="projectFilter"><option value="">所属项目</option><option value="__unbound">未绑定</option></select>
+    <select id="trafficFilter"><option value="">流量状态</option><option value="normal">正常</option><option value="warning">预警</option></select>
+    <select id="versionFilter"><option value="">软件版本</option></select>
+    <select id="productFilter"><option value="">产品版本</option><option>标准版</option><option>MAX版</option></select>
+    <select id="outdoorBrandFilter"><option value="">外机品牌</option></select>
+    <select id="indoorBrandFilter"><option value="">内机品牌</option></select>
+    <select id="onlineFilter"><option value="">在线状态</option><option value="true">在线</option><option value="false">离线</option></select>
+    <select id="systemFilter"><option value="">系统状态</option><option>开机</option><option>关机</option></select>
+    <select id="upgradeFilter"><option value="">升级状态</option><option value="true">可升级</option><option value="false">最新</option></select>
+    <select id="faultFilter"><option value="">故障状态</option><option value="true">有故障</option><option value="false">无故障</option></select>
+  </div>
+  <div class="filter-actions"><button class="btn btnp" onclick="applyFilters()">查询</button><button class="btn" onclick="resetFilters()">重置</button></div>
+</section>
+
+<div class="table-scroll">
+  <table>
+    <thead><tr><th>产品SN</th><th>所属项目</th><th>流量情况</th><th>软件版本</th><th>外机品牌</th><th>内机品牌</th><th>在线状态</th><th>项目地址</th><th>系统状态</th><th>外机故障</th><th>内机故障</th><th class="sticky">操作</th></tr></thead>
+    <tbody id="deviceBody"></tbody>
+  </table>
+</div>
+<div id="devicePager"></div>
+
+<div class="modal" id="bindProjectDialog">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>绑定项目</span><span class="dx" onclick="$modalClose('bindProjectDialog')">✕</span></div>
+    <div class="db">
+      <p class="bind-note">为当前 R7 设备选择所属项目，确认后列表和详情将同步更新。</p>
+      <div class="bind-device" id="bindingDeviceSn"></div>
+      <div class="bind-form"><span class="fl">所属项目</span><select id="bindProjectSelect"></select></div>
+    </div>
+    <div class="df"><button class="btn" onclick="$modalClose('bindProjectDialog')">取消</button><button class="btn btnp" onclick="submitBinding()">确定</button></div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script src="_r7-data.js"></script>
+<script>
+var allDevices=[];
+var filteredDevices=[];
+var bindingSn='';
+var pageState={total:0,page:1,size:10,sizes:[10,20,50],onChange:function(){renderTable();}};
+var controls={
+  sn:document.getElementById('snFilter'),project:document.getElementById('projectFilter'),traffic:document.getElementById('trafficFilter'),version:document.getElementById('versionFilter'),product:document.getElementById('productFilter'),outdoor:document.getElementById('outdoorBrandFilter'),indoor:document.getElementById('indoorBrandFilter'),online:document.getElementById('onlineFilter'),system:document.getElementById('systemFilter'),upgrade:document.getElementById('upgradeFilter'),fault:document.getElementById('faultFilter')
+};
+
+function unique(field){
+  return allDevices.map(function(device){return device[field];}).filter(function(value,index,list){return value&&list.indexOf(value)===index;}).sort();
+}
+
+function fillSelect(select,values){
+  values.forEach(function(value){var option=document.createElement('option');option.value=value;option.textContent=value;select.appendChild(option);});
+}
+
+function initializeFilters(){
+  fillSelect(controls.project,R7Store.projects());
+  fillSelect(controls.version,unique('version'));
+  fillSelect(controls.outdoor,unique('outdoorBrand'));
+  fillSelect(controls.indoor,unique('indoorBrand'));
+}
+
+function applyFilters(){
+  allDevices=R7Store.devices();
+  var snQuery=controls.sn.value.trim().toLowerCase();
+  filteredDevices=allDevices.filter(function(device){
+    var snMatch=!snQuery||device.sn.toLowerCase().includes(snQuery);
+    var projectMatch=!controls.project.value||(controls.project.value==='__unbound'?!device.project:device.project===controls.project.value);
+    var trafficMatch=!controls.traffic.value||R7Store.traffic(device).state===controls.traffic.value;
+    var versionMatch=!controls.version.value||device.version===controls.version.value;
+    var productMatch=!controls.product.value||R7Store.productVersion(device)===controls.product.value;
+    var outdoorMatch=!controls.outdoor.value||device.outdoorBrand===controls.outdoor.value;
+    var indoorMatch=!controls.indoor.value||device.indoorBrand===controls.indoor.value;
+    var onlineMatch=!controls.online.value||String(device.online)===controls.online.value;
+    var systemMatch=!controls.system.value||device.systemStatus===controls.system.value;
+    var upgradeMatch=!controls.upgrade.value||String(device.version!==device.latestVersion)===controls.upgrade.value;
+    var faultMatch=!controls.fault.value||String(R7Store.hasFault(device))===controls.fault.value;
+    return snMatch&&projectMatch&&trafficMatch&&versionMatch&&productMatch&&outdoorMatch&&indoorMatch&&onlineMatch&&systemMatch&&upgradeMatch&&faultMatch;
+  });
+  pageState.page=1;pageState.total=filteredDevices.length;
+  $pager('devicePager',pageState);renderTable();renderSummary();
+}
+
+function renderSummary(){
+  var stats=R7Store.stats(allDevices);
+  document.querySelector('#summaryTotal b').textContent=stats.total;
+  document.querySelector('#summaryOnline b').textContent=stats.online;
+  document.querySelector('#summaryRunning b').textContent=stats.running;
+  document.querySelector('#summaryFault b').textContent=stats.faults;
+  document.querySelector('#summaryTraffic b').textContent=stats.trafficWarnings;
+}
+
+function errorCell(errors){
+  return '<span class="fault-chip '+(errors.length?'fault':'normal')+'">'+(errors.length?'有':'无')+'</span>';
+}
+
+function renderTable(){
+  var start=(pageState.page-1)*pageState.size;
+  var rows=filteredDevices.slice(start,start+pageState.size);
+  document.getElementById('deviceBody').innerHTML=rows.length?rows.map(function(device){
+    var traffic=R7Store.traffic(device),latest=device.version===device.latestVersion;
+    return '<tr>'+
+      '<td><div class="sn-stack"><span class="sn">'+device.sn+'</span><span class="product-chip '+(device.productVersion==='MAX版'?'max':'')+'">'+device.productVersion+'</span></div></td>'+
+      '<td>'+(device.project?device.project:'<button class="bind-btn" onclick="openBindDialog(\''+device.sn+'\')">绑定项目</button>')+'</td>'+
+      '<td><div class="traffic-stack '+traffic.state+'"><b>'+traffic.label+'</b><em>剩余 '+traffic.remain+'</em></div></td>'+
+      '<td><div class="version-stack"><span class="sn">'+device.version+'</span><span class="version-chip '+(latest?'latest':'')+'">'+(latest?'最新版本':'可升级')+'</span></div></td>'+
+      '<td>'+device.outdoorBrand+'</td><td>'+device.indoorBrand+'</td>'+
+      '<td><span class="status '+(device.online?'online':'')+'"><i></i>'+(device.online?'在线':'离线')+'</span></td>'+
+      '<td class="address" title="'+device.address+'">'+device.address+'</td>'+
+      '<td><span class="power-chip '+(device.systemStatus==='开机'?'on':'')+'">'+device.systemStatus+'</span></td>'+
+      '<td>'+errorCell(device.outdoorErrors)+'</td><td>'+errorCell(device.indoorErrors)+'</td>'+
+      '<td class="sticky"><button class="detail-link" onclick="openDetail(\''+device.sn+'\')">详情 <span>›</span></button></td></tr>';
+  }).join(''):'<tr><td colspan="12" class="empty-row">暂无匹配设备</td></tr>';
+}
+
+function setQuickFilterActive(summaryId){
+  document.querySelectorAll('.summary button').forEach(function(button){
+    var active=button.id===summaryId;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+}
+
+function resetFilters(){
+  Object.keys(controls).forEach(function(key){controls[key].value='';});
+  setQuickFilterActive('summaryTotal');
+  applyFilters();
+}
+
+function quickFilter(type){
+  Object.keys(controls).forEach(function(key){controls[key].value='';});
+  if(type==='online')controls.online.value='true';
+  if(type==='running')controls.system.value='开机';
+  if(type==='fault')controls.fault.value='true';
+  if(type==='traffic')controls.traffic.value='warning';
+  var summaryId={all:'summaryTotal',online:'summaryOnline',running:'summaryRunning',fault:'summaryFault',traffic:'summaryTraffic'}[type];
+  setQuickFilterActive(summaryId);
+  applyFilters();
+}
+
+function openBindDialog(sn){
+  bindingSn=sn;
+  document.getElementById('bindingDeviceSn').textContent=sn;
+  document.getElementById('bindProjectSelect').innerHTML=R7Store.projects().map(function(project){return '<option value="'+project+'">'+project+'</option>';}).join('');
+  $modal('bindProjectDialog');
+}
+
+function submitBinding(){
+  var project=document.getElementById('bindProjectSelect').value;
+  if(!bindingSn||!project)return $msg('请选择所属项目','warning');
+  R7Store.bindProject(bindingSn,project);
+  $modalClose('bindProjectDialog');
+  applyFilters();
+  $msg('项目绑定成功');
+}
+
+function openDetail(sn){
+  R7Store.selectDevice(sn);
+  window.parent.postMessage({nav:'ops-r7',sn:sn},'*');
+}
+
+allDevices=R7Store.devices();
+initializeFilters();
+applyFilters();
+controls.sn.addEventListener('keydown',function(event){if(event.key==='Enter')applyFilters();});
+</script>
+</body>
+</html>

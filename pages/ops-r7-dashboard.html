@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>R7仪表盘</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.dash-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}.dash-head h1{font-size:20px;color:var(--txw);font-weight:600}.dash-head p{margin-top:5px;color:var(--ts);font-size:12px}.updated{font-size:12px;color:var(--tw3)}
+.card{background:linear-gradient(145deg,#141d32,#10182b);border:1px solid var(--bd);border-radius:var(--r);padding:15px;min-width:0;position:relative;overflow:hidden}.card::before{content:"";position:absolute;left:0;top:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(95,145,255,.45),transparent)}.card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:13px;position:relative;z-index:1}.card-head h2{font-size:14px;color:var(--txw);font-weight:600}.card-head p{margin-top:4px;color:var(--tw3);font-size:11px}
+.primary-layout{display:grid;grid-template-columns:minmax(170px,.68fr) minmax(260px,1.08fr) minmax(175px,.7fr) minmax(175px,.7fr) minmax(390px,1.84fr);gap:12px;margin-bottom:12px;align-items:stretch}.primary-layout>.card,.total-metric,.metric-quartet{min-height:260px}
+.total-metric{padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #2c4f89;border-radius:var(--r);background:radial-gradient(circle at 85% 18%,rgba(51,118,255,.24),transparent 36%),linear-gradient(155deg,#17305b,#101a31 62%);position:relative;overflow:hidden}.total-metric::after{content:"R7";position:absolute;right:12px;bottom:-16px;color:rgba(116,163,255,.08);font:700 88px/1 Consolas,monospace}.total-metric .label{color:#9bb8e8;font-size:12px}.total-metric strong{display:block;color:#f2f7ff;font:600 54px/1 Consolas,monospace}.total-metric small{color:#7f9ac5;font-size:11px;line-height:1.7}.total-signal{width:42px;height:3px;border-radius:3px;background:#4d8dff;box-shadow:12px 0 #2966cf,24px 0 #1c407d}
+.metric-quartet{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric-mini{padding:14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--bd);border-radius:var(--r);background:linear-gradient(145deg,#151f35,#10182b);position:relative;overflow:hidden}.metric-mini::after{content:"";position:absolute;right:-17px;bottom:-20px;width:70px;height:70px;border-radius:50%;background:var(--glow,rgba(49,107,223,.12))}.metric-mini .label{color:var(--ts);font-size:11px}.metric-mini strong{color:var(--txw);font:600 30px/1 Consolas,monospace;position:relative;z-index:1}.metric-mini small{color:var(--tw3);font-size:10px;position:relative;z-index:1}.metric-mini.online{--glow:rgba(38,194,129,.13)}.metric-mini.online strong{color:var(--ok)}.metric-mini.running strong{color:#68a4ff}.metric-mini.fault{--glow:rgba(239,84,103,.15)}.metric-mini.fault strong{color:var(--er)}.metric-mini.traffic{--glow:rgba(243,178,74,.14)}.metric-mini.traffic strong{color:var(--wn)}
+.pie-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;min-height:188px}.chart-pie{width:126px;height:126px;border-radius:50%;display:grid;place-items:center;position:relative;flex:0 0 auto;box-shadow:0 0 0 1px rgba(91,130,196,.1);cursor:crosshair}.chart-pie::after{content:"";position:absolute;inset:23px;border-radius:50%;background:#121b2f;box-shadow:inset 0 0 0 1px rgba(74,100,145,.18)}.pie-center{position:relative;z-index:1;text-align:center}.pie-center strong{display:block;color:var(--txw);font:600 25px/1 Consolas,monospace}.pie-center span{display:block;margin-top:5px;color:var(--tw3);font-size:10px}.compact-legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.legend-item{display:inline-flex;align-items:center;gap:6px;color:var(--ts);font-size:11px}.legend-item i{width:7px;height:7px;border-radius:2px;background:var(--legend-color)}.legend-item b{color:var(--txw);font-weight:600}.health-card .pie-body,.edition-card .pie-body{min-height:158px;gap:10px}.health-card .compact-legend{display:grid;grid-template-columns:1fr;gap:6px;width:100%;justify-items:center}
+.edition-card .chart-pie{width:112px;height:112px}.edition-card .chart-pie::after{inset:21px}.edition-list{display:grid;grid-template-columns:1fr;gap:6px;width:100%}.edition-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #26344d;border-radius:4px;background:#111a2c;color:var(--ts);font-size:11px}.edition-row span{display:flex;align-items:center;gap:6px}.edition-row i{width:7px;height:7px;border-radius:2px;background:var(--edition-color)}.edition-row strong{color:var(--txw);font:600 14px Consolas,monospace}
+.pie-tooltip{position:fixed;z-index:40;max-width:220px;padding:9px 11px;border:1px solid #385588;border-radius:7px;background:rgba(10,17,31,.96);box-shadow:0 10px 28px rgba(0,0,0,.34);color:var(--tx);font-size:11px;line-height:1.45;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .14s ease,transform .14s ease}.pie-tooltip.is-visible{opacity:1;transform:translateY(0)}.pie-tooltip strong{display:block;color:var(--txw);font-size:12px;font-weight:600}.pie-tooltip span{display:block;margin-top:3px;color:var(--ts)}
+.software-layout{display:grid;grid-template-columns:132px minmax(0,1fr);align-items:center;gap:14px;min-height:190px}.version-card .chart-pie{width:116px;height:116px;margin:auto}.version-card .chart-pie::after{inset:22px}.version-list{display:grid;gap:8px}.version-row{display:grid;grid-template-columns:58px minmax(70px,1fr) 58px;align-items:center;gap:8px;font-size:11px}.version-row>span{color:var(--tx);font-family:Consolas,monospace}.version-row strong{text-align:right;color:var(--ts);font-weight:500}.version-row strong b{color:var(--txw);margin-right:3px}.version-track,.brand-track,.combo-track{height:7px;background:#253149;border-radius:6px;overflow:hidden}.version-track b,.brand-track b,.combo-track b{display:block;height:100%;border-radius:inherit;background:var(--bar-color)}
+.brand-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.brand-list{display:grid;gap:10px}.brand-row{display:grid;grid-template-columns:84px 1fr 70px;align-items:center;gap:10px;font-size:12px}.brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}.brand-track b{background:linear-gradient(90deg,#2e69d7,#5697ff)}.indoor .brand-track b{background:linear-gradient(90deg,#228495,#42bccb)}.brand-value{text-align:right;color:var(--ts)}.brand-value b{color:var(--txw);margin-right:4px}
+.combination-card{margin-bottom:4px}.distribution-layout{display:grid;grid-template-columns:minmax(160px,190px) minmax(220px,1fr) minmax(520px,1.7fr);gap:22px;align-items:center}.combo-summary{display:contents}.combo-summary .chart-pie{width:144px;height:144px;justify-self:center}.combo-summary .chart-pie::after{inset:28px}.pie-legend{display:grid;grid-template-columns:1fr;gap:8px;min-width:0}.pie-legend .legend-item{min-width:0}.pie-legend .legend-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.combo-list{display:grid;gap:9px;min-width:0}.combo-row{display:grid;grid-template-columns:minmax(185px,260px) minmax(120px,1fr) 70px;align-items:center;gap:12px;font-size:11px}.combo-name{color:var(--tx);line-height:1.35}.combo-value{text-align:right;color:var(--ts)}.combo-value b{color:var(--txw);margin-right:4px}
+@media(max-width:1500px){.primary-layout{grid-template-columns:180px minmax(260px,1fr) minmax(180px,.72fr) minmax(180px,.72fr)}.version-card{grid-column:1/-1}.software-layout{grid-template-columns:160px minmax(0,1fr)}}
+@media(max-width:1050px){.primary-layout{grid-template-columns:1fr 1.45fr 1fr}.edition-card{grid-column:auto}.version-card{grid-column:1/-1}.brand-grid{grid-template-columns:1fr 1fr}.distribution-layout{grid-template-columns:170px minmax(0,1fr);align-items:center}.pie-legend{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.primary-layout{grid-template-columns:1fr 1fr}.total-metric,.metric-quartet{min-height:230px}.health-card,.edition-card{min-height:220px}.version-card{grid-column:1/-1}.brand-grid{grid-template-columns:1fr}.distribution-layout{grid-template-columns:145px minmax(0,1fr);gap:16px}.pie-legend{grid-template-columns:1fr}.combo-row{grid-template-columns:minmax(150px,220px) 1fr 62px}}
+@media(max-width:560px){.dash-head{align-items:flex-start;flex-direction:column}.primary-layout{grid-template-columns:1fr}.primary-layout>.card,.total-metric,.metric-quartet{min-height:auto}.total-metric{min-height:190px}.metric-quartet{min-height:224px}.software-layout,.distribution-layout{grid-template-columns:1fr}.software-layout{gap:18px}.version-card .chart-pie,.distribution-layout .chart-pie{margin:auto}.pie-legend{grid-template-columns:1fr 1fr}.combo-row{grid-template-columns:minmax(0,1fr) 64px;grid-template-areas:"name value" "track track";gap:6px 10px}.combo-name{grid-area:name}.combo-track{grid-area:track}.combo-value{grid-area:value}.brand-row{grid-template-columns:74px 1fr 62px}.edition-list{max-width:300px}.card{padding:14px}}
+</style>
+</head>
+<body>
+<div class="dash-head">
+  <div><h1>R7仪表盘</h1><p>汇总所有在网 R7 产品的连接、运行与设备构成</p></div>
+  <span class="updated" id="updatedAt"></span>
+</div>
+
+<section class="primary-layout">
+  <article class="total-metric" id="totalMetricCard">
+    <div><span class="label">设备总数</span><div class="total-signal"></div></div>
+    <strong id="metricTotal">0</strong>
+    <small>全部在网 R7 产品<br>覆盖当前账号可见项目</small>
+  </article>
+
+  <section class="metric-quartet" id="metricQuartet" aria-label="R7核心指标">
+    <article class="metric-mini online"><span class="label">在线设备</span><strong id="metricOnline">0</strong><small id="onlineHint">在线率 0%</small></article>
+    <article class="metric-mini running"><span class="label">运行系统</span><strong id="metricRunning">0</strong><small>当前开机运行</small></article>
+    <article class="metric-mini fault"><span class="label">故障系统</span><strong id="metricFaults">0</strong><small>内机或外机故障</small></article>
+    <article class="metric-mini traffic"><span class="label">流量预警</span><strong id="metricTraffic">0</strong><small>剩余流量低于 50M</small></article>
+  </section>
+
+  <article class="card health-card">
+    <div class="card-head"><div><h2>设备在线率</h2><p>当前设备在线情况</p></div></div>
+    <div class="pie-body">
+      <div class="chart-pie" id="onlineDonut"><div class="pie-center"><strong id="onlineRate">0%</strong><span>在线率</span></div></div>
+      <div class="compact-legend"><span class="legend-item" style="--legend-color:#32c989"><i></i>在线<b id="onlineCount">0</b></span><span class="legend-item" style="--legend-color:#526079"><i></i>离线<b id="offlineCount">0</b></span></div>
+    </div>
+  </article>
+
+  <article class="card edition-card">
+    <div class="card-head"><div><h2>产品版本</h2><p>标准版与 MAX 版构成</p></div></div>
+    <div class="pie-body">
+      <div class="chart-pie" id="editionRing"><div class="pie-center"><strong id="editionTotal">0</strong><span>设备</span></div></div>
+      <div class="edition-list" id="editionList"></div>
+    </div>
+  </article>
+
+  <article class="card version-card">
+    <div class="card-head"><div><h2>软件版本分布</h2><p>版本比例与设备数量</p></div></div>
+    <div class="software-layout">
+      <div class="chart-pie" id="versionPie"><div class="pie-center"><strong id="versionCount">0</strong><span>版本</span></div></div>
+      <div class="version-list" id="versionBars"></div>
+    </div>
+  </article>
+</section>
+
+<section class="brand-grid">
+  <article class="card">
+    <div class="card-head"><div><h2>外机品牌分布</h2><p>按设备数量降序</p></div></div>
+    <div class="brand-list" id="outdoorBrands"></div>
+  </article>
+  <article class="card indoor">
+    <div class="card-head"><div><h2>内机品牌分布</h2><p>按设备数量降序</p></div></div>
+    <div class="brand-list" id="indoorBrands"></div>
+  </article>
+</section>
+
+<section class="card combination-card">
+  <div class="card-head"><div><h2>内外机组合分布（外机+内机）</h2><p>统计不同外机与内机品牌组合的使用量</p></div></div>
+  <div class="distribution-layout">
+    <div class="combo-summary">
+      <div class="chart-pie" id="combinationPie"><div class="pie-center"><strong id="combinationCount">0</strong><span>组合</span></div></div>
+      <div class="pie-legend" id="combinationLegend"></div>
+    </div>
+    <div class="combo-list" id="combinationBars"></div>
+  </div>
+</section>
+
+<div class="pie-tooltip" id="pieTooltip" role="status" aria-live="polite"></div>
+
+<script src="_ui.js"></script>
+<script src="_r7-data.js"></script>
+<script>
+var devices=R7Store.devices();
+var dashboardStats=R7Store.stats(devices);
+var chartColors=['#367cf5','#32b6c7','#38c98b','#f2b24d','#ee6d7b','#8b79f1','#4f9ac8','#ca7ed8','#6cbe63','#dc8b4a','#7193e8','#48a89b','#bf6f87','#9a9f4f','#6f84a9','#d09b6f','#4fbbb0','#ab80d5','#7d9b59','#ba7387'];
+var pieTooltip=document.getElementById('pieTooltip');
+
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char];});}
+
+function renderMetrics(){
+  document.getElementById('metricTotal').textContent=dashboardStats.total;
+  document.getElementById('metricOnline').textContent=dashboardStats.online;
+  document.getElementById('metricRunning').textContent=dashboardStats.running;
+  document.getElementById('metricFaults').textContent=dashboardStats.faults;
+  document.getElementById('metricTraffic').textContent=dashboardStats.trafficWarnings;
+  document.getElementById('onlineHint').textContent='在线率 '+dashboardStats.onlineRate+'%';
+}
+
+function conicStops(items){
+  var total=items.reduce(function(sum,item){return sum+item.value;},0);
+  if(!total)return '#263149 0 100%';
+  var start=0;
+  return items.map(function(item,index){
+    var end=start+item.value*100/total,color=item.color||chartColors[index%chartColors.length],stop=color+' '+start.toFixed(2)+'% '+end.toFixed(2)+'%';
+    start=end;
+    return stop;
+  }).join(',');
+}
+
+function renderPie(target,items){
+  var pie=document.getElementById(target);
+  pie.style.background='conic-gradient('+conicStops(items)+')';
+  pie._pieItems=items;
+}
+
+function pieItemAt(pie,event){
+  var items=pie._pieItems||[],total=items.reduce(function(sum,item){return sum+item.value;},0);
+  if(!items.length||!total)return null;
+  var rect=pie.getBoundingClientRect(),centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;
+  var dx=event.clientX-centerX,dy=event.clientY-centerY;
+  if(Math.sqrt(dx*dx+dy*dy)<rect.width*.18)return null;
+  var angle=(Math.atan2(dy,dx)*180/Math.PI+90+360)%360,position=angle*total/360,offset=0;
+  for(var index=0;index<items.length;index++){
+    offset+=items[index].value;
+    if(position<=offset)return {item:items[index],total:total};
+  }
+  return {item:items[items.length-1],total:total};
+}
+
+function positionPieTooltip(event){
+  var gap=14,x=event.clientX+gap,y=event.clientY+gap,width=pieTooltip.offsetWidth,height=pieTooltip.offsetHeight;
+  if(x+width>window.innerWidth-8)x=event.clientX-width-gap;
+  if(y+height>window.innerHeight-8)y=event.clientY-height-gap;
+  pieTooltip.style.left=Math.max(8,x)+'px';
+  pieTooltip.style.top=Math.max(8,y)+'px';
+}
+
+function hidePieTooltip(){
+  pieTooltip.classList.remove('is-visible');
+}
+
+function updatePieTooltip(event){
+  var selected=pieItemAt(event.currentTarget,event);
+  if(!selected){hidePieTooltip();return;}
+  var item=selected.item,percent=item.percent==null?Math.round(item.value*100/selected.total):item.percent;
+  pieTooltip.innerHTML='<strong>'+escapeHtml(item.name||'未命名')+'</strong><span>'+item.value+' 台 · '+percent+'%</span>';
+  pieTooltip.classList.add('is-visible');
+  positionPieTooltip(event);
+}
+
+function bindPieTooltips(){
+  document.querySelectorAll('.chart-pie').forEach(function(pie){
+    pie.addEventListener('pointermove',updatePieTooltip);
+    pie.addEventListener('pointerleave',hidePieTooltip);
+  });
+  window.addEventListener('resize',hidePieTooltip);
+}
+
+function renderOnlineDonut(){
+  renderPie('onlineDonut',[
+    {name:'在线',value:dashboardStats.online,percent:dashboardStats.onlineRate,color:'#32c989'},
+    {name:'离线',value:dashboardStats.offline,percent:dashboardStats.total?Math.round(dashboardStats.offline*100/dashboardStats.total):0,color:'#526079'}
+  ]);
+  document.getElementById('onlineRate').textContent=dashboardStats.onlineRate+'%';
+  document.getElementById('onlineCount').textContent=dashboardStats.online;
+  document.getElementById('offlineCount').textContent=dashboardStats.offline;
+}
+
+function renderProductVersions(){
+  var items=[
+    {name:'MAX版',value:dashboardStats.max,color:'#367cf5'},
+    {name:'标准版',value:dashboardStats.standard,color:'#74839d'}
+  ];
+  renderPie('editionRing',items);
+  document.getElementById('editionTotal').textContent=dashboardStats.total;
+  document.getElementById('editionList').innerHTML=items.map(function(item){
+    return '<div class="edition-row"><span><i style="--edition-color:'+item.color+'"></i>'+item.name+'</span><strong>'+item.value+'</strong></div>';
+  }).join('');
+}
+
+function versionDistribution(){
+  var counts={};
+  devices.forEach(function(device){counts[device.version]=(counts[device.version]||0)+1;});
+  var max=Object.keys(counts).reduce(function(value,key){return Math.max(value,counts[key]);},0)||1;
+  return Object.keys(counts).sort(function(left,right){return right.localeCompare(left,'zh-CN',{numeric:true});}).map(function(version,index){
+    return {name:version,value:counts[version],percent:devices.length?Math.round(counts[version]*100/devices.length):0,width:counts[version]*100/max,color:chartColors[index%chartColors.length]};
+  });
+}
+
+function renderSoftwareVersions(){
+  var versions=versionDistribution();
+  renderPie('versionPie',versions);
+  document.getElementById('versionCount').textContent=versions.length;
+  document.getElementById('versionBars').innerHTML=versions.map(function(item){
+    return '<div class="version-row"><span>'+escapeHtml(item.name)+'</span><i class="version-track"><b style="width:'+item.width+'%;--bar-color:'+item.color+'"></b></i><strong><b>'+item.value+'</b>'+item.percent+'%</strong></div>';
+  }).join('');
+}
+
+function renderBrandBars(target,field){
+  document.getElementById(target).innerHTML=R7Store.brandDistribution(devices,field).map(function(brand){
+    return '<div class="brand-row"><span class="brand-name" title="'+escapeHtml(brand.name)+'">'+escapeHtml(brand.name)+'</span><i class="brand-track"><b style="width:'+brand.width+'%"></b></i><span class="brand-value"><b>'+brand.value+'</b>'+brand.percent+'%</span></div>';
+  }).join('');
+}
+
+function renderCombinations(){
+  var combinations=R7Store.combinationDistribution(devices,20).map(function(item,index){item.color=chartColors[index%chartColors.length];return item;});
+  renderPie('combinationPie',combinations);
+  document.getElementById('combinationCount').textContent=combinations.length;
+  document.getElementById('combinationLegend').innerHTML=combinations.map(function(item){
+    return '<span class="legend-item" style="--legend-color:'+item.color+'" title="'+escapeHtml(item.name)+'"><i></i><span>'+escapeHtml(item.name)+'</span><b>'+item.percent+'%</b></span>';
+  }).join('');
+  document.getElementById('combinationBars').innerHTML=combinations.map(function(item){
+    return '<div class="combo-row"><span class="combo-name">'+escapeHtml(item.name)+'</span><i class="combo-track"><b style="width:'+item.width+'%;--bar-color:'+item.color+'"></b></i><span class="combo-value"><b>'+item.value+'</b>'+item.percent+'%</span></div>';
+  }).join('');
+}
+
+renderMetrics();
+renderOnlineDonut();
+renderProductVersions();
+renderSoftwareVersions();
+renderBrandBars('outdoorBrands','outdoorBrand');
+renderBrandBars('indoorBrands','indoorBrand');
+renderCombinations();
+bindPieTooltips();
+document.getElementById('updatedAt').textContent='统计更新时间：2026-07-22 14:40';
+</script>
+</body>
+</html>
