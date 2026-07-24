@@ -165,7 +165,7 @@
             <div class="sec-title">空调控制配置</div>
             <div class="timer-card" id="timerCard">
               <div class="form-item">
-                <div style="display:flex;align-items:center;gap:8px"><span class="fl" style="margin:0;white-space:nowrap"><span class="req">*</span>下发间隔</span><input id="interval" type="number" min="1" max="120" step="1" value="15" style="max-width:80px" oninput="updatePreview()"><span class="text-sub">分钟（ 1-120 分钟）</span></div>
+                <div style="display:flex;align-items:center;gap:8px"><span class="fl" style="margin:0;white-space:nowrap"><span class="req">*</span>下发间隔</span><input id="interval" type="number" min="5" max="120" step="1" value="15" style="max-width:80px" oninput="updatePreview()"><span class="text-sub">分钟（ 5-120 分钟）</span></div>
                 <div class="muted" style="margin-top:6px;white-space:nowrap">示例：设定生效时间 08:00 至 12:00、下发间隔 30 分钟，则将在 <span class="time-points">08:00、08:30、09:00 … 11:30</span> 各下发一次控制指令。</div>
               </div>
               <div class="form-line" style="margin-top:10px">
@@ -194,7 +194,7 @@
       <p class="help-intro">极致节能通过平台定时反复下发空调控制指令，将所选房间的空调持续保持在设定状态，防止人为调整导致能耗上升，实现刚性节能管控。</p>
       <ul class="help-list">
         <li>任务在生效日期、生效时间、周运行时间内执行，排除日期不执行。</li>
-        <li>任务启用后，平台在上述时间范围内每隔 N 分钟主动向所选空调下发一次控制指令，下发间隔可设置 1-120 分钟。</li>
+        <li>任务启用后，平台在上述时间范围内每隔 N 分钟主动向所选空调下发一次控制指令，下发间隔可设置 5-120 分钟，避免短时间内频繁控制空调。</li>
         <li>开关机、模式、温度、风速均为可选项，选择“不设置”表示不改变空调该项状态；创建任务时至少需要设置一项。</li>
       </ul>
     </div>
@@ -497,7 +497,7 @@ function validateTask(){
   if(!weekOn.some(Boolean)) errors.push('请至少选择一个周运行时间');
   if(minutesFromTime(getTime('end'))<=minutesFromTime(getTime('start'))) errors.push('执行结束时间必须晚于开始时间');
   if(document.getElementById('startDate').value>document.getElementById('endDate').value) errors.push('执行结束日期不能早于开始日期');
-  if(!numberInRange(document.getElementById('interval').value,1,120,0)) errors.push('下发间隔请输入 1-120 分钟的整数');
+  if(!numberInRange(document.getElementById('interval').value,5,120,0)) errors.push('下发间隔请输入 5-120 分钟的整数');
   const tempVal=document.getElementById('temp').value;
   if(tempVal&&!numberInRange(tempVal,16,30,1)) errors.push('温度设置请输入 16-30℃，最多保留 1 位小数');
   if(!commandText(document.getElementById('power').value,document.getElementById('mode').value,tempVal,document.getElementById('fan').value))
