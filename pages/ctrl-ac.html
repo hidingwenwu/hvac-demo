@@ -21,28 +21,45 @@
 .more-filters.show{display:flex;}
 /* 卡片网格 */
 .grid-wrap{flex:1;overflow-y:auto;}
-.ac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
-.ac-card{background:linear-gradient(160deg,#1b2440,#141b30);border-radius:8px;padding:10px 12px 8px;cursor:pointer;border:1px solid transparent;user-select:none;transition:border-color .12s,transform .12s;}
-.ac-card:hover{transform:translateY(-1px);}
-.ac-card.sel{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary);}
-.ac-card.on{background:linear-gradient(160deg,#12306b,#0f1c40);}
-.ac-card.lost{background:linear-gradient(160deg,#8c2332,#43101a);}
-.ac-hd{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#cfd6e4;margin-bottom:4px;}
-.ac-hd .rn{font-weight:600;display:flex;align-items:center;gap:4px;}
-.ac-hd .tn{display:flex;align-items:center;gap:3px;color:#aeb8cc;font-size:11px;}
-.ac-mid{display:flex;align-items:center;justify-content:space-between;min-height:52px;}
-.ac-temp{display:flex;align-items:flex-start;gap:2px;line-height:1;}
-.ac-temp .tv{font-size:32px;font-weight:700;color:#fff;}
-.ac-temp .tu{font-size:12px;color:#aeb8cc;margin-top:4px;}
-.ac-temp .lk{font-size:10px;margin-top:4px;}
-.ac-rt{font-size:11px;color:#8f9ab0;margin-top:2px;}
-.ac-icon{width:44px;height:44px;flex-shrink:0;}
-.ac-icon svg{width:100%;height:100%;}
-.ac-ft{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#aeb8cc;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06);}
-.ac-card.lost .ac-ft{border-top-color:rgba(255,255,255,.12);}
-.ac-ft span{display:flex;align-items:center;gap:3px;white-space:nowrap;}
-.lost-tag{display:flex;flex-direction:column;align-items:center;gap:2px;color:#ffd7d9;font-size:11px;font-weight:700;}
-.lost-tag .li{font-size:22px;}
+.ac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,255px));gap:14px;justify-content:start;}
+/* ══ 空调卡片:对标现网 .ac-card ══
+   尺寸255×174 圆角20 边框1px rgba(255,255,255,.1) padding 12/10/26/15 文字#ccc
+   背景:顶部统一#0a1022,底部按状态渐亮(制冷蓝/制热橙棕/送风青/除湿青蓝/关机灰蓝/故障红) */
+.ac-card{position:relative;width:255px;height:174px;border-radius:20px;border:1px solid rgba(255,255,255,.1);
+  padding:12px 10px 26px 15px;color:#ccc;cursor:pointer;user-select:none;overflow:hidden;
+  background:linear-gradient(180deg,#0a1022 0%,#2e3249 100%);  /* 默认:关机灰蓝 */
+  transition:transform .12s,box-shadow .12s;}
+.ac-card:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,.3);}
+.ac-card.sel{outline:2px solid var(--primary);outline-offset:-1px;}
+/* 状态背景(顶部#0a1022→底部,取现网像素采样) */
+.ac-card.m-cool{background:linear-gradient(180deg,#0a1022 0%,#123571 100%);}
+.ac-card.m-heat{background:linear-gradient(180deg,#0a1022 0%,#5d4426 100%);}
+.ac-card.m-fan{background:linear-gradient(180deg,#0a1022 0%,#0f4a4e 100%);}
+.ac-card.m-dry{background:linear-gradient(180deg,#0a1022 0%,#134a5e 100%);}
+.ac-card.m-off{background:linear-gradient(180deg,#0a1022 0%,#2e3249 100%);}
+.ac-card.m-fault{background:linear-gradient(180deg,#0d0b27 0%,#5c0720 100%);}
+/* 顶部:房间号+wifi | 租户 */
+.ac-card-top{display:flex;align-items:center;gap:6px;}
+.ac-card-name{font-size:14px;font-weight:700;color:#fff;}
+.ac-wifi{width:14px;height:14px;flex-shrink:0;}
+.ac-wifi.on{color:#fff;}
+.ac-wifi.off{color:#777;}
+.ac-card-teant{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13px;color:#fff;}
+.ac-card-teant svg{width:12px;height:12px;fill:#fff;}
+/* 中部:左温度 右模式大图标 */
+.ac-card-middle{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.set-temp{display:flex;align-items:flex-start;line-height:1;}
+.set-temp .sv{font-size:41px;font-weight:600;color:#fff;}
+.set-temp .su{font-size:14px;color:#fff;margin:4px 0 0 6px;}
+.room-temp{font-size:13px;color:rgba(255,255,255,.65);margin-top:8px;}
+.ac-mode-icon{width:72px;height:72px;flex-shrink:0;position:relative;}
+.ac-mode-icon svg{width:100%;height:100%;}
+/* 故障码:现网置于警报图标正下方,小号红字 */
+.ac-fault-code{position:absolute;left:50%;transform:translateX(-50%);bottom:-16px;font-size:12px;color:#ff5b60;font-weight:600;}
+/* 底部:模式/风速/开关 三列 */
+.ac-card-bottom{position:absolute;left:15px;right:10px;bottom:12px;display:flex;gap:18px;}
+.ac-bottom-item{display:flex;align-items:center;gap:5px;font-size:13px;color:#fff;}
+.ac-bottom-item svg{width:13px;height:13px;fill:#fff;}
 /* 可视化布局 */
 .plan-wrap{flex:1;overflow:auto;background:#e9ebf0;border-radius:8px;position:relative;padding:26px;display:none;}
 .plan{position:relative;width:1100px;height:640px;background:#f4f5f8;border:2px solid #c9cdd6;border-radius:6px;margin:0 auto;}
@@ -81,6 +98,20 @@
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;font-size:12px;}
 .info-grid .ig-k{color:var(--ts);margin-bottom:3px;}
 .info-grid .ig-v{color:#fff;word-break:break-all;}
+/* 名称行:标签+值同行,不加框(名称多为用户未设定的空值,默认'—',不抢位置卡焦点) */
+.info-name-row{grid-column:1/3;display:flex;align-items:baseline;gap:8px;}
+.info-name-row .ig-k{margin-bottom:0;}
+/* 位置高亮卡:蓝色渐变突出"当前控制对象",纯文字无图标 */
+.info-location-card{grid-column:1/3;padding:10px 12px;border-radius:8px;background:linear-gradient(135deg,rgba(31,101,255,.16),rgba(31,101,255,.06));border:1px solid rgba(31,101,255,.22);}
+.info-location-card .ig-k{margin-bottom:4px;color:#8eb2ff;}
+.info-location-card .ig-v{font-size:14px;font-weight:600;color:#f4f8ff;word-break:normal;}
+.ig-fault{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11px;font-weight:700;color:var(--er);background:var(--er-dim);border:1px solid rgba(245,108,108,.4);}
+.info-host{grid-column:1/3;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
+.info-host .ih-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.info-host .ih-hd .ig-k{margin-bottom:0;}
+.ih-copy{font-size:11px;color:var(--primary);cursor:pointer;user-select:none;white-space:nowrap;}
+.ih-copy:hover{color:var(--primary-hover);}
+.info-host .ig-v{font-family:ui-monospace,'SF Mono',Consolas,Menlo,monospace;font-size:11px;letter-spacing:.4px;line-height:1.55;color:#cfd8ea;}
 /* 底部分页行 */
 .pgline{display:flex;justify-content:center;}
 /* 新功能推广弹窗 */
@@ -219,14 +250,22 @@
       </div>
     </div>
 
-    <div class="cp">
+    <div class="cp" id="detailPanel" style="display:none">
       <div class="cp-hd"><span class="t">详细信息</span></div>
       <div class="info-grid" id="infoGrid">
-        <div style="grid-column:1/3"><div class="ig-k">主机编号</div><div class="ig-v">—</div></div>
+        <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">—</span></div>
+        <div class="info-location-card">
+          <div class="ig-k">空调位置</div>
+          <div class="ig-v">—</div>
+        </div>
         <div><div class="ig-k">空调品牌</div><div class="ig-v">—</div></div>
-        <div><div class="ig-k">空调地址</div><div class="ig-v">—</div></div>
         <div><div class="ig-k">空调容量</div><div class="ig-v">—</div></div>
+        <div><div class="ig-k">空调地址</div><div class="ig-v">—</div></div>
         <div><div class="ig-k">故障代码</div><div class="ig-v">—</div></div>
+        <div class="info-host">
+          <div class="ih-hd"><span class="ig-k">主机编号</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
+          <div class="ig-v" id="hostVal">—</div>
+        </div>
       </div>
     </div>
   </aside>
@@ -273,15 +312,20 @@ const ACS=[];
       const lost=n%37===5;
       const on=!lost&&n%4===1;
       ACS.push({
-        id:n,room:String(room),fl,
+        id:n,bld:'1号楼',room:String(room),fl,
+        indoorId:`IN-${String(n+1).padStart(3,'0')}`,
         addr:`${1+n%2}-${1+n%3}-${fl<10?fl:fl+16}-${1+n%8}`,
         temp:22+n%8,roomTemp:26+n%4,
         mode:['制冷','制冷','制冷','除湿'][n%4],
         wind:['自动','低风','中风','中低风','高风'][n%5],
         on,lost,lock:n%3!==0,online:!lost,
+        tenant:n%4===3?'飞奕':'产品部',
+        faultCode:lost?String(30+n%8):null,
         host:'B0000016000012402401290001'+String(16+n%60).padStart(4,'0'),
         brand:['海信','大金','美的'][n%3],cap:['2.2kW','2.8kW','3.6kW'][n%3],
       });
+      /* 故障卡按现网呈现运行态:开机+高风(故障≠停机) */
+      if(lost){const a=ACS[ACS.length-1];a.on=true;a.wind='高风';}
       n++;
     }
   });
@@ -312,8 +356,11 @@ function applyFilter(){
     (!ol||(ol==='在线')===a.online)&&
     (!ft||(ft==='故障')===a.lost)
   );
+  /* 筛选变化即修剪选择集:不在当前结果中的自动取消,避免批量控制误伤看不见的空调 */
+  const inScope=new Set(filtered.map(a=>a.id));
+  [...sel].forEach(id=>{if(!inScope.has(id))sel.delete(id);});
   pg.page=1;pg.total=filtered.length;
-  renderPager();renderCards();renderPlan();
+  renderPager();renderCards();renderPlan();syncDetailVisibility();
 }
 function resetFilter(){
   document.getElementById('roomSearch').value='';
@@ -325,32 +372,57 @@ function toggleMore(){
 }
 
 /* ── 选择 ── */
-function selAll(){filtered.forEach(a=>sel.add(a.id));renderCards();renderPager();renderPlan();$msg(`已选择全部 ${filtered.length} 台空调`,'info');}
-function selPage(){pageItems().forEach(a=>sel.add(a.id));renderCards();renderPager();renderPlan();}
+function selAll(){filtered.forEach(a=>sel.add(a.id));renderCards();renderPager();renderPlan();syncDetailVisibility();$msg(`已选择全部 ${filtered.length} 台空调`,'info');}
+function selPage(){pageItems().forEach(a=>sel.add(a.id));renderCards();renderPager();renderPlan();syncDetailVisibility();}
 function pageItems(){const s=(pg.page-1)*pg.size;return filtered.slice(s,s+pg.size);}
 function toggleSel(id){
   sel.has(id)?sel.delete(id):sel.add(id);
-  renderCards();renderPager();renderPlan();fillInfo(ACS[id]);
+  renderCards();renderPager();renderPlan();syncDetailVisibility();
 }
 
 /* ── 卡片渲染 ── */
-const SVG_POWER='<svg viewBox="0 0 48 48" fill="none" stroke="#9aa6bd" stroke-width="2.8" stroke-linecap="round"><path d="M16.5 12.5a14 14 0 1 0 15 0"/><path d="M24 8v14"/></svg>';
-const SVG_SNOW='<svg viewBox="0 0 48 48" fill="none" stroke="#6db3ff" stroke-width="2.2" stroke-linecap="round"><path d="M24 6v36M8.4 15l31.2 18M39.6 15L8.4 33M24 12l-4-4M24 12l4-4M24 36l-4 4M24 36l4 4M12 17l-5.5-1.5M12 17l-1.5-5.5M36 31l5.5 1.5M36 31l1.5 5.5M36 17l5.5-1.5M36 17l1.5-5.5M12 31l-5.5 1.5M12 31l-1.5 5.5"/></svg>';
-const SVG_ALARM='<svg viewBox="0 0 48 48" fill="none" stroke="#ffd7d9" stroke-width="2.4" stroke-linecap="round"><path d="M14 20a10 10 0 0 1 20 0c0 9 3.5 11 3.5 11h-27S14 29 14 20z"/><path d="M20.5 37a3.8 3.8 0 0 0 7 0"/></svg>';
+/* 现网模式大图标(72px,各带品牌渐变,path取自现网 symbol) */
+const G=(id,c1,c2)=>`<defs><linearGradient id="${id}" x1="40" y1="0" x2="40" y2="80" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>`;
+const SVG_MODE={
+  制冷:`<svg viewBox="0 0 80 80">${G('g-cool','#BEE1FC','#96C7FA')}<path fill="url(#g-cool)" d="M72.6938 48.5535L70.6404 41.124L55.7205 45.0308L47.4358 40.3738L55.7659 35.6925L70.6904 39.6002L72.7438 32.1707L65.4362 30.2565L75.5177 24.5906L71.5657 17.9275L61.4879 23.5916L63.4375 16.4795L55.802 14.495L51.8176 29.0267L43.4847 33.7107V24.193L54.4229 13.5473L48.8352 8.10594L43.4847 13.3129V2.2002H35.5815V13.3264L30.23 8.10864L24.6377 13.5446L35.5815 24.2155V33.7116L27.1125 28.9509L23.1104 14.4066L15.4759 16.3974L17.4329 23.5113L7.54774 17.9545L3.5957 24.6177L13.4938 30.1808L6.17606 32.0832L8.21552 39.5164L23.1808 35.6258L31.6295 40.3738L23.2095 45.1065L8.26924 41.2078L6.22329 48.64L13.53 50.5461L3.64479 56.1029L7.59682 62.766L17.4931 57.2029L15.5278 64.3232L23.1604 66.3203L27.1818 51.9026L35.5815 47.1979V56.309L24.6423 67.0959L30.23 72.5373L35.5815 67.3286V78.4399H43.4847V67.3183L48.8352 72.5373L54.4229 67.0986L43.4847 56.3155V47.1979L51.8539 51.9706L55.8495 66.3968L63.484 64.4088L61.5271 57.2949L71.4122 62.8517L75.3643 56.1886L65.4661 50.6255L72.7839 48.7231L72.6938 48.5535Z"/></svg>`,
+  制热:`<svg viewBox="0 0 81 81">${G('g-heat','#FFDB27','#FF5100')}<path fill="url(#g-heat)" d="M39.7882 21.8605C34.9055 21.8597 30.2224 23.7961 26.7692 27.2439C23.316 30.6917 21.3756 35.3684 21.3747 40.2451C21.3739 45.1219 23.3127 49.7992 26.7647 53.2482C30.2167 56.6972 34.8991 58.6353 39.7819 58.6361C44.6647 58.6369 49.3488 56.7005 52.8028 53.2537C56.2568 49.8069 58.1972 45.1302 58.1954 40.2515C58.1936 35.3728 56.2514 30.6971 52.7983 27.2489C49.3452 23.8007 44.6629 21.8613 39.7882 21.8605ZM39.7882 12.6658C41.4795 12.6658 42.8548 11.2953 42.8548 9.6062V3.47746C42.8548 1.79154 41.4818 0.421143 39.7882 0.421143C38.0946 0.421143 36.7216 1.79154 36.7216 3.47746V9.6062C36.7216 11.2953 38.0946 12.6658 39.7882 12.6658ZM62.8843 19.0545L66.293 15.6505C67.4758 14.4692 67.4758 12.5751 66.293 11.3938C65.1102 10.2125 63.2134 10.2125 62.0306 11.3938L58.6219 14.7978C57.4391 15.9791 57.4391 17.8732 58.6219 19.0545C59.8047 20.2358 61.7015 20.2358 62.8843 19.0545ZM16.6922 19.0545C17.875 20.2358 19.7718 20.2358 20.9546 19.0545C22.1374 17.8732 22.1374 15.9791 20.9546 14.7978L17.5459 11.3938C16.3631 10.2125 14.4663 10.2125 13.2835 11.3938C12.1007 12.5751 12.1007 14.4692 13.2835 15.6505L16.6922 19.0545ZM66.8389 39.7882C66.8389 41.4795 68.2142 42.8548 69.9053 42.8548H76.0425C77.7284 42.8548 79.0988 41.4818 79.0988 39.7882C79.0988 38.0946 77.7284 36.7216 76.0425 36.7216H69.9053C68.2142 36.7216 66.8389 38.0946 66.8389 39.7882ZM0.478516 39.7882C0.478516 41.4795 1.85377 42.8548 3.54489 42.8548H9.68212C11.368 42.8548 12.7384 41.4818 12.7384 39.7882C12.7384 38.0946 11.368 36.7216 9.68212 36.7216H3.54489C1.85377 36.7216 0.478516 38.0946 0.478516 39.7882ZM62.8843 60.5219C61.7015 59.3406 59.8047 59.3406 58.6219 60.5219C57.4391 61.7032 57.4391 63.5973 58.6219 64.7786L62.0306 68.1826C63.2134 69.3639 65.1102 69.3639 66.293 68.1826C67.4758 67.0013 67.4758 65.1072 66.293 63.9259L62.8843 60.5219ZM20.9546 60.5219C19.7718 59.3406 17.875 59.3406 16.6922 60.5219L13.2835 63.9259C12.1007 65.1072 12.1007 67.0013 13.2835 68.1826C14.4663 69.3639 16.3631 69.3639 17.5459 68.1826L20.9546 64.7786C22.1374 63.5973 22.1374 61.7032 20.9546 60.5219ZM39.7882 66.9106C38.0946 66.9106 36.7216 68.2836 36.7216 69.9773V76.1061C36.7216 77.792 38.0946 79.1624 39.7882 79.1624C41.4818 79.1624 42.8548 77.792 42.8548 76.1061V69.9773C42.8548 68.2836 41.4795 66.9106 39.7882 66.9106Z"/></svg>`,
+  送风:`<svg viewBox="0 0 80 80">${G('g-fan','#A0FFBE','#2EA76C')}<path fill="url(#g-fan)" d="M32.6661 38.8274V38.1328C24.3234 35.3545 12.5045 27.7142 12.5045 27.7142C10.4188 25.6305 8.33308 26.3251 8.33308 26.3251C8.33308 26.3251 0.685547 27.7142 0.685547 40.2165C1.38078 53.4133 13.1997 56.1916 13.1997 56.1916C20.152 57.5808 29.8852 49.9405 34.7518 44.3839C34.0566 42.9948 32.6661 40.9111 32.6661 38.8274ZM39.6184 32.5762H41.7041C45.1803 24.2414 53.523 13.1282 53.523 13.1282C55.6087 11.0445 54.9135 8.96082 54.9135 8.96082C54.9135 8.96082 54.2183 1.32055 41.7041 0.625977C28.4947 0.625977 25.0186 12.4337 25.0186 12.4337C22.9329 19.3794 29.8852 28.4088 34.7518 34.6599C36.1423 33.2708 37.5327 32.5762 39.6184 32.5762ZM44.485 42.9948C43.0946 44.3839 41.7041 45.7731 39.6184 45.7731V46.4676C47.9611 49.2459 59.78 56.8862 59.78 56.8862C61.8657 58.9699 63.9514 58.2753 63.9514 58.2753C63.9514 58.2753 71.5989 56.8862 71.5989 44.3839C70.9037 31.1871 59.0848 28.4088 59.0848 28.4088C52.1325 27.0196 42.3993 34.6599 37.5327 40.2165C38.2279 41.6056 39.6184 43.6893 39.6184 45.7731H41.7041C43.0946 45.7731 44.485 44.3839 44.485 42.9948ZM41.7041 45.7731C40.3137 45.7731 38.9232 46.4676 37.5327 47.8567C33.3612 53.4133 26.4089 63.0345 26.4089 63.0345C24.3232 65.1182 25.0178 67.2019 25.0178 67.2019C25.0178 67.2019 25.7124 74.8422 38.2279 75.5368C51.438 75.5368 54.9141 63.729 54.9141 63.729C56.9998 56.7833 50.0475 47.7539 45.1809 41.5028C43.7904 42.8919 42.3999 43.5864 41.7041 43.5864Z"/></svg>`,
+  除湿:`<svg viewBox="0 0 80 80">${G('g-dry','#8FF2FF','#00BDD6')}<path fill="url(#g-dry)" d="M53.8954 53.6036C53.8954 65.173 44.4834 74.5513 32.872 74.5513C21.2606 74.5513 11.8486 65.173 11.8486 53.6036C11.8486 42.0374 32.872 7.05273 32.872 7.05273C32.872 7.05273 53.8954 42.0374 53.8954 53.6036Z"/><path fill="url(#g-dry)" d="M68.2798 26.3213C68.2798 29.7352 65.5553 32.5026 62.1941 32.5026C58.8329 32.5026 56.1084 29.7352 56.1084 26.3213C56.1084 22.9083 62.1941 12.585 62.1941 12.585C62.1941 12.585 68.2798 22.9083 68.2798 26.3213Z"/></svg>`,
+  关机:`<svg viewBox="0 0 61 61">${G('g-off','#969CB8','#434552')}<path fill="url(#g-off)" d="M30.5034 61C13.6516 61 0 47.3416 0 30.4966C0 17.9684 7.55776 7.21732 18.3565 2.52606C18.3497 2.70309 18.302 2.8665 18.302 3.05034V16.9471C14.5844 20.297 12.2014 25.0972 12.2014 30.4966C12.2014 40.6008 20.3923 48.7986 30.5034 48.7986C40.6077 48.7986 48.7986 40.6077 48.7986 30.4966C48.7986 25.0972 46.4156 20.297 42.698 16.9471V3.05034C42.698 2.87331 42.6571 2.70309 42.6435 2.52606C53.4422 7.22413 61 17.9752 61 30.4966C61 47.3416 47.3416 61 30.5034 61ZM30.5034 33.5469C27.1331 33.5469 24.4027 30.8166 24.4027 27.4463V6.10068C24.4027 2.73033 27.1399 0 30.5034 0C33.8738 0 36.6041 2.73033 36.6041 6.10068V27.4463C36.5973 30.8166 33.867 33.5469 30.5034 33.5469Z"/></svg>`,
+  故障:`<svg viewBox="0 0 80 80">${G('g-alarm','#710913','#DC5E62')}<path fill="url(#g-alarm)" d="M61.0321 66.8145C60.4958 66.288 59.8053 65.9128 59.0347 65.7615C58.5724 65.6708 58.2395 65.2835 58.2395 64.8236V42.5788C58.2395 32.9571 50.2192 24.9814 40.4173 25.0178C30.6462 25.0541 22.7307 32.8422 22.7307 42.4457V64.8236C22.7307 65.2835 22.3978 65.6708 21.9355 65.7615C20.1354 66.1246 18.7853 67.6859 18.7853 69.5558H62.1849C62.1849 68.4847 61.741 67.5164 61.0321 66.8145ZM43.8942 35.6681L42.6982 46.1551H47.3896L37.0822 60.8418L38.2781 50.3548H33.5806L43.8942 35.6681ZM40.4851 20.1767C39.3939 20.1767 38.5124 19.3113 38.5124 18.2402V9.52628C38.5124 8.45519 39.3939 7.58984 40.4851 7.58984C41.5763 7.58984 42.4578 8.45519 42.4578 9.52628V18.2402C42.4578 19.3113 41.5763 20.1767 40.4851 20.1767ZM26.1829 25.5079C25.2397 26.0404 24.0315 25.7258 23.489 24.7999L19.0504 17.2539C18.5079 16.328 18.8284 15.1419 19.7716 14.6094C20.7148 14.0769 21.9231 14.3916 22.4656 15.3174L26.9042 22.8635C27.4467 23.7893 27.1261 24.9693 26.1829 25.5079ZM54.7872 25.5079C55.7304 26.0404 56.9387 25.7258 57.4812 24.7999L61.9198 17.2539C62.4623 16.328 62.1418 15.1419 61.1986 14.6094C60.2554 14.0769 59.0471 14.3916 58.5046 15.3174L54.066 22.8635C53.5235 23.7893 53.844 24.9693 54.7872 25.5079ZM21.4053 34.5123C21.1217 35.5471 20.0429 36.1583 18.9887 35.8799L10.4136 33.6288C9.35942 33.3505 8.73678 32.2915 9.0142 31.2567C9.29777 30.2219 10.3766 29.6107 11.4308 29.8891L20.0059 32.1463C21.0601 32.4186 21.6827 33.4776 21.4053 34.5123ZM59.5649 34.5123C59.8485 35.5471 60.9273 36.1583 61.9815 35.8799L70.5566 33.6228C71.6108 33.3444 72.2334 32.2854 71.9498 31.2507C71.6663 30.2159 70.5874 29.6047 69.5333 29.883L60.9581 32.1402C59.9101 32.4186 59.2875 33.4776 59.5649 34.5123Z"/></svg>`,
+};
+/* wifi(在线亮/离线灰) */
+const SVG_WIFI_ON='<svg viewBox="0 0 11 11" fill="currentColor"><path d="M5.5 8.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zM5.5 5C3.9 5 2.4 5.6 1.2 6.7l1.1 1.2A4.6 4.6 0 0 1 5.5 6.7c1.3 0 2.5.5 3.2 1.3l1.1-1.2A6.1 6.1 0 0 0 5.5 5zM5.5 1.5C3.1 1.5.9 2.4-.6 4l1.1 1.2A8 8 0 0 1 5.5 3.2c2 0 3.8.8 5 2L11.6 4C10.1 2.4 7.9 1.5 5.5 1.5z"/></svg>';
+const SVG_WIFI_OFF='<svg viewBox="0 0 11 11" fill="currentColor"><path d="M5.5 8.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zM9.8 6.7L8.7 7.9A4.6 4.6 0 0 0 5.5 6.7c-.5 0-1 .1-1.5.3L2.9 5.9A8 8 0 0 1 5.5 5c1.3 0 2.5.3 3.6.8L10 5C8.7 3.7 7.2 3 5.5 3c-1 0-2 .2-2.9.7L1.4 2.5.7 3.2l9 9 .7-.7-2.6-2.6"/></svg>';
+const SVG_TEANT='<svg viewBox="0 0 12 12"><path d="M6 6a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm0 1c-2 0-5 1-5 3v1h10v-1c0-2-3-3-5-3z"/></svg>';
+/* 底部小图标:模式/风速/电源 */
+const SVG_B_MODE='<svg viewBox="0 0 12 13"><path d="M6 0v13M1 3l10 7M11 3L1 10M6 1.5L4.5 0M6 1.5L7.5 0M6 11.5L4.5 13M6 11.5L7.5 13" stroke="#fff" stroke-width="1.2" fill="none"/></svg>';
+const SVG_B_WIND='<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="1" fill="#fff"/><path d="M6 5C6.2 2.4 8.6 1.4 9.1 3c.4 1.2-1.6 1.8-3.1 2zM5 6C2.4 5.8 1.4 3.4 3 2.9c1.2-.4 1.8 1.6 2 3.1zM7 6c2.6.2 3.6 2.6 2 3.1-1.2.4-1.8-1.6-2-3.1zM6 7c-.2 2.6-2.6 3.6-3.1 2-.4-1.2 1.6-1.8 3.1-2z" fill="#fff"/></svg>';
+const SVG_B_POW='<svg viewBox="0 0 12 12"><path d="M6 1v5M3.2 2.8a4.5 4.5 0 1 0 5.6 0" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>';
 function cardHTML(a,idx){
-  const cls=a.lost?'lost':(a.on?'on':'');
-  const icon=a.lost?`<div class="lost-tag"><span class="li">${SVG_ALARM}</span>LOST</div>`:(a.on?SVG_SNOW:SVG_POWER);
+  /* 模式大图标键:开机按模式,关机用电源,故障用警报灯 */
+  const modeKey=a.lost?'故障':(a.on?(SVG_MODE[a.mode]?a.mode:'送风'):'关机');
+  const cls=a.lost?'m-fault':(a.on?({制冷:'m-cool',制热:'m-heat',送风:'m-fan',除湿:'m-dry'}[a.mode]||'m-fan'):'m-off');
+  const bigIcon=SVG_MODE[modeKey]||SVG_MODE.关机;
+  const wifi=a.online?`<span class="ac-wifi on">${SVG_WIFI_ON}</span>`:`<span class="ac-wifi off">${SVG_WIFI_OFF}</span>`;
+  /* 底部三项:模式/风速/开关机,故障卡也按实际运行状态显示 */
+  const bMode=a.mode,bWind=a.on?a.wind:'自动',bPow=a.on?'开机':'关机';
   return `<div class="ac-card ${cls} ${sel.has(a.id)?'sel':''}" onclick="toggleSel(${a.id})">
-    <div class="ac-hd"><span class="rn">${a.room} <span style="opacity:.7">📶</span>${a.lock?'':''}</span><span class="tn">👤 ${a.fl<10?'A':'C'}${a.fl}-${a.room}</span></div>
-    <div class="ac-mid">
-      <div><div class="ac-temp"><span class="tv">${a.lost?a.roomTemp:a.temp}</span><span class="tu">℃${a.lock?' 🔒':''}</span></div>
-      <div class="ac-rt">室温${a.roomTemp}℃</div></div>
-      <div class="ac-icon">${icon}</div>
+    <div class="ac-card-top">
+      <div class="ac-card-name">${a.room}</div>${wifi}
+      <div class="ac-card-teant">${SVG_TEANT}<span>${a.tenant||'产品部'}</span></div>
     </div>
-    <div class="ac-ft">
-      <span>❄ ${a.mode}${a.lock?' 🔒':''}</span>
-      <span>✣ ${a.on?a.wind:'自动'}</span>
-      <span>⏻ ${a.on?'开机':'关机'}${a.lock&&!a.on?' 🔒':''}</span>
+    <div class="ac-card-middle">
+      <div class="ac-card-middle-left">
+        <div class="set-temp"><span class="sv">${a.temp}</span><span class="su">°C</span></div>
+        <div class="room-temp">室温${a.roomTemp}°C</div>
+      </div>
+      <div class="ac-mode-icon">${bigIcon}${a.lost?`<span class="ac-fault-code">${a.faultCode||'31'}</span>`:''}</div>
+    </div>
+    <div class="ac-card-bottom">
+      <div class="ac-bottom-item">${SVG_B_MODE}<span>${bMode}</span></div>
+      <div class="ac-bottom-item">${SVG_B_WIND}<span>${bWind}</span></div>
+      <div class="ac-bottom-item">${SVG_B_POW}<span>${bPow}</span></div>
     </div>
   </div>`;
 }
@@ -388,7 +460,7 @@ function renderPlan(){
     const fans=r.fans.map(f=>{
       const ac=ACS[(fi*7)%ACS.length];const on=ac.on;const myIdx=fi++;
       return `<div class="fan ${on?'on':''} ${planSel===myIdx?'sel':''}" style="left:${f[0]}px;top:${f[1]}px"
-        onclick="planSel=${myIdx};fillInfo(ACS[${ac.id}]);renderPlan()">${FAN_SVG(on)}<span class="flb">${f[2]}</span></div>`;
+        onclick="planSel=${myIdx};showPlanInfo(${ac.id});renderPlan()">${FAN_SVG(on)}<span class="flb">${f[2]}</span></div>`;
     }).join('');
     return `<div class="room" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px"><span class="rlb">${r.lb}</span></div>`+fans;
   }).join('');
@@ -407,13 +479,24 @@ function showVisualPromoOnce(){
 function closeVisualPromo(){
   $modalClose('dlgPromo');
 }
+/* 可视化视图下详情面板跟随风机点选;切视图时重置,回卡片视图按勾选数恢复 */
+function showPlanInfo(id){
+  fillInfo(ACS[id]);
+  document.getElementById('detailPanel').style.display='block';
+}
 function setView(v){
   view=v;
   document.getElementById('vtCard').classList.toggle('active',v==='card');
   document.getElementById('vtPlan').classList.toggle('active',v==='plan');
   document.getElementById('gridWrap').style.display=v==='card'?'':'none';
   document.getElementById('planWrap').style.display=v==='plan'?'block':'none';
-  if(v==='plan'){renderPlan();showVisualPromoOnce();}
+  if(v==='plan'){
+    planSel=-1;
+    document.getElementById('detailPanel').style.display='none';
+    renderPlan();showVisualPromoOnce();
+  }else{
+    syncDetailVisibility();
+  }
 }
 
 /* ── 右侧控制面板 ── */
@@ -438,6 +521,7 @@ function setWind(w){
 }
 function applyCtrl(){
   if(!sel.size)return $msg('请先在左侧勾选或点击卡片选择空调','warning');
+  const count=sel.size;
   sel.forEach(id=>{
     const a=ACS[id];
     if(ctrl.on!==null)a.on=ctrl.on;
@@ -445,8 +529,9 @@ function applyCtrl(){
     if(ctrl.mode)a.mode=ctrl.mode;
     if(ctrl.wind)a.wind=ctrl.wind;
   });
-  renderCards();renderPlan();
-  $msg(`控制指令已下发至 ${sel.size} 台空调`);
+  sel.clear();
+  renderCards();renderPager();renderPlan();syncDetailVisibility();
+  $msg(`控制指令已下发至 ${count} 台空调`);
 }
 function stepLock(k,d){
   const r=document.getElementById(k==='hi'?'hiRange':'loRange');
@@ -455,7 +540,10 @@ function stepLock(k,d){
 }
 function applyLock(){
   if(!sel.size)return $msg('请先选择空调','warning');
-  $msg(`锁定设置已下发至 ${sel.size} 台空调`);
+  const count=sel.size;
+  sel.clear();
+  renderCards();renderPager();renderPlan();syncDetailVisibility();
+  $msg(`锁定设置已下发至 ${count} 台空调`);
 }
 function unlockAll(){
   ['lkHi','lkLo','lkCool','lkHeat'].forEach(id=>document.getElementById(id).checked=false);
@@ -463,13 +551,48 @@ function unlockAll(){
   document.getElementById('banOff').classList.remove('btnd');
   $msg('已一键解锁');
 }
+function syncDetailVisibility(){
+  const panel=document.getElementById('detailPanel');
+  if(!panel)return;
+  if(sel.size===1){
+    panel.style.display='block';
+    const selectedId=[...sel][0];
+    fillInfo(ACS[selectedId]);
+  }else{
+    panel.style.display='none';
+  }
+}
+/* 详情卡内容顺序按查看频率排列:名称(常为空,轻量同行展示)→位置(高亮确认对象)→品牌/容量/地址/故障(设备与状态)→主机编号(低频长串置底) */
 function fillInfo(a){
   document.getElementById('infoGrid').innerHTML=`
-    <div style="grid-column:1/3"><div class="ig-k">主机编号</div><div class="ig-v">${a.host}</div></div>
+    <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">${a.indoorId||'—'}</span></div>
+    <div class="info-location-card">
+      <div class="ig-k">空调位置</div>
+      <div class="ig-v">${a.bld} · ${a.fl}层 · ${a.room}室</div>
+    </div>
     <div><div class="ig-k">空调品牌</div><div class="ig-v">${a.brand}</div></div>
-    <div><div class="ig-k">空调地址</div><div class="ig-v">${a.addr}</div></div>
     <div><div class="ig-k">空调容量</div><div class="ig-v">${a.cap}</div></div>
-    <div><div class="ig-k">故障代码</div><div class="ig-v ${a.lost?'text-er':''}">${a.lost?'LOST':'—'}</div></div>`;
+    <div><div class="ig-k">空调地址</div><div class="ig-v">${a.addr}</div></div>
+    <div><div class="ig-k">故障代码</div><div class="ig-v">${a.lost?'<span class="ig-fault">LOST</span>':'—'}</div></div>
+    <div class="info-host">
+      <div class="ih-hd"><span class="ig-k">主机编号</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
+      <div class="ig-v" id="hostVal">${a.host}</div>
+    </div>`;
+}
+function copyHostNo(){
+  const v=(document.getElementById('hostVal')?.textContent||'').trim();
+  if(!v||v==='—')return;
+  const done=()=>$msg('主机编号已复制','success');
+  const fallback=()=>{ /* file:// 或剪贴板权限受限时降级 execCommand */
+    const ta=document.createElement('textarea');
+    ta.value=v;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(e){}
+    ta.remove();
+    ok?done():$msg('复制失败,请手动复制','error');
+  };
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done,fallback):fallback();
 }
 
 /* ── 推广弹窗平面示意图 ── */
@@ -484,6 +607,7 @@ function fillInfo(a){
 /* ── 初始化 ── */
 renderTree();
 applyFilter();
+syncDetailVisibility();
 setPow(false);
 syncVisualNewBadge();
 </script>
