@@ -501,6 +501,17 @@ function setView(v){
 
 /* ── 右侧控制面板 ── */
 let ctrl={on:null,temp:null,mode:null,wind:null};
+/* 未选中空调时,状态/锁定控制面板按未选中(默认)状态展示 */
+function resetCtrlPanels(){
+  ctrl={on:null,temp:null,mode:null,wind:null};
+  document.getElementById('ooOff').classList.remove('act');
+  document.getElementById('ooOn').classList.remove('act');
+  document.getElementById('tempVal').textContent='--℃';
+  document.querySelectorAll('[data-m],[data-w]').forEach(b=>b.classList.remove('act'));
+  ['lkHi','lkLo','lkCool','lkHeat'].forEach(id=>document.getElementById(id).checked=false);
+  document.getElementById('banOn').classList.remove('btnd');
+  document.getElementById('banOff').classList.remove('btnd');
+}
 function setPow(on){
   ctrl.on=on;
   document.getElementById('ooOff').classList.toggle('act',!on);
@@ -560,6 +571,7 @@ function syncDetailVisibility(){
     fillInfo(ACS[selectedId]);
   }else{
     panel.style.display='none';
+    if(sel.size===0)resetCtrlPanels();  /* 未选中:控制面板回默认态 */
   }
 }
 /* 详情卡内容顺序按查看频率排列:名称(常为空,轻量同行展示)→位置(高亮确认对象)→品牌/容量/地址/故障(设备与状态)→主机编号(低频长串置底) */
@@ -607,8 +619,7 @@ function copyHostNo(){
 /* ── 初始化 ── */
 renderTree();
 applyFilter();
-syncDetailVisibility();
-setPow(false);
+syncDetailVisibility();  /* 初始未选中:resetCtrlPanels 已由 syncDetailVisibility 触发 */
 syncVisualNewBadge();
 </script>
 </body>
