@@ -26,21 +26,26 @@
 
   <!-- 右侧主区 -->
   <div class="main-col">
-    <!-- 筛选栏:分摊时间 + 查询/重置/导出(按线上照抄) -->
+    <!-- 筛选栏:分摊时间 + 分摊时段 + 查询方式(按房间/按租户) + 查询/重置/导出(按线上照抄) -->
     <div class="fb">
       <div class="fi"><span class="fl">分摊时间</span>
-        <input type="date" id="fStart" value="2026-07-02" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
+        <input type="date" id="fStart" value="2026-07-27" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-28" style="width:150px">
+      </div>
+      <div class="fi"><span class="fl">分摊时段</span>
+        <input type="time" id="fTimeS" style="width:130px"><span class="text-sub"> </span><input type="time" id="fTimeE" style="width:130px">
+      </div>
+      <div class="fi"><span class="fl">查询方式</span>
+        <span class="qradio" role="group" aria-label="查询方式">
+          <button class="view-btn active" id="billingRoom" onclick="switchBillingMode('room')">按房间</button>
+          <button class="view-btn" id="billingTenant" onclick="switchBillingMode('tenant')">按租户</button>
+        </span>
       </div>
       <button class="btn btnp" onclick="doQuery()">查询</button>
       <button class="btn" onclick="doReset()">重置</button>
       <button class="btn btnp" onclick="$msg('导出任务已生成,请稍候下载')">⬆ 导出</button>
-      <div class="view-switch" role="group" aria-label="汇总方式">
-        <button class="view-btn active" id="billingRoom" onclick="switchBillingMode('room')">按房间</button>
-        <button class="view-btn" id="billingTenant" onclick="switchBillingMode('tenant')">按租户</button>
-      </div>
     </div>
 
-    <!-- 表格:序号/租户/房间/用量(度)/费用(与线上 5 列一致) -->
+    <!-- 表格:房间/租户/用量(度)/费用(与线上 4 列一致,无序号列) -->
     <div class="tw">
       <table>
         <thead id="thead"></thead>
@@ -74,13 +79,13 @@ const ROWS=(()=>{
     rooms.forEach(rm=>{
       const u=use[i%use.length];
       rows.push({fl:fl+'层',tenant:String(rm),room:`1号楼 ${fl}层 ${rm}`,
-        use:u.toFixed(2),fee:(u*0.917).toFixed(2),date:'2026-07-02'});
+        use:u.toFixed(2),fee:(u*0.917).toFixed(2),date:'2026-07-27'});
       i++;
     });
     /* 每层一条公区(中走廊)分摊记录,租户为公区编号 */
     const u2=use[(i+5)%use.length];
     rows.push({fl:fl+'层',tenant:'1',room:`1号楼 ${fl}层 中走廊`,
-      use:u2.toFixed(2),fee:(u2*0.917).toFixed(2),date:'2026-07-02'});
+      use:u2.toFixed(2),fee:(u2*0.917).toFixed(2),date:'2026-07-27'});
     i++;
   });
   return rows;
@@ -118,8 +123,10 @@ function doQuery(){
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  document.getElementById('fStart').value='2026-07-02';
-  document.getElementById('fEnd').value='2026-07-02';
+  document.getElementById('fStart').value='2026-07-27';
+  document.getElementById('fEnd').value='2026-07-28';
+  document.getElementById('fTimeS').value='';
+  document.getElementById('fTimeE').value='';
   treeSel=null;renderTree();doQuery();
 }
 function renderTable(){
@@ -127,12 +134,12 @@ function renderTable(){
   const rows=filtered.slice(start,start+pg.size);
   const tenant=billingMode==='tenant';
   document.getElementById('thead').innerHTML=tenant
-    ?'<tr><th>序号</th><th>租户</th><th>用量(度)</th><th>费用</th></tr>'
-    :'<tr><th>序号</th><th>房间</th><th>租户</th><th>用量(度)</th><th>费用</th></tr>';
+    ?'<tr><th>租户</th><th>用量(度)</th><th>费用</th></tr>'
+    :'<tr><th>房间</th><th>租户</th><th>用量(度)</th><th>费用</th></tr>';
   document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>tenant
-    ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`
-    :`<tr><td>${start+i+1}</td><td>${r.room}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`).join('')
-    :`<tr><td colspan="${tenant?4:5}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
+    ?`<tr><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`
+    :`<tr><td>${r.room}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td></tr>`).join('')
+    :`<tr><td colspan="${tenant?3:4}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
 }
 
 renderTree();doQuery();

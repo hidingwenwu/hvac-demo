@@ -27,23 +27,28 @@
 
   <!-- 右侧主区 -->
   <div class="main-col">
-    <!-- 筛选栏:分摊时间 + 查询/重置/导出/手动获取(按线上照抄) -->
+    <!-- 筛选栏:分摊时间 + 分摊时段 + 查询方式(按内机/按房间/按租户) + 查询/重置/导出/手动获取(按线上照抄) -->
     <div class="fb">
       <div class="fi"><span class="fl">分摊时间</span>
-        <input type="date" id="fStart" value="2026-07-02" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
+        <input type="date" id="fStart" value="2026-07-27" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-28" style="width:150px">
+      </div>
+      <div class="fi"><span class="fl">分摊时段</span>
+        <input type="time" id="fTimeS" style="width:130px"><span class="text-sub"> </span><input type="time" id="fTimeE" style="width:130px">
+      </div>
+      <div class="fi"><span class="fl">查询方式</span>
+        <span class="qradio" role="group" aria-label="查询方式">
+          <button class="view-btn active" id="dailyUnit" onclick="switchDailyMode('unit')">按内机</button>
+          <button class="view-btn" id="dailyRoom" onclick="switchDailyMode('room')">按房间</button>
+          <button class="view-btn" id="dailyTenant" onclick="switchDailyMode('tenant')">按租户</button>
+        </span>
       </div>
       <button class="btn btnp" onclick="doQuery()">查询</button>
       <button class="btn" onclick="doReset()">重置</button>
       <button class="btn btnp" onclick="$msg('导出任务已生成,请稍候下载')">⬆ 导出</button>
       <button class="btn btnp" onclick="manualFetch()">手动获取</button>
-      <div class="view-switch" role="group" aria-label="查看方式">
-        <button class="view-btn active" id="dailyUnit" onclick="switchDailyMode('unit')">按内机</button>
-        <button class="view-btn" id="dailyRoom" onclick="switchDailyMode('room')">按房间</button>
-        <button class="view-btn" id="dailyTenant" onclick="switchDailyMode('tenant')">按租户</button>
-      </div>
     </div>
 
-    <!-- 表格:序号/租户/房间/内机地址/用量(度)/费用/生成时间(与线上 7 列一致) -->
+    <!-- 表格:租户/房间/内机地址/用量(度)/费用/生成时间(与线上一致,无序号列) -->
     <div class="tw">
       <table>
         <thead id="thead"></thead>
@@ -72,7 +77,7 @@ const ROWS=(()=>{
   ];
   /* 用量样本(贴线上:0.68 ~ 21.12 之间的两位小数) */
   const use=[3.42,3.30,13.39,2.51,13.30,21.12,3.29,0.68,5.12,3.48,1.86,7.05,0.92,10.44,4.70,2.13,6.58,0.35,15.07,8.21];
-  const days=['2026-07-02','2026-07-01','2026-06-30'];
+  const days=['2026-07-27','2026-07-26','2026-07-25'];
   let i=0;
   days.forEach(d=>{
     units.forEach(([fl,rm,addr])=>{
@@ -113,8 +118,10 @@ function doQuery(){
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  document.getElementById('fStart').value='2026-07-02';
-  document.getElementById('fEnd').value='2026-07-02';
+  document.getElementById('fStart').value='2026-07-27';
+  document.getElementById('fEnd').value='2026-07-28';
+  document.getElementById('fTimeS').value='';
+  document.getElementById('fTimeE').value='';
   treeSel=null;renderTree();doQuery();
 }
 function renderTable(){
@@ -122,16 +129,16 @@ function renderTable(){
   const rows=filtered.slice(start,start+pg.size);
   const room=dailyMode==='room',tenant=dailyMode==='tenant';
   document.getElementById('thead').innerHTML=tenant
-    ?'<tr><th>序号</th><th>租户</th><th>用量(度)</th><th>费用</th><th>日期</th></tr>'
+    ?'<tr><th>租户</th><th>用量(度)</th><th>费用</th><th>生成时间</th></tr>'
     :room
-      ?'<tr><th>序号</th><th>租户</th><th>房间</th><th>用量(度)</th><th>费用</th><th>日期</th></tr>'
-      :'<tr><th>序号</th><th>租户</th><th>房间</th><th>内机地址</th><th>用量(度)</th><th>费用</th><th>生成时间</th></tr>';
+      ?'<tr><th>租户</th><th>房间</th><th>用量(度)</th><th>费用</th><th>生成时间</th></tr>'
+      :'<tr><th>租户</th><th>房间</th><th>内机地址</th><th>用量(度)</th><th>费用</th><th>生成时间</th></tr>';
   document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>tenant
-    ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
+    ?`<tr><td>${r.tenant}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
     :room
-      ?`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
-      :`<tr><td>${start+i+1}</td><td>${r.tenant}</td><td>${r.room}</td><td>${r.addr}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`).join('')
-    :`<tr><td colspan="${tenant?5:room?6:7}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
+      ?`<tr><td>${r.tenant}</td><td>${r.room}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`
+      :`<tr><td>${r.tenant}</td><td>${r.room}</td><td>${r.addr}</td><td>${Number(r.use).toFixed(2)}</td><td>${Number(r.fee).toFixed(2)}</td><td>${r.date}</td></tr>`).join('')
+    :`<tr><td colspan="${tenant?4:room?5:6}"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>`;
 }
 /* 手动获取:线上点击后弹确认框(取消/确定) */
 function manualFetch(){

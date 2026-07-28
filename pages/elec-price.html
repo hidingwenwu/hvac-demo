@@ -126,7 +126,7 @@
 <script>
 /* ── 项目上下文(壳写入 localStorage;独立打开时默认后付费按天项目) ── */
 const PROJ=(()=>{try{const p=JSON.parse(localStorage.getItem('fyProj')||'null');if(p&&p.pay)return p;}catch(e){}
-  return {name:'1861蔚蓝公寓B2',pay:'post',unit:'day'};})();
+  return {name:'平台测试_后付费',pay:'post',unit:'day'};})();
 const HOURLY=PROJ.unit==='hour';
 const DATE_PRICE_ON=PROJ.unit==='day'&&PROJ.pay==='post'; /* 指定日期电价:仅按天计费且后付费 */
 

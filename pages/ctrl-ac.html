@@ -19,6 +19,11 @@
 .new-badge{position:absolute;top:-9px;right:-6px;background:#3dd68c;color:#04240f;font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;z-index:1;}
 .more-filters{display:none;align-items:center;gap:10px;flex-wrap:wrap;}
 .more-filters.show{display:flex;}
+/* 温度范围筛选组(线上形态:label + 数值框 至 数值框) */
+.mf-grp{display:inline-flex;align-items:center;gap:6px;}
+.mf-grp .mf-lb{font-size:13px;color:var(--tx);white-space:nowrap;}
+.mf-grp .mf-sep{color:var(--ts);font-size:12px;}
+.mf-grp input[type=number]{text-align:center;}
 /* 卡片网格 */
 .grid-wrap{flex:1;overflow-y:auto;}
 .ac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,255px));gap:14px;justify-content:start;}
@@ -170,6 +175,8 @@
       </span>
     </div>
     <div class="more-filters" id="moreFilters">
+      <span class="mf-grp"><span class="mf-lb">设定温度范围</span><input type="number" min="16" max="31" style="width:64px" placeholder="16"><span class="mf-sep">至</span><input type="number" min="16" max="31" style="width:64px" placeholder="31"></span>
+      <span class="mf-grp"><span class="mf-lb">房间温度范围</span><input type="number" min="16" max="31" style="width:64px" placeholder="16"><span class="mf-sep">至</span><input type="number" min="16" max="31" style="width:64px" placeholder="31"></span>
       <select style="width:110px"><option>空调模式</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select>
       <select style="width:110px" id="fFault" onchange="applyFilter()"><option value="">故障状态</option><option>正常</option><option>故障</option></select>
       <select style="width:110px"><option>定时状态</option><option>有定时</option><option>无定时</option></select>
@@ -300,36 +307,31 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_fleet.js"></script>
 <script>
-/* ── 模拟数据:620 台空调,楼层分布与线上一致 ── */
-const FLOORS=[3,7,9,14,23];
-const ACS=[];
-(()=>{
-  let n=0;
-  FLOORS.forEach(fl=>{
-    for(let i=1;i<=124&&ACS.length<620;i++){
-      const room=fl*100+((i-1)%28)+1;
-      const lost=n%37===5;
-      const on=!lost&&n%4===1;
-      ACS.push({
-        id:n,bld:'1号楼',room:String(room),fl,
-        indoorId:`IN-${String(n+1).padStart(3,'0')}`,
-        addr:`${1+n%2}-${1+n%3}-${fl<10?fl:fl+16}-${1+n%8}`,
-        temp:22+n%8,roomTemp:26+n%4,
-        mode:['制冷','制冷','制冷','除湿'][n%4],
-        wind:['自动','低风','中风','中低风','高风'][n%5],
-        on,lost,lock:n%3!==0,online:!lost,
-        tenant:n%4===3?'飞奕':'产品部',
-        faultCode:lost?String(30+n%8):null,
-        host:'B0000016000012402401290001'+String(16+n%60).padStart(4,'0'),
-        brand:['海信','大金','美的'][n%3],cap:['2.2kW','2.8kW','3.6kW'][n%3],
-      });
-      /* 故障卡按现网呈现运行态:开机+高风(故障≠停机) */
-      if(lost){const a=ACS[ACS.length-1];a.on=true;a.wind='高风';}
-      n++;
-    }
-  });
-})();
+/* ── 机队数据:与"空调与房间关系"页共享同源(_fleet.js)
+   绑定/解绑/内机标识名称/建筑物修改 即时同步到本页 ── */
+const FLEET=window.HvacFleet.load();
+const ACS=FLEET.units.map((u,n)=>{
+  const lost=n%37===5;
+  const on=!lost&&n%4===1;
+  const a={
+    id:u.uid,bld:u.bld,room:u.room,fl:u.fl,
+    indoorId:u.name||'',                      /* 内机标识名称(关系页可编辑,现网常态为空) */
+    addr:u.addr,
+    temp:22+n%8,roomTemp:26+n%4,
+    mode:['制冷','制冷','制冷','除湿'][n%4],
+    wind:['自动','低风','中风','中低风','高风'][n%5],
+    on,lost,lock:n%3!==0,online:!lost,
+    tenant:u.tenant,
+    faultCode:lost?String(30+n%8):null,
+    host:'B0000016000012402401290001'+String(16+n%60).padStart(4,'0'),
+    brand:['海信','大金','美的'][n%3],cap:u.capKw,
+  };
+  /* 故障卡按现网呈现运行态:开机+高风(故障≠停机) */
+  if(lost){a.on=true;a.wind='高风';}
+  return a;
+});
 
 /* ── 状态 ── */
 let view='card';
@@ -340,7 +342,7 @@ const pg={total:0,page:1,size:12,sizes:[12,60,120],onChange:()=>renderCards()};
 /* ── 建筑树:楼栋-楼层-房间 三级(由空调数据动态构建,共享组件见 _ui.js) ── */
 let treeSel=null;
 function renderTree(){
-  $tree3('tree',$tree3From(ACS.map(a=>({bld:'1号楼',fl:a.fl+'层',room:a.room}))),s=>{treeSel=s;applyFilter();});
+  $tree3('tree',$tree3From(ACS.map(a=>({bld:a.bld,fl:a.fl+'层',room:a.room}))),s=>{treeSel=s;applyFilter();});
 }
 
 /* ── 筛选 ── */
@@ -409,7 +411,7 @@ function cardHTML(a,idx){
   const bMode=a.mode,bWind=a.on?a.wind:'自动',bPow=a.on?'开机':'关机';
   return `<div class="ac-card ${cls} ${sel.has(a.id)?'sel':''}" onclick="toggleSel(${a.id})">
     <div class="ac-card-top">
-      <div class="ac-card-name">${a.room}</div>${wifi}
+      <div class="ac-card-name">${a.room}${a.indoorId?'-'+a.indoorId:''}</div>${wifi}
       <div class="ac-card-teant">${SVG_TEANT}<span>${a.tenant||'产品部'}</span></div>
     </div>
     <div class="ac-card-middle">

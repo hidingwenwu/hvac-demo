@@ -175,68 +175,48 @@ tr.acsel td{background:#0d1730!important;}
 
 <script src="_ui.js"></script>
 <script src="_allocation.js"></script>
+<script src="_fleet.js"></script>
 <script>
-/* ══════════ 模拟数据 ══════════ */
+/* ══════════ 数据层:共享机队(与空调控制页同源同步) ══════════ */
 const allocation=window.HvacAllocation;
-/* 建筑物树:1号楼 > 楼层 > 房间 */
-const FLOOR_ROOMS={
-  '3层':['301','302','303','304','305','306','307','308'],
-  '7层':['707','713','714','715','716','717','718','719'],
-  '8层':['801','802','803会议室','8层电梯厅'],
-  '9层':['901','903','905','906','908','909','912','9层电梯厅'],
-  '13层':['1301','1302','1303','1304','1305','1306','1307','中走廊','1310','1311'],
-  '14层':['1404','1406','1408','1410','1412','14层走廊'],
-  '23层':['2302','2303','2305','2308']
-};
-const TREE=[{name:'1号楼',type:'楼栋',open:false,children:Object.keys(FLOOR_ROOMS).map(f=>({
-  name:f,type:'楼层',open:false,children:FLOOR_ROOMS[f].map(r=>({name:r,type:'房间'}))
-}))}];
+const store=window.HvacFleet.load();
+let units=store.units;
+function persist(){window.HvacFleet.save(store);}
 
-/* 未绑定空调 */
-let ACS=[
-  {addr:'2-3-0-5', sw:'关',mode:'制冷',temp:24,fan:'高风',cap:70,checked:false},
-  {addr:'2-3-26-7',sw:'关',mode:'制冷',temp:23,fan:'高风',cap:70,checked:false}
-];
-let acFiltered=ACS.slice();
+/* 未绑定空调(机队中 bound=false 的内机;运行参数按 uid 生成,与选择器选项匹配) */
+let ACS=[];
+let acFiltered=[];
+function rebuildAcs(){
+  ACS=units.filter(u=>!u.bound).map(u=>({
+    uid:u.uid,addr:u.addr,cap:u.cap,
+    sw:u.uid%2?'关':'开',mode:['制冷','制热','送风','除湿'][u.uid%4],
+    temp:23+u.uid%4,fan:['高风','中风','低风'][u.uid%3],checked:false
+  }));
+  acFiltered=ACS.slice();
+}
 
-/* 已绑定关系(共618条,首屏对齐线上截图) */
-const RELS=(()=>{
-  const head=[
-    {fl:'13层',room:'1301',addr:'2-3-2-2',cap:45},
-    {fl:'13层',room:'1305',addr:'2-3-2-1',cap:70},
-    {fl:'13层',room:'1307',addr:'2-3-4-6',cap:70},
-    {fl:'13层',room:'1306',addr:'2-3-4-7',cap:70},
-    {fl:'13层',room:'1303',addr:'2-3-2-3',cap:70},
-    {fl:'13层',room:'1304',addr:'2-3-2-4',cap:70},
-    {fl:'13层',room:'1302',addr:'2-3-2-5',cap:70},
-    {fl:'13层',room:'中走廊',addr:'2-3-2-6',cap:45,tenant:'31'},
-    {fl:'13层',room:'1310',addr:'2-3-4-1',cap:70},
-    {fl:'13层',room:'1311',addr:'2-3-4-2',cap:70}
-  ];
-  const rows=head.map(r=>({bld:'1号楼',fl:r.fl,room:r.room,tenant:r.tenant||r.room,addr:r.addr,name:'',cap:r.cap,checked:false}));
-  let i=0;
-  while(rows.length<618){
-    const fl=1+(i%23);
-    const rm=fl*100+1+Math.floor(i/23)%28;
-    rows.push({bld:'1号楼',fl:fl+'层',room:String(rm),tenant:String(rm),
-      addr:`${1+(i%2)}-${1+(i%4)}-${fl%28}-${i%8}`,name:'',
-      cap:[70,45,56,70][i%4],checked:false});
-    i++;
-  }
-  return rows;
-})();
+/* 已绑定关系 */
+let RELS=[];
+function rebuildRels(){RELS=units.filter(u=>u.bound);}
 
 /* ══════════ 面板1:建筑物树 ══════════ */
+let TREE=[];
 let seg='all';
-let selRoom=null;   /* {name,fl} */
+let selRoom=null;   /* {bld,name,fl} */
+const boundRooms=new Set();
+function refreshBoundRooms(){
+  boundRooms.clear();
+  units.filter(u=>u.bound).slice(0,60).forEach(u=>boundRooms.add(u.room));
+}
 function setSeg(v){
   seg=v;
   document.getElementById('segAll').className='sg'+(v==='all'?' active':'');
   document.getElementById('segUn').className='sg'+(v==='un'?' active':'');
   renderTree();
 }
-const boundRooms=new Set(RELS.slice(0,60).map(r=>r.room));
 function renderTree(){
+  TREE=window.HvacFleet.tree(store);
+  refreshBoundRooms();
   const tb=document.getElementById('treeBody');
   const rows=[];
   const publicRooms=new Set(allocation.getState().publicRoomIds);
@@ -255,31 +235,59 @@ function renderTree(){
       if(f.open) f.children.forEach(r=>{
         if(seg==='un'&&boundRooms.has(r.name)) return;
         const sel=selRoom&&selRoom.name===r.name&&selRoom.fl===f.name;
-        const roomId=`1号楼|${f.name}|${r.name}`;
+        const roomId=`${b.name}|${f.name}|${r.name}`;
         const isPublic=publicRooms.has(roomId);
         rows.push(`<tr><td class="tl" style="padding-left:58px"><span class="cell-name">
           <span class="arr hid">▶</span>
-          <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();pickRoom('${f.name}|${r.name}',this)"><span>${r.name}</span></span></td>
-          <td>${r.type}</td><td><span class="pub-mark"><button type="button" class="switch ${isPublic?'on':''}" role="switch" aria-checked="${isPublic}" aria-label="${isPublic?'取消':'标记'}${r.name}为公区" onclick="event.stopPropagation();togglePublicRoom('${f.name}','${r.name}',${!isPublic})"></button></span></td><td>${ops}</td></tr>`);
+          <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();pickRoom('${b.name}|${f.name}|${r.name}',this)"><span>${r.name}</span></span></td>
+          <td>${r.type}</td><td><span class="pub-mark"><button type="button" class="switch ${isPublic?'on':''}" role="switch" aria-checked="${isPublic}" aria-label="${isPublic?'取消':'标记'}${r.name}为公区" onclick="event.stopPropagation();togglePublicRoom('${b.name}','${f.name}','${r.name}',${!isPublic})"></button></span></td><td>${ops}</td></tr>`);
       });
     });
   });
   tb.innerHTML=rows.join('');
 }
-function togglePublicRoom(floor,room,enabled){
-  allocation.setPublicRoom(`1号楼|${floor}|${room}`,enabled);
+function togglePublicRoom(bld,floor,room,enabled){
+  allocation.setPublicRoom(`${bld}|${floor}|${room}`,enabled);
   $msg(enabled?`“${room}”已标记为公区`:`已取消“${room}”公区标记`);
   renderTree();
 }
 function toggleNode(bi,fi){
   if(fi===undefined) TREE[bi].open=!TREE[bi].open;
   else TREE[bi].children[fi].open=!TREE[bi].children[fi].open;
-  renderTree();
+  /* 就地重绘(保留展开态,不重建 TREE) */
+  const tb=document.getElementById('treeBody');
+  const rows=[];
+  const publicRooms=new Set(allocation.getState().publicRoomIds);
+  const ops=`<span class="op"><span class="tb tb-edit" onclick="event.stopPropagation();editNode(this)" title="编辑">✎</span><span class="tb tb-del" onclick="event.stopPropagation();delNode(this)" title="删除">🗑</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已上移')" title="上移">▲</span><span class="tb tb-mv" onclick="event.stopPropagation();$msg('已下移')" title="下移">▼</span></span>`;
+  TREE.forEach((b,bi2)=>{
+    rows.push(`<tr><td class="tl" style="padding-left:12px"><span class="cell-name">
+      <span class="arr ${b.open?'open':''}" onclick="toggleNode(${bi2})">▶</span>
+      <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${b.name}</span></span></td>
+      <td>${b.type}</td><td class="pub-placeholder">&mdash;</td><td>${ops}</td></tr>`);
+    if(b.open) b.children.forEach((f,fi2)=>{
+      if(seg==='un'&&f.children.every(r=>boundRooms.has(r.name))) return;
+      rows.push(`<tr><td class="tl" style="padding-left:34px"><span class="cell-name">
+        <span class="arr ${f.open?'open':''}" onclick="toggleNode(${bi2},${fi2})">▶</span>
+        <input type="checkbox" onclick="event.stopPropagation();pickRoom(null,this)"><span>${f.name}</span></span></td>
+        <td>${f.type}</td><td class="pub-placeholder">&mdash;</td><td>${ops}</td></tr>`);
+      if(f.open) f.children.forEach(r=>{
+        if(seg==='un'&&boundRooms.has(r.name)) return;
+        const sel=selRoom&&selRoom.name===r.name&&selRoom.fl===f.name;
+        const roomId=`${b.name}|${f.name}|${r.name}`;
+        const isPublic=publicRooms.has(roomId);
+        rows.push(`<tr><td class="tl" style="padding-left:58px"><span class="cell-name">
+          <span class="arr hid">▶</span>
+          <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();pickRoom('${b.name}|${f.name}|${r.name}',this)"><span>${r.name}</span></span></td>
+          <td>${r.type}</td><td><span class="pub-mark"><button type="button" class="switch ${isPublic?'on':''}" role="switch" aria-checked="${isPublic}" aria-label="${isPublic?'取消':'标记'}${r.name}为公区" onclick="event.stopPropagation();togglePublicRoom('${b.name}','${f.name}','${r.name}',${!isPublic})"></button></span></td><td>${ops}</td></tr>`);
+      });
+    });
+  });
+  tb.innerHTML=rows.join('');
 }
 function pickRoom(key,el){
   if(!key){ el.checked=false; $msg('请勾选房间进行绑定','warning'); return; }
-  const [fl,name]=key.split('|');
-  selRoom=el.checked?{fl,name}:null;
+  const [bld,fl,name]=key.split('|');
+  selRoom=el.checked?{bld,fl,name}:null;
   renderTree();renderSlots();relQuery();
 }
 function sortTree(){ $msg('一键排序完成'); }
@@ -297,12 +305,27 @@ function editNode(el){ editing=el;
   $modal('dlgNew');
 }
 function saveNew(){
-  if(!document.getElementById('nName').value.trim()){$msg('请输入建筑物名称','warning');return;}
+  const name=document.getElementById('nName').value.trim();
+  if(!name){$msg('请输入建筑物名称','warning');return;}
+  if(!editing){
+    /* 新建:写入 extra 空节点并持久化(类型决定挂接层级),建筑物列表与空调控制页同步 */
+    const type=document.getElementById('nType').value;
+    if(type==='楼栋')store.extra.push({bld:name,fl:'1层',room:''});
+    else if(type==='楼层')store.extra.push({bld:(selRoom&&selRoom.bld)||'1号楼',fl:name,room:''});
+    else store.extra.push({bld:(selRoom&&selRoom.bld)||'1号楼',fl:(selRoom&&selRoom.fl)||'1层',room:name});
+    persist();
+  }
   $modalClose('dlgNew');$msg(editing?'保存成功':'新建成功');
+  renderTree();
 }
 function delNode(el){
   const name=el.closest('tr').querySelector('.cell-name span:last-child').textContent;
-  $confirm('确定删除「'+name+'」吗?',()=>$msg('删除成功'));
+  $confirm('确定删除「'+name+'」吗?',()=>{
+    /* 仅允许删除新建的空节点;机队已占用的建筑不可删 */
+    const i=(store.extra||[]).findIndex(n=>n.bld===name||n.fl===name||n.room===name);
+    if(i>-1){store.extra.splice(i,1);persist();renderTree();$msg('删除成功');}
+    else $msg('该建筑下存在已绑定空调,不可删除','warning');
+  });
 }
 
 /* ══════════ 面板2:选择空调 ══════════ */
@@ -331,7 +354,7 @@ function acQuery(){
 /* ══════════ 面板3:确认绑定 ══════════ */
 function renderSlots(){
   const sr=document.getElementById('slotRoom'),sa=document.getElementById('slotAc');
-  if(selRoom){sr.textContent='1号楼 / '+selRoom.fl+' / '+selRoom.name;sr.classList.add('has');}
+  if(selRoom){sr.textContent=selRoom.bld+' / '+selRoom.fl+' / '+selRoom.name;sr.classList.add('has');}
   else{sr.textContent='未选房间';sr.classList.remove('has');}
   const picked=ACS.filter(a=>a.checked);
   if(picked.length){sa.textContent=picked.map(a=>a.addr).join('、');sa.classList.add('has');}
@@ -342,21 +365,24 @@ function doBind(){
   if(!selRoom){$msg('请先选择房间','warning');return;}
   if(!picked.length){$msg('请先选择空调','warning');return;}
   picked.forEach(a=>{
-    RELS.unshift({bld:'1号楼',fl:selRoom.fl,room:selRoom.name,tenant:selRoom.name,addr:a.addr,name:'',cap:a.cap,checked:false});
+    const u=units.find(x=>x.uid===a.uid);
+    if(u){u.bld=selRoom.bld;u.fl=parseInt(selRoom.fl)||u.fl;u.room=selRoom.name;u.bound=true;}
   });
-  ACS=ACS.filter(a=>!a.checked);acFiltered=ACS.slice();
+  persist();                       /* 绑定即写入共享机队,空调控制页同步可见 */
   selRoom=null;
+  rebuildAcs();rebuildRels();
   $msg('绑定成功');
   renderTree();renderAcs();relQuery();
 }
 
 /* ══════════ 下方:关系列表 ══════════ */
-let relFiltered=RELS.slice();
-const pg={total:RELS.length,page:1,size:10,onChange:()=>renderRel()};
+let relFiltered=[];
+const pg={total:0,page:1,size:10,onChange:()=>renderRel()};
 function relQuery(){
+  rebuildRels();
   const addr=document.getElementById('fAddr').value.trim();
   const ten=document.getElementById('fTenant').value.trim();
-  relFiltered=RELS.filter(r=>(!selRoom||(r.fl===selRoom.fl&&r.room===selRoom.name))&&
+  relFiltered=RELS.filter(r=>(!selRoom||(r.fl+'层'===selRoom.fl&&r.room===selRoom.name))&&
     (!addr||r.addr.includes(addr))&&(!ten||r.tenant.includes(ten)));
   pg.page=1;pg.total=relFiltered.length;
   $pager('pager',pg);renderRel();
@@ -369,18 +395,17 @@ function renderRel(){
   const start=(pg.page-1)*pg.size;
   const rows=relFiltered.slice(start,start+pg.size);
   document.getElementById('relBody').innerHTML=rows.length?rows.map((r,i)=>{
-    const gi=RELS.indexOf(r);
     return `<tr>
-      <td><input type="checkbox" ${r.checked?'checked':''} onclick="RELS[${gi}].checked=this.checked"></td>
-      <td>${r.bld}</td><td>${r.fl}</td><td>${r.room}</td>
-      <td><select style="width:120px" onchange="$msg('租户已变更')">
+      <td><input type="checkbox" ${r.checked?'checked':''} onclick="units.find(x=>x.uid===${r.uid}).checked=this.checked"></td>
+      <td>${r.bld}</td><td>${r.fl}层</td><td>${r.room}</td>
+      <td><select style="width:120px" onchange="units.find(x=>x.uid===${r.uid}).tenant=this.value;persist();$msg('租户已变更')">
         <option ${'selected'}>${r.tenant}</option><option>公共区域</option><option>未分配</option></select></td>
       <td>${r.addr}</td>
-      <td><input placeholder="请输入" value="${r.name}" style="width:180px" onchange="RELS[${gi}].name=this.value"></td>
-      <td><input value="${r.cap}" style="width:110px" onchange="RELS[${gi}].cap=this.value"></td>
+      <td><input placeholder="请输入" value="${r.name}" style="width:180px" onchange="units.find(x=>x.uid===${r.uid}).name=this.value;persist()"></td>
+      <td><input value="${r.cap}" style="width:110px" onchange="units.find(x=>x.uid===${r.uid}).cap=this.value;persist()"></td>
       <td><span class="op">
-        <button class="btn btn-mini btn-plain" onclick="$msg('提交成功')">提交</button>
-        <button class="btn btn-mini btn-plain-d" onclick="unbindRow(${gi})">解绑</button>
+        <button class="btn btn-mini btn-plain" onclick="persist();$msg('提交成功')">提交</button>
+        <button class="btn btn-mini btn-plain-d" onclick="unbindRow(${r.uid})">解绑</button>
       </span></td>
     </tr>`;}).join('')
     :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
@@ -388,28 +413,30 @@ function renderRel(){
 }
 function relCheckAll(v){
   const start=(pg.page-1)*pg.size;
-  relFiltered.slice(start,start+pg.size).forEach(r=>r.checked=v);
+  relFiltered.slice(start,start+pg.size).forEach(r=>{units.find(x=>x.uid===r.uid).checked=v;});
   renderRel();
   document.getElementById('relAll').checked=v;
 }
-function unbindRow(gi){
-  const r=RELS[gi];
-  $confirm('确定解绑房间 '+r.room+' 的内机 '+r.addr+' 吗?',()=>{
-    RELS.splice(gi,1);relQuery();$msg('解绑成功');
+function unbindRow(uid){
+  const u=units.find(x=>x.uid===uid);
+  $confirm('确定解绑房间 '+u.room+' 的内机 '+u.addr+' 吗?',()=>{
+    u.bound=false;persist();
+    rebuildAcs();relQuery();$msg('解绑成功');
   });
 }
 function batchSubmit(){
-  const n=RELS.filter(r=>r.checked).length;
+  const n=units.filter(u=>u.bound&&u.checked).length;
   if(!n){$msg('请先勾选记录','warning');return;}
+  persist();
   $msg('已批量提交 '+n+' 条记录');
-  RELS.forEach(r=>r.checked=false);renderRel();
+  units.forEach(u=>u.checked=false);renderRel();
 }
 function batchUnbind(){
-  const picked=RELS.filter(r=>r.checked);
+  const picked=units.filter(u=>u.bound&&u.checked);
   if(!picked.length){$msg('请先勾选记录','warning');return;}
   $confirm('确定批量解绑选中的 '+picked.length+' 条记录吗?',()=>{
-    picked.forEach(r=>{const i=RELS.indexOf(r);if(i>-1)RELS.splice(i,1);});
-    relQuery();$msg('批量解绑成功');
+    picked.forEach(u=>{u.bound=false;u.checked=false;});
+    persist();rebuildAcs();relQuery();$msg('批量解绑成功');
   });
 }
 function showTenantDetail(){
@@ -420,8 +447,10 @@ function showTenantDetail(){
   location.href='elec-tenant.html';
 }
 
+/* ── 初始化 ── */
+rebuildAcs();
 renderTree();renderAcs();
-$pager('pager',pg);renderRel();
+relQuery();
 allocation.subscribe(()=>renderTree());
 </script>
 </body>

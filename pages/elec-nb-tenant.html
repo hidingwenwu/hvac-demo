@@ -10,28 +10,48 @@
 .detail-grid .k{color:var(--ts);text-align:right;}
 .detail-grid .v{color:var(--tx);}
 .bal-neg{color:var(--tx);}                 /* 线上余额为普通文字色,负数不飘红 */
+/* 余额阈值预警条(线上黄底告警) */
+.bal-alert{display:flex;align-items:center;gap:8px;background:#fdf6ec;border:1px solid #faecd8;border-radius:4px;color:#e6a23c;font-size:13px;padding:9px 14px;margin-bottom:14px;}
+.bal-alert b{font-weight:700;margin:0 2px;}
+.bal-alert .ba-ic{font-size:15px;}
+.bal-alert .ba-link{color:#e6a23c;text-decoration:underline;cursor:pointer;margin-left:4px;}
+.bal-alert .ba-x{margin-left:auto;cursor:pointer;color:#c0c4cc;font-size:12px;padding:2px 6px;}
+.bal-alert .ba-x:hover{color:#909399;}
 .flow-bar{display:flex;gap:10px;margin-bottom:12px;}
 .sub-tw{background:var(--bg-input);border-radius:6px;overflow:hidden;}
 .sub-tw th{background:#101830;}
 </style>
 </head>
 <body>
-<!-- 筛选栏:账户租户名称 / 联系人真实名称 + 查询/重置/新增/导出变动记录(按 live json) -->
+<!-- 筛选栏:租户名称/联系人名称/充值/余额范围 + 查询/重置/新增/设定/导出充值记录/导出变动记录(对齐线上新计费) -->
 <div class="fb">
-  <div class="fi"><span class="fl">账户租户名称</span><input id="fName" placeholder="请输入账户租户名称" style="width:190px"></div>
-  <div class="fi"><span class="fl">联系人真实名称</span><input id="fContact" placeholder="请输入联系人真实名称" style="width:190px"></div>
+  <div class="fi"><span class="fl">租户名称</span><input id="fName" placeholder="请输入租户名称" style="width:150px"></div>
+  <div class="fi"><span class="fl">联系人名称</span><input id="fContact" placeholder="请输入联系人名称" style="width:150px"></div>
+  <div class="fi"><span class="fl">充值</span>
+    <select id="fCharge" style="width:110px"><option value="">请选择</option><option>已充值</option><option>未充值</option></select>
+  </div>
+  <div class="fi"><span class="fl">余额范围</span><input id="fBalMin" placeholder="请输入" style="width:80px"><span class="text-sub">—</span><input id="fBalMax" placeholder="请输入" style="width:80px"></div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn btnp" onclick="openAdd()">＋ 新增</button>
+  <button class="btn btnp" onclick="$msg('阈值设定已保存')">⚙ 设定</button>
+  <button class="btn btnp" onclick="$msg('充值记录导出任务已提交')">⬇ 导出充值记录</button>
   <button class="btn btnp" onclick="$msg('变动记录导出任务已提交')">⬇ 导出变动记录</button>
 </div>
 
-<!-- 表格:勾选列 + 序号/账户租户名称/联系人真实名称/余额/创建时间/修改时间/操作 -->
+<!-- 余额阈值预警条(线上黄色告警,可快捷筛选) -->
+<div class="bal-alert" id="balAlert">
+  <span class="ba-ic">⚠</span>
+  <span>当前有<b id="balLowCount">7</b>个租户的余额小于等于阈值100元,<a class="ba-link" onclick="quickFilterLow()">快捷筛选</a></span>
+  <span class="ba-x" onclick="document.getElementById('balAlert').style.display='none'">✕</span>
+</div>
+
+<!-- 表格:勾选列 + 序号/租户名称/联系人名称/余额/创建时间/修改时间/操作 -->
 <div class="tw">
   <table>
     <thead><tr>
       <th style="width:44px"><input type="checkbox" id="chkAll" onclick="toggleAll(this)"></th>
-      <th>序号</th><th>账户租户名称</th><th>联系人真实名称</th><th>余额</th>
+      <th>序号</th><th>租户名称</th><th>联系人名称</th><th>余额</th>
       <th>创建时间</th><th>修改时间</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -45,12 +65,12 @@
     <div class="dh"><span id="editTitle">新增租户</span><span class="dx" onclick="$modalClose('dlgEdit')">✕</span></div>
     <div class="db">
       <div class="form-item" style="margin-bottom:14px">
-        <span class="fl"><span class="req">*</span>账户租户名称</span>
-        <input id="eName" placeholder="请输入账户租户名称">
+        <span class="fl"><span class="req">*</span>租户名称</span>
+        <input id="eName" placeholder="请输入租户名称">
       </div>
       <div class="form-item" style="margin-bottom:14px">
-        <span class="fl">联系人真实名称</span>
-        <input id="eContact" placeholder="请输入联系人真实名称">
+        <span class="fl">联系人名称</span>
+        <input id="eContact" placeholder="请输入联系人名称">
       </div>
       <div class="form-item" style="margin-bottom:14px">
         <span class="fl">联系电话</span>
@@ -140,25 +160,30 @@
 
 <script src="_ui.js"></script>
 <script>
-/* ── 模拟数据(形态贴 live json:名称多为纯数字,余额 -49.6x,创建时间固定,修改时间秒数微变) ── */
+/* ── 模拟数据(对齐线上"平台测试_新计费":999/A座-1~8/公区 + 测试A座N层租户联系人,正余额,7户低于阈值100) ── */
 const TENANTS=(()=>{
-  const rows=[],TOTAL=12925;
-  for(let i=0;i<TOTAL;i++){
-    let name;
-    if(i<10)name='1';                            // 首页与线上一致,均为"1"
-    else if(i<12)name=String(i-8);               // 2、3
-    else if(i<13)name='10';
-    else name=String(1000+(i-13)%900);           // 1000~1899 循环
-    const bal=(i%23===11)?(100+(i%40)*7.5).toFixed(2)      // 少量正余额
-                         :(-(49.6+[8,8,7,8,7,7,7,8,8,8][i%10]/100)).toFixed(2); // -49.67/-49.68,首页序列贴线上
-    rows.push({
-      id:i+1,name,
-      contact:(i>=10&&i%17===5)?['张伟','李娜','王强','刘敏'][i%4]:'',  // 联系人多为空,首页与线上一致全空
-      bal,
-      crtTime:'2025-06-24 16:48:25',
-      modTime:'2026-07-02 03:04:'+String(37-(i%15)).padStart(2,'0')
-    });
-  }
+  const rows=[];
+  const defs=[
+    ['999','999','102.00','2026-07-27 16:50:58'],
+    ['A座-1','测试A座1层的租户','9653.52','2025-09-15 10:30:17'],
+    ['A座-2','测试A座2层的租户','2998.25','2025-09-15 10:33:54'],
+    ['A座-3','','10000.00','2026-07-03 16:10:57'],
+    ['A座-4','','300.69','2026-07-03 16:11:03'],
+    ['A座-5','','9992.50','2026-07-03 16:11:09'],
+    ['A座-6','','9992.50','2026-07-03 16:11:14'],
+    ['A座-7','','9992.50','2026-07-03 16:11:20'],
+    ['A座-8','','9992.50','2026-07-03 16:11:25'],
+    ['公区','公区','10000.00','2026-07-03 13:10:13'],
+  ];
+  defs.forEach((d,i)=>rows.push({
+    id:i+1,name:d[0],contact:d[1],bal:d[2],crtTime:d[3],
+    modTime:'2026-07-28 13:50:'+String(30-i%5).padStart(2,'0'),charged:i!==0
+  }));
+  /* 低余额租户:补足线上"7 户低于阈值 100"告警 */
+  for(let i=0;i<4;i++)rows.push({
+    id:11+i,name:'B座-'+(i+1),contact:'',bal:(12.5+i*20).toFixed(2),
+    crtTime:'2026-07-03 16:1'+i+':00',modTime:'2026-07-28 13:50:30',charged:false
+  });
   return rows;
 })();
 
@@ -168,13 +193,28 @@ const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()}
 function doQuery(){
   const name=document.getElementById('fName').value.trim();
   const contact=document.getElementById('fContact').value.trim();
-  filtered=TENANTS.filter(r=>(!name||r.name.includes(name))&&(!contact||r.contact.includes(contact)));
+  const charge=document.getElementById('fCharge').value;
+  const bMin=parseFloat(document.getElementById('fBalMin').value);
+  const bMax=parseFloat(document.getElementById('fBalMax').value);
+  filtered=TENANTS.filter(r=>
+    (!name||r.name.includes(name))&&
+    (!contact||r.contact.includes(contact))&&
+    (!charge||(charge==='已充值')===r.charged)&&
+    (isNaN(bMin)||+r.bal>=bMin)&&
+    (isNaN(bMax)||+r.bal<=bMax)
+  );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  document.getElementById('fName').value='';
-  document.getElementById('fContact').value='';
+  ['fName','fContact','fBalMin','fBalMax'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fCharge').value='';
+  doQuery();
+}
+/* 快捷筛选:余额≤阈值100 的租户 */
+function quickFilterLow(){
+  document.getElementById('fBalMin').value='';
+  document.getElementById('fBalMax').value='100';
   doQuery();
 }
 function renderTable(){
@@ -190,12 +230,18 @@ function renderTable(){
       <td><span class="op">
         <a onclick="showView(${r.id})">查看</a>
         <a onclick="openEdit(${r.id})">编辑</a>
+        <a onclick="openCharge(${r.id})">充值</a>
+        <a onclick="openChargeLog(${r.id})">充值记录</a>
         <a onclick="openFlow(${r.id})">费用流水</a>
         <a onclick="openRoom(${r.id})">房间信息</a>
         <a class="danger" onclick="doDel(${r.id})">删除</a>
       </span></td>
     </tr>`).join('')
     :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  /* 预警条计数随数据联动 */
+  const low=TENANTS.filter(r=>+r.bal<=100).length;
+  const cnt=document.getElementById('balLowCount');
+  if(cnt)cnt.textContent=low;
 }
 function toggleAll(el){document.querySelectorAll('.row-chk').forEach(c=>c.checked=el.checked);}
 const byId=id=>TENANTS.find(r=>r.id===id);
@@ -204,8 +250,8 @@ const byId=id=>TENANTS.find(r=>r.id===id);
 function showView(id){
   const r=byId(id);
   document.getElementById('viewGrid').innerHTML=`
-    <span class="k">账户租户名称:</span><span class="v">${r.name}</span>
-    <span class="k">联系人真实名称:</span><span class="v">${r.contact||'-'}</span>
+    <span class="k">租户名称:</span><span class="v">${r.name}</span>
+    <span class="k">联系人名称:</span><span class="v">${r.contact||'-'}</span>
     <span class="k">余额(元):</span><span class="v">${r.bal}</span>
     <span class="k">创建时间:</span><span class="v">${r.crtTime}</span>
     <span class="k">修改时间:</span><span class="v">${r.modTime}</span>`;
@@ -231,7 +277,7 @@ function openEdit(id){
 function resetEdit(){['eName','eContact','ePhone','eRemark'].forEach(id=>document.getElementById(id).value='');}
 function submitEdit(){
   const name=document.getElementById('eName').value.trim();
-  if(!name){$msg('请输入账户租户名称','warning');return;}
+  if(!name){$msg('请输入租户名称','warning');return;}
   if(editId){const r=byId(editId);r.name=name;r.contact=document.getElementById('eContact').value.trim();r.modTime='2026-07-03 10:00:00';}
   else{TENANTS.unshift({id:TENANTS.length+1,name,contact:document.getElementById('eContact').value.trim(),bal:'0.00',crtTime:'2026-07-03 10:00:00',modTime:'2026-07-03 10:00:00'});}
   $modalClose('dlgEdit');$msg(editId?'保存成功':'新增成功');doQuery();
@@ -263,6 +309,26 @@ function openMoney(type){
   document.getElementById('mAmount').value='';
   document.getElementById('mRemark').value='';
   $modal('dlgMoney');
+}
+/* 行内"充值":直接打开充值弹窗 */
+function openCharge(id){
+  flowId=id;
+  openMoney('充值');
+}
+/* 行内"充值记录":费用流水仅显示充值类记录 */
+function openChargeLog(id){
+  flowId=id;const r=byId(id);
+  document.getElementById('flowName').textContent=r.name;
+  document.getElementById('flowBal').textContent=r.bal;
+  const items=[
+    ['2026-07-20 10:12:05','充值','+10000.00',r.bal,'丁文武'],
+    ['2026-06-28 14:22:05','充值','+50.00',(+r.bal-10000).toFixed(2),'丁文武']
+  ];
+  document.getElementById('flowBody').innerHTML=items.map(x=>`
+    <tr><td>${x[0]}</td><td>${x[1]}</td>
+    <td style="color:var(--ok)">${x[2]}</td>
+    <td>${x[3]}</td><td>${x[4]}</td></tr>`).join('');
+  $modal('dlgFlow');
 }
 function submitMoney(){
   const v=parseFloat(document.getElementById('mAmount').value);

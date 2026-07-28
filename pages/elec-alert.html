@@ -19,7 +19,7 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
 </style>
 </head>
 <body>
-<!-- 筛选栏(严格对照线上:预警类型 / 账户租户名称 / 创建时间 / 查询 / 重置) -->
+<!-- 筛选栏(严格对照线上:预警类型 / 租户名称 / 创建时间 / 查询 / 重置) -->
 <div class="fb">
   <div class="fi"><span class="fl">预警类型</span>
     <select id="fType" style="width:170px">
@@ -29,8 +29,8 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
       <option>通知</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">账户租户名称</span>
-    <input id="fTenant" placeholder="请输入账户租户名称" style="width:180px">
+  <div class="fi"><span class="fl">租户名称</span>
+    <input id="fTenant" placeholder="请输入租户名称" style="width:180px">
   </div>
   <div class="fi"><span class="fl">创建时间</span>
     <input type="date" id="fStart" value="2026-07-02" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-03" style="width:145px">
@@ -43,7 +43,7 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
 <div class="tw">
   <table>
     <thead><tr>
-      <th>序号</th><th>账户租户名称</th><th>预警类型</th><th>标题</th><th>内容</th>
+      <th>序号</th><th>租户名称</th><th>预警类型</th><th>标题</th><th>内容</th>
       <th>是否已读</th><th>消息模版</th><th>发送状态</th><th>发生时间</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -158,7 +158,7 @@ function renderTable(){
 function showDetail(json){
   const r=JSON.parse(json);
   document.getElementById('detailGrid').innerHTML=`
-    <span class="k">账户租户名称:</span><span class="v">${r.tenant}</span>
+    <span class="k">租户名称:</span><span class="v">${r.tenant}</span>
     <span class="k">预警类型:</span><span class="v"><span class="tag ${TYPE_TAG[r.type]}">${r.type}</span></span>
     <span class="k">标题:</span><span class="v">${r.title}</span>
     <span class="k">内容:</span><span class="v">${r.content}</span>
