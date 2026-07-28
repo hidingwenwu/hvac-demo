@@ -6,7 +6,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'pages', 'ctrl-ac.html')
 
 assert.match(html, /const AC_VISUAL_PROMO_KEY='acVisualPromoSeen'/);
 assert.match(html, /function showVisualPromoOnce\(\)/);
-assert.match(html, /if\(v==='plan'\)\{renderPlan\(\);showVisualPromoOnce\(\);\}/);
+assert.match(html, /if\(v==='plan'\)\{\s*planSel=-1;\s*document\.getElementById\('detailPanel'\)\.style\.display='none';\s*renderPlan\(\);showVisualPromoOnce\(\);\s*\}else\{\s*syncDetailVisibility\(\);\s*\}/);
 assert.match(html, /localStorage\.setItem\(AC_VISUAL_PROMO_KEY,'1'\)/);
 assert.doesNotMatch(html, /sessionStorage\.getItem\('acPromoShown'\)/);
 assert.doesNotMatch(html, /每次进入弹一次新功能推广/);

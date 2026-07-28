@@ -99,7 +99,7 @@ test('R7 列表使用 SN 模糊输入和下拉筛选', () => {
   assert.doesNotMatch(html, /添加设备/);
 });
 
-test('R7 列表筛选文案精简并按选项长度固定宽度', () => {
+test('R7 列表筛选文案精简并按页面宽度自适应分布', () => {
   const html = read('pages/ops-r7-list.html');
   const filterPanel = html.slice(html.indexOf('<section class="filter-panel">'), html.indexOf('</section>', html.indexOf('<section class="filter-panel">')));
   assert.doesNotMatch(filterPanel, /全部/);
