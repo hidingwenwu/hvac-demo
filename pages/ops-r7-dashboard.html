@@ -14,7 +14,10 @@
 .pie-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;min-height:188px}.chart-pie{width:126px;height:126px;border-radius:50%;display:grid;place-items:center;position:relative;flex:0 0 auto;box-shadow:0 0 0 1px rgba(91,130,196,.1);cursor:crosshair}.chart-pie::after{content:"";position:absolute;inset:23px;border-radius:50%;background:#121b2f;box-shadow:inset 0 0 0 1px rgba(74,100,145,.18)}.pie-center{position:relative;z-index:1;text-align:center}.pie-center strong{display:block;color:var(--txw);font:600 25px/1 Consolas,monospace}.pie-center span{display:block;margin-top:5px;color:var(--tw3);font-size:10px}.compact-legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.legend-item{display:inline-flex;align-items:center;gap:6px;color:var(--ts);font-size:11px}.legend-item i{width:7px;height:7px;border-radius:2px;background:var(--legend-color)}.legend-item b{color:var(--txw);font-weight:600}.health-card .pie-body,.edition-card .pie-body{min-height:158px;gap:10px}.health-card .compact-legend{display:grid;grid-template-columns:1fr;gap:6px;width:100%;justify-items:center}
 .edition-card .chart-pie{width:112px;height:112px}.edition-card .chart-pie::after{inset:21px}.edition-list{display:grid;grid-template-columns:1fr;gap:6px;width:100%}.edition-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #26344d;border-radius:4px;background:#111a2c;color:var(--ts);font-size:11px}.edition-row span{display:flex;align-items:center;gap:6px}.edition-row i{width:7px;height:7px;border-radius:2px;background:var(--edition-color)}.edition-row strong{color:var(--txw);font:600 14px Consolas,monospace}
 .pie-tooltip{position:fixed;z-index:40;max-width:220px;padding:9px 11px;border:1px solid #385588;border-radius:7px;background:rgba(10,17,31,.96);box-shadow:0 10px 28px rgba(0,0,0,.34);color:var(--tx);font-size:11px;line-height:1.45;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .14s ease,transform .14s ease}.pie-tooltip.is-visible{opacity:1;transform:translateY(0)}.pie-tooltip strong{display:block;color:var(--txw);font-size:12px;font-weight:600}.pie-tooltip span{display:block;margin-top:3px;color:var(--ts)}
-.software-layout{display:grid;grid-template-columns:132px minmax(0,1fr);align-items:center;gap:14px;min-height:190px}.version-card .chart-pie{width:116px;height:116px;margin:auto}.version-card .chart-pie::after{inset:22px}.version-list{display:grid;gap:8px}.version-row{display:grid;grid-template-columns:58px minmax(70px,1fr) 58px;align-items:center;gap:8px;font-size:11px}.version-row>span{color:var(--tx);font-family:Consolas,monospace}.version-row strong{text-align:right;color:var(--ts);font-weight:500}.version-row strong b{color:var(--txw);margin-right:3px}.version-track,.brand-track,.combo-track{height:7px;background:#253149;border-radius:6px;overflow:hidden}.version-track b,.brand-track b,.combo-track b{display:block;height:100%;border-radius:inherit;background:var(--bar-color)}
+.software-layout{display:grid;grid-template-columns:132px minmax(0,1fr);align-items:center;gap:14px;min-height:190px}.version-card .chart-pie{width:116px;height:116px;margin:auto}.version-card .chart-pie::after{inset:22px}.version-list{display:grid;gap:8px}.version-row{display:grid;grid-template-columns:132px minmax(70px,1fr) 58px;align-items:center;gap:8px;font-size:11px}.version-row>span{color:var(--tx);font-family:Consolas,monospace}.version-row strong{text-align:right;color:var(--ts);font-weight:500}.version-row strong b{color:var(--txw);margin-right:3px}.version-track,.brand-track,.combo-track{height:7px;background:#253149;border-radius:6px;overflow:hidden}.version-track b,.brand-track b,.combo-track b{display:block;height:100%;border-radius:inherit;background:var(--bar-color)}
+/* 软件版本分布:标题旁 全部/MAX版/标准版 切换 */
+.version-toggle{margin-left:auto;flex-shrink:0}
+.version-toggle .rtab{height:26px;padding:0 12px;font-size:11px;}
 .brand-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.brand-list{display:grid;gap:10px}.brand-row{display:grid;grid-template-columns:84px 1fr 70px;align-items:center;gap:10px;font-size:12px}.brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}.brand-track b{background:linear-gradient(90deg,#2e69d7,#5697ff)}.indoor .brand-track b{background:linear-gradient(90deg,#228495,#42bccb)}.brand-value{text-align:right;color:var(--ts)}.brand-value b{color:var(--txw);margin-right:4px}
 .combination-card{margin-bottom:4px}.distribution-layout{display:grid;grid-template-columns:minmax(160px,190px) minmax(220px,1fr) minmax(520px,1.7fr);gap:22px;align-items:center}.combo-summary{display:contents}.combo-summary .chart-pie{width:144px;height:144px;justify-self:center}.combo-summary .chart-pie::after{inset:28px}.pie-legend{display:grid;grid-template-columns:1fr;gap:8px;min-width:0}.pie-legend .legend-item{min-width:0}.pie-legend .legend-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.combo-list{display:grid;gap:9px;min-width:0}.combo-row{display:grid;grid-template-columns:minmax(185px,260px) minmax(120px,1fr) 70px;align-items:center;gap:12px;font-size:11px}.combo-name{color:var(--tx);line-height:1.35}.combo-value{text-align:right;color:var(--ts)}.combo-value b{color:var(--txw);margin-right:4px}
 @media(max-width:1500px){.primary-layout{grid-template-columns:180px minmax(260px,1fr) minmax(180px,.72fr) minmax(180px,.72fr)}.version-card{grid-column:1/-1}.software-layout{grid-template-columns:160px minmax(0,1fr)}}
@@ -60,9 +63,13 @@
   </article>
 
   <article class="card version-card">
-    <div class="card-head"><div><h2>软件版本分布</h2><p>版本比例与设备数量</p></div></div>
+    <div class="card-head"><div><h2>软件版本分布</h2><p>版本比例与设备数量</p></div>
+      <span class="rtabs version-toggle" id="versionToggle">
+        <span class="rtab active" data-p="">全部</span><span class="rtab" data-p="MAX版">MAX版</span><span class="rtab" data-p="标准版">标准版</span>
+      </span>
+    </div>
     <div class="software-layout">
-      <div class="chart-pie" id="versionPie"><div class="pie-center"><strong id="versionCount">0</strong><span>版本</span></div></div>
+      <div class="chart-pie" id="versionPie"></div>
       <div class="version-list" id="versionBars"></div>
     </div>
   </article>
@@ -193,23 +200,40 @@ function renderProductVersions(){
   }).join('');
 }
 
+/* 版本号展示带机型前缀:MAX版→"MAX-0.35.0.1.13",标准版→"标准_0.26.0.0.5" */
+function versionPrefix(product){return product==='MAX版'?'MAX-':(product==='标准版'?'标准_':'');}
+var versionFilter='';           /* ''=全部 / MAX版 / 标准版 */
+var versionColorMap={};         /* 颜色按版本名固定,切换产品线不变色 */
 function versionDistribution(){
+  var list=versionFilter?devices.filter(function(device){return device.productVersion===versionFilter;}):devices;
   var counts={};
-  devices.forEach(function(device){counts[device.version]=(counts[device.version]||0)+1;});
+  list.forEach(function(device){
+    var name=versionPrefix(device.productVersion)+device.version;
+    counts[name]=(counts[name]||0)+1;
+  });
   var max=Object.keys(counts).reduce(function(value,key){return Math.max(value,counts[key]);},0)||1;
-  return Object.keys(counts).sort(function(left,right){return right.localeCompare(left,'zh-CN',{numeric:true});}).map(function(version,index){
-    return {name:version,value:counts[version],percent:devices.length?Math.round(counts[version]*100/devices.length):0,width:counts[version]*100/max,color:chartColors[index%chartColors.length]};
+  var names=Object.keys(counts).sort(function(left,right){return counts[right]-counts[left]||right.localeCompare(left,'zh-CN',{numeric:true});});
+  names.forEach(function(name){if(!versionColorMap[name])versionColorMap[name]=chartColors[Object.keys(versionColorMap).length%chartColors.length];});
+  return names.map(function(name){
+    return {name:name,value:counts[name],percent:list.length?Math.round(counts[name]*100/list.length):0,width:counts[name]*100/max,color:versionColorMap[name]};
   });
 }
 
 function renderSoftwareVersions(){
   var versions=versionDistribution();
   renderPie('versionPie',versions);
-  document.getElementById('versionCount').textContent=versions.length;
   document.getElementById('versionBars').innerHTML=versions.map(function(item){
     return '<div class="version-row"><span>'+escapeHtml(item.name)+'</span><i class="version-track"><b style="width:'+item.width+'%;--bar-color:'+item.color+'"></b></i><strong><b>'+item.value+'</b>'+item.percent+'%</strong></div>';
   }).join('');
 }
+
+document.getElementById('versionToggle').addEventListener('click',function(event){
+  var tab=event.target.closest('.rtab');
+  if(!tab)return;
+  versionFilter=tab.dataset.p;
+  this.querySelectorAll('.rtab').forEach(function(item){item.classList.toggle('active',item===tab);});
+  renderSoftwareVersions();
+});
 
 function renderBrandBars(target,field){
   document.getElementById(target).innerHTML=R7Store.brandDistribution(devices,field).map(function(brand){

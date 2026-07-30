@@ -13,20 +13,86 @@
     '武汉创意天地',
     '宝鸡维也纳酒店R7'
   ];
-  var BASE_DEVICES = [
-    {sn:'R7-370500-240716-0018',project:'凤凰台测试',trafficPlan:300,trafficRemain:136,version:'R7.2.6',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'美的',indoorBrand:'格力',online:true,address:'青岛市市北区凤凰台路 18 号',systemStatus:'开机',systemModes:['制冷','送风'],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:40:00'},
-    {sn:'R7-370500-240625-0041',project:'海信产业园',trafficPlan:300,trafficRemain:42,version:'R7.2.5',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'海信',indoorBrand:'美的',online:true,address:'青岛市崂山区株洲路 151 号',systemStatus:'开机',systemModes:['制冷','自动'],outdoorErrors:['E7'],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:39:35'},
-    {sn:'R7-110108-240612-0007',project:'中关村软件园',trafficPlan:300,trafficRemain:18,version:'R7.2.4',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'格力',indoorBrand:'海信',online:false,address:'北京市海淀区东北旺西路 8 号',systemStatus:'关机',systemModes:[],outdoorErrors:['C0','E6'],indoorErrors:['H4'],lastCommunicationAt:'2026-07-22 09:18:22'},
-    {sn:'R7-310115-240531-0023',project:'临港科技城',trafficPlan:500,trafficRemain:287,version:'R7.2.6',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'大金',indoorBrand:'三菱电机',online:true,address:'上海市浦东新区环湖西二路 888 号',systemStatus:'开机',systemModes:['制冷'],outdoorErrors:[],indoorErrors:['U4','A3'],lastCommunicationAt:'2026-07-22 14:40:12'},
-    {sn:'R7-440305-240427-0012',project:'南山智慧大厦',trafficPlan:300,trafficRemain:94,version:'R7.2.3',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'日立',indoorBrand:'东芝',online:true,address:'深圳市南山区科技南十二路 6 号',systemStatus:'关机',systemModes:[],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:38:56'},
-    {sn:'R7-510107-240318-0036',project:'',trafficPlan:300,trafficRemain:33,version:'R7.2.5',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'三菱电机',indoorBrand:'日立',online:false,address:'成都市武侯区天府五街 200 号',systemStatus:'关机',systemModes:[],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-21 21:05:16'},
-    {sn:'R7-320505-240206-0029',project:'狮山金融中心',trafficPlan:500,trafficRemain:391,version:'R7.2.2',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'东芝',indoorBrand:'约克',online:true,address:'苏州市虎丘区狮山路 28 号',systemStatus:'开机',systemModes:['制热','送风'],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:39:48'},
-    {sn:'R7-420106-231218-0015',project:'武汉创意天地',trafficPlan:300,trafficRemain:76,version:'R7.2.1',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'约克',indoorBrand:'大金',online:true,address:'武汉市武昌区公正路 9 号',systemStatus:'开机',systemModes:['除湿'],outdoorErrors:['P3'],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:39:03'},
-    {sn:'R7-610113-231107-0009',project:'西安研发中心',trafficPlan:300,trafficRemain:211,version:'R7.2.6',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'海尔',indoorBrand:'美的',online:true,address:'西安市雁塔区锦业一路 58 号',systemStatus:'开机',systemModes:['制冷'],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:40:05'},
-    {sn:'R7-330106-230923-0028',project:'杭州智慧园区',trafficPlan:500,trafficRemain:165,version:'R7.2.5',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'美的',indoorBrand:'海尔',online:true,address:'杭州市西湖区文三路 478 号',systemStatus:'开机',systemModes:['制冷','自动'],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:39:58'},
-    {sn:'R7-440106-230812-0017',project:'广州国际金融城',trafficPlan:300,trafficRemain:46,version:'R7.2.4',latestVersion:'R7.2.6',productVersion:'标准版',outdoorBrand:'格力',indoorBrand:'格力',online:false,address:'广州市天河区临江大道 59 号',systemStatus:'关机',systemModes:[],outdoorErrors:['E1'],indoorErrors:['F0'],lastCommunicationAt:'2026-07-22 07:26:11'},
-    {sn:'R7-120103-230628-0032',project:'宝鸡维也纳酒店R7',trafficPlan:300,trafficRemain:128,version:'R7.2.6',latestVersion:'R7.2.6',productVersion:'MAX版',outdoorBrand:'海信',indoorBrand:'海信',online:true,address:'天津市河西区友谊路 35 号',systemStatus:'开机',systemModes:['送风'],outdoorErrors:[],indoorErrors:[],lastCommunicationAt:'2026-07-22 14:40:08'}
+  /* 软件版本体系(按产品线区分):MAX版 0.35/0.34 系列,标准版 0.26/0.25/0.24 系列 */
+  var VERSION_LATEST = {'MAX版':'0.35.0.1.13','标准版':'0.26.0.0.5'};
+  var VERSION_POOL = {
+    'MAX版':['0.35.0.1.13','0.35.0.1.11','0.35.0.0.9','0.34.2.1.6','0.34.1.0.3'],
+    '标准版':['0.26.0.0.5','0.26.0.0.3','0.25.2.1.8','0.25.1.4.0','0.24.3.2.7']
+  };
+  /* 机队生成表:[项目,产品线,版本序号,外机,内机,在线,系统状态,剩余流量M,外机故障,内机故障]
+     42 台:MAX版 23 / 标准版 19;在线 35;故障 9;低流量 6 —— 数字分布刻意拉开 */
+  var DEVICE_ROWS = [
+    ['凤凰台测试','MAX版',0,'美的','格力',1,'开机',136,'',''],
+    ['海信产业园','标准版',0,'海信','美的',1,'开机',42,'E7',''],
+    ['中关村软件园','标准版',1,'格力','海信',0,'关机',18,'C0,E6','H4'],
+    ['临港科技城','MAX版',0,'大金','三菱电机',1,'开机',287,'','U4,A3'],
+    ['南山智慧大厦','MAX版',1,'日立','东芝',1,'关机',94,'',''],
+    ['','MAX版',1,'三菱电机','日立',0,'关机',33,'',''],
+    ['狮山金融中心','标准版',2,'东芝','约克',1,'开机',391,'',''],
+    ['武汉创意天地','标准版',2,'约克','大金',1,'开机',76,'P3',''],
+    ['西安研发中心','标准版',0,'海尔','美的',1,'开机',211,'',''],
+    ['杭州智慧园区','MAX版',2,'美的','海尔',1,'开机',165,'',''],
+    ['广州国际金融城','标准版',1,'格力','格力',0,'关机',46,'E1','F0'],
+    ['宝鸡维也纳酒店R7','MAX版',0,'海信','海信',1,'开机',128,'',''],
+    ['凤凰台测试','MAX版',0,'美的','大金',1,'开机',245,'',''],
+    ['海信产业园','MAX版',0,'海信','格力',1,'开机',312,'',''],
+    ['中关村软件园','MAX版',0,'大金','美的',1,'开机',89,'',''],
+    ['临港科技城','MAX版',0,'三菱电机','海尔',1,'开机',176,'',''],
+    ['南山智慧大厦','标准版',0,'日立','海信',1,'开机',264,'',''],
+    ['狮山金融中心','MAX版',0,'东芝','三菱电机',1,'关机',58,'',''],
+    ['武汉创意天地','标准版',0,'约克','约克',1,'开机',143,'',''],
+    ['西安研发中心','MAX版',1,'海尔','日立',1,'开机',327,'',''],
+    ['杭州智慧园区','MAX版',1,'美的','东芝',1,'开机',199,'',''],
+    ['广州国际金融城','MAX版',1,'格力','大金',0,'关机',82,'',''],
+    ['宝鸡维也纳酒店R7','MAX版',1,'海信','三菱电机',1,'开机',221,'',''],
+    ['凤凰台测试','标准版',0,'美的','海尔',1,'开机',156,'',''],
+    ['海信产业园','标准版',0,'海信','海信',1,'开机',298,'',''],
+    ['中关村软件园','标准版',0,'大金','格力',1,'开机',71,'',''],
+    ['临港科技城','MAX版',2,'三菱电机','美的',1,'开机',184,'',''],
+    ['南山智慧大厦','MAX版',2,'日立','大金',1,'开机',269,'',''],
+    ['','标准版',2,'格力','三菱重工',0,'关机',39,'H1',''],
+    ['狮山金融中心','MAX版',2,'东芝','日立',1,'开机',118,'','E2'],
+    ['武汉创意天地','MAX版',2,'约克','海尔',1,'开机',233,'',''],
+    ['西安研发中心','标准版',1,'海尔','美的',1,'开机',167,'',''],
+    ['杭州智慧园区','标准版',1,'美的','格力',1,'关机',92,'',''],
+    ['广州国际金融城','标准版',1,'格力','东芝',1,'开机',204,'',''],
+    ['宝鸡维也纳酒店R7','标准版',1,'海信','大金',0,'关机',27,'','H5'],
+    ['凤凰台测试','MAX版',3,'美的','三菱电机',1,'开机',251,'',''],
+    ['海信产业园','MAX版',3,'海信','日立',1,'开机',139,'',''],
+    ['中关村软件园','MAX版',3,'大金','海尔',0,'关机',64,'F3',''],
+    ['临港科技城','标准版',3,'三菱电机','格力',1,'开机',188,'',''],
+    ['南山智慧大厦','标准版',3,'日立','美的',1,'开机',112,'',''],
+    ['狮山金融中心','MAX版',4,'东芝','海信',1,'开机',276,'',''],
+    ['武汉创意天地','标准版',4,'约克','三菱电机',1,'开机',95,'','']
   ];
+  var REGIONS = ['370500','110108','310115','440305','510107','320505','420106','610113','330106','440106','120103','370201'];
+  var ADDRESSES = [
+    '青岛市市北区凤凰台路 18 号','青岛市崂山区株洲路 151 号','北京市海淀区东北旺西路 8 号','上海市浦东新区环湖西二路 888 号',
+    '深圳市南山区科技南十二路 6 号','成都市武侯区天府五街 200 号','苏州市虎丘区狮山路 28 号','武汉市武昌区公正路 9 号',
+    '西安市雁塔区锦业一路 58 号','杭州市西湖区文三路 478 号','广州市天河区临江大道 59 号','天津市河西区友谊路 35 号'
+  ];
+  var BASE_DEVICES = DEVICE_ROWS.map(function (row, index) {
+    var product = row[1], version = VERSION_POOL[product][row[2]];
+    var month = 1 + (index % 12), day = 1 + (index * 3) % 27;
+    return {
+      sn:'R7-' + REGIONS[index % REGIONS.length] + '-24' + String(101 + index).slice(1) + '-' + String(1000 + index * 7).slice(1),
+      project:row[0],
+      trafficPlan:(index % 3 === 2) ? 500 : 300,
+      trafficRemain:row[7],
+      version:version,
+      latestVersion:VERSION_LATEST[product],
+      productVersion:product,
+      outdoorBrand:row[3],
+      indoorBrand:row[4],
+      online:row[5] === 1,
+      address:ADDRESSES[index % ADDRESSES.length],
+      systemStatus:row[6],
+      systemModes:row[6] === '开机' ? [['制冷'],['制冷','送风'],['制冷','自动'],['送风'],['除湿']][index % 5] : [],
+      outdoorErrors:row[8] ? row[8].split(',') : [],
+      indoorErrors:row[9] ? row[9].split(',') : [],
+      lastCommunicationAt:'2026-07-2' + (index % 3) + ' ' + String(8 + month).padStart(2,'0') + ':' + String((index * 7) % 60).padStart(2,'0') + ':' + String((index * 13) % 60).padStart(2,'0')
+    };
+  });
 
   function safeStorage(storageName) {
     try {
