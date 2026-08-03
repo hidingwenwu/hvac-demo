@@ -3,3 +3,5 @@ testcase/node_modules/
 # 现网采集产物(体积大,仅本机参考;采集脚本 collect-*.cjs 保留)
 testcase/live-full/
 testcase/live-ac-cards/
+# 故障预警端到端验证截图产物(verify-alarm.cjs 每次运行重新生成)
+testcase/live-alarm/
