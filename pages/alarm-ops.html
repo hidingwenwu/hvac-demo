@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>项目运维故障</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* Tab 未处理数徽标 */
+.tab .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:16px;padding:0 5px;margin-left:6px;background:var(--er);color:#fff;border-radius:8px;font-size:11px;font-weight:400;}
+/* 关键信息列左对齐换行 */
+td.cell-key{max-width:380px;text-align:left;white-space:normal;line-height:1.5;padding:8px 10px;}
+/* 异常对象可点击(仅展示设备SN/地址,详情走操作列) */
+.obj{color:var(--primary);cursor:pointer;}
+.obj:hover{color:var(--primary-hover);}
+/* 对象信息小弹卡 */
+.obj-pop{position:fixed;z-index:2000;background:var(--bg-panel-2);border:1px solid var(--bd2);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);padding:10px 14px;font-size:12px;line-height:1.8;display:none;min-width:180px;}
+.obj-pop .opk{color:var(--ts);}
+.obj-pop .opv{color:var(--txw);font-weight:600;}
+/* 详情弹窗字段栅格 */
+.detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
+.detail-grid .k{color:var(--ts);text-align:right;}
+.detail-grid .v{color:var(--tx);word-break:break-all;}
+/* 处理弹窗摘要条 */
+.hd-sum{background:var(--bg-input);border:1px solid var(--bd);border-radius:4px;padding:10px 14px;font-size:13px;line-height:1.7;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<!-- 分类 Tab:基础配置问题 | 计费分摊问题(带未处理数;非计费项目不显示计费分摊 Tab) -->
+<div class="tabs">
+  <div class="tab active" data-t="base" onclick="pickTab('base')">基础配置问题<span class="cnt" id="cntBase"></span></div>
+  <div class="tab" data-t="bill" id="tabBill" onclick="pickTab('bill')">计费分摊问题<span class="cnt" id="cntBill"></span></div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="fb">
+  <div class="fi"><span class="fl">异常类型</span><select id="fCat" style="width:170px"><option value="">全部类型</option></select></div>
+  <div class="fi"><span class="fl">异常对象</span><input id="fObj" placeholder="请输入异常对象" style="width:170px"></div>
+  <div class="fi"><span class="fl">状态</span>
+    <select id="fSt" style="width:150px">
+      <option value="">全部</option>
+      <option value="new" selected>未处理</option>
+      <option value="gone">已恢复(待确认)</option>
+      <option value="done">已处理</option>
+      <option value="ignored">已忽略</option>
+    </select>
+  </div>
+  <div class="fi"><span class="fl">发生时间</span>
+    <input type="date" id="fStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px">
+  </div>
+  <button class="btn btnp" onclick="doQuery()">查询</button>
+  <button class="btn" onclick="doReset()">重置</button>
+</div>
+
+<!-- 统一明细列表 -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th>序号</th><th>异常类型</th><th>异常对象</th><th>关键信息</th>
+      <th>首次发生</th><th>最近发生</th><th>持续时长</th><th>状态</th><th>处理人</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div id="pager"></div>
+
+<!-- 详情弹窗 -->
+<div class="modal" id="dlgDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>异常详情</span><span class="dx" onclick="$modalClose('dlgDetail')">✕</span></div>
+    <div class="db"><div class="detail-grid" id="detailGrid"></div></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDetail')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 处理弹窗 -->
+<div class="modal" id="dlgHandle">
+  <div class="dialog" style="width:520px">
+    <div class="dh"><span>处理异常</span><span class="dx" onclick="$modalClose('dlgHandle')">✕</span></div>
+    <div class="db">
+      <div class="hd-sum" id="handleSum"></div>
+      <div class="form-item">
+        <span class="fl"><span class="req" style="color:var(--er)">*</span>处理备注</span>
+        <textarea id="handleNote" rows="3" placeholder="请填写处理情况说明" style="width:100%"></textarea>
+      </div>
+      <div class="form-item" style="margin-top:12px">
+        <span class="fl">处理人</span>
+        <input id="handleBy" value="丁文武" style="width:200px">
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgHandle')">取消</button>
+      <button class="btn btnp" onclick="doHandle()">确认处理</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script src="_alarm-data.js"></script>
+<script>
+/* 非计费项目不展示计费分摊相关内容 */
+const PROJ_BILL=$alarmProjBill($alarmCurProj());
+if(!PROJ_BILL)document.getElementById('tabBill').style.display='none';
+
+let tab='base';                 // base=基础配置问题 bill=计费分摊问题
+let filtered=[];
+const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
+let handleId=null;
+
+function stOf(r){const s=$alarmStatus(r.id);return s?s.st:'new';}
+function stTag(st){
+  if(st==='done')return '<span class="tag tok">已处理</span>';
+  if(st==='ignored')return '<span class="tag tin">已忽略</span>';
+  return '<span class="tag ter">未处理</span>';
+}
+/* 状态列:处理状态 + 异常已自动恢复标记(已恢复但仍需人工确认数据完整性) */
+function stCell(r){
+  return stTag(stOf(r))+(r.gone?' <span class="tag tok" title="异常已自动恢复,请确认期间数据是否完整后闭环">已恢复</span>':'');
+}
+
+/* Tab 切换 + 未处理数徽标 */
+function pickTab(t){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.t===t));
+  renderCatOptions();
+  doQuery();
+}
+function renderCounts(){
+  const st=$alarmStatusAll();
+  let b=0,l=0;
+  ALARM_OPS_ITEMS.forEach(r=>{
+    if(st[r.id])return;
+    if(ALARM_OPS_CATS[r.cat]==='base')b++;else l++;
+  });
+  document.getElementById('cntBase').textContent=b;
+  document.getElementById('cntBase').style.display=b?'inline-flex':'none';
+  if(PROJ_BILL){
+    document.getElementById('cntBill').textContent=l;
+    document.getElementById('cntBill').style.display=l?'inline-flex':'none';
+  }
+}
+/* 异常类型下拉随 Tab 联动 */
+function renderCatOptions(){
+  const sel=document.getElementById('fCat');
+  const cats=Object.keys(ALARM_OPS_CATS).filter(c=>ALARM_OPS_CATS[c]===tab);
+  sel.innerHTML='<option value="">全部类型</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+}
+
+function val(id){return document.getElementById(id).value;}
+function doQuery(){
+  const cat=val('fCat'),obj=val('fObj').trim(),st=val('fSt'),s=val('fStart'),e=val('fEnd');
+  filtered=ALARM_OPS_ITEMS.filter(r=>{
+    if(ALARM_OPS_CATS[r.cat]!==tab)return false;
+    if(cat&&r.cat!==cat)return false;
+    if(obj&&!r.obj.includes(obj)&&!r.info.includes(obj))return false;
+    if(st==='gone'){if(!(r.gone&&stOf(r)==='new'))return false;}
+    else if(st&&stOf(r)!==st)return false;
+    if(s&&r.last<s)return false;
+    if(e&&r.last>e+' 23:59:59')return false;
+    return true;
+  });
+  pg.page=1;pg.total=filtered.length;
+  $pager('pager',pg);
+  renderCounts();renderTable();
+}
+function doReset(){
+  ['fObj','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fSt').value='new';
+  renderCatOptions();doQuery();
+}
+
+function renderTable(){
+  const start=(pg.page-1)*pg.size;
+  const rows=filtered.slice(start,start+pg.size);
+  document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>{
+    const st=stOf(r);
+    const sRec=$alarmStatus(r.id);
+    return `<tr>
+      <td>${start+i+1}</td>
+      <td><span class="tag ${ALARM_OPS_CAT_TAG[r.cat]||'tin'}">${r.cat}</span></td>
+      <td><span class="obj" onclick="showObjPop(event,${start+i})">${r.obj}</span></td>
+      <td class="cell-key">${r.info}</td>
+      <td>${r.first}</td><td>${r.last}</td>
+      <td>${$alarmDuration(r.last,r.gone)}</td>
+      <td>${stCell(r)}</td>
+      <td>${sRec?sRec.by:'—'}</td>
+      <td><span class="op">
+        <a onclick="showDetail(${start+i})">详情</a>
+        ${st==='new'?`<a onclick="openHandle(${start+i})">处理</a><a class="danger" onclick="doIgnore(${start+i})">忽略</a>`:''}
+      </span></td>
+    </tr>`;
+  }).join('')
+  :'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+
+/* ── 异常对象小弹卡:仅展示设备SN/空调地址 ── */
+function objIdInfo(r){
+  const m=r.obj.match(/^(\S+)\s+(.+)$/);
+  if(!m)return null;
+  const kind=m[1],v=m[2];
+  if(kind==='主机')return ['主机','设备SN',v];
+  if(kind==='电表')return ['电表','电表编号(SN)',v];
+  if(kind==='外机')return ['外机系统','外机地址',v];
+  if(kind==='内机')return ['内机','内机全地址',v];
+  return null;
+}
+let objPopEl=null;
+function showObjPop(ev,idx){
+  ev.stopPropagation();
+  const r=filtered[idx];
+  closeObjPop();
+  const info=objIdInfo(r);
+  objPopEl=document.createElement('div');
+  objPopEl.className='obj-pop';
+  objPopEl.innerHTML=info
+    ?`<div><span class="opk">对象类型：</span><span class="opv">${info[0]}</span></div>
+      <div><span class="opk">${info[1]}：</span><span class="opv">${info[2]}</span></div>`
+    :`<div><span class="opv">${r.obj}</span></div><div class="opk">项目级异常,无设备对象</div>`;
+  document.body.appendChild(objPopEl);
+  const w=objPopEl.offsetWidth;
+  objPopEl.style.left=Math.min(ev.clientX,window.innerWidth-w-12)+'px';
+  objPopEl.style.top=(ev.clientY+10)+'px';
+  objPopEl.style.display='block';
+}
+function closeObjPop(){if(objPopEl){objPopEl.remove();objPopEl=null;}}
+document.addEventListener('click',closeObjPop);
+
+/* 详情弹窗(含处理留痕与恢复确认提示) */
+function showDetail(idx){
+  const r=filtered[idx];
+  const st=stOf(r);
+  const sRec=$alarmStatus(r.id);
+  document.getElementById('detailGrid').innerHTML=`
+    <span class="k">分类:</span><span class="v">${tab==='base'?'项目运维故障 / 基础配置问题':'项目运维故障 / 计费分摊问题'}</span>
+    <span class="k">异常类型:</span><span class="v"><span class="tag ${ALARM_OPS_CAT_TAG[r.cat]||'tin'}">${r.cat}</span></span>
+    <span class="k">异常对象:</span><span class="v">${r.obj}</span>
+    <span class="k">关键信息:</span><span class="v">${r.info}</span>
+    <span class="k">首次发生:</span><span class="v">${r.first}<span class="text-sub" style="margin-left:8px">该设备历史首次出现同类异常</span></span>
+    <span class="k">最近发生:</span><span class="v">${r.last}<span class="text-sub" style="margin-left:8px">本次异常开始时间</span></span>
+    ${r.gone?`<span class="k">异常消失:</span><span class="v text-ok">${r.gone}</span>`:''}
+    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.last,r.gone)}${r.gone?'':'<span class="text-sub" style="margin-left:8px">至今</span>'}</span>
+    <span class="k">状态:</span><span class="v">${stCell(r)}</span>
+    ${r.gone&&st==='new'?`<span class="k">恢复确认:</span><span class="v text-wn">异常已自动恢复,请人工确认异常期间的数据是否完整(如当量/抄表数据已成功自动补拉),确认无误后点「处理」闭环。</span>`:''}
+    ${sRec?`<span class="k">处理人:</span><span class="v">${sRec.by}</span>
+    <span class="k">处理时间:</span><span class="v">${sRec.time}</span>
+    <span class="k">处理备注:</span><span class="v">${sRec.note||'—'}</span>`:''}`;
+  $modal('dlgDetail');
+}
+
+/* 处理 / 忽略 */
+function openHandle(idx){
+  const r=filtered[idx];
+  handleId=r.id;
+  document.getElementById('handleSum').innerHTML=`<b>${r.obj}</b> · ${r.cat}<br>${r.info}`;
+  document.getElementById('handleNote').value='';
+  document.getElementById('handleBy').value='丁文武';
+  $modal('dlgHandle');
+}
+function doHandle(){
+  const note=document.getElementById('handleNote').value.trim();
+  const by=document.getElementById('handleBy').value.trim();
+  if(!note){$msg('请填写处理备注','error');return;}
+  if(!by){$msg('请填写处理人','error');return;}
+  $alarmSetStatus(handleId,'done',note,by);
+  $modalClose('dlgHandle');
+  $msg('已标记为已处理');
+  doQuery();
+}
+function doIgnore(idx){
+  const r=filtered[idx];
+  $confirm(`确定忽略「${r.obj} ${r.cat}」吗?忽略后不再计入未处理数。`,()=>{
+    $alarmSetStatus(r.id,'ignored','');
+    $msg('已忽略');
+    doQuery();
+  });
+}
+
+renderCatOptions();doQuery();
+</script>
+</body>
+</html>

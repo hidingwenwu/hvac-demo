@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>异常预警信息</title>
+<title>推送记录</title>
 <link rel="stylesheet" href="_base.css">
 <style>
 /* 内容列较长:左对齐并限宽省略 */
@@ -19,8 +19,15 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
 </style>
 </head>
 <body>
-<!-- 筛选栏(严格对照线上:预警类型 / 租户名称 / 创建时间 / 查询 / 重置) -->
+<!-- 筛选栏(渠道 / 预警类型 / 接收对象 / 创建时间) -->
 <div class="fb">
+  <div class="fi"><span class="fl">渠道</span>
+    <select id="fChan" style="width:140px">
+      <option value="">全部渠道</option>
+      <option>站内消息</option>
+      <option>短信</option>
+    </select>
+  </div>
   <div class="fi"><span class="fl">预警类型</span>
     <select id="fType" style="width:170px">
       <option value="">请选择预警类型</option>
@@ -29,8 +36,8 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
       <option>通知</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">租户名称</span>
-    <input id="fTenant" placeholder="请输入租户名称" style="width:180px">
+  <div class="fi"><span class="fl">接收对象</span>
+    <input id="fTenant" placeholder="租户名称/接收人/手机号" style="width:180px">
   </div>
   <div class="fi"><span class="fl">创建时间</span>
     <input type="date" id="fStart" value="2026-07-02" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-03" style="width:145px">
@@ -39,11 +46,11 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
   <button class="btn" onclick="doReset()">重置</button>
 </div>
 
-<!-- 预警信息表格(9列,列名与线上一致) -->
+<!-- 推送记录表格(10列:新增渠道列) -->
 <div class="tw">
   <table>
     <thead><tr>
-      <th>序号</th><th>租户名称</th><th>预警类型</th><th>标题</th><th>内容</th>
+      <th>序号</th><th>渠道</th><th>接收对象</th><th>预警类型</th><th>标题</th><th>内容</th>
       <th>是否已读</th><th>消息模版</th><th>发送状态</th><th>发生时间</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -66,71 +73,86 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
 </div>
 
 <script src="_ui.js"></script>
+<script src="_alarm-data.js"></script>
 <script>
 /* ── 模拟数据(形态贴线上:电表号 2204151135xx / 消息模版为英文代码) ── */
 const ALERTS=(()=>{
   const rows=[];
+  const add=(tenant,type,title,content,read,tpl,send,time)=>
+    rows.push({chan:'站内消息',tenant,type,title,content,read,tpl,send,time});
   // 线上示例:缺失抄表记录 × electricity_bill_allocation_status_day × 发送中
   const meters=['220415113551','220415113596','220415113437','220415113602','220415113343',
                 '220415114074','220415114089','220415114086','220415113590','220415113567',
                 '220415113712','220415113728','220415113805','220415113811','220415113954',
                 '220415114012','220415114120','220415114133'];
   meters.forEach((m,i)=>{
-    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'缺失抄表记录',
-      content:`电表 ${m} 缺失抄表记录`,read:'未读',
-      tpl:'electricity_bill_allocation_status_day',send:'发送中',
-      time:'2026-07-03 08:32:08'});
+    add('1861蔚蓝公寓B2','故障','缺失抄表记录',
+      `电表 ${m} 缺失抄表记录`,'未读',
+      'electricity_bill_allocation_status_day','发送中',
+      '2026-07-03 08:32:08');
   });
   // 小时口径缺失抄表
   ['220415113551','220415113596','220415113437','220415113602','220415113343','220415114074'].forEach((m,i)=>{
-    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'缺失抄表记录',
-      content:`电表 ${m} 缺失抄表记录`,read:i<2?'未读':'已读',
-      tpl:'electricity_bill_allocation_status_hour',send:'已发送',
-      time:'2026-07-02 20:0'+(i%6)+':11'});
+    add('1861蔚蓝公寓B2','故障','缺失抄表记录',
+      `电表 ${m} 缺失抄表记录`,i<2?'未读':'已读',
+      'electricity_bill_allocation_status_hour','已发送',
+      '2026-07-02 20:0'+(i%6)+':11');
   });
   // 电表离线故障
   ['220415113712','220415113805','220415114012'].forEach((m,i)=>{
-    rows.push({tenant:'1861蔚蓝公寓B2',type:'故障',title:'电表离线',
-      content:`电表 ${m} 通讯离线超过 2 小时,请检查供电与线路`,read:'未读',
-      tpl:'electricity_meter_offline',send:i===2?'发送失败':'发送中',
-      time:'2026-07-02 16:4'+i+':26'});
+    add('1861蔚蓝公寓B2','故障','电表离线',
+      `电表 ${m} 通讯离线超过 2 小时,请检查供电与线路`,'未读',
+      'electricity_meter_offline',i===2?'发送失败':'发送中',
+      '2026-07-02 16:4'+i+':26');
   });
   // 余额不足提醒
   [['B2-1502 张女士','12.6'],['B2-0806 李先生','8.3'],['B2-2101 王先生','3.9'],['B2-1706 陈女士','15.2']].forEach(([t,v],i)=>{
-    rows.push({tenant:t,type:'提醒',title:'预付费余额不足',
-      content:`租户 ${t} 预付费余额仅剩 ${v} 元,请及时充值`,read:i%2?'已读':'未读',
-      tpl:'electricity_balance_warn',send:'已发送',
-      time:'2026-07-02 09:3'+i+':45'});
+    add(t,'提醒','预付费余额不足',
+      `租户 ${t} 预付费余额仅剩 ${v} 元,请及时充值`,i%2?'已读':'未读',
+      'electricity_balance_warn','已发送',
+      '2026-07-02 09:3'+i+':45');
   });
   // 分摊完成通知
   ['2026-07-01','2026-06-30','2026-06-29'].forEach((d,i)=>{
-    rows.push({tenant:'1861蔚蓝公寓B2',type:'通知',title:'电费分摊完成',
-      content:`${d} 日电费分摊任务执行完成,共处理电表 128 块`,read:'已读',
-      tpl:'electricity_bill_allocation_done',send:'已发送',
-      time:d+' 06:00:0'+i});
+    add('1861蔚蓝公寓B2','通知','电费分摊完成',
+      `${d} 日电费分摊任务执行完成,共处理电表 128 块`,'已读',
+      'electricity_bill_allocation_done','已发送',
+      d+' 06:00:0'+i);
   });
+  /* 短信推送记录(预警推送配置驱动,共享数据层) */
+  $alarmPushLogGet().forEach(r=>{
+    rows.push({chan:'短信',proj:r.proj,tenant:r.receiver,phone:r.phone,type:r.type,title:r.title,
+      content:r.content,read:'—',tpl:r.tpl,send:r.send,time:r.time});
+  });
+  /* 统一按时间倒序 */
+  rows.sort((a,b)=>a.time<b.time?1:-1);
   return rows;
 })();
 
 /* 预警类型彩色标签 */
 const TYPE_TAG={'故障':'ter','提醒':'twn','通知':'thl'};
+/* 渠道标签 */
+function chanTag(c){return c==='短信'?'<span class="tag twn">短信</span>':'<span class="tag tin">站内消息</span>';}
 
 /* ── 查询 / 重置 / 分页 ── */
 let filtered=ALERTS.slice();
 const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
 function doQuery(){
+  const chan=document.getElementById('fChan').value;
   const type=document.getElementById('fType').value;
   const tenant=document.getElementById('fTenant').value.trim();
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
   filtered=ALERTS.filter(r=>
+    (!chan||r.chan===chan)&&
     (!type||r.type===type)&&
-    (!tenant||r.tenant.includes(tenant))&&
+    (!tenant||r.tenant.includes(tenant)||(r.phone||'').includes(tenant)||(r.proj||'').includes(tenant))&&
     (!s||r.time>=s)&&(!e||r.time<=e+' 23:59:59')
   );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
 function doReset(){
+  document.getElementById('fChan').value='';
   document.getElementById('fType').value='';
   document.getElementById('fTenant').value='';
   document.getElementById('fStart').value='2026-07-02';
@@ -143,22 +165,25 @@ function renderTable(){
   document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>`
     <tr>
       <td>${start+i+1}</td>
-      <td>${r.tenant}</td>
+      <td>${chanTag(r.chan)}</td>
+      <td>${r.tenant}${r.chan==='短信'?`<div style="font-size:11px;color:var(--tw3)">${r.phone||''}</div>`:''}</td>
       <td><span class="tag ${TYPE_TAG[r.type]}">${r.type}</span></td>
       <td><span class="ttl" onclick='showDetail(${JSON.stringify(JSON.stringify(r))})'>${r.title}</span></td>
       <td class="cell-content tl" title="${r.content}">${r.content}</td>
-      <td>${r.read==='未读'?'<span class="text-wn">未读</span>':'已读'}</td>
+      <td>${r.read==='—'?'—':(r.read==='未读'?'<span class="text-wn">未读</span>':'已读')}</td>
       <td><span class="tpl">${r.tpl}</span></td>
       <td>${r.send==='发送失败'?'<span class="text-er">发送失败</span>':r.send}</td>
       <td>${r.time}</td>
     </tr>`).join('')
-    :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+    :'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 /* 详情弹窗 */
 function showDetail(json){
   const r=JSON.parse(json);
   document.getElementById('detailGrid').innerHTML=`
-    <span class="k">租户名称:</span><span class="v">${r.tenant}</span>
+    <span class="k">渠道:</span><span class="v">${chanTag(r.chan)}</span>
+    ${r.proj?`<span class="k">所属项目:</span><span class="v">${r.proj}</span>`:''}
+    <span class="k">接收对象:</span><span class="v">${r.tenant}${r.phone?`(${r.phone})`:''}</span>
     <span class="k">预警类型:</span><span class="v"><span class="tag ${TYPE_TAG[r.type]}">${r.type}</span></span>
     <span class="k">标题:</span><span class="v">${r.title}</span>
     <span class="k">内容:</span><span class="v">${r.content}</span>

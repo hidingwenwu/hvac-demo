@@ -65,7 +65,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .hd-act{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx);position:relative;border-radius:4px;}
 .hd-act:hover{color:var(--txw);background:var(--bg-hover);}
 .hd-act svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
-.hd-act .bdg{position:absolute;top:2px;right:3px;width:7px;height:7px;background:#f56c6c;border-radius:50%;border:1px solid var(--bg);}
+.hd-act .bdg{position:absolute;top:1px;right:0;width:9px;height:9px;background:#f56c6c;border-radius:50%;border:1px solid var(--bg);display:block;}
 .hd-user{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;color:var(--tx);position:relative;padding:4px 2px;}
 .hd-user:hover{color:var(--txw);}
 .hd-user svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
@@ -87,6 +87,33 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .hd-ann-popup-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;align-self:flex-start;}
 .hd-ann-popup-title{font-size:13.5px;font-weight:700;color:var(--txw);line-height:1.4;}
 .hd-ann-popup-body{font-size:12px;color:var(--ts);line-height:1.7;}
+
+/* 预警通知下拉面板(铃铛) */
+.alarm-panel{position:fixed;z-index:9000;width:380px;background:#1a2233;border:1px solid var(--bd);border-radius:8px;box-shadow:0 16px 48px rgba(0,0,0,.6);display:none;overflow:hidden;}
+.alarm-panel.show{display:block;}
+.ap-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);font-size:14px;font-weight:600;color:var(--txw);}
+.ap-hd .ap-all{font-size:12px;color:var(--primary);cursor:pointer;font-weight:400;}
+.ap-hd .ap-all:hover{color:var(--primary-hover,#4080ff);}
+.ap-cnts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;border-bottom:1px solid var(--bd);}
+.ap-sec{padding:10px 16px 2px;font-size:12px;color:var(--ts);}
+.ap-cnt{background:#0b1426;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;}
+.ap-cnt:hover{background:#141b30;}
+.ap-cnt .n{font-size:18px;font-weight:700;line-height:1.2;}
+.ap-cnt .t{font-size:11px;color:var(--ts);margin-top:2px;}
+.ap-list{max-height:300px;overflow-y:auto;}
+.ap-item{display:flex;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);}
+.ap-item:hover{background:#232d48;}
+.ap-item:last-child{border-bottom:none;}
+.ap-item .ai-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.ap-item .ai-main{flex:1;min-width:0;}
+.ap-item .ai-t{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ap-item .ai-t .done{color:var(--ok);font-size:11px;}
+.ap-item .ai-s{font-size:11px;color:var(--tw3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ap-item .ai-time{font-size:11px;color:var(--tw3);flex-shrink:0;margin-top:2px;}
+.ap-ft{padding:10px 16px;text-align:center;border-top:1px solid var(--bd);}
+.ap-ft span{color:var(--primary);font-size:13px;cursor:pointer;}
+.ap-ft span:hover{color:#4080ff;}
+.ap-empty{padding:30px;text-align:center;color:var(--tw3);font-size:13px;}
 
 .content{flex:1;overflow:hidden;background:var(--bg);}
 .content iframe{width:100%;height:100%;border:none;display:block;}
@@ -132,9 +159,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <div class="hd-act" title="操作指引" onclick="window.open('pages/guide-view.html','_blank')">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.8.3-1 .9-1 1.8"/><circle cx="12" cy="16.6" r=".4" fill="currentColor"/></svg>
         </div>
-        <div class="hd-act" title="预警通知" onclick="$msgTop('暂无新的预警通知')">
+        <div class="hd-act" title="故障通知" id="alarmBell" onclick="toggleAlarmPanel(event)">
           <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>
-          <span class="bdg"></span>
+          <span class="bdg" id="alarmBdg" style="display:none"></span>
         </div>
         <div class="hd-act" title="全屏" onclick="toggleFS()">
           <svg viewBox="0 0 24 24"><path d="M8 3.5H3.5V8M16 3.5h4.5V8M8 20.5H3.5V16M16 20.5h4.5V16"/></svg>
@@ -157,17 +184,27 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <div class="hd-ann-popup-body" id="hdAnnPopupBody"></div>
         </div>
       </div>
+      <!-- 预警通知下拉面板 -->
+      <div class="alarm-panel" id="alarmPanel">
+        <div class="ap-hd"><span>故障通知</span></div>
+        <div class="ap-cnts" id="apCnts"></div>
+        <div class="ap-sec">最近故障级预警(最新 3 条)</div>
+        <div class="ap-list" id="apList"></div>
+        <div class="ap-ft"><span onclick="goAlarm('alarm-overview')">查看详情</span></div>
+      </div>
     </header>
     <main class="content"><iframe id="fr" src="pages/overview-big.html"></iframe></main>
   </div>
 </div>
 
+<script src="pages/_alarm-data.js"></script>
 <script>
 /* ── 图标库(线描风,对应线上左侧菜单) ── */
 const ICONS={
   overview:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4M7 12l3-3 2.5 2.5L17 8"/></svg>',
   monitor:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4M7 10.5h2l1.5-3 2 5 1.5-2h3"/></svg>',
   ctrl:'<svg viewBox="0 0 24 24"><path d="M5 4v6M5 14v6M12 4v10M12 18v2M19 4v2M19 10v10"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="16" r="2"/><circle cx="19" cy="8" r="2"/></svg>',
+  alarm:'<svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>',
   strategy:'<svg viewBox="0 0 24 24"><path d="M13 3L5 13.5h5.5L10 21l8-10.5h-5.5L13 3z"/></svg>',
   device:'<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>',
   elec:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M8 3v4M16 3v4M12.5 9.5l-3 4h5l-3 4"/></svg>',
@@ -189,7 +226,6 @@ const MENU=[
     {id:'ctrl-env',lb:'环境感知监测',env:1},
     {id:'ctrl-group',lb:'群组控制'},
     {id:'ctrl-schedule',lb:'日程管理'},
-    {id:'ctrl-fault',lb:'故障记录'},
     {id:'ctrl-onoff',lb:'开关机记录'},
   ]},
   {t:'g',ic:'strategy',lb:'节能策略',ch:[
@@ -220,7 +256,6 @@ const MENU=[
       {id:'elec-price',lb:'电价设定'},
       {id:'elec-common-area',lb:'公区空调分摊'},
     ]},
-    {id:'elec-alert',lb:'异常预警信息'},
     {lb:'新计费功能',nb:1,sub:[
       {id:'elec-nb-tenant',lb:'租户管理'},
       {id:'elec-nb-query',lb:'电费查询'},
@@ -230,9 +265,11 @@ const MENU=[
       {id:'elec-nb-abnormal-query',lb:'异常查询'},
       {id:'elec-nb-eq',lb:'当量数据查询'},
     ]},
-    {id:'elec-warn',lb:'异常预警'},
-    {id:'elec-warn-hour',lb:'异常预警小时'},
-    {id:'elec-warn-daily',lb:'异常每日盘点'},
+  ]},
+  {t:'g',ic:'alarm',lb:'故障预警',ch:[
+    {id:'alarm-overview',lb:'故障总览'},
+    {id:'alarm-detail',lb:'故障详情'},
+    {id:'alarm-push',lb:'故障推送',admin:1},
   ]},
   {t:'g',ic:'ops',lb:'智慧运维',ch:[
     {id:'ops-ac',lb:'空调参数'},
@@ -256,12 +293,20 @@ const MENU=[
     {id:'sys-guide',lb:'操作指引管理',admin:1},
   ]},
 ];
-/* 面包屑路径映射(菜单外可达页面) */
+/* 面包屑路径映射(菜单外可达页面;故障预警早期版本页面保留直接访问) */
 const EXTRA_PATH={
   'guide-view':['帮助','操作指引'],
   'device-sub-create':['项目及设备管理','子账号列表','新增子账号'],
   'ctrl-env-human':['集中控制','环境感知监测'],
   'ctrl-env-door':['集中控制','环境感知监测'],
+  'ctrl-fault':['故障预警','故障详情(旧版)'],
+  'alarm-ops':['故障预警','项目运维故障(旧版)'],
+  'alarm-ac':['故障预警','空调故障预警(旧版)'],
+  'alarm-code-lib':['故障预警','故障代码库'],
+  'elec-alert':['故障预警','推送记录(旧版)'],
+  'elec-warn':['电费相关','异常预警(旧版)'],
+  'elec-warn-hour':['电费相关','异常预警小时(旧版)'],
+  'elec-warn-daily':['电费相关','异常每日盘点(旧版)'],
 };
 
 let aid='overview-big';
@@ -288,8 +333,12 @@ function renderBC(){
   }).join('');
 }
 function nav(id,query){aid=id;fr.src='pages/'+id+'.html'+(query?'?'+query:'');render();renderBC();}
-/* 接收子页面(iframe)的跳转请求 */
-window.addEventListener('message',e=>{if(e.data&&e.data.nav)nav(e.data.nav,e.data.sn?'sn='+encodeURIComponent(e.data.sn):'');});
+/* 接收子页面(iframe)的跳转请求与预警状态变更通知 */
+window.addEventListener('message',e=>{
+  if(!e.data)return;
+  if(e.data.nav)nav(e.data.nav,e.data.q||(e.data.sn?'sn='+encodeURIComponent(e.data.sn):''));
+  if(e.data.alarmDirty)refreshBell();
+});
 function hasA(ch){return ch.some(c=>c.id===aid||(c.sub&&c.sub.some(s=>s.id===aid)));}
 
 function render(){
@@ -380,7 +429,7 @@ function saveProj(name){
   saveProj(projSel.value);
 })();
 /* file:// 下 contentWindow.location 跨域受限,改用重设 src 刷新 */
-projSel.onchange=function(){saveProj(this.value);$msgTop('已切换到项目:'+this.value);applyProjMeta();fr.setAttribute('src',fr.getAttribute('src'));};
+projSel.onchange=function(){saveProj(this.value);$msgTop('已切换到项目:'+this.value);applyProjMeta();refreshBell();fr.setAttribute('src',fr.getAttribute('src'));};
 /* 项目特性 → 菜单显隐 + logo(现网 logo 按项目配置) */
 function applyProjMeta(){
   const m=curMeta();
@@ -441,6 +490,71 @@ function showAnnPopup(el){
 }
 function hideAnnPopup(){document.getElementById('hdAnnPopup').classList.remove('show');}
 initAnnouncement();
+
+/* ── 预警通知(铃铛角标 + 下拉面板,数据来自共享数据层 _alarm-data.js) ── */
+const alarmPanel=document.getElementById('alarmPanel');
+function toggleAlarmPanel(e){
+  e.stopPropagation();
+  if(alarmPanel.classList.contains('show')){alarmPanel.classList.remove('show');return;}
+  renderAlarmPanel();
+  const rect=document.getElementById('alarmBell').getBoundingClientRect();
+  alarmPanel.style.top=(rect.bottom+8)+'px';
+  alarmPanel.style.left=Math.max(8,rect.right-380)+'px';
+  alarmPanel.classList.add('show');
+}
+document.addEventListener('click',e=>{
+  if(!alarmPanel.contains(e.target)&&e.target.closest('#alarmBell')==null)alarmPanel.classList.remove('show');
+});
+function goAlarm(id,query){
+  alarmPanel.classList.remove('show');
+  nav(id,query);
+}
+function refreshBell(){
+  const bill=$alarmProjBill(projSel.value);
+  const c=$alarmCounts({bill});
+  /* 仅区分有无未处理故障:有则亮红点,无则隐藏,不展示数量 */
+  const bdg=document.getElementById('alarmBdg');
+  bdg.style.display=c.total>0?'block':'none';
+  if(alarmPanel.classList.contains('show'))renderAlarmPanel();
+}
+function renderAlarmPanel(){
+  const bill=$alarmProjBill(projSel.value);
+  const c=$alarmCounts({bill});
+  /* 三个小卡片:今日新增 / 未处理总数 / 故障级(今日新增深链带当日范围+全部状态,与卡片口径一致) */
+  const cells=[
+    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','today=1')"><div class="n" style="color:#5a8dff">${$alarmTodayNew({bill})}</div><div class="t">今日新增</div></div>`,
+    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','status=new')"><div class="n" style="color:#e6a23c">${c.total}</div><div class="t">未处理总数</div></div>`,
+    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','level=1&status=new')"><div class="n" style="color:#f56c6c">${c.lv1}</div><div class="t">故障级</div></div>`,
+  ];
+  const apCnts=document.getElementById('apCnts');
+  apCnts.style.gridTemplateColumns=`repeat(${cells.length},1fr)`;
+  apCnts.innerHTML=cells.join('');
+  /* 明细:仅最近 3 条未处理的故障级预警;点击按该记录定位(带对象/地址筛选) */
+  bellList=$alarmRecent(50,{bill}).filter(r=>r.level===1&&!r.done).slice(0,3);
+  document.getElementById('apList').innerHTML=bellList.length?bellList.map((r,i)=>{
+    const color=ALARM_LEVELS[r.level].color;
+    return `<div class="ap-item" onclick="goBellItem(${i})">
+      <span class="ai-dot" style="background:${color}"></span>
+      <div class="ai-main">
+        <div class="ai-t">${r.title}${r.gone?' <span class="done">已恢复</span>':''}</div>
+        <div class="ai-s">${r.obj} · ${r.info}</div>
+      </div>
+      <span class="ai-time">${r.time.slice(5,16)}</span>
+    </div>`;
+  }).join(''):'<div class="ap-empty">暂无未处理的故障级预警</div>';
+}
+let bellList=[];
+function goBellItem(i){
+  const r=bellList[i];
+  if(!r)return;
+  goAlarm('alarm-detail',r.kind==='ac'
+    ?`tab=ac&level=1&status=new&addr=${encodeURIComponent(r.addr||'')}`
+    :`level=1&status=new&obj=${encodeURIComponent(r.obj||'')}`);
+}
+refreshBell();
+
+/* 站内提醒由顶部铃铛承担:有未处理故障即红点(全局口径,不依赖任何推送配置),
+   点开面板预览、进详情页查看;不单独建设站内信/登录弹窗 */
 
 applyProjMeta();renderBC();
 </script>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故障总览</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 统计卡可点击 */
+.scd{cursor:pointer;}
+/* 中部布局:趋势 + 占比(双饼图需更宽) */
+.mid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:1100px){.mid{grid-template-columns:1fr;}}
+/* 双饼图布局 */
+.pies{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pie-card{display:flex;flex-direction:column;align-items:center;}
+.pie-card .pi-t{font-size:13px;color:var(--txw);font-weight:600;margin-bottom:6px;}
+.pie-card .pi-svg{width:150px;height:150px;}
+.pie-card .pi-leg{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 12px;margin-top:8px;font-size:11px;color:var(--ts);}
+.pie-card .pi-leg span{display:flex;align-items:center;gap:5px;}
+.pie-card .pi-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;}
+/* 最近故障列表 */
+.recent-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;}
+.recent-row:hover{background:var(--bg-hover);}
+.recent-row:last-child{border-bottom:none;}
+.recent-row .rt{width:190px;flex-shrink:0;font-size:13px;color:var(--txw);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recent-row .ro{width:170px;flex-shrink:0;font-size:12px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recent-row .ri{flex:1;min-width:0;font-size:12px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recent-row .rm{width:150px;flex-shrink:0;font-size:12px;color:var(--tw3);text-align:right;}
+/* 图例 */
+.legend{display:flex;gap:18px;font-size:12px;color:var(--ts);}
+.legend span{display:flex;align-items:center;gap:6px;}
+/* 趋势统计区间切换(近7日/近30日) */
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:4px;overflow:hidden;}
+.seg-btn{padding:2px 10px;font-size:12px;color:var(--ts);cursor:pointer;font-weight:400;user-select:none;}
+.seg-btn.active{background:var(--primary);color:#fff;}
+.seg-btn:not(:last-child){border-right:1px solid var(--bd);}
+/* 饼图鼠标划过提示(数字+比例) */
+#pieTip{position:fixed;z-index:99;display:none;background:#0b1426;border:1px solid var(--bd);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--txw);pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.4);white-space:nowrap;}
+/* 维护窗口生效提示条 */
+#maintBar{display:none;align-items:center;gap:8px;background:rgba(230,162,60,.12);border:1px solid rgba(230,162,60,.35);color:var(--wn,#e6a23c);border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.6;}
+.pi-arc{cursor:pointer;transition:opacity .12s;}
+.pi-arc:hover{opacity:.8;}
+</style>
+</head>
+<body>
+<!-- 维护窗口生效提示 -->
+<div id="maintBar"></div>
+
+<!-- 统计卡片区 -->
+<div class="sc" id="cards" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
+
+<!-- 趋势与占比 -->
+<div class="mid">
+  <div class="panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span style="display:flex;align-items:center;gap:12px">故障趋势统计
+        <span class="seg" id="trendSeg">
+          <span class="seg-btn active" data-d="7" onclick="pickTrend(7)">近7日</span>
+          <span class="seg-btn" data-d="30" onclick="pickTrend(30)">近30日</span>
+        </span>
+      </span>
+      <span class="legend">
+        <span><i class="dot" style="background:var(--primary)"></i>新增故障</span>
+        <span><i class="dot" style="background:var(--ok)"></i>处理完成</span>
+      </span>
+    </div>
+    <div id="trend"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">故障分类</div>
+    <div id="share"></div>
+  </div>
+</div>
+
+<!-- 最近故障 -->
+<div class="panel" style="padding:0">
+  <div class="panel-title" style="padding:16px 16px 10px">最近故障</div>
+  <div id="recent"></div>
+</div>
+
+<script src="_ui.js"></script>
+<script src="_alarm-data.js"></script>
+<script>
+/* 非计费项目不展示计费分摊相关内容 */
+const PROJ_BILL=$alarmProjBill($alarmCurProj());
+const cnt=$alarmCounts({bill:PROJ_BILL});
+
+/* ── 统计卡片 ── */
+const cards=[
+  /* 今日新增:深链带当日时间范围+状态=全部,与卡片口径(当日产生,不区分处理状态)一致 */
+  {lb:'今日新增',v:$alarmTodayNew({bill:PROJ_BILL}),cls:'',go:()=>$alarmNav('alarm-detail','today=1')},
+  {lb:'未处理总数',v:cnt.total,cls:'scr',go:()=>$alarmNav('alarm-detail','status=new')},
+  {lb:'项目运维',v:cnt.ops,cls:'scw',go:()=>$alarmNav('alarm-detail','cat=ops&status=new')},
+  {lb:'空调故障',v:cnt.ac,cls:'',go:()=>$alarmNav('alarm-detail','tab=ac&status=new')},
+  {lb:'故障级',v:cnt.lv1,cls:'scr',go:()=>$alarmNav('alarm-detail','level=1&status=new')},
+  {lb:'警示级',v:cnt.lv2,cls:'scw',go:()=>$alarmNav('alarm-detail','level=2&status=new')},
+  {lb:'提示级',v:cnt.lv3,cls:'',go:()=>$alarmNav('alarm-detail','level=3&status=new')},
+];
+document.getElementById('cards').innerHTML=cards.map((c,i)=>`
+  <div class="scd" onclick="goCard(${i})">
+    <div class="sc-lb">${c.lb}</div>
+    <div class="sc-v ${c.cls}">${c.v}<span class="sc-u">条</span></div>
+  </div>`).join('');
+function goCard(i){cards[i].go();}
+
+/* ── 故障趋势统计:柱状图,支持近 7 日 / 近 30 日切换
+     (新增=mock 明细按日统计,处理=状态记录按日统计;
+      mock 明细仅覆盖近 7 日,更早日期用确定性演示数据填充,仅趋势图使用) ── */
+let trendDays=7;
+function pickTrend(n){
+  trendDays=n;
+  document.querySelectorAll('#trendSeg .seg-btn').forEach(b=>b.classList.toggle('active',+b.dataset.d===n));
+  renderTrend();
+}
+function renderTrend(){
+  const N=trendDays;
+  const days=[];
+  const now=new Date();
+  for(let i=N-1;i>=0;i--){
+    const d=new Date(now.getTime()-i*86400000);
+    days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+  const stAll=$alarmStatusAll();
+  const opsById={};ALARM_OPS_ITEMS.forEach(r=>{opsById[r.id]=r;});
+  const acById={};ALARM_AC_FAULTS.forEach(f=>{acById[f.id]=f;});
+  const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;};
+  const news=[],dones=[];
+  days.forEach((d,i)=>{
+    const ago=N-1-i;
+    if(ago<=6){
+      /* 与统计卡同口径:剔除项目屏蔽故障码与维护窗口期记录;非计费项目剔除计费分摊类 */
+      let n=0;
+      ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill')&&!$alarmInMaint(r))n++;});
+      ALARM_AC_FAULTS.forEach(f=>{if(f.devTime.slice(0,10)===d&&$alarmFaultLevelProj(f)!==0&&!$alarmInMaint(f))n++;});
+      news.push(n);
+      /* 处理完成:仅统计「已处理」(已忽略不计),并按当前项目与计费口径过滤 */
+      dones.push(Object.keys(stAll).filter(k=>{
+        const s=stAll[k];
+        if(s.st!=='done'||(s.time||'').slice(0,10)!==d)return false;
+        const r=opsById[k];
+        if(r)return PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill';
+        const f=acById[k];
+        if(f)return $alarmFaultLevelProj(f)!==0;
+        return false;
+      }).length);
+    }else{
+      const h=hash(d);
+      const nv=2+h%7;
+      news.push(nv);
+      dones.push(Math.max(1,nv-(h>>4)%3));
+    }
+  });
+  const W=620,H=190,PL=34,PB=26,PT=14,PR=10;
+  const max=Math.max(4,...news,...dones);
+  const iw=(W-PL-PR)/N;
+  const bw=Math.max(3,Math.min(14,iw*0.32));
+  const y=v=>PT+(H-PT-PB)*(1-v/max);
+  const H0=H-PB;
+  const bars=days.map((d,i)=>{
+    const cx=PL+iw*i+iw/2;
+    const nY=y(news[i]),dY=y(dones[i]);
+    return `<rect x="${(cx-bw-1).toFixed(1)}" y="${nY.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,H0-nY).toFixed(1)}" rx="1.5" fill="#1f65ff"><title>${d.slice(5)} 新增故障 ${news[i]} 条</title></rect>`
+          +`<rect x="${(cx+1).toFixed(1)}" y="${dY.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,H0-dY).toFixed(1)}" rx="1.5" fill="#67c23a"><title>${d.slice(5)} 处理完成 ${dones[i]} 条</title></rect>`;
+  }).join('');
+  const labels=days.map((d,i)=>{
+    if(N>14&&i%5!==0&&i!==N-1)return '';
+    const cx=PL+iw*i+iw/2;
+    return `<text x="${cx.toFixed(1)}" y="${H-8}" fill="#6b7a99" font-size="10" text-anchor="middle">${d.slice(5)}</text>`;
+  }).join('');
+  const grid=[0,.5,1].map(t=>{
+    const gy=PT+(H-PT-PB)*t;
+    return `<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="rgba(255,255,255,.06)"/><text x="${PL-6}" y="${gy+4}" fill="#6b7a99" font-size="10" text-anchor="end">${Math.round(max*(1-t))}</text>`;
+  }).join('');
+  document.getElementById('trend').innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">${grid}${labels}${bars}</svg>`;
+}
+
+/* ── 故障分类:双饼图,展示当前全部未处理故障的分布(与未处理计数同口径) ── */
+function renderShare(){
+  const c=$alarmCounts({bill:PROJ_BILL});
+  /* 饼图 1:故障类别(项目运维 vs 空调故障) */
+  const p1=[
+    {lb:'项目运维',n:c.ops,c:'#5a8dff'},
+    {lb:'空调故障',n:c.ac,c:'#f56c6c'},
+  ];
+  /* 饼图 2:故障等级(故障 / 警示 / 提示) */
+  const p2=[
+    {lb:'故障',n:c.lv1,c:'#f56c6c'},
+    {lb:'警示',n:c.lv2,c:'#e6a23c'},
+    {lb:'提示',n:c.lv3,c:'#5a8dff'},
+  ];
+  document.getElementById('share').innerHTML=
+    `<div class="pies">${pieCard('故障类别',p1)}${pieCard('故障等级',p2)}</div>`
+    +`<div style="font-size:12px;color:var(--tw3);margin-top:8px">统计范围:当前全部未处理故障(共 ${c.total} 条);已处理、已忽略及项目屏蔽故障码的记录不计入。</div>`;
+}
+/* 单个饼图卡片:svg 扇形 + 图例(空数据时显占位环);扇形鼠标划过展示数字与比例 */
+function pieCard(title,slices){
+  const R=60,CX=75,CY=75,IR=34;   /* 外径60,内径34(环形饼图) */
+  const total=slices.reduce((s,x)=>s+x.n,0);
+  let acc=0;const arcs=[];
+  if(total>0){
+    slices.forEach(s=>{
+      if(!s.n)return;
+      const a0=acc/total*Math.PI*2, a1=(acc+s.n)/total*Math.PI*2;acc+=s.n;
+      const pct=(s.n/total*100).toFixed(1);
+      arcs.push(`<path d="${donutPath(CX,CY,R,IR,a0,a1)}" fill="${s.c}" class="pi-arc" data-tip="${s.lb}:${s.n} 条(${pct}%)"/>`);
+    });
+  }else{
+    arcs.push(`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--bg-input)" stroke-width="${R-IR}"/>`);
+  }
+  const svg=`<svg class="pi-svg" viewBox="0 0 150 150">${arcs.join('')}<text x="${CX}" y="${CY-4}" text-anchor="middle" fill="var(--txw)" font-size="20" font-weight="600">${total}</text><text x="${CX}" y="${CY+14}" text-anchor="middle" fill="var(--ts)" font-size="11">条</text></svg>`;
+  const leg=`<div class="pi-leg">${slices.map(s=>`<span><i style="background:${s.c}"></i>${s.lb} ${s.n}</span>`).join('')}</div>`;
+  return `<div class="pie-card"><div class="pi-t">${title}</div>${svg}${leg}</div>`;
+}
+/* 饼图 hover 提示框(跟随鼠标) */
+const pieTip=document.createElement('div');
+pieTip.id='pieTip';
+document.body.appendChild(pieTip);
+document.addEventListener('mousemove',e=>{
+  const t=e.target.closest?e.target.closest('.pi-arc'):null;
+  if(t&&t.dataset.tip){
+    pieTip.textContent=t.dataset.tip;
+    pieTip.style.display='block';
+    pieTip.style.left=(e.clientX+12)+'px';
+    pieTip.style.top=(e.clientY+12)+'px';
+  }else pieTip.style.display='none';
+});
+/* 环形扇形路径(外弧 + 内弧反向闭合) */
+function donutPath(cx,cy,r,ir,a0,a1){
+  if(a1-a0>=Math.PI*2-1e-6){   /* 整圆:画两段半圆避免单路径首尾重合 */
+    return `M${cx+r} ${cy}A${r} ${r} 0 1 1 ${cx-r} ${cy}A${r} ${r} 0 1 1 ${cx+r} ${cy}M${cx+ir} ${cy}A${ir} ${ir} 0 1 0 ${cx-ir} ${cy}A${ir} ${ir} 0 1 0 ${cx+ir} ${cy}Z`;
+  }
+  const p=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  const [x0,y0]=p(r,a0),[x1,y1]=p(r,a1),[x2,y2]=p(ir,a1),[x3,y3]=p(ir,a0);
+  const lg=(a1-a0)>Math.PI?1:0;
+  return `M${x0} ${y0}A${r} ${r} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${ir} ${ir} 0 ${lg} 0 ${x3} ${y3}Z`;
+}
+
+/* ── 最近故障(点击按该记录定位:带对象/地址筛选,状态=全部,保证已处理记录也能找到) ── */
+let recentList=[];
+function renderRecent(){
+  recentList=$alarmRecent(10,{bill:PROJ_BILL});
+  document.getElementById('recent').innerHTML=recentList.length?recentList.map((r,i)=>{
+    const L=ALARM_LEVELS[r.level];
+    const catTag=r.kind==='ac'
+      ?`<span class="tag ${L.tag}">空调故障·${L.short}</span>`
+      :`<span class="tag ${L.tag}">项目运维·${L.short}</span>`;
+    return `<div class="recent-row" onclick="goRecent(${i})">
+      ${catTag}
+      <span class="rt">${r.title}</span>
+      <span class="ro">${r.obj}</span>
+      <span class="ri">${r.info}</span>
+      <span class="rm">${r.time.slice(5,16)} ${r.done?'<span class="text-ok">· 已处理</span>':''}</span>
+    </div>`;
+  }).join('')
+  :'<div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
+}
+function goRecent(i){
+  const r=recentList[i];
+  if(!r)return;
+  $alarmNav('alarm-detail',r.kind==='ac'
+    ?`tab=ac&status=&addr=${encodeURIComponent(r.addr||'')}`
+    :`status=&obj=${encodeURIComponent(r.obj||'')}`);
+}
+
+/* 维护窗口生效中:页顶提示(与故障详情页一致) */
+(function renderMaintBar(){
+  const m=$alarmPushCfgGet($alarmCurProj()).maint||{};
+  if(!m.on||!m.from||!m.to)return;
+  const now=$alarmNow();
+  const from=m.from.replace('T',' ')+':00';
+  const to=m.to.replace('T',' ')+':59';
+  if(now<from||now>to)return;
+  const el=document.getElementById('maintBar');
+  el.style.display='flex';
+  el.innerHTML=`当前项目处于<b>维护窗口</b>(${from.slice(5,16)} ~ ${to.slice(5,16)}${m.note?' · '+m.note:''}),窗口期内产生的故障不计入统计与列表、不触发推送。`;
+})();
+renderTrend();renderShare();renderRecent();
+</script>
+</body>
+</html>

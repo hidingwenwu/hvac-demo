@@ -139,6 +139,8 @@ function $tree3From(rows) {
 }
 function $tree3Match(sel, r) {
   if (!sel) return true;
+  /* 楼栋校验:多楼栋项目下选「2号楼-7层」不应命中「1号楼-7层」;调用方未传 bld 时跳过(兼容单楼栋页面) */
+  if (sel.bld != null && r.bld != null && String(r.bld) !== sel.bld) return false;
   if (sel.fl != null && String(r.fl) !== sel.fl) return false;
   if (sel.room != null && String(r.room) !== sel.room) return false;
   return true;

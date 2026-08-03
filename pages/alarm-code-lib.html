@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故障代码库</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+/* 提示横幅 */
+.hint-bar{display:flex;align-items:flex-start;gap:10px;background:var(--primary-dim);border:1px solid rgba(31,101,255,.3);color:var(--tx);border-radius:6px;padding:10px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;}
+.hint-bar .hi{color:var(--primary);font-weight:700;flex-shrink:0;}
+.hint-bar .sub{color:var(--ts);font-size:12px;}
+/* 当前项目标签 */
+.cur-proj{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ts);}
+.cur-proj b{color:var(--txw);font-weight:600;}
+/* 编辑弹窗表单 */
+.frm{display:flex;flex-direction:column;gap:12px;}
+.form-item .opt{font-size:11px;color:var(--tw3);font-weight:400;margin-left:4px;}
+/* 场景提示 */
+.scn-tip{font-size:12px;line-height:1.6;padding:8px 12px;border-radius:4px;display:none;}
+.scn-tip.s1{background:var(--ok-dim);border:1px solid rgba(103,194,58,.3);color:var(--ok);}
+.scn-tip.s2{background:var(--wn-dim);border:1px solid rgba(230,162,60,.3);color:var(--wn);}
+</style>
+</head>
+<body>
+<!-- 页头:当前项目(仅直达访问时展示;弹窗模式下项目名已在弹窗标题中,本条隐藏避免冗余) -->
+<div class="fb" style="justify-content:space-between" id="curProjBar">
+  <div class="cur-proj">当前项目：<b id="curProjName"></b><span>（配置仅对当前项目生效）</span></div>
+</div>
+
+<!-- 页签:项目新增 | 项目屏蔽 -->
+<div class="tabs">
+  <div class="tab active" data-t="add" onclick="pickTab('add')">项目新增</div>
+  <div class="tab" data-t="blk" onclick="pickTab('blk')">项目屏蔽</div>
+</div>
+
+<!-- ═══════ 项目新增 ═══════ -->
+<div id="tabAdd">
+  <div class="hint-bar">
+    <span class="hi">ⓘ</span>
+    <span>除常规故障码外，以下故障码也纳入监测范围。<br>
+    <span class="sub">适用场景：① 通用代码库中无此故障码，本项目需要监测；② 通用代码库中的故障级别与本项目认定的级别不同（按本项目档位生效，不影响通用库与其他项目）。</span></span>
+  </div>
+  <div class="fb" style="justify-content:flex-end">
+    <button class="btn btns" onclick="openProjAdd(null)">+ 新增故障码</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>序号</th><th>品牌</th><th>适用机型</th><th>故障代码</th><th>故障名称</th><th>本项目等级</th><th>类型</th><th>操作</th>
+      </tr></thead>
+      <tbody id="tbAdd"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════ 项目屏蔽 ═══════ -->
+<div id="tabBlk" style="display:none">
+  <div class="hint-bar">
+    <span class="hi">ⓘ</span>
+    <span>屏蔽后，该故障码在本项目不产生预警计数、不参与等级统计、不触发短信推送；通用代码库定义与其他项目不受影响，可随时取消屏蔽恢复（同码的项目新增/等级调整配置在屏蔽时被移除，取消屏蔽后不自动恢复）。</span>
+  </div>
+  <div class="fb" style="justify-content:flex-end">
+    <button class="btn btns" onclick="openBlock()">+ 添加屏蔽</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>序号</th><th>品牌</th><th>故障代码</th><th>故障名称</th><th>通用等级</th><th>操作</th>
+      </tr></thead>
+        <tbody id="tbBlk"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 项目新增:新增/编辑弹窗(仅品牌+故障码必填,其余选填,缺省取通用库描述) -->
+<div class="modal" id="dlgProjAdd">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span id="paTitle">新增故障码</span><span class="dx" onclick="$modalClose('dlgProjAdd')">✕</span></div>
+    <div class="db">
+      <div class="frm">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 空调品牌</span>
+            <input id="paBrand" list="paBrandList" placeholder="输入或选择品牌" oninput="paKeyChange()">
+            <datalist id="paBrandList"></datalist>
+          </div>
+          <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 故障代码</span>
+            <input id="paCode" placeholder="如 EH" oninput="paKeyChange()">
+          </div>
+        </div>
+        <div class="scn-tip" id="paScnTip"></div>
+        <div class="form-item"><span class="fl">适用机型<span class="opt">选填,缺省取通用库</span></span><input id="paModel" placeholder="如 MDV系列 / 室内机通用"></div>
+        <div class="form-item"><span class="fl">故障名称<span class="opt">选填,缺省取通用库</span></span><input id="paName" placeholder="缺省时取通用代码库名称"></div>
+        <div class="form-item"><span class="fl">故障原因<span class="opt">选填,缺省取通用库描述</span></span><textarea id="paDesc" rows="2" placeholder="缺省时取通用代码库描述"></textarea></div>
+        <div class="form-item"><span class="fl">排查方法<span class="opt">选填,缺省取通用库描述</span></span><textarea id="paAdvice" rows="3" placeholder="缺省时取通用代码库描述"></textarea></div>
+        <div class="form-item"><span class="fl">本项目故障等级</span>
+          <select id="paLevel" style="width:260px">
+            <option value="1">故障(影响正常运行,必须处理)</option>
+            <option value="2">警示(可继续运行,存在隐患)</option>
+            <option value="3">提示(提示性信息,无需刻意处理)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgProjAdd')">取消</button>
+      <button class="btn btnp" onclick="doSaveProjAdd()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 项目屏蔽:添加弹窗(仅品牌+故障码) -->
+<div class="modal" id="dlgBlock">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>添加屏蔽故障码</span><span class="dx" onclick="$modalClose('dlgBlock')">✕</span></div>
+    <div class="db">
+      <div class="frm">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 空调品牌</span>
+            <input id="bkBrand" list="paBrandList" placeholder="输入或选择品牌">
+          </div>
+          <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 故障代码</span>
+            <input id="bkCode" placeholder="如 H1">
+          </div>
+        </div>
+        <div id="bkPreview" class="text-sub" style="font-size:12px;line-height:1.6"></div>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgBlock')">取消</button>
+      <button class="btn btnp" onclick="doBlock()">确认屏蔽</button>
+    </div>
+  </div>
+</div>
+
+<script src="_ui.js"></script>
+<script src="_alarm-data.js"></script>
+<script>
+/* 当前项目:优先取 URL ?proj=(按项目弹窗),否则复用顶部栏当前查看项目(配置按项目隔离) */
+const projParam=new URLSearchParams(location.search).get('proj');
+const curProj=projParam||$alarmCurProj();
+document.getElementById('curProjName').textContent=curProj;
+/* 弹窗(iframe)模式:弹窗标题已含「故障代码库(当前项目:xxx)+配置仅对当前项目生效」,隐藏页内横条 */
+if(projParam)document.getElementById('curProjBar').style.display='none';
+
+let tab='add';
+function pickTab(t){
+  tab=t;
+  document.querySelectorAll('.tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.t===t));
+  document.getElementById('tabAdd').style.display=t==='add'?'block':'none';
+  document.getElementById('tabBlk').style.display=t==='blk'?'block':'none';
+  if(t==='add')renderAdd();else renderBlk();
+}
+function lvTag(lv){const L=ALARM_LEVELS[lv];return `<span class="tag ${L.tag}">${L.lb}</span>`;}
+function renderBrandList(){
+  const brands=[...new Set($alarmCodeLib().map(e=>e.brand))];
+  document.getElementById('paBrandList').innerHTML=brands.map(b=>`<option value="${b}">`).join('');
+}
+
+/* ═══════ 项目新增 ═══════ */
+let paList=[];
+function projAddEntries(){
+  const cfg=$alarmProjCodeGet(curProj);
+  return Object.keys(cfg.adds).map(k=>{
+    const raw=cfg.adds[k];
+    const uni=$alarmCodeLookup(raw.brand,raw.code);
+    const merged=$alarmProjEntry(raw.brand,raw.code,curProj);
+    return Object.assign({},merged,{key:k,type:uni?'等级调整':'新增监测'});
+  });
+}
+/* 操作用索引绑定(不把名称/键拼进 onclick 字符串,避免引号字符破坏属性) */
+function renderAdd(){
+  paList=projAddEntries();
+  document.getElementById('tbAdd').innerHTML=paList.length?paList.map((e,i)=>`
+    <tr>
+      <td>${i+1}</td><td>${e.brand}</td><td>${e.model||'—'}</td><td><b>${e.code}</b></td>
+      <td>${e.name||'—'}</td><td>${lvTag(e.level)}</td>
+      <td><span class="tag ${e.type==='新增监测'?'tok':'twn'}">${e.type}</span></td>
+      <td><span class="op">
+        <a onclick="openProjAddIdx(${i})">编辑</a>
+        <a class="danger" onclick="delProjAddIdx(${i})">删除</a>
+      </span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无项目新增故障码</span></div></td></tr>';
+}
+function openProjAddIdx(i){if(paList[i])openProjAdd(paList[i].key);}
+function delProjAddIdx(i){const e=paList[i];if(e)delProjAdd(e.key,e.name||e.code);}
+
+let paEditKey=null;
+function openProjAdd(key){
+  paEditKey=key||null;
+  renderBrandList();
+  const cfg=$alarmProjCodeGet(curProj);
+  document.getElementById('paTitle').textContent=key?`编辑故障码 ${key.replace('|','-')}`:'新增故障码';
+  const raw=key?cfg.adds[key]:null;
+  document.getElementById('paBrand').value=raw?raw.brand:'';
+  document.getElementById('paCode').value=raw?raw.code:'';
+  document.getElementById('paBrand').disabled=!!key;
+  document.getElementById('paCode').disabled=!!key;
+  /* 编辑时展示原始填写值(选填缺省项保持为空,保存语义不变) */
+  document.getElementById('paModel').value=raw?(raw.model===undefined?'':raw.model||''):'';
+  document.getElementById('paName').value=raw?raw.name||'':'';
+  document.getElementById('paDesc').value=raw?raw.desc||'':'';
+  document.getElementById('paAdvice').value=raw?raw.advice||'':'';
+  document.getElementById('paLevel').value=raw?String(raw.level):'2';
+  paKeyChange(true);
+  $modal('dlgProjAdd');
+}
+/* 品牌+代码输入后:识别场景(① 通用库无此码 ② 档位与通用库不同),并提示缺省回退 */
+function paKeyChange(keepVals){
+  const brand=document.getElementById('paBrand').value.trim();
+  const code=document.getElementById('paCode').value.trim();   /* 保留原始大小写,匹配不区分大小写 */
+  const tip=document.getElementById('paScnTip');
+  if(!brand||!code){tip.style.display='none';return;}
+  const uni=$alarmCodeLookup(brand,code);
+  tip.style.display='block';
+  if(uni){
+    tip.className='scn-tip s2';
+    tip.textContent=`通用代码库已有该码（${uni.name}，通用等级：${ALARM_LEVELS[uni.level].lb}）。保存后按本项目配置生效，选填项缺省取通用库描述。`;
+    if(!keepVals){
+      document.getElementById('paLevel').value=String(uni.level);
+    }
+  }else if($alarmCiSiblings(brand,code).length>1){
+    /* 大小写并存码(如海信 Ee/EE):提示按设备上报大小写精确填写 */
+    tip.className='scn-tip s2';
+    tip.textContent=`「${brand}」存在仅大小写不同的并存码（${$alarmCiSiblings(brand,code).map(x=>x.code+'='+x.name).join('；')}），两者为不同故障，请按设备上报的大小写精确填写。`;
+  }else{
+    tip.className='scn-tip s1';
+    tip.textContent='通用代码库中无此故障码，保存后将作为本项目新增监测码纳入监测范围。';
+    if(!keepVals)document.getElementById('paLevel').value='2';
+  }
+}
+function doSaveProjAdd(){
+  const brand=document.getElementById('paBrand').value.trim();
+  const code=document.getElementById('paCode').value.trim();   /* 保留原始大小写(库中存在 db/0b 等小写码) */
+  if(!brand){$msg('请填写空调品牌','error');return;}
+  if(!code){$msg('请填写故障代码','error');return;}
+  /* 大小写并存码防呆(如海信 Ee/EE 为两个不同故障):精确无此码且并存多个时要求精确填写 */
+  const sibs=$alarmCiSiblings(brand,code);
+  if(!ALARM_CODE_LIB_BASE.some(x=>x.brand===brand&&x.code===code)&&sibs.length>1){
+    $msg(`「${brand}」存在仅大小写不同的并存码(${sibs.map(x=>x.code).join(' / ')}),请按设备上报的大小写精确填写`,'error');return;
+  }
+  const key=brand+'|'+code;   /* 键保留原始大小写;匹配时按规则容错(见 _alarm-data.js) */
+  const cfg=$alarmProjCodeGet(curProj);
+  if(!paEditKey&&$alarmProjAdd(cfg,brand,code)){$msg('该故障码已在项目新增清单中','error');return;}
+  if(!paEditKey&&$alarmProjBlockedKey(cfg,brand,code)){$msg('该故障码在项目屏蔽清单中,请先取消屏蔽','error');return;}
+  cfg.adds[key]={
+    brand,code,
+    model:document.getElementById('paModel').value.trim(),
+    name:document.getElementById('paName').value.trim(),
+    desc:document.getElementById('paDesc').value.trim(),
+    advice:document.getElementById('paAdvice').value.trim(),
+    level:+document.getElementById('paLevel').value,
+  };
+  $alarmProjCodeSet(curProj,cfg);
+  $modalClose('dlgProjAdd');
+  const uni=$alarmCodeLookup(brand,code);
+  $msg(uni?`「${brand}-${code}」本项目等级已调整为${ALARM_LEVELS[+document.getElementById('paLevel').value].short},立即生效`
+         :`「${brand}-${code}」已纳入「${curProj}」监测范围`);
+  renderAdd();
+}
+function delProjAdd(key,name){
+  $confirm(`确定从项目新增清单删除「${key.replace('|','-')} ${name}」吗?删除后按通用代码库等级生效。`,()=>{
+    const cfg=$alarmProjCodeGet(curProj);
+    delete cfg.adds[key];
+    $alarmProjCodeSet(curProj,cfg);
+    $msg('已删除,恢复按通用代码库等级生效');
+    renderAdd();
+  });
+}
+
+/* ═══════ 项目屏蔽 ═══════ */
+let blkList=[];
+function renderBlk(){
+  const cfg=$alarmProjCodeGet(curProj);
+  blkList=cfg.blocks.map(k=>{
+    const [brand,code]=k.split('|');
+    const uni=$alarmCodeLookup(brand,code);   /* 按匹配规则联查;展示用通用库原始大小写 */
+    return {key:k,brand,code:uni&&uni.code?uni.code:code,name:uni?uni.name:'—',level:uni?uni.level:null};
+  });
+  document.getElementById('tbBlk').innerHTML=blkList.length?blkList.map((e,i)=>`
+    <tr>
+      <td>${i+1}</td><td>${e.brand}</td><td><b>${e.code}</b></td>
+      <td>${e.name}</td><td>${e.level?lvTag(e.level):'—'}</td>
+      <td><span class="op"><a onclick="unBlockIdx(${i})">取消屏蔽</a></span></td>
+    </tr>`).join('')
+    :'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无屏蔽故障码</span></div></td></tr>';
+}
+function unBlockIdx(i){if(blkList[i])unBlock(blkList[i].key);}
+function openBlock(){
+  renderBrandList();
+  document.getElementById('bkBrand').value='';
+  document.getElementById('bkCode').value='';
+  document.getElementById('bkPreview').textContent='';
+  $modal('dlgBlock');
+}
+function doBlock(){
+  const brand=document.getElementById('bkBrand').value.trim();
+  const code=document.getElementById('bkCode').value.trim();   /* 保留原始大小写,匹配不区分大小写 */
+  if(!brand){$msg('请填写空调品牌','error');return;}
+  if(!code){$msg('请填写故障代码','error');return;}
+  /* 大小写并存码防呆(如海信 Ee/EE 为两个不同故障):精确无此码且并存多个时要求精确填写 */
+  const sibs=$alarmCiSiblings(brand,code);
+  if(!ALARM_CODE_LIB_BASE.some(x=>x.brand===brand&&x.code===code)&&sibs.length>1){
+    $msg(`「${brand}」存在仅大小写不同的并存码(${sibs.map(x=>x.code).join(' / ')}),请按设备上报的大小写精确填写`,'error');return;
+  }
+  const cfg=$alarmProjCodeGet(curProj);
+  if($alarmProjBlockedKey(cfg,brand,code)){$msg('该故障码已在屏蔽清单中','error');return;}
+  const addKey=Object.keys(cfg.adds).find(k=>$alarmKeyEq(k,brand,code));
+  const exec=()=>{
+    if(addKey)delete cfg.adds[addKey];   /* 屏蔽优先:同时移出项目新增 */
+    cfg.blocks.push(brand+'|'+code);     /* 键保留原始大小写 */
+    $alarmProjCodeSet(curProj,cfg);
+    $modalClose('dlgBlock');
+    $msg(`「${brand}-${code}」已在「${curProj}」屏蔽,立即生效`);
+    renderBlk();
+  };
+  /* 互斥提示:同码存在项目新增/等级调整配置时,二次确认后才移除 */
+  if(addKey){
+    $confirm(`「${brand}-${code}」存在项目新增/等级调整配置,屏蔽将移除该配置,取消屏蔽后不自动恢复(需重新配置)。是否继续?`,exec);
+    return;
+  }
+  exec();
+}
+function unBlock(key){
+  const cfg=$alarmProjCodeGet(curProj);
+  cfg.blocks=cfg.blocks.filter(k=>k!==key);
+  $alarmProjCodeSet(curProj,cfg);
+  $msg(`已取消「${key.replace('|','-')}」的屏蔽`);
+  renderBlk();
+}
+
+renderAdd();
+</script>
+</body>
+</html>
