@@ -22,6 +22,22 @@
 .detail-grid{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px;}
 .detail-grid .k{color:var(--ts);text-align:right;}
 .detail-grid .v{color:var(--tx);word-break:break-all;}
+/* ── 下发分体控制器配置弹窗 ── */
+.cfg-model{font-size:13.5px;color:var(--tx);margin:10px 0 2px;}
+.cfg-model b{color:var(--txw);font-weight:600;}
+.cfg-item{margin-top:16px;}
+.cfg-label{font-size:13px;color:var(--tx);margin-bottom:8px;}
+.cfg-label .req{color:var(--er);margin-right:4px;}
+.cfg-row{display:flex;align-items:center;gap:10px;}
+.cfg-row input,.cfg-row select{flex:1;min-width:0;}
+.cfg-unit{color:var(--ts);font-size:12.5px;flex-shrink:0;width:26px;}
+.cfg-row .btn{flex-shrink:0;}
+.cfg-note{font-size:12px;color:var(--er);margin-top:6px;line-height:1.5;}
+.cfg-tip{font-size:12px;color:var(--ts);margin-top:8px;line-height:1.7;}
+.cfg-group{margin-top:18px;padding-top:14px;border-top:1px dashed var(--bd);}
+.cfg-group-title{font-size:13px;font-weight:600;color:var(--txw);}
+.cfg-sw-row{display:flex;align-items:center;gap:12px;}
+.cfg-sw-state{font-size:12.5px;color:var(--ts);}
 </style>
 </head>
 <body>
@@ -41,7 +57,7 @@
   <div class="toolbar-right">
     <label class="chk-all"><input type="checkbox" id="selAll" onchange="toggleAll(this.checked)">本页全选</label>
     <button class="btn btnp" onclick="batchOp('加入升级计划')">+ 加入升级计划</button>
-    <button class="btn btnp" onclick="batchOp('下发配置')">下发配置</button>
+    <button class="btn btnp" onclick="openDispatch()">下发配置</button>
     <button class="btn btnp" onclick="openEnergy()">设置电量类型</button>
     <button class="btn btnp" onclick="openCreate()">+ 新建主机</button>
     <button class="btn btnp" onclick="$msg('刷新成功')">⟳ 刷新</button>
@@ -84,7 +100,7 @@
       <div class="form-row"><span class="fl"><span class="req">*</span>主机名称</span><input id="cName" class="flex1" placeholder="请输入主机名称"></div>
       <div class="form-row"><span class="fl"><span class="req">*</span>通信id</span><input id="cCid" class="flex1" placeholder="请输入通信id"></div>
       <div class="form-row"><span class="fl">型号</span>
-        <select id="cModel" class="flex1"><option>E74G</option><option>A02FG</option><option>S74G3</option><option>A02EG</option></select>
+        <select id="cModel" class="flex1"><option>E74G</option><option>A02FG</option><option>S74G3</option><option>A02EG</option><option>FD01G</option></select>
       </div>
     </div>
     <div class="df">
@@ -110,10 +126,26 @@
   </div>
 </div>
 
+<!-- 下发分体控制器配置弹窗(oc/dbx/hrjn/FD01G,按型号渲染配置项) -->
+<div class="modal" id="dlgDispatch">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>下发分体控制器配置</span><span class="dx" onclick="$modalClose('dlgDispatch')">✕</span></div>
+    <div class="db" id="dispBody"></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgDispatch')">取 消</button></div>
+  </div>
+</div>
+
 <script src="_ui.js"></script>
 <script>
-/* ── 模拟数据(与线上形态一致) ── */
+/* ── 模拟数据(与线上形态一致):分体机控制器(参照测试环境「平台测试_分体机」项目)+ 抄表器/网关 ── */
 const HOSTS=[
+  {name:'FD01G分体控制器',code:'eace218166bd23ba958f704bca84d4fc',mac:'70:4B:CA:84:D4:FE',cid:14,model:'FD01G',ver:'0.114.0.0.15',online:'离线',hasNew:'是',commTime:'2026-07-29 14:09:43',devTime:'2026-07-29 05:10:10',crtTime:'2026-05-21 10:00:31'},
+  {name:'1235',code:'e309bbe96817fc0f0139ece334a2f178',mac:'EC:E3:34:A2:F1:7A',cid:13,model:'FD01G',ver:'0.114.0.0.4',online:'离线',hasNew:'是',commTime:'2026-03-30 16:29:15',devTime:'2026-03-30 16:29:13',crtTime:'2026-01-12 21:11:50'},
+  {name:'开发自测2026040212345678',code:'860935079871097',mac:'',cid:12,model:'hrjn',ver:'1.0.1',online:'离线',hasNew:'否',commTime:'2026-04-23 16:22:17',devTime:'2026-04-23 16:22:16',crtTime:'2026-04-02 08:53:06'},
+  {name:'HRJN测试设备',code:'860935071588111',mac:'',cid:11,model:'hrjn',ver:'1.0.0',online:'离线',hasNew:'否',commTime:'2025-09-15 12:45:11',devTime:'2025-09-15 12:45:13',crtTime:'2025-09-04 13:37:19'},
+  {name:'DBX可用设备',code:'864423069849445',mac:'',cid:10,model:'dbx',ver:'1.0.1',online:'离线',hasNew:'否',commTime:'2026-07-29 05:10:11',devTime:'2026-07-29 05:10:10',crtTime:'2025-11-17 17:07:39'},
+  {name:'DBX测试设备2',code:'864423061759634',mac:'',cid:9,model:'dbx',ver:'1.0.1',online:'在线',hasNew:'否',commTime:'2026-07-29 13:20:41',devTime:'2026-07-29 13:20:41',crtTime:'2025-11-17 17:07:39'},
+  {name:'OC可用设备',code:'00010121ff000008',mac:'',cid:8,model:'oc',ver:'0.4.1',online:'在线',hasNew:'否',commTime:'2026-07-29 13:24:58',devTime:'2026-07-29 13:24:58',crtTime:'2025-09-28 14:54:37'},
   {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',mac:'9c:9e:6e:e0:ef:a6',cid:7,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:27',devTime:'2026-07-03 10:16:00',crtTime:'2025-06-27 11:23:00'},
   {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',mac:'9c:9e:6e:e0:2b:4e',cid:6,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:20',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 11:23:00'},
   {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',mac:'9c:9e:6e:df:73:72',cid:5,model:'E74G',ver:'18.41.0.0.102',online:'在线',hasNew:'是',commTime:'2026-07-03 10:16:19',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 21:10:06'},
@@ -182,6 +214,139 @@ function batchOp(op){
   const n=HOSTS.filter(h=>h._ck).length;
   if(!n)return $msg('请先勾选主机','warning');
   $confirm(`确定对选中的 ${n} 台主机执行「${op}」吗?`,()=>$msg(op+'成功'));
+}
+
+/* ══════════════════════════════════════════════════════════
+   下发配置(分体控制器):交互与现网一致
+   - 未勾选:请先勾选主机
+   - 勾选含非分体机型号(E74G/A02FG/S74G3/A02EG 等):请选择分体空调主机
+   - 跨型号多选:请选择同一型号的主机
+   - 同型号:打开「下发分体控制器配置」弹窗,按型号渲染配置项,逐项下发
+   型号能力:oc/dbx=品牌代码;hrjn=空调类型+品牌代码+待机功耗;
+            FD01G(本次新增)=品牌代码+电流互感器辅助判断+电量采集配置
+   ══════════════════════════════════════════════════════════ */
+const SPLIT_MODELS=['oc','dbx','hrjn','FD01G'];
+let dispModel='',dispCount=0;
+/* FD01G 配置项在弹窗中的临时状态(仅前端演示) */
+const fdState={ctOn:false};
+
+function openDispatch(){
+  const sel=HOSTS.filter(h=>h._ck);
+  if(!sel.length)return $msg('请先勾选主机','warning');
+  if(sel.some(h=>!SPLIT_MODELS.includes(h.model)))return $msg('请选择分体空调主机','warning');
+  const models=[...new Set(sel.map(h=>h.model))];
+  if(models.length>1)return $msg('请选择同一型号的主机','warning');
+  dispModel=models[0];dispCount=sel.length;fdState.ctOn=false;
+  renderDispatch();$modal('dlgDispatch');
+}
+
+function cfgRow(id,labelHtml,ctrlHtml,unit,sendFn,noteHtml){
+  return `<div class="cfg-item" id="ci-${id}">
+    <div class="cfg-label">${labelHtml}</div>
+    <div class="cfg-row">${ctrlHtml}${unit?`<span class="cfg-unit">${unit}</span>`:''}<button class="btn btnp" onclick="${sendFn}">下发</button></div>
+    ${noteHtml||''}
+  </div>`;
+}
+
+function renderDispatch(){
+  let h=`<div class="cfg-model">当前控制器型号：<b>${dispModel}</b>（已选 ${dispCount} 台）</div>`;
+  if(dispModel==='hrjn'){
+    h+=cfgRow('acType','<span class="req">*</span>空调类型',
+      `<select id="dAcType"><option value="">请选择空调类型</option><option>壁挂机</option><option>单相柜机</option><option>三相柜机</option></select>`,
+      '', 'sendAcType()');
+  }
+  /* 品牌代码:全部分体机型号通用 */
+  h+=cfgRow('brand','<span class="req">*</span>空调品牌代码',
+    `<input id="dBrand" placeholder="请输入空调品牌代码(十进制)">`,
+    '', 'sendBrand()');
+  if(dispModel==='hrjn'){
+    h+=cfgRow('standby','<span class="req">*</span>待机功耗',
+      `<input id="dStandby" type="number" min="0" placeholder="请输入待机功耗(W)">`,
+      'W', 'sendStandby()');
+  }
+  if(dispModel==='FD01G'){
+    /* 电流互感器辅助判断开关机 */
+    h+=`<div class="cfg-item" id="ci-ct">
+      <div class="cfg-label"><span class="req">*</span>电流互感器辅助判断开关机状态</div>
+      <div class="cfg-row cfg-sw-row">
+        <span class="switch${fdState.ctOn?' on':''}" id="dCtSwitch" onclick="toggleCt()"></span>
+        <span class="cfg-sw-state" id="dCtState">${fdState.ctOn?'已开启':'已关闭'}</span>
+        <span style="flex:1"></span>
+        <button class="btn btnp" onclick="sendCt()">下发</button>
+      </div>
+      <div class="cfg-row" id="dCtThRow" style="margin-top:10px;${fdState.ctOn?'':'display:none;'}">
+        <span style="font-size:12.5px;color:var(--ts);flex-shrink:0">电流阈值</span>
+        <input id="dCtTh" type="number" min="50" step="1" value="100" placeholder="请输入电流阈值(mA)">
+        <span class="cfg-unit">mA</span>
+      </div>
+      <div class="cfg-tip">开启后,控制器结合电流互感器采集的电流值辅助判断空调实际开关机状态;电流阈值为不小于 50 的整数。</div>
+    </div>`;
+    /* 电量采集配置组(参照 FD01G 蓝牙小程序原型) */
+    h+=`<div class="cfg-group"><div class="cfg-group-title">电量采集配置</div></div>`;
+    h+=cfgRow('mode','<span class="req">*</span>供电模式',
+      `<select id="dMode" onchange="modeChanged()"><option value="single">单相模式</option><option value="three">三相模式</option></select>`,
+      '', 'sendMode()',
+      `<div class="cfg-note" id="dModeNote" style="display:none">本设备仅采集一相电流,请根据所采相位合理设定电压有效值和功率因数,以获取相对准确的功率及用电量。</div>`);
+    h+=cfgRow('volt','<span class="req">*</span>电压有效值 (U)',
+      `<input id="dVolt" type="number" min="0" step="1" value="220">`,
+      'V', 'sendVolt()');
+    h+=cfgRow('pf','<span class="req">*</span>功率因数（cosΦ）',
+      `<input id="dPf" type="number" min="0" max="1" step="0.01" value="1">`,
+      '', 'sendPf()',
+      `<div class="cfg-note">功率因数设置不当可能导致用电量计算误差较大,请谨慎配置。</div>`);
+    h+=`<div class="cfg-tip">功率计算公式：单相模式 P = U × I × cosΦ；三相模式 P = √3 × U × I × cosΦ</div>`;
+  }
+  document.getElementById('dispBody').innerHTML=h;
+}
+
+/* ── 各配置项下发(均为原型演示:确认后提示成功) ── */
+function dval(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+
+function sendBrand(){
+  const val=dval('dBrand');
+  if(!/^\d+$/.test(val))return $msg('请输入空调品牌代码(十进制)','warning');
+  const hex='0x'+(+val).toString(16).toUpperCase();
+  $confirm(`确认下发空调品牌代码为:${val}(${hex})?`,()=>$msg('下发成功'));
+}
+function sendAcType(){
+  const val=dval('dAcType');
+  if(!val)return $msg('请选择空调类型','warning');
+  $confirm(`确认下发空调类型为:${val}?`,()=>$msg('下发成功'));
+}
+function sendStandby(){
+  const val=dval('dStandby');
+  if(val===''||isNaN(+val)||+val<0)return $msg('请输入正确的待机功耗(W)','warning');
+  $confirm(`确认下发待机功耗为:${val}W?`,()=>$msg('下发成功'));
+}
+function toggleCt(){
+  fdState.ctOn=!fdState.ctOn;
+  document.getElementById('dCtSwitch').classList.toggle('on',fdState.ctOn);
+  document.getElementById('dCtState').textContent=fdState.ctOn?'已开启':'已关闭';
+  document.getElementById('dCtThRow').style.display=fdState.ctOn?'':'none';
+}
+function sendCt(){
+  if(!fdState.ctOn)return $confirm('确认下发:关闭电流互感器辅助判断开关机?',()=>$msg('下发成功'));
+  const th=dval('dCtTh');
+  if(!/^\d+$/.test(th)||+th<50)return $msg('电流阈值必须为不小于50的整数','warning');
+  $confirm(`确认下发:开启电流互感器辅助判断,电流阈值 ${th}mA?`,()=>$msg('下发成功'));
+}
+function modeChanged(){
+  const three=document.getElementById('dMode').value==='three';
+  document.getElementById('dModeNote').style.display=three?'':'none';
+}
+function sendMode(){
+  const mode=document.getElementById('dMode').value==='three'?'三相模式':'单相模式';
+  $confirm(`确认下发供电模式为:${mode}?`,()=>$msg('下发成功'));
+}
+function sendVolt(){
+  const val=dval('dVolt');
+  if(val===''||isNaN(+val)||+val<0)return $msg('电压有效值必须为非负数','warning');
+  $confirm(`确认下发电压有效值为:${val}V?`,()=>$msg('下发成功'));
+}
+function sendPf(){
+  const val=dval('dPf');
+  if(val===''||isNaN(+val)||+val<0||+val>1)return $msg('功率因数必须在0-1之间','warning');
+  $confirm(`确认下发功率因数为:${val}?`,()=>$msg('下发成功'));
 }
 
 /* ── 详情 / 编辑 / 新建 ── */
