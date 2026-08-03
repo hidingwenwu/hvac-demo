@@ -1,10 +1,12 @@
-/* 故障预警功能端到端验证(2026-08-01 一期收敛后形态):
+/* 故障预警功能端到端验证(2026-08-03 评审修改后形态):
    菜单(故障预警组位于电费相关与智慧运维之间,3 个子项) / 站内提醒=铃铛红点(无站内信/登录弹窗) /
    铃铛(红点;下拉面板=今日新增·未处理总数·故障级三卡片+最近3条故障级) /
    故障总览(趋势统计7/30日柱状图切换,故障分类双饼图=未处理口径) /
-   故障详情(项目运维一期8类故障:基础配置5类+计费分摊3类;空调故障) /
-   故障推送配置(仅飞奕技术支持;推送范围独立配置,短信抽屉只留短信内容,无接收人数列) /
-   故障代码库弹窗标题(当前项目:xxx)+小字说明 / 非计费项目过滤 / 旧页面文件保留
+   故障详情(项目运维一期8类;双 Tab 均含 故障发生/恢复时间·持续时长 列与恢复时间筛选;
+     空调列表无故障名称列、故障代码纯文本、经操作列-详情看明细;批量处理/批量忽略,无批量删除) /
+   故障推送(仅飞奕技术支持;推送配置合并抽屉=开关+范围+接收人+策略;频控配置移除,
+     去重为后台内置规则且页面不展示提示语;无维护窗口/根因抑制;推送方式筛选) /
+   故障代码库(项目自定义=仅等级自定义,未收录码走通用库维护) / 非计费项目过滤 / 旧页面文件保留
    运行:cd testcase && node verify-alarm.cjs */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -167,14 +169,14 @@ const server = http.createServer((req, res) => {
     /* ── 5. 故障详情-项目运维 Tab ── */
     fr = await nav('alarm-detail');
     const opsHead = await page.frameLocator('#fr').locator('#tabOps thead').innerText();
-    ['故障等级', '故障子类', '故障名称', '故障对象', '故障描述', '故障时间', '状态'].forEach(h => assert.ok(opsHead.includes(h), `运维列表缺少列: ${h}`));
-    ['异常类型', '关键信息', '首次发生'].forEach(h => assert.ok(!opsHead.includes(h), `运维列表应去掉列: ${h}`));
+    ['故障等级', '故障子类', '故障名称', '故障对象', '故障发生时间', '故障恢复时间', '持续时长', '状态', '处理人'].forEach(h => assert.ok(opsHead.includes(h), `运维列表缺少列: ${h}`));
+    ['故障描述', '异常类型', '关键信息', '首次发生'].forEach(h => assert.ok(!opsHead.includes(h), `运维列表应去掉列: ${h}`));
     /* 一期故障名称收敛:基础配置 5 类 + 计费分摊 3 类 */
     const nameOpts = await page.frameLocator('#fr').locator('#oName option').allTextContents();
     assert.deepEqual(nameOpts, ['全部名称', '控制器离线', '电表离线', '环境感知设备离线', '控制器存储空间不够', '内机未绑定建筑物', '缺少抄表记录', '电表未绑空调系统', '电表可能绑错空调系统']);
     /* 未处理口径含「已恢复待确认」(P0-1 修复):默认筛选 18 = 15 未处理 + 3 已恢复待确认 */
     assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('共 18 条'));
-    assert.ok((await page.frameLocator('#fr').locator('#oSt option:checked').innerText()).includes('含待确认'));
+    assert.equal((await page.frameLocator('#fr').locator('#oSt option:checked').innerText()).trim(), '未处理', '状态筛选默认项文案应为「未处理」(口径仍含已恢复待确认)');
     const opsLv = await page.frameLocator('#fr').locator('#opsLvCards .ln').allTextContents();
     assert.deepEqual(opsLv, ['8', '10', '0']);
     /* 状态单值:已恢复待确认(共 3 条)且状态列每行仅一个状态 */
@@ -182,8 +184,10 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#tabOps button', { hasText: '查询' }).click();
     await page.waitForTimeout(300);
     assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('3'));
-    const oneTag = await fr.evaluate(() => [...document.querySelectorAll('#opsBody tr')].every(tr => tr.querySelectorAll('td:nth-child(9) .tag').length === 1));
+    const oneTag = await fr.evaluate(() => [...document.querySelectorAll('#opsBody tr')].every(tr => tr.querySelectorAll('td:nth-child(10) .tag').length === 1));
     assert.ok(oneTag, '状态列应每行仅一个状态值');
+    const goneCells = await fr.evaluate(() => [...document.querySelectorAll('#opsBody tr')].every(tr => tr.cells[7].textContent.trim() !== '—' && tr.cells[8].textContent.trim() !== ''));
+    assert.ok(goneCells, '已恢复待确认记录应展示故障恢复时间与持续时长');
     /* 故障对象为纯文本(无点击弹窗) */
     assert.equal(await page.frameLocator('#fr').locator('#opsBody .obj').count(), 0);
     /* 故障类别=计费分摊 8 条 */
@@ -229,15 +233,32 @@ const server = http.createServer((req, res) => {
     assert.ok((await page.frameLocator('#fr').locator('#acPager .pg-total').innerText()).includes('27'));
     const acLv = await page.frameLocator('#fr').locator('#acLvCards .ln').allTextContents();
     assert.deepEqual(acLv, ['11', '10', '6']);
-    /* 格力-L1 详情联查通用库 */
+    /* 列改造:无故障名称列(故障描述仅详情展示)、故障代码纯文本、含恢复时间/持续时长 */
+    const acHead = await page.frameLocator('#fr').locator('#tabAc thead').innerText();
+    ['故障代码', '故障等级', '故障发生时间', '故障恢复时间', '持续时长', '状态', '操作'].forEach(h => assert.ok(acHead.includes(h), `空调列表缺少列: ${h}`));
+    assert.ok(!acHead.includes('故障名称'), '空调列表应去掉故障名称列(故障描述仅详情展示)');
+    assert.equal(await page.frameLocator('#fr').locator('#acBody .fault-code').count(), 0, '故障代码应为纯文本不可点击');
+    assert.ok(!(await page.frameLocator('#fr').locator('#tabAc .batch-bar').innerText()).includes('批量删除'), '空调 Tab 批量删除已移除');
+    /* 已恢复待确认(空调恢复口径与运维一致):3 条,恢复时间/持续时长展示 */
+    await page.frameLocator('#fr').locator('#aSt').selectOption('gone');
+    await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#acPager .pg-total').innerText()).includes('共 3 条'));
+    const acGoneCells = await fr.evaluate(() => [...document.querySelectorAll('#acBody tr')].every(tr => tr.cells[10].textContent.trim() !== '—' && tr.cells[11].textContent.trim() !== ''));
+    assert.ok(acGoneCells, '已恢复记录应展示故障恢复时间与持续时长');
+    await page.frameLocator('#fr').locator('#acBody .op a', { hasText: '详情' }).first().click();
+    const goneDetail = await page.frameLocator('#fr').locator('#acDetailGrid').innerText();
+    assert.ok(goneDetail.includes('故障恢复时间') && goneDetail.includes('恢复确认'), '已恢复详情应展示恢复时间与恢复确认提示');
+    await page.frameLocator('#fr').locator('#dlgAcDetail button', { hasText: '关闭' }).click();
+    /* 格力-L1:列表不展示名称,经操作列「详情」查看明细(故障描述联查通用库) */
     await page.frameLocator('#fr').locator('#aSt').selectOption('');
     await page.frameLocator('#fr').locator('#aCode').fill('L1');
     await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
     await page.waitForTimeout(300);
-    assert.ok((await page.frameLocator('#fr').locator('#acBody').innerText()).includes('内风机保护'));
-    await page.frameLocator('#fr').locator('#acBody .fault-code').first().click();
+    assert.ok(!(await page.frameLocator('#fr').locator('#acBody').innerText()).includes('内风机保护'), '列表不应展示故障名称');
+    await page.frameLocator('#fr').locator('#acBody .op a', { hasText: '详情' }).first().click();
     const acDetail = await page.frameLocator('#fr').locator('#acDetailGrid').innerText();
-    assert.ok(acDetail.includes('排查建议') && acDetail.includes('依据通用代码库') && acDetail.includes('故障'));
+    assert.ok(acDetail.includes('故障描述') && acDetail.includes('内风机保护') && acDetail.includes('排查建议') && acDetail.includes('依据通用代码库'));
     /* 详情弹窗直接弹出本项目代码库(P0-3 修复):不再跳转故障推送页 */
     await page.frameLocator('#fr').locator('#dlgAcDetail button', { hasText: '前往故障代码库' }).click();
     await page.waitForTimeout(800);
@@ -247,19 +268,47 @@ const server = http.createServer((req, res) => {
     assert.ok((await page.frameLocator('#fr').locator('#clTitle').innerText()).includes('故障代码库(当前项目:'));
     await page.frameLocator('#fr').locator('#dlgCodeLib .dx').click();
     await page.waitForTimeout(300);
-    /* 未收录代码 X9 → 未知故障 */
+    /* 未收录代码 X9:详情展示未知故障 + 联系飞奕维护指引 */
     await page.frameLocator('#fr').locator('#aCode').fill('X9');
     await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
     await page.waitForTimeout(300);
-    assert.ok((await page.frameLocator('#fr').locator('#acBody').innerText()).includes('未知故障'));
+    await page.frameLocator('#fr').locator('#acBody .op a', { hasText: '详情' }).first().click();
+    const x9Detail = await page.frameLocator('#fr').locator('#acDetailGrid').innerText();
+    assert.ok(x9Detail.includes('未知故障') && x9Detail.includes('请联系飞奕维护至通用故障码库'), '未收录码详情应提示未知故障并指引联系飞奕');
+    await page.frameLocator('#fr').locator('#dlgAcDetail button', { hasText: '关闭' }).click();
     await page.screenshot({ path: path.join(SHOT, 'alarm-detail-ac.png') });
-    console.log('OK 空调故障 Tab:27 条、三档卡 11/10/6、真实故障码联查通用库、未收录显示未知故障');
+    console.log('OK 空调故障 Tab:27 条、三档卡 11/10/6、无名称列/代码纯文本、恢复时间+持续时长、已恢复待确认 3 条、详情联查通用库');
 
-    /* ── 7. 故障代码库(直达页面)+ 屏蔽联动 ── */
+    /* ── 7. 故障代码库(直达页面):项目自定义(仅等级自定义)+ 屏蔽联动 ── */
     fr = await nav('alarm-code-lib');
-    assert.ok((await page.frameLocator('#fr').locator('body').innerText()).includes('除常规故障码外，以下故障码也纳入监测范围'));
+    const clBody = await page.frameLocator('#fr').locator('body').innerText();
+    assert.ok(clBody.includes('项目自定义'), '页签应为「项目自定义」');
+    assert.ok(!clBody.includes('项目新增'), '不应再出现「项目新增」表述');
+    assert.ok(clBody.includes('以下故障码在本项目按自定义等级生效'), '横幅应说明仅等级自定义');
+    assert.ok(clBody.includes('请联系飞奕维护至通用故障码库'), '未收录码场景应指引联系飞奕维护通用库');
     assert.equal(await page.frameLocator('#fr').locator('#curProjName').innerText(), '产品部测试-按小时预付费');
-    assert.ok((await page.frameLocator('#fr').locator('#tbAdd').innerText()).includes('XW'));   // 种子新增监测码
+    /* 种子:格力-L7 无主内机 通用警示 → 本项目故障 */
+    const addRow = await page.frameLocator('#fr').locator('#tbAdd').innerText();
+    assert.ok(addRow.includes('L7') && addRow.includes('无主内机') && addRow.includes('警示') && addRow.includes('故障'), '自定义种子应为 L7 通用警示→本项目故障: ' + addRow);
+    assert.equal(await fr.evaluate(() => window.$alarmFaultLevelProj({ brand: '格力', code: 'L7' })), 1, 'L7 本项目应按自定义等级(故障)生效');
+    /* 表单仅 品牌/故障码/自定义等级;通用库无此码时拒绝保存 */
+    await page.frameLocator('#fr').locator('button', { hasText: '添加自定义故障码' }).click();
+    await page.frameLocator('#fr').locator('#dlgProjAdd.show').waitFor();
+    const formChk = await fr.evaluate(() => ({
+      model: !!document.getElementById('paModel'), name: !!document.getElementById('paName'),
+      desc: !!document.getElementById('paDesc'), advice: !!document.getElementById('paAdvice'),
+      level: !!document.getElementById('paLevel'),
+    }));
+    assert.deepEqual(formChk, { model: false, name: false, desc: false, advice: false, level: true }, '表单应仅保留品牌/故障码/自定义等级');
+    await page.frameLocator('#fr').locator('#paBrand').fill('格力');
+    await page.frameLocator('#fr').locator('#paCode').fill('ZZ9');
+    await page.waitForTimeout(200);
+    assert.ok((await page.frameLocator('#fr').locator('#paScnTip').innerText()).includes('无法自定义等级'), '未收录码应即时提示无法自定义');
+    await page.frameLocator('#fr').locator('#dlgProjAdd button', { hasText: '保存' }).click();
+    await page.waitForTimeout(300);
+    assert.equal(await fr.evaluate(() => Object.keys(window.$alarmProjCodeGet('产品部测试-按小时预付费').adds).length), 1, '未收录码不应被保存(场景1走通用库维护)');
+    await page.frameLocator('#fr').locator('#dlgProjAdd .dx').click();
+    await page.waitForTimeout(200);
     /* 项目屏蔽:格力-LH(提示级) */
     await page.frameLocator('#fr').locator('.tab', { hasText: '项目屏蔽' }).click();
     await page.waitForTimeout(200);
@@ -284,7 +333,7 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('.op a', { hasText: '取消屏蔽' }).click();
     await page.waitForTimeout(400);
     assert.equal(await bellTotal(), 44);
-    console.log('OK 故障代码库:种子 XW、屏蔽 LH 联动铃铛总数 44→43、取消恢复');
+    console.log('OK 故障代码库:项目自定义(种子 L7 警示→故障)、未收录码拒绝保存、屏蔽 LH 联动铃铛 44→43、取消恢复');
 
     /* ── 7.5 小写故障码(P0-5 修复):屏蔽 格力-db 正常生效并联查通用库 ── */
     await page.frameLocator('#fr').locator('button', { hasText: '添加屏蔽' }).click();
@@ -328,21 +377,76 @@ const server = http.createServer((req, res) => {
     assert.equal(await bellTotal(), 44);
     console.log('OK 故障码大小写:小写 db 屏蔽生效(44→43→44),并存码 EE/Ee 严格区分不误伤');
 
-    /* ── 8. 故障推送(仅飞奕技术支持,页面内不展示角色提示;推送范围独立配置;无接收人数列) ── */
+    /* ── 7.8 批量操作(多选;批量处理/批量忽略/批量删除;删除后全局剔除) ── */
+    fr = await nav('alarm-detail');
+    await page.frameLocator('#fr').locator('#oName').selectOption('内机未绑定建筑物');
+    await page.frameLocator('#fr').locator('#tabOps button', { hasText: '查询' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('共 2 条'));
+    await page.frameLocator('#fr').locator('#opsAllCk').check();
+    await page.waitForTimeout(200);
+    assert.ok((await page.frameLocator('#fr').locator('#opsSelCnt').innerText()).includes('已选 2 条'), '全选后应显示已选条数');
+    await page.frameLocator('#fr').locator('#tabOps .batch-bar button', { hasText: '批量处理' }).click();
+    await page.frameLocator('#fr').locator('#dlgHandle.show').waitFor();
+    assert.ok((await page.frameLocator('#fr').locator('#handleSum').innerText()).includes('2'), '批量处理弹窗应汇总条数');
+    await page.frameLocator('#fr').locator('#handleNote').fill('已批量完成建筑物绑定');
+    await page.frameLocator('#fr').locator('#dlgHandle button', { hasText: '确认处理' }).click();
+    await page.waitForTimeout(400);
+    assert.equal(await bellTotal(), 42, '批量处理 2 条后未处理 44→42');
+    /* 批量忽略(维护窗口的替代方案:计划检修等场景先批量忽略,复发自动重新告警) */
+    await page.frameLocator('#fr').locator('#oName').selectOption('电表未绑空调系统');
+    await page.frameLocator('#fr').locator('#tabOps button', { hasText: '查询' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('共 2 条'));
+    await page.frameLocator('#fr').locator('#opsAllCk').check();
+    await page.waitForTimeout(200);
+    await page.frameLocator('#fr').locator('#tabOps .batch-bar button', { hasText: '批量忽略' }).click();
+    await page.frameLocator('#fr').locator('#__confirm_modal.show').waitFor();
+    await page.frameLocator('#fr').locator('#__confirm_modal .__ok').click();
+    await page.waitForTimeout(400);
+    assert.equal(await bellTotal(), 40, '批量忽略 2 条后未处理 42→40');
+    /* 无批量删除(批量忽略已起到批量清理效果);已忽略记录在「全部」中留痕可查 */
+    assert.equal(await page.frameLocator('#fr').locator('#tabOps .batch-bar button').count(), 2, '批量操作应仅有批量处理/批量忽略');
+    assert.ok(!(await page.frameLocator('#fr').locator('#tabOps .batch-bar').innerText()).includes('批量删除'), '批量删除已移除');
+    await page.frameLocator('#fr').locator('#oName').selectOption('');
+    await page.frameLocator('#fr').locator('#oSt').selectOption('');
+    await page.frameLocator('#fr').locator('#tabOps button', { hasText: '查询' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('共 18 条'), '全部状态列表应保留全部 18 条记录(忽略留痕可查)');
+    await page.frameLocator('#fr').locator('#oSt').selectOption('new');
+    await page.frameLocator('#fr').locator('#tabOps button', { hasText: '查询' }).click();
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: path.join(SHOT, 'alarm-detail-batch.png') });
+    console.log('OK 批量操作:批量处理 44→42、批量忽略 42→40(无批量删除,全部状态留痕 18 条)');
+
+    /* ── 8. 故障推送(仅飞奕技术支持;全页=短信推送管理;推送配置合并抽屉;推送方式筛选) ── */
     fr = await nav('alarm-push');
     assert.equal(await page.frameLocator('#fr').locator('.role-bar').count(), 0, '页面内不应展示角色说明横幅');
     assert.equal(await page.frameLocator('#fr').locator('#fName').getAttribute('list'), 'projList', '项目名称应支持下拉选择');
     assert.equal(await page.frameLocator('#fr').locator('#projList option').count(), 6);
     assert.equal(await page.frameLocator('#fr').locator('#tbody tr').count(), 6);
     const head = await page.frameLocator('#fr').locator('.tw thead').first().innerText();
-    ['短信推送', '推送范围'].forEach(h => assert.ok(head.includes(h)));
-    assert.ok(!head.includes('站内信'), '站内信通道已取消,不应有站内信列');
-    assert.ok(!head.includes('接收人数'), '接收人数列应移除');
+    ['项目名称', '短信推送', '推送范围', '推送方式', '最近推送', '操作'].forEach(h => assert.ok(head.includes(h), `推送列表缺少列: ${h}`));
+    ['维护窗口', '站内信', '接收人数'].forEach(h => assert.ok(!head.includes(h), `推送列表应去掉列: ${h}`));
     const row1 = await page.frameLocator('#fr').locator('#tbody tr').first().innerText();
     assert.ok(row1.includes('产品部测试-按小时预付费') && row1.includes('故障') && row1.includes('项目运维+空调故障'));
-    assert.ok(row1.includes('推送范围配置') && row1.includes('短信推送配置'), '操作列应有独立的推送范围配置');
+    assert.ok(row1.includes('推送配置') && row1.includes('推送记录') && row1.includes('故障代码库'), '操作列应为 推送配置/推送记录/故障代码库');
+    assert.ok(!row1.includes('推送范围配置') && !row1.includes('短信推送配置') && !row1.includes('维护窗口'), '范围与短信配置应合并为「推送配置」,维护窗口移除');
+    assert.equal(await page.frameLocator('#fr').locator('#dlgScope').count(), 0, '独立推送范围弹窗应移除');
+    assert.equal(await page.frameLocator('#fr').locator('#dlgMaint').count(), 0, '维护窗口弹窗应移除');
     const sw = await page.frameLocator('#fr').locator('#tbody tr').first().locator('.switch').evaluateAll(els => els.map(e => e.classList.contains('on')));
     assert.deepEqual(sw, [true]);   // 仅短信开关,种子项目开启
+    /* 推送方式筛选:全部项目默认实时推送 */
+    await page.frameLocator('#fr').locator('#fMode').selectOption('daily');
+    await page.frameLocator('#fr').locator('button', { hasText: '搜索' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#tbody').innerText()).includes('暂无数据'), '筛选每日汇总应为空');
+    await page.frameLocator('#fr').locator('#fMode').selectOption('realtime');
+    await page.frameLocator('#fr').locator('button', { hasText: '搜索' }).click();
+    await page.waitForTimeout(300);
+    assert.equal(await page.frameLocator('#fr').locator('#tbody tr').count(), 6, '实时推送应命中全部 6 个项目');
+    await page.frameLocator('#fr').locator('button', { hasText: '重置' }).first().click();
+    await page.waitForTimeout(300);
     /* 旧版残缺推送配置的防御合并(P2 修复) */
     const mergeChk = await fr.evaluate(() => {
       localStorage.setItem('fyAlarmPushCfg', JSON.stringify({ '二次分摊-H': { enabled: true } }));
@@ -351,71 +455,41 @@ const server = http.createServer((req, res) => {
       return c.enabled === true && Array.isArray(c.scope.levels) && Array.isArray(c.scope.cats) && !!c.strategy.dnd && c.strategy.mode === 'realtime';
     });
     assert.ok(mergeChk, '旧版残缺推送配置应与默认结构逐层合并,不致页面报错');
-    /* 维护窗口(缺失能力补充):窗口期内产生的故障全局忽略 */
-    await page.frameLocator('#fr').locator('.op a', { hasText: '维护窗口' }).first().click();
-    await page.frameLocator('#fr').locator('#dlgMaint.show').waitFor();
-    const win = await fr.evaluate(() => {
-      const p = n => String(n).padStart(2, '0');
-      const f = d => `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-      return { from: f(new Date(Date.now() - 6.5 * 86400000)), to: f(new Date(Date.now() + 3600000)) };   /* ≤7 天上限内,覆盖全部 mock 故障 */
-    });
-    await fr.evaluate(w => {
-      document.getElementById('mOn').classList.add('on');
-      document.getElementById('mFrom').value = w.from;
-      document.getElementById('mTo').value = w.to;
-      document.getElementById('mNote').value = '机房停电检修';
-    }, win);
-    await page.frameLocator('#fr').locator('#dlgMaint button', { hasText: '保存' }).click();
-    await page.waitForTimeout(400);
-    assert.ok((await page.frameLocator('#fr').locator('#tbody tr').first().innerText()).includes('生效中'), '列表应显示维护窗口生效中');
-    assert.equal(await bellTotal(), 0, '窗口期覆盖全部 mock 故障时未处理应为 0');
-    assert.ok(!(await page.locator('#alarmBdg').isVisible()), '维护窗口期内铃铛红点应消失');
-    /* 总览/详情页顶提示维护窗口生效中(项目用户可感知) */
-    fr = await nav('alarm-detail');
-    assert.ok(await page.frameLocator('#fr').locator('#maintBar').isVisible(), '详情页应显示维护窗口提示条');
-    assert.ok((await page.frameLocator('#fr').locator('#maintBar').innerText()).includes('维护窗口'));
-    fr = await nav('alarm-push');
-    await page.frameLocator('#fr').locator('.op a', { hasText: '维护窗口' }).first().click();
-    await page.frameLocator('#fr').locator('#dlgMaint.show').waitFor();
-    await fr.evaluate(() => document.getElementById('mOn').classList.remove('on'));
-    await page.frameLocator('#fr').locator('#dlgMaint button', { hasText: '保存' }).click();
-    await page.waitForTimeout(400);
-    assert.equal(await bellTotal(), 44, '关闭维护窗口后应恢复计数');
-    console.log('OK 维护窗口:启用后未处理 44→0、红点消失,关闭恢复 44');
-    /* 推送范围配置(独立弹窗,作用于短信;铃铛不受范围限制) */
-    await page.frameLocator('#fr').locator('.op a', { hasText: '推送范围配置' }).first().click();
-    await page.frameLocator('#fr').locator('#dlgScope.show').waitFor();
-    const scopeCks = await fr.evaluate(() => ({
-      lv1: document.getElementById('sLv1').checked, lv2: document.getElementById('sLv2').checked,
-      ops: document.getElementById('sCatOps').checked, ac: document.getElementById('sCatAc').checked,
-    }));
-    assert.deepEqual(scopeCks, { lv1: true, lv2: false, ops: true, ac: true });
-    assert.ok((await page.frameLocator('#fr').locator('#dlgScope').innerText()).includes('铃铛红点不受此范围限制'), '范围仅作用于短信,铃铛全局提醒');
-    await page.frameLocator('#fr').locator('#dlgScope .dx').click();
-    /* 短信抽屉:只保留短信内容(启用/接收人/策略),不再含推送范围 */
-    await page.frameLocator('#fr').locator('.op a', { hasText: '短信推送配置' }).first().click();
+    /* 推送配置抽屉:开关+推送范围+接收人+推送策略一体(全页均为短信推送管理) */
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
     await page.frameLocator('#fr').locator('#drawer.show').waitFor();
+    assert.ok((await page.frameLocator('#fr').locator('#drawerTitle').innerText()).includes('推送配置 - 产品部测试-按小时预付费'));
     assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 2);
-    assert.equal(await fr.evaluate(() => document.getElementById('dLv1')), null, '短信抽屉不应再含推送范围勾选');
-    assert.ok(!(await page.frameLocator('#fr').locator('#drawer').innerText()).includes('推送范围'), '短信抽屉不应再出现推送范围分区');
-    assert.ok((await page.frameLocator('#fr').locator('#drawer').innerText()).includes('根因抑制'), '策略区应说明根因抑制内置规则');
-    /* 推送记录弹窗(按项目) */
+    const scopeCks = await fr.evaluate(() => ({
+      lv1: document.getElementById('dLv1').checked, lv2: document.getElementById('dLv2').checked,
+      ops: document.getElementById('dCatOps').checked, ac: document.getElementById('dCatAc').checked,
+    }));
+    assert.deepEqual(scopeCks, { lv1: true, lv2: false, ops: true, ac: true }, '推送范围默认仅故障级+双类别');
+    const drawerTxt = await page.frameLocator('#fr').locator('#drawer').innerText();
+    assert.ok(drawerTxt.includes('推送范围') && drawerTxt.includes('铃铛红点不受此范围限制'), '抽屉应含推送范围分区(仅作用于短信)');
+    assert.ok(!drawerTxt.includes('内置去重') && !drawerTxt.includes('24 小时内不重复'), '去重为后台内置规则:页面无配置项、不展示提示语(规则写入功能说明文档)');
+    assert.ok(!drawerTxt.includes('根因抑制'), '根因抑制规则已从原型移除');
+    assert.ok(!drawerTxt.includes('静音'), '故障级豁免注解不应使用「静音」表述');
+    assert.equal(await fr.evaluate(() => !!document.getElementById('dFreq')), false, '24h 频控配置项应移除(内置去重替代)');
+    /* 推送记录弹窗(按项目):3 条短信种子(根因合并流水已移除,无站内信流水) */
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.frameLocator('#fr').locator('.op a', { hasText: '推送记录' }).first().click();
     await page.frameLocator('#fr').locator('#dlgLog.show').waitFor();
-    assert.ok((await page.frameLocator('#fr').locator('#logPager .pg-total').innerText()).includes('共 4 条'));   // 4 条短信(含根因合并),无站内信流水
-    assert.ok((await page.frameLocator('#fr').locator('#logBody').innerText()).includes('等故障'), '推送记录应含根因合并「××等故障 N 条」模板示例');
+    assert.ok((await page.frameLocator('#fr').locator('#logPager .pg-total').innerText()).includes('共 3 条'));
+    const logTxt = await page.frameLocator('#fr').locator('#logBody').innerText();
+    assert.ok(!logTxt.includes('等故障'), '根因合并推送流水应移除');
+    assert.ok(logTxt.includes('【空调集控】'), '短信签名应为【空调集控】');
     assert.ok(!(await page.frameLocator('#fr').locator('#dlgLog').innerText()).includes('站内信'), '推送记录不应再有站内信渠道');
     await page.frameLocator('#fr').locator('#dlgLog .dx').click();
-    /* 测试推送 → 记录 6 条 */
-    await page.frameLocator('#fr').locator('.op a', { hasText: '短信推送配置' }).first().click();
+    /* 测试推送 → 记录 4 条 */
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
     await page.frameLocator('#fr').locator('button', { hasText: '测试推送' }).click();
     await page.waitForTimeout(300);
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.waitForTimeout(200);
     await page.frameLocator('#fr').locator('.op a', { hasText: '推送记录' }).first().click();
     await page.waitForTimeout(300);
-    assert.ok((await page.frameLocator('#fr').locator('#logPager .pg-total').innerText()).includes('共 5 条'));
+    assert.ok((await page.frameLocator('#fr').locator('#logPager .pg-total').innerText()).includes('共 4 条'));
     await page.frameLocator('#fr').locator('#dlgLog .dx').click();
     /* 故障代码库:操作列按项目弹窗(iframe 带 ?proj=),标题=故障代码库(当前项目:xxx)+小字说明 */
     await page.frameLocator('#fr').locator('#tbody .op a', { hasText: '故障代码库' }).first().click();
@@ -429,25 +503,46 @@ const server = http.createServer((req, res) => {
     assert.ok(await clFrame.locator('#curProjBar').isHidden(), '弹窗内页顶部冗余项目条应隐藏');
     assert.ok(await clFrame.locator('#tbAdd').isVisible());
     await page.frameLocator('#fr').locator('#dlgCodeLib .dx').click();
-    /* 001:加接收人保存 */
+    /* 001:手动接收人须短信验证码验证后添加(平台账号已验证免验) */
     await page.frameLocator('#fr').locator('#fName').fill('001');
     await page.frameLocator('#fr').locator('button', { hasText: '搜索' }).click();
     await page.waitForTimeout(300);
-    await page.frameLocator('#fr').locator('.op a', { hasText: '短信推送配置' }).first().click();
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
+    await page.frameLocator('#fr').locator('#drawer.show').waitFor();
+    assert.equal(await page.frameLocator('#fr').locator('#dSendCode').count(), 1, '手动录入应为「发送验证码」入口,无直接添加按钮');
     await page.frameLocator('#fr').locator('#dName').fill('现场负责人');
     await page.frameLocator('#fr').locator('#dPhone').fill('13800001111');
-    await page.frameLocator('#fr').locator('#drawer button', { hasText: '添加' }).last().click();
+    await page.frameLocator('#fr').locator('#dSendCode').click();
     await page.waitForTimeout(200);
+    assert.ok((await page.frameLocator('#fr').locator('#dSendCode').innerText()).includes('重新发送'), '发送后 60s 内不可重复发送');
+    const codeTip = await page.frameLocator('#fr').locator('#dCodeTip').innerText();
+    const demoCode = (codeTip.match(/验证码[::](\d{6})/) || [])[1];
+    assert.ok(demoCode, '演示环境应展示验证码: ' + codeTip);
+    /* 错误验证码被拒绝 */
+    await page.frameLocator('#fr').locator('#dCode').fill(demoCode === '000000' ? '111111' : '000000');
+    await page.frameLocator('#fr').locator('#dCodeRow button', { hasText: '验证并添加' }).click();
+    await page.waitForTimeout(200);
+    assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 0, '验证码错误不应添加接收人');
+    /* 正确验证码通过 */
+    await page.frameLocator('#fr').locator('#dCode').fill(demoCode);
+    await page.frameLocator('#fr').locator('#dCodeRow button', { hasText: '验证并添加' }).click();
+    await page.waitForTimeout(200);
+    assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 1, '验证通过后方可添加接收人');
+    /* 平台账号已验证:直接添加无需验证码 */
+    await page.frameLocator('#fr').locator('#dAccSel').selectOption({ index: 1 });
+    await page.frameLocator('#fr').locator('#drawer button', { hasText: '添加' }).first().click();
+    await page.waitForTimeout(200);
+    assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 2, '平台账号选择即添加(免验证)');
     await page.frameLocator('#fr').locator('#drawer button', { hasText: '保存' }).click();
     await page.waitForTimeout(300);
     /* 接收人数列已移除:重开抽屉确认接收人已保存 */
-    await page.frameLocator('#fr').locator('.op a', { hasText: '短信推送配置' }).first().click();
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
     await page.frameLocator('#fr').locator('#drawer.show').waitFor();
-    assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 1);
+    assert.equal(await page.frameLocator('#fr').locator('.rc-tag').count(), 2);
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.waitForTimeout(200);
     await page.screenshot({ path: path.join(SHOT, 'alarm-push.png') });
-    console.log('OK 故障推送:无页内角色提示、项目下拉、范围独立配置、短信抽屉纯短信、无接收人数列、代码库弹窗新标题、001 配置保存');
+    console.log('OK 故障推送:6 列表格、推送方式筛选、合并推送配置抽屉(范围+接收人+策略;去重后台内置不展示)、推送记录 3→4、代码库弹窗、001 手机号验证码验证后添加保存');
 
     /* ── 9. 非计费项目(001):计费分摊过滤 ── */
     await page.selectOption('#projSel', '001');

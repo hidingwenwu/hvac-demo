@@ -27,26 +27,26 @@
   <div class="cur-proj">当前项目：<b id="curProjName"></b><span>（配置仅对当前项目生效）</span></div>
 </div>
 
-<!-- 页签:项目新增 | 项目屏蔽 -->
+<!-- 页签:项目自定义 | 项目屏蔽 -->
 <div class="tabs">
-  <div class="tab active" data-t="add" onclick="pickTab('add')">项目新增</div>
+  <div class="tab active" data-t="add" onclick="pickTab('add')">项目自定义</div>
   <div class="tab" data-t="blk" onclick="pickTab('blk')">项目屏蔽</div>
 </div>
 
-<!-- ═══════ 项目新增 ═══════ -->
+<!-- ═══════ 项目自定义(仅故障等级自定义) ═══════ -->
 <div id="tabAdd">
   <div class="hint-bar">
     <span class="hi">ⓘ</span>
-    <span>除常规故障码外，以下故障码也纳入监测范围。<br>
-    <span class="sub">适用场景：① 通用代码库中无此故障码，本项目需要监测；② 通用代码库中的故障级别与本项目认定的级别不同（按本项目档位生效，不影响通用库与其他项目）。</span></span>
+    <span>以下故障码在本项目按自定义等级生效（不影响通用代码库与其他项目）。<br>
+    <span class="sub">适用场景：通用代码库中的故障等级与本项目认定不同。如遇通用代码库未收录的故障码需要监测，请联系飞奕维护至通用故障码库（维护后自动纳入全部项目监测范围）。</span></span>
   </div>
   <div class="fb" style="justify-content:flex-end">
-    <button class="btn btns" onclick="openProjAdd(null)">+ 新增故障码</button>
+    <button class="btn btns" onclick="openProjAdd(null)">+ 添加自定义故障码</button>
   </div>
   <div class="tw">
     <table>
       <thead><tr>
-        <th>序号</th><th>品牌</th><th>适用机型</th><th>故障代码</th><th>故障名称</th><th>本项目等级</th><th>类型</th><th>操作</th>
+        <th>序号</th><th>品牌</th><th>故障代码</th><th>故障名称</th><th>通用等级</th><th>本项目等级</th><th>操作</th>
       </tr></thead>
       <tbody id="tbAdd"></tbody>
     </table>
@@ -57,7 +57,7 @@
 <div id="tabBlk" style="display:none">
   <div class="hint-bar">
     <span class="hi">ⓘ</span>
-    <span>屏蔽后，该故障码在本项目不产生预警计数、不参与等级统计、不触发短信推送；通用代码库定义与其他项目不受影响，可随时取消屏蔽恢复（同码的项目新增/等级调整配置在屏蔽时被移除，取消屏蔽后不自动恢复）。</span>
+    <span>屏蔽后，该故障码在本项目不产生预警计数、不参与等级统计、不触发短信推送；通用代码库定义与其他项目不受影响，可随时取消屏蔽恢复（同码的项目自定义等级配置在屏蔽时被移除，取消屏蔽后不自动恢复）。</span>
   </div>
   <div class="fb" style="justify-content:flex-end">
     <button class="btn btns" onclick="openBlock()">+ 添加屏蔽</button>
@@ -72,10 +72,10 @@
   </div>
 </div>
 
-<!-- 项目新增:新增/编辑弹窗(仅品牌+故障码必填,其余选填,缺省取通用库描述) -->
+<!-- 项目自定义:添加/编辑弹窗(仅 品牌+故障码+自定义等级;名称/描述/排查建议一律联查通用库) -->
 <div class="modal" id="dlgProjAdd">
   <div class="dialog" style="width:560px">
-    <div class="dh"><span id="paTitle">新增故障码</span><span class="dx" onclick="$modalClose('dlgProjAdd')">✕</span></div>
+    <div class="dh"><span id="paTitle">添加自定义故障码</span><span class="dx" onclick="$modalClose('dlgProjAdd')">✕</span></div>
     <div class="db">
       <div class="frm">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -84,15 +84,11 @@
             <datalist id="paBrandList"></datalist>
           </div>
           <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 故障代码</span>
-            <input id="paCode" placeholder="如 EH" oninput="paKeyChange()">
+            <input id="paCode" placeholder="如 L7" oninput="paKeyChange()">
           </div>
         </div>
         <div class="scn-tip" id="paScnTip"></div>
-        <div class="form-item"><span class="fl">适用机型<span class="opt">选填,缺省取通用库</span></span><input id="paModel" placeholder="如 MDV系列 / 室内机通用"></div>
-        <div class="form-item"><span class="fl">故障名称<span class="opt">选填,缺省取通用库</span></span><input id="paName" placeholder="缺省时取通用代码库名称"></div>
-        <div class="form-item"><span class="fl">故障原因<span class="opt">选填,缺省取通用库描述</span></span><textarea id="paDesc" rows="2" placeholder="缺省时取通用代码库描述"></textarea></div>
-        <div class="form-item"><span class="fl">排查方法<span class="opt">选填,缺省取通用库描述</span></span><textarea id="paAdvice" rows="3" placeholder="缺省时取通用代码库描述"></textarea></div>
-        <div class="form-item"><span class="fl">本项目故障等级</span>
+        <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 自定义等级<span class="opt">仅本项目生效</span></span>
           <select id="paLevel" style="width:260px">
             <option value="1">故障(影响正常运行,必须处理)</option>
             <option value="2">警示(可继续运行,存在隐患)</option>
@@ -156,15 +152,15 @@ function renderBrandList(){
   document.getElementById('paBrandList').innerHTML=brands.map(b=>`<option value="${b}">`).join('');
 }
 
-/* ═══════ 项目新增 ═══════ */
+/* ═══════ 项目自定义(仅故障等级自定义;通用库无此码时须先联系飞奕维护至通用故障码库) ═══════ */
 let paList=[];
 function projAddEntries(){
   const cfg=$alarmProjCodeGet(curProj);
   return Object.keys(cfg.adds).map(k=>{
     const raw=cfg.adds[k];
     const uni=$alarmCodeLookup(raw.brand,raw.code);
-    const merged=$alarmProjEntry(raw.brand,raw.code,curProj);
-    return Object.assign({},merged,{key:k,type:uni?'等级调整':'新增监测'});
+    return {key:k,brand:raw.brand,code:raw.code,level:raw.level,
+      name:uni?uni.name:'—',uniLevel:uni?uni.level:null};
   });
 }
 /* 操作用索引绑定(不把名称/键拼进 onclick 字符串,避免引号字符破坏属性) */
@@ -172,15 +168,16 @@ function renderAdd(){
   paList=projAddEntries();
   document.getElementById('tbAdd').innerHTML=paList.length?paList.map((e,i)=>`
     <tr>
-      <td>${i+1}</td><td>${e.brand}</td><td>${e.model||'—'}</td><td><b>${e.code}</b></td>
-      <td>${e.name||'—'}</td><td>${lvTag(e.level)}</td>
-      <td><span class="tag ${e.type==='新增监测'?'tok':'twn'}">${e.type}</span></td>
+      <td>${i+1}</td><td>${e.brand}</td><td><b>${e.code}</b></td>
+      <td>${e.name}</td>
+      <td>${e.uniLevel?lvTag(e.uniLevel):'—'}</td>
+      <td>${lvTag(e.level)}</td>
       <td><span class="op">
         <a onclick="openProjAddIdx(${i})">编辑</a>
         <a class="danger" onclick="delProjAddIdx(${i})">删除</a>
       </span></td>
     </tr>`).join('')
-    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无项目新增故障码</span></div></td></tr>';
+    :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无项目自定义故障码</span></div></td></tr>';
 }
 function openProjAddIdx(i){if(paList[i])openProjAdd(paList[i].key);}
 function delProjAddIdx(i){const e=paList[i];if(e)delProjAdd(e.key,e.name||e.code);}
@@ -190,43 +187,35 @@ function openProjAdd(key){
   paEditKey=key||null;
   renderBrandList();
   const cfg=$alarmProjCodeGet(curProj);
-  document.getElementById('paTitle').textContent=key?`编辑故障码 ${key.replace('|','-')}`:'新增故障码';
+  document.getElementById('paTitle').textContent=key?`编辑自定义故障码 ${key.replace('|','-')}`:'添加自定义故障码';
   const raw=key?cfg.adds[key]:null;
   document.getElementById('paBrand').value=raw?raw.brand:'';
   document.getElementById('paCode').value=raw?raw.code:'';
   document.getElementById('paBrand').disabled=!!key;
   document.getElementById('paCode').disabled=!!key;
-  /* 编辑时展示原始填写值(选填缺省项保持为空,保存语义不变) */
-  document.getElementById('paModel').value=raw?(raw.model===undefined?'':raw.model||''):'';
-  document.getElementById('paName').value=raw?raw.name||'':'';
-  document.getElementById('paDesc').value=raw?raw.desc||'':'';
-  document.getElementById('paAdvice').value=raw?raw.advice||'':'';
   document.getElementById('paLevel').value=raw?String(raw.level):'2';
   paKeyChange(true);
   $modal('dlgProjAdd');
 }
-/* 品牌+代码输入后:识别场景(① 通用库无此码 ② 档位与通用库不同),并提示缺省回退 */
+/* 品牌+代码输入后即时校验:通用库有此码方可自定义等级;无此码提示联系飞奕维护 */
 function paKeyChange(keepVals){
   const brand=document.getElementById('paBrand').value.trim();
-  const code=document.getElementById('paCode').value.trim();   /* 保留原始大小写,匹配不区分大小写 */
+  const code=document.getElementById('paCode').value.trim();   /* 保留原始大小写,匹配按防混淆规则容错 */
   const tip=document.getElementById('paScnTip');
   if(!brand||!code){tip.style.display='none';return;}
   const uni=$alarmCodeLookup(brand,code);
   tip.style.display='block';
   if(uni){
-    tip.className='scn-tip s2';
-    tip.textContent=`通用代码库已有该码（${uni.name}，通用等级：${ALARM_LEVELS[uni.level].lb}）。保存后按本项目配置生效，选填项缺省取通用库描述。`;
-    if(!keepVals){
-      document.getElementById('paLevel').value=String(uni.level);
-    }
+    tip.className='scn-tip s1';
+    tip.textContent=`通用代码库:${uni.name},通用等级:${ALARM_LEVELS[uni.level].lb}。保存后本项目按自定义等级生效,不影响通用库与其他项目。`;
+    if(!keepVals)document.getElementById('paLevel').value=String(uni.level);
   }else if($alarmCiSiblings(brand,code).length>1){
     /* 大小写并存码(如海信 Ee/EE):提示按设备上报大小写精确填写 */
     tip.className='scn-tip s2';
-    tip.textContent=`「${brand}」存在仅大小写不同的并存码（${$alarmCiSiblings(brand,code).map(x=>x.code+'='+x.name).join('；')}），两者为不同故障，请按设备上报的大小写精确填写。`;
+    tip.textContent=`「${brand}」存在仅大小写不同的并存码(${$alarmCiSiblings(brand,code).map(x=>x.code+'='+x.name).join(';')}),两者为不同故障,请按设备上报的大小写精确填写。`;
   }else{
-    tip.className='scn-tip s1';
-    tip.textContent='通用代码库中无此故障码，保存后将作为本项目新增监测码纳入监测范围。';
-    if(!keepVals)document.getElementById('paLevel').value='2';
+    tip.className='scn-tip s2';
+    tip.textContent='通用代码库无此故障码,无法自定义等级;如需监测该码,请联系飞奕维护至通用故障码库(维护后自动纳入监测,再按需自定义等级)。';
   }
 }
 function doSaveProjAdd(){
@@ -239,27 +228,21 @@ function doSaveProjAdd(){
   if(!ALARM_CODE_LIB_BASE.some(x=>x.brand===brand&&x.code===code)&&sibs.length>1){
     $msg(`「${brand}」存在仅大小写不同的并存码(${sibs.map(x=>x.code).join(' / ')}),请按设备上报的大小写精确填写`,'error');return;
   }
+  /* 仅支持等级自定义:通用库必须已收录该码 */
+  const uni=$alarmCodeLookup(brand,code);
+  if(!uni){$msg('通用代码库无此故障码,无法自定义等级;请联系飞奕维护至通用故障码库','error');return;}
   const key=brand+'|'+code;   /* 键保留原始大小写;匹配时按规则容错(见 _alarm-data.js) */
   const cfg=$alarmProjCodeGet(curProj);
-  if(!paEditKey&&$alarmProjAdd(cfg,brand,code)){$msg('该故障码已在项目新增清单中','error');return;}
+  if(!paEditKey&&$alarmProjAdd(cfg,brand,code)){$msg('该故障码已有项目自定义配置','error');return;}
   if(!paEditKey&&$alarmProjBlockedKey(cfg,brand,code)){$msg('该故障码在项目屏蔽清单中,请先取消屏蔽','error');return;}
-  cfg.adds[key]={
-    brand,code,
-    model:document.getElementById('paModel').value.trim(),
-    name:document.getElementById('paName').value.trim(),
-    desc:document.getElementById('paDesc').value.trim(),
-    advice:document.getElementById('paAdvice').value.trim(),
-    level:+document.getElementById('paLevel').value,
-  };
+  cfg.adds[key]={brand,code,level:+document.getElementById('paLevel').value};
   $alarmProjCodeSet(curProj,cfg);
   $modalClose('dlgProjAdd');
-  const uni=$alarmCodeLookup(brand,code);
-  $msg(uni?`「${brand}-${code}」本项目等级已调整为${ALARM_LEVELS[+document.getElementById('paLevel').value].short},立即生效`
-         :`「${brand}-${code}」已纳入「${curProj}」监测范围`);
+  $msg(`「${brand}-${code}」本项目等级已自定义为${ALARM_LEVELS[+document.getElementById('paLevel').value].short}(通用库:${ALARM_LEVELS[uni.level].short}),立即生效`);
   renderAdd();
 }
 function delProjAdd(key,name){
-  $confirm(`确定从项目新增清单删除「${key.replace('|','-')} ${name}」吗?删除后按通用代码库等级生效。`,()=>{
+  $confirm(`确定删除「${key.replace('|','-')} ${name}」的项目自定义等级吗?删除后按通用代码库等级生效。`,()=>{
     const cfg=$alarmProjCodeGet(curProj);
     delete cfg.adds[key];
     $alarmProjCodeSet(curProj,cfg);
@@ -307,16 +290,16 @@ function doBlock(){
   if($alarmProjBlockedKey(cfg,brand,code)){$msg('该故障码已在屏蔽清单中','error');return;}
   const addKey=Object.keys(cfg.adds).find(k=>$alarmKeyEq(k,brand,code));
   const exec=()=>{
-    if(addKey)delete cfg.adds[addKey];   /* 屏蔽优先:同时移出项目新增 */
+    if(addKey)delete cfg.adds[addKey];   /* 屏蔽优先:同时移出项目自定义 */
     cfg.blocks.push(brand+'|'+code);     /* 键保留原始大小写 */
     $alarmProjCodeSet(curProj,cfg);
     $modalClose('dlgBlock');
     $msg(`「${brand}-${code}」已在「${curProj}」屏蔽,立即生效`);
     renderBlk();
   };
-  /* 互斥提示:同码存在项目新增/等级调整配置时,二次确认后才移除 */
+  /* 互斥提示:同码存在项目自定义等级配置时,二次确认后才移除 */
   if(addKey){
-    $confirm(`「${brand}-${code}」存在项目新增/等级调整配置,屏蔽将移除该配置,取消屏蔽后不自动恢复(需重新配置)。是否继续?`,exec);
+    $confirm(`「${brand}-${code}」存在项目自定义等级配置,屏蔽将移除该配置,取消屏蔽后不自动恢复(需重新配置)。是否继续?`,exec);
     return;
   }
   exec();

@@ -30,14 +30,13 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
 /* 故障代码库弹窗(iframe) */
 .cl-iframe{width:100%;height:66vh;border:none;display:block;background:var(--bg);}
 .cl-sub{display:block;font-size:12px;color:var(--ts);font-weight:400;margin-top:2px;}
-/* 维护窗口生效提示条 */
-#maintBar{display:none;align-items:center;gap:8px;background:rgba(230,162,60,.12);border:1px solid rgba(230,162,60,.35);color:var(--wn,#e6a23c);border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.6;}
+/* 批量操作工具条 */
+.batch-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.batch-bar .bc-cnt{font-size:12px;color:var(--ts);}
+.row-ck,.all-ck{width:14px;height:14px;cursor:pointer;vertical-align:middle;}
 </style>
 </head>
 <body>
-<!-- 维护窗口生效提示(项目用户可感知全局过滤原因) -->
-<div id="maintBar"></div>
-
 <!-- 顶部 Tab:项目运维 | 空调故障 -->
 <div class="tabs">
   <div class="tab active" data-t="ops" onclick="pickTab('ops')">项目运维</div>
@@ -58,22 +57,32 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
     <div class="fi"><span class="fl">故障名称</span><select id="oName" style="width:160px"><option value="">全部名称</option></select></div>
     <div class="fi"><span class="fl">故障对象</span><input id="oObj" placeholder="设备SN/地址/关键字" style="width:160px"></div>
     <div class="fi"><span class="fl">状态</span>
-      <select id="oSt" style="width:170px">
-        <option value="">全部</option><option value="new" selected>未处理(含待确认)</option>
+      <select id="oSt" style="width:130px">
+        <option value="">全部</option><option value="new" selected>未处理</option>
         <option value="gone">已恢复待确认</option><option value="done">已处理</option><option value="ignored">已忽略</option>
       </select>
     </div>
-    <div class="fi"><span class="fl">故障时间</span>
-      <input type="date" id="oStart" style="width:140px"><span class="text-sub">至</span><input type="date" id="oEnd" style="width:140px">
+    <div class="fi"><span class="fl">故障发生时间</span>
+      <input type="date" id="oStart" style="width:135px"><span class="text-sub">至</span><input type="date" id="oEnd" style="width:135px">
+    </div>
+    <div class="fi"><span class="fl">故障恢复时间</span>
+      <input type="date" id="oRecStart" style="width:135px"><span class="text-sub">至</span><input type="date" id="oRecEnd" style="width:135px">
     </div>
     <button class="btn btnp" onclick="doQueryOps()">查询</button>
     <button class="btn" onclick="doResetOps()">重置</button>
   </div>
+  <!-- 批量操作:多选后批量处理/批量忽略(忽略即起到批量清理效果,复发自动重新告警) -->
+  <div class="batch-bar">
+    <button class="btn" onclick="batchHandle('ops')">批量处理</button>
+    <button class="btn" onclick="batchIgnore('ops')">批量忽略</button>
+    <span class="bc-cnt" id="opsSelCnt">已选 0 条</span>
+  </div>
   <div class="tw">
     <table>
       <thead><tr>
-        <th>序号</th><th>故障等级</th><th>故障子类</th><th>故障名称</th><th>故障对象</th><th>故障描述</th>
-        <th>故障时间</th><th>持续时长</th><th>状态</th><th>处理人</th><th>操作</th>
+        <th style="width:34px"><input type="checkbox" class="all-ck" id="opsAllCk" onclick="toggleAll('ops',this.checked)"></th>
+        <th>序号</th><th>故障等级</th><th>故障子类</th><th>故障名称</th><th>故障对象</th>
+        <th>故障发生时间</th><th>故障恢复时间</th><th>持续时长</th><th>状态</th><th>处理人</th><th>操作</th>
       </tr></thead>
       <tbody id="opsBody"></tbody>
     </table>
@@ -101,21 +110,32 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
         <div class="fi"><span class="fl">状态</span>
           <select id="aSt" style="width:140px">
             <option value="">全部</option><option value="new" selected>未处理</option>
+            <option value="gone">已恢复待确认</option>
             <option value="done">已处理</option><option value="ignored">已忽略</option>
           </select>
         </div>
         <div class="fi"><span class="fl">故障发生时间</span>
           <input type="date" id="aStart" style="width:135px"><span class="text-sub">至</span><input type="date" id="aEnd" style="width:135px">
         </div>
+        <div class="fi"><span class="fl">故障恢复时间</span>
+          <input type="date" id="aRecStart" style="width:135px"><span class="text-sub">至</span><input type="date" id="aRecEnd" style="width:135px">
+        </div>
         <button class="btn btnp" onclick="doQueryAc()">查询</button>
         <button class="btn" onclick="doResetAc()">重置</button>
+      </div>
+      <!-- 批量操作:多选后批量处理/批量忽略(忽略即起到批量清理效果,复发自动重新告警) -->
+      <div class="batch-bar">
+        <button class="btn" onclick="batchHandle('ac')">批量处理</button>
+        <button class="btn" onclick="batchIgnore('ac')">批量忽略</button>
+        <span class="bc-cnt" id="acSelCnt">已选 0 条</span>
       </div>
       <div class="tw">
         <table>
           <thead><tr>
+            <th style="width:34px"><input type="checkbox" class="all-ck" id="acAllCk" onclick="toggleAll('ac',this.checked)"></th>
             <th>序号</th><th>楼栋</th><th>楼层</th><th>房间</th><th>内机全地址</th>
-            <th>品牌</th><th>故障代码</th><th>故障名称</th><th>故障等级</th>
-            <th>故障发生时间</th><th>状态</th><th>操作</th>
+            <th>品牌</th><th>故障代码</th><th>故障等级</th>
+            <th>故障发生时间</th><th>故障恢复时间</th><th>持续时长</th><th>状态</th><th>操作</th>
           </tr></thead>
           <tbody id="acBody"></tbody>
         </table>
@@ -228,7 +248,6 @@ function renderOpsLvCards(){
   const cnt={1:0,2:0,3:0};
   ALARM_OPS_ITEMS.forEach(r=>{
     if($alarmStatusOf(r))return;
-    if($alarmInMaint(r))return;
     if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return;
     cnt[$alarmOpsLevel(r)]++;
   });
@@ -247,26 +266,30 @@ function pickOpsLv(lv){
 }
 function ov(id){return document.getElementById(id).value;}
 function doQueryOps(){
-  const lv=ov('oLevel'),cat=ov('oCat'),name=ov('oName'),obj=ov('oObj').trim(),st=ov('oSt'),s=ov('oStart'),e=ov('oEnd');
+  const lv=ov('oLevel'),cat=ov('oCat'),name=ov('oName'),obj=ov('oObj').trim(),st=ov('oSt'),
+        s=ov('oStart'),e=ov('oEnd'),rs=ov('oRecStart'),re=ov('oRecEnd');
   opsFiltered=ALARM_OPS_ITEMS.filter(r=>{
     if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return false;
-    if($alarmInMaint(r))return false;
     if(lv&&String($alarmOpsLevel(r))!==lv)return false;
     if(cat&&ALARM_OPS_CATS[r.cat]!==cat)return false;
     if(name&&r.cat!==name)return false;
-    if(obj&&!r.obj.includes(obj)&&!r.info.includes(obj))return false;
+    if(obj&&!r.obj.includes(obj))return false;
     if(!stMatch(st,r))return false;
     if(s&&r.last<s)return false;
     if(e&&r.last>e+' 23:59:59')return false;
+    /* 故障恢复时间筛选:仅已恢复(gone)记录参与命中 */
+    if(rs&&(!r.gone||r.gone<rs))return false;
+    if(re&&(!r.gone||r.gone>re+' 23:59:59'))return false;
     return true;
   });
-  opsFiltered.sort((a,b)=>a.last<b.last?1:-1);   /* 默认按故障时间倒序 */
+  opsFiltered.sort((a,b)=>a.last<b.last?1:-1);   /* 默认按故障发生时间倒序 */
   opsPg.page=1;opsPg.total=opsFiltered.length;
+  opsSel.clear();
   $pager('opsPager',opsPg);
   renderOpsLvCards();renderOpsTable();
 }
 function doResetOps(){
-  ['oObj','oStart','oEnd'].forEach(id=>document.getElementById(id).value='');
+  ['oObj','oStart','oEnd','oRecStart','oRecEnd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('oLevel').value='';
   document.getElementById('oCat').value='';
   document.getElementById('oSt').value='new';
@@ -280,13 +303,14 @@ function renderOpsTable(){
     const st=stOf(r);
     const sRec=$alarmStatusOf(r);
     return `<tr>
+      <td><input type="checkbox" class="row-ck" ${opsSel.has(r.id)?'checked':''} onclick="toggleSel('ops','${r.id}',this.checked)"></td>
       <td>${start+i+1}</td>
       <td>${lvTag($alarmOpsLevel(r))}</td>
       <td><span class="tag ${ALARM_OPS_CATS[r.cat]==='base'?'twn':'thl'}">${ALARM_OPS_CAT_LABEL[ALARM_OPS_CATS[r.cat]]}</span></td>
       <td>${r.cat}</td>
       <td>${r.obj}</td>
-      <td class="cell-key">${r.info}</td>
       <td>${r.last}</td>
+      <td>${r.gone?`<span class="text-ok">${r.gone}</span>`:'—'}</td>
       <td>${$alarmDuration(r.last,r.gone)}</td>
       <td>${stTag(st)}</td>
       <td>${sRec?sRec.by:'—'}</td>
@@ -296,7 +320,8 @@ function renderOpsTable(){
       </span></td>
     </tr>`;
   }).join('')
-  :'<tr><td colspan="11"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  :'<tr><td colspan="12"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  syncSelUI('ops');
 }
 function showOpsDetail(idx){
   const r=opsFiltered[idx];
@@ -307,10 +332,9 @@ function showOpsDetail(idx){
     <span class="k">故障等级:</span><span class="v">${lvTag($alarmOpsLevel(r))}</span>
     <span class="k">故障名称:</span><span class="v">${r.cat}</span>
     <span class="k">故障对象:</span><span class="v">${r.obj}</span>
-    <span class="k">故障描述:</span><span class="v">${r.info}</span>
-    <span class="k">故障时间:</span><span class="v">${r.last}<span class="text-sub" style="margin-left:8px">本次故障开始时间</span></span>
+    <span class="k">故障发生时间:</span><span class="v">${r.last}<span class="text-sub" style="margin-left:8px">本次故障开始时间</span></span>
     <span class="k">首次发生:</span><span class="v">${r.first}<span class="text-sub" style="margin-left:8px">该设备历史首次出现同类故障</span></span>
-    ${r.gone?`<span class="k">异常消失:</span><span class="v text-ok">${r.gone}</span>`:''}
+    ${r.gone?`<span class="k">故障恢复时间:</span><span class="v text-ok">${r.gone}</span>`:''}
     <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.last,r.gone)}${r.gone?'':'<span class="text-sub" style="margin-left:8px">至今</span>'}</span>
     <span class="k">状态:</span><span class="v">${stTag(st)}</span>
     ${st==='gone'?`<span class="k">恢复确认:</span><span class="v text-wn">故障已自动恢复,请人工确认故障期间的数据是否完整(如当量/抄表数据已成功自动补拉),确认无误后点「处理」闭环。</span>`:''}
@@ -339,7 +363,6 @@ function renderAcLvCards(){
   ALARM_AC_FAULTS.forEach(f=>{
     const lv=lvOfAc(f);
     if(lv===0)return;
-    if($alarmInMaint(f))return;
     if(!$alarmStatusOf(f))cnt[lv]++;
   });
   document.getElementById('acLvCards').innerHTML=[1,2,3].map(lv=>{
@@ -358,9 +381,9 @@ function pickAcLv(lv){
 function av(id){return document.getElementById(id).value;}
 function doQueryAc(){
   const lv=av('aLevel'),brand=av('aBrand'),code=av('aCode').trim().toUpperCase(),
-        addr=av('aAddr').trim(),st=av('aSt'),s=av('aStart'),e=av('aEnd');
+        addr=av('aAddr').trim(),st=av('aSt'),s=av('aStart'),e=av('aEnd'),
+        rs=av('aRecStart'),re=av('aRecEnd');
   acFiltered=ALARM_AC_FAULTS.filter(r=>{
-    if($alarmInMaint(r))return false;
     if(lv!==''&&String(lvOfAc(r))!==lv)return false;
     if(brand&&r.brand!==brand)return false;
     if(code&&r.code.toUpperCase().indexOf(code)<0)return false;
@@ -368,15 +391,19 @@ function doQueryAc(){
     if(!stMatch(st,r))return false;
     if(s&&r.devTime<s)return false;
     if(e&&r.devTime>e+' 23:59:59')return false;
+    /* 故障恢复时间筛选:仅已恢复(gone)记录参与命中 */
+    if(rs&&(!r.gone||r.gone<rs))return false;
+    if(re&&(!r.gone||r.gone>re+' 23:59:59'))return false;
     return $tree3Match(treeSel,r);
   });
   acFiltered.sort((a,b)=>a.devTime<b.devTime?1:-1);   /* 默认按故障发生时间倒序 */
   acPg.page=1;acPg.total=acFiltered.length;
+  acSel.clear();
   $pager('acPager',acPg);
   renderAcLvCards();renderAcTable();
 }
 function doResetAc(){
-  ['aCode','aAddr','aStart','aEnd'].forEach(id=>document.getElementById(id).value='');
+  ['aCode','aAddr','aStart','aEnd','aRecStart','aRecEnd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('aBrand').value='';
   document.getElementById('aLevel').value='';
   document.getElementById('aSt').value='new';
@@ -390,20 +417,23 @@ function renderAcTable(){
     const entry=$alarmProjEntry(r.brand,r.code);
     const st=stOf(r);
     return `<tr>
+      <td><input type="checkbox" class="row-ck" ${acSel.has(r.id)?'checked':''} onclick="toggleSel('ac','${r.id}',this.checked)"></td>
       <td>${start+i+1}</td><td>${r.bld}</td><td>${r.fl}</td><td>${r.room}</td>
       <td>${r.addr}</td><td>${r.brand}</td>
-      <td><span class="fault-code" onclick="showAcDetail(${start+i})">${r.code}</span></td>
-      <td>${entry&&entry.name?entry.name:'<span class="text-wn">未知故障</span>'}</td>
+      <td>${r.code}</td>
       <td>${lvTag(lv)}</td>
       <td>${r.devTime}</td>
+      <td>${r.gone?`<span class="text-ok">${r.gone}</span>`:'—'}</td>
+      <td>${$alarmDuration(r.devTime,r.gone)}</td>
       <td>${stTag(st)}</td>
       <td><span class="op">
         <a onclick="showAcDetail(${start+i})">详情</a>
-        ${st==='new'?`<a onclick="openHandle('ac',${start+i})">处理</a><a class="danger" onclick="doIgnore('ac',${start+i})">忽略</a>`:''}
+        ${(st==='new'||st==='gone')?`<a onclick="openHandle('ac',${start+i})">处理</a><a class="danger" onclick="doIgnore('ac',${start+i})">忽略</a>`:''}
       </span></td>
     </tr>`;
   }).join('')
-  :'<tr><td colspan="12"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  :'<tr><td colspan="14"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  syncSelUI('ac');
 }
 function showAcDetail(idx){
   const r=acFiltered[idx];
@@ -418,9 +448,8 @@ function showAcDetail(idx){
   const adjusted=!blocked&&!!padd&&!!uniEntry;
   let lvNote;
   if(blocked)lvNote=`本项目已屏蔽该故障码,不产生预警计数与短信推送${uniEntry?`(通用库等级:${ALARM_LEVELS[uniEntry.level].lb})`:''}`;
-  else if(adjusted)lvNote=`依据项目新增配置:通用${ALARM_LEVELS[uniEntry.level].short} → 本项目${ALARM_LEVELS[lv].short}`;
+  else if(adjusted)lvNote=`依据项目自定义:通用${ALARM_LEVELS[uniEntry.level].short} → 本项目${ALARM_LEVELS[lv].short}`;
   else if(uniEntry)lvNote=`依据通用代码库:${uniEntry.brand}-${uniEntry.code}`;
-  else if(padd)lvNote='依据项目新增监测码(通用代码库无此码)';
   else lvNote='未收录代码,默认按警示处理';
   document.getElementById('acDetailGrid').innerHTML=`
     <span class="k">楼栋:</span><span class="v">${r.bld}</span>
@@ -429,16 +458,16 @@ function showAcDetail(idx){
     <span class="k">内机全地址:</span><span class="v">${r.addr}</span>
     <span class="k">品牌:</span><span class="v">${r.brand}</span>
     <span class="k">故障代码:</span><span class="v text-er">${r.code}</span>
-    <span class="k">故障名称:</span><span class="v">${entry&&entry.name?entry.name:'未知故障'}</span>
+    <span class="k">故障描述:</span><span class="v">${entry&&entry.name?entry.name:'<span class="text-wn">未知故障</span>'}</span>
     <span class="k">故障等级:</span><span class="v">${lvTag(lv)}<span class="text-sub" style="margin-left:8px">${lvNote}</span></span>
-    ${entry&&(entry.desc||entry.advice)?`
-    <span class="k">故障说明:</span><span class="v">${entry.desc||'—'}</span>
-    <span class="k">排查建议:</span><span class="v"><div class="advice-box">${entry.advice||'—'}</div></span>`
-    :(blocked?'':(padd
-      ?`<span class="k">提示:</span><span class="v text-sub">该项目新增监测码未填写故障原因与排查方法,可在故障代码库中补充。</span>`
-      :`<span class="k">提示:</span><span class="v text-wn">该代码未收录进通用代码库,默认按警示处理,请前往故障代码库补录。</span>`))}
+    ${entry&&entry.advice?`
+    <span class="k">排查建议:</span><span class="v"><div class="advice-box">${entry.advice}</div></span>`
+    :(blocked?'':`<span class="k">提示:</span><span class="v text-wn">该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。</span>`)}
     <span class="k">故障发生时间:</span><span class="v">${r.devTime}</span>
+    ${r.gone?`<span class="k">故障恢复时间:</span><span class="v text-ok">${r.gone}</span>`:''}
+    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.devTime,r.gone)}${r.gone?'':'<span class="text-sub" style="margin-left:8px">至今</span>'}</span>
     <span class="k">状态:</span><span class="v">${stTag(st)}</span>
+    ${st==='gone'?`<span class="k">恢复确认:</span><span class="v text-wn">故障码已复位(故障自动恢复),请人工确认现场机组运行正常后点「处理」闭环。</span>`:''}
     ${sRec?`<span class="k">处理人:</span><span class="v">${sRec.by}</span>
     <span class="k">处理时间:</span><span class="v">${sRec.time}</span>
     <span class="k">处理备注:</span><span class="v">${sRec.note||'—'}</span>`:''}`;
@@ -460,11 +489,40 @@ function closeCodeLib(){
 /* 点遮罩关闭同样走 closeCodeLib,保证列表与计数刷新 */
 document.getElementById('dlgCodeLib').addEventListener('click',e=>{if(e.target.id==='dlgCodeLib')closeCodeLib();});
 
-/* ═══════ 处理/忽略(两个 Tab 共用) ═══════ */
+/* ═══════ 多选与批量操作(两个 Tab 共用) ═══════ */
+const opsSel=new Set(),acSel=new Set();
+function selOf(kind){return kind==='ops'?opsSel:acSel;}
+function listOf(kind){return kind==='ops'?opsFiltered:acFiltered;}
+function toggleSel(kind,id,checked){
+  const sel=selOf(kind);
+  if(checked)sel.add(id);else sel.delete(id);
+  syncSelUI(kind);
+}
+function toggleAll(kind,checked){
+  const sel=selOf(kind);
+  sel.clear();
+  if(checked)listOf(kind).forEach(r=>sel.add(r.id));
+  if(kind==='ops')renderOpsTable();else renderAcTable();
+}
+function syncSelUI(kind){
+  const sel=selOf(kind);
+  document.getElementById(kind==='ops'?'opsSelCnt':'acSelCnt').textContent=`已选 ${sel.size} 条`;
+  const all=document.getElementById(kind==='ops'?'opsAllCk':'acAllCk');
+  const total=listOf(kind).length;
+  all.checked=total>0&&sel.size===total;
+}
+/* 批量选中项中仍未闭环(未处理/已恢复待确认)的记录 */
+function selOpen(kind){
+  return listOf(kind).filter(r=>sel0(kind).has(r.id)&&(stOf(r)==='new'||stOf(r)==='gone'));
+}
+function sel0(kind){return selOf(kind);}
+function refreshTab(kind){if(kind==='ops')doQueryOps();else doQueryAc();}
+
+/* ═══════ 处理/忽略/删除(单条与批量共用弹窗) ═══════ */
 let handleCtx=null;
 function openHandle(kind,idx){
   const r=kind==='ops'?opsFiltered[idx]:acFiltered[idx];
-  handleCtx={kind,id:r.id,occur:r.last||r.devTime};   /* 记录本次故障时间:复发后旧状态自动失效 */
+  handleCtx={kind,items:[{id:r.id,occur:r.last||r.devTime}]};   /* occur=本次故障时间:复发后旧状态自动失效 */
   let sum;
   if(kind==='ops'){
     sum=`<b>${r.obj}</b> · ${r.cat}(${ALARM_OPS_CAT_LABEL[ALARM_OPS_CATS[r.cat]]} · ${ALARM_LEVELS[$alarmOpsLevel(r)].lb})<br>${r.info}`;
@@ -478,15 +536,25 @@ function openHandle(kind,idx){
   document.getElementById('handleBy').value='丁文武';
   $modal('dlgHandle');
 }
+function batchHandle(kind){
+  const open=selOpen(kind);
+  if(!sel0(kind).size){$msg('请先勾选要处理的记录','warning');return;}
+  if(!open.length){$msg('所选记录均已闭环,无需处理','warning');return;}
+  handleCtx={kind,items:open.map(r=>({id:r.id,occur:r.last||r.devTime}))};
+  document.getElementById('handleSum').innerHTML=`已选 <b>${sel0(kind).size}</b> 条,其中未闭环 <b>${open.length}</b> 条将批量标记为已处理(已处理/已忽略的记录自动跳过)。`;
+  document.getElementById('handleNote').value='';
+  document.getElementById('handleBy').value='丁文武';
+  $modal('dlgHandle');
+}
 function doHandle(){
   const note=document.getElementById('handleNote').value.trim();
   const by=document.getElementById('handleBy').value.trim();
   if(!note){$msg('请填写处理备注','error');return;}
   if(!by){$msg('请填写处理人','error');return;}
-  $alarmSetStatus(handleCtx.id,'done',note,by,handleCtx.occur);
+  handleCtx.items.forEach(it=>$alarmSetStatus(it.id,'done',note,by,it.occur));
   $modalClose('dlgHandle');
-  $msg('已标记为已处理');
-  if(handleCtx.kind==='ops')doQueryOps();else doQueryAc();
+  $msg(handleCtx.items.length>1?`已批量处理 ${handleCtx.items.length} 条`:'已标记为已处理');
+  refreshTab(handleCtx.kind);
 }
 function doIgnore(kind,idx){
   const r=kind==='ops'?opsFiltered[idx]:acFiltered[idx];
@@ -494,25 +562,22 @@ function doIgnore(kind,idx){
   $confirm(`确定忽略「${label}」吗?忽略后不再计入未处理数(同类故障再次发生时将重新告警)。`,()=>{
     $alarmSetStatus(r.id,'ignored','',undefined,r.last||r.devTime);
     $msg('已忽略');
-    if(kind==='ops')doQueryOps();else doQueryAc();
+    refreshTab(kind);
   });
 }
-
+function batchIgnore(kind){
+  const open=selOpen(kind);
+  if(!sel0(kind).size){$msg('请先勾选要忽略的记录','warning');return;}
+  if(!open.length){$msg('所选记录均已闭环,无需忽略','warning');return;}
+  $confirm(`确定批量忽略所选 ${open.length} 条未闭环记录吗?忽略后不再计入未处理数(同类故障再次发生时将重新告警);计划检修等场景可先批量忽略,复发自动重新告警。`,()=>{
+    open.forEach(r=>$alarmSetStatus(r.id,'ignored','',undefined,r.last||r.devTime));
+    $msg(`已批量忽略 ${open.length} 条`);
+    refreshTab(kind);
+  });
+}
 renderNameOpts();
 /* 空调故障 Tab 初始化:建筑物树 + 品牌下拉(与集中控制等页面同一 $tree3 组件) */
 renderTree();renderBrands();
-/* 维护窗口生效中:页顶提示(说明窗口期内故障不计入的原因,避免被误判为数据丢失) */
-(function renderMaintBar(){
-  const m=$alarmPushCfgGet($alarmCurProj()).maint||{};
-  if(!m.on||!m.from||!m.to)return;
-  const now=$alarmNow();
-  const from=m.from.replace('T',' ')+':00';
-  const to=m.to.replace('T',' ')+':59';
-  if(now<from||now>to)return;
-  const el=document.getElementById('maintBar');
-  el.style.display='flex';
-  el.innerHTML=`当前项目处于<b>维护窗口</b>(${from.slice(5,16)} ~ ${to.slice(5,16)}${m.note?' · '+m.note:''}),窗口期内产生的故障不计入统计与列表、不触发推送。`;
-})();
 /* 支持 URL 深链筛选(由总览卡片·铃铛·最近故障点击带入):
    tab / level / status(缺省=未处理,传空串=全部) / cat / today=1(当日范围+全部状态) / obj(运维记录定位) / addr(空调记录定位) */
 function applyDeepFilter(){
@@ -540,7 +605,6 @@ function applyDeepFilter(){
     ALARM_OPS_ITEMS.forEach(r=>{
       if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return;
       if(r.last.slice(0,10)!==todayStr)return;
-      if($alarmInMaint(r))return;
       opsN++;
     });
     if(!opsN){pickTab('ac');return;}
@@ -559,7 +623,6 @@ function applyDeepFilter(){
       if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return;
       if(String($alarmOpsLevel(r))!==level)return;
       if($alarmStatusOf(r))return;
-      if($alarmInMaint(r))return;
       opsN++;
     });
     if(!opsN){pickTab('ac');return;}

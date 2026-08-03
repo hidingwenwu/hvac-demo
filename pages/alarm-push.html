@@ -44,6 +44,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
   <div class="fi"><span class="fl">项目名称</span><input id="fName" list="projList" placeholder="输入或选择项目名称" style="width:200px"><datalist id="projList"></datalist></div>
   <div class="fi"><span class="fl">短信推送</span><select id="fSms" style="width:110px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
   <div class="fi"><span class="fl">故障等级</span><select id="fLv" style="width:110px"><option value="">全部</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
+  <div class="fi"><span class="fl">推送方式</span><select id="fMode" style="width:120px"><option value="">全部</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
 </div>
@@ -52,17 +53,17 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 <div class="tw">
   <table>
     <thead><tr>
-      <th>项目名称</th><th>短信推送</th><th>推送范围</th><th>推送方式</th><th>维护窗口</th><th>最近推送</th><th>操作</th>
+      <th>项目名称</th><th>短信推送</th><th>推送范围</th><th>推送方式</th><th>最近推送</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
 <div id="pager"></div>
 
-<!-- 短信推送配置抽屉 -->
+<!-- 推送配置抽屉(本页全部为短信推送管理:开关/接收人/推送范围/推送策略) -->
 <div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer" style="width:560px">
-  <div class="dh"><span id="drawerTitle">短信推送配置</span><span class="dx" onclick="closeDrawer()">✕</span></div>
+  <div class="dh"><span id="drawerTitle">推送配置</span><span class="dx" onclick="closeDrawer()">✕</span></div>
   <div class="db">
     <div class="sec">
       <div class="sec-t">基本</div>
@@ -72,6 +73,21 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
       </div>
     </div>
     <div class="sec">
+      <div class="sec-t">推送范围</div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:8px">故障等级</div>
+      <div class="ck-row">
+        <label class="ck"><input type="checkbox" id="dLv1"> <span class="tag ter">故障</span></label>
+        <label class="ck"><input type="checkbox" id="dLv2"> <span class="tag twn">警示</span></label>
+        <label class="ck"><input type="checkbox" id="dLv3"> <span class="tag thl">提示</span></label>
+      </div>
+      <div style="font-size:12px;color:var(--ts);margin:12px 0 8px">故障类别</div>
+      <div class="ck-row">
+        <label class="ck"><input type="checkbox" id="dCatOps"> 项目运维</label>
+        <label class="ck"><input type="checkbox" id="dCatAc"> 空调故障</label>
+      </div>
+      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送「故障」级;项目屏蔽的故障码不产生推送;顶部铃铛红点不受此范围限制(始终按未处理全局口径提醒)。</div>
+    </div>
+    <div class="sec">
       <div class="sec-t">接收人(可多个)</div>
       <div class="rc-add">
         <select id="dAccSel" style="flex:1"></select>
@@ -79,11 +95,16 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
       </div>
       <div class="rc-add" style="margin-top:8px">
         <input id="dName" placeholder="姓名" style="width:110px">
-        <input id="dPhone" placeholder="手机号(11位)" style="flex:1">
-        <button class="btn" onclick="addManual()">添加</button>
+        <input id="dPhone" placeholder="手机号(11位)" style="flex:1" oninput="phoneChanged()">
+        <button class="btn" id="dSendCode" onclick="sendVerifyCode()">发送验证码</button>
+      </div>
+      <div class="rc-add" id="dCodeRow" style="margin-top:8px;display:none">
+        <input id="dCode" placeholder="短信验证码(6位)" style="width:150px">
+        <button class="btn btnp" onclick="verifyAndAdd()">验证并添加</button>
+        <span class="tip" id="dCodeTip" style="margin-top:0"></span>
       </div>
       <div class="rc-tags" id="dReceivers"></div>
-      <div class="tip">支持从平台账号选择(账号已绑定手机号),也可手动录入姓名+手机号,可混合添加多个。</div>
+      <div class="tip">平台账号手机号已验证,选择即可添加;<b>手动录入的手机号须通过短信验证码验证后方可添加</b>(验证码 6 位、5 分钟内有效、60 秒内不可重复发送),避免号码填写错误导致提醒短信误发。</div>
     </div>
     <div class="sec">
       <div class="sec-t">推送策略</div>
@@ -94,11 +115,6 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         <input type="time" id="dDailyTime" value="09:00" style="width:110px;display:none">
       </div>
       <div class="st-row">
-        <span class="fl2">防打扰频控</span>
-        <span class="switch on" id="dFreq" onclick="this.classList.toggle('on')"></span>
-        <span class="text-sub">同一对象同一故障 24 小时内不重复推送</span>
-      </div>
-      <div class="st-row">
         <span class="fl2">免打扰时段</span>
         <span class="switch" id="dDnd" onclick="this.classList.toggle('on');syncDnd()"></span>
         <span id="dDndRange" style="display:none;align-items:center;gap:6px">
@@ -107,77 +123,14 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
           <label class="ck" title="免打扰时段内,故障级预警仍照常推送"><input type="checkbox" id="dExempt" checked> 故障级豁免</label>
         </span>
       </div>
-      <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内默认不推送任何预警;勾选「<b>故障级豁免</b>」后,仅<b>故障级(最高级别)</b>预警仍会照常推送,警示、提示级被静音,确保严重故障不被漏报。</div>
-      <div class="st-row" style="align-items:flex-start">
-        <span class="fl2">根因抑制</span>
-        <span class="text-sub" style="line-height:1.7">内置规则(不可关闭):<b>控制器离线</b>期间,其下级设备(电表/环境感知设备/内机)产生的连带故障不单独推送,仅推送「控制器离线」一条,文案合并为「××等故障 N 条」;连带故障仍正常计入列表与统计,明细到故障详情页查看。</span>
-      </div>
-      <div class="tip">推送策略仅作用于<b>短信通道</b>(铃铛红点为全局提醒,不适用);生效优先级:推送方式 → 24h 频控 → 免打扰(故障级豁免仅对实时推送生效;每日汇总时刻落入免打扰时段时,顺延至时段结束后发送)。</div>
+      <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内产生的预警不发送短信(时段结束后不补发);勾选「<b>故障级豁免</b>」后,故障级预警不受免打扰限制、仍照常推送,确保严重故障不漏报。豁免仅决定是否发送短信,平台内记录与统计不受影响。</div>
+      <div class="tip">推送策略仅作用于短信(铃铛红点为全局提醒,不适用);生效优先级:推送方式 → 免打扰(故障级豁免仅对实时推送生效;每日汇总时刻落入免打扰时段时,顺延至时段结束后发送)。</div>
     </div>
   </div>
   <div class="df" style="border-top:1px solid var(--bd)">
     <button class="btn" onclick="testPush()">测试推送</button>
     <button class="btn" onclick="closeDrawer()">取消</button>
     <button class="btn btnp" onclick="saveCfg()">保存</button>
-  </div>
-</div>
-
-<!-- 维护窗口弹窗(窗口期内产生的故障全局忽略:不计数、不进列表、不推送) -->
-<div class="modal" id="dlgMaint">
-  <div class="dialog" style="width:520px">
-    <div class="dh"><span id="mtTitle">维护窗口</span><span class="dx" onclick="$modalClose('dlgMaint')">✕</span></div>
-    <div class="db">
-      <div class="sec">
-        <div class="sec-t">窗口设置</div>
-        <div class="st-row">
-          <span class="fl2">启用维护窗口</span>
-          <span class="switch" id="mOn" onclick="this.classList.toggle('on')"></span>
-        </div>
-        <div class="st-row">
-          <span class="fl2">窗口时间</span>
-          <input type="datetime-local" id="mFrom" style="width:190px"> 至
-          <input type="datetime-local" id="mTo" style="width:190px">
-        </div>
-        <div class="st-row">
-          <span class="fl2">备注</span>
-          <input id="mNote" placeholder="如:机房停电检修(选填)" style="flex:1">
-        </div>
-      </div>
-      <div class="tip">窗口期内产生的故障视为计划性维护噪音,<b>全局忽略</b>:不计入统计与列表、不触发推送;窗口外故障不受影响。窗口结束后自动恢复监测;关闭本开关后,窗口期内故障恢复计入(如需永久排除请逐条忽略)。每个项目同一时间仅一个维护窗口。</div>
-    </div>
-    <div class="df">
-      <button class="btn" onclick="$modalClose('dlgMaint')">取消</button>
-      <button class="btn btnp" onclick="saveMaint()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 推送范围配置弹窗(项目级配置:作用于短信推送) -->
-<div class="modal" id="dlgScope">
-  <div class="dialog" style="width:520px">
-    <div class="dh"><span id="scTitle">推送范围配置</span><span class="dx" onclick="$modalClose('dlgScope')">✕</span></div>
-    <div class="db">
-      <div class="sec">
-        <div class="sec-t">故障等级</div>
-        <div class="ck-row">
-          <label class="ck"><input type="checkbox" id="sLv1"> <span class="tag ter">故障</span></label>
-          <label class="ck"><input type="checkbox" id="sLv2"> <span class="tag twn">警示</span></label>
-          <label class="ck"><input type="checkbox" id="sLv3"> <span class="tag thl">提示</span></label>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sec-t">故障类别</div>
-        <div class="ck-row">
-          <label class="ck"><input type="checkbox" id="sCatOps"> 项目运维</label>
-          <label class="ck"><input type="checkbox" id="sCatAc"> 空调故障</label>
-        </div>
-      </div>
-      <div class="tip">推送范围为项目级配置,作用于<b>短信推送</b>;仅勾选范围内新产生的预警才会推送,默认仅推送「故障」级;项目屏蔽的故障码不产生推送。<b>顶部铃铛红点不受此范围限制</b>(始终按未处理全局口径提醒)。</div>
-    </div>
-    <div class="df">
-      <button class="btn" onclick="$modalClose('dlgScope')">取消</button>
-      <button class="btn btnp" onclick="saveScope()">保存</button>
-    </div>
   </div>
 </div>
 
@@ -241,28 +194,17 @@ function scopeText(cfg){
     parts.push(cfg.scope.cats.map(c=>c==='ops'?'项目运维':'空调故障').join('+'));
   return parts.length?parts.join(' · '):'<span class="text-sub">未选择</span>';
 }
-/* 维护窗口列展示:生效中(橙)/已排期(灰)/已结束/— */
-function maintText(cfg){
-  const m=cfg.maint||{};
-  if(!m.on||!m.from||!m.to)return '<span class="text-sub">—</span>';
-  const now=$alarmNow();
-  const from=m.from.replace('T',' ')+':00';
-  const to=m.to.replace('T',' ')+':59';
-  const fmt=s=>s.slice(5,16);
-  if(now>=from&&now<=to)return `<span class="tag twn">生效中</span><div class="tpl">${fmt(from)} ~ ${fmt(to)}</div>`;
-  if(now<from)return `<span class="tag tin">已排期</span><div class="tpl">${fmt(from)} ~ ${fmt(to)}</div>`;
-  return `<span class="text-sub">已结束</span><div class="tpl">${fmt(from)} ~ ${fmt(to)}</div>`;
-}
-
 function doQuery(){
   const name=document.getElementById('fName').value.trim();
   const sms=document.getElementById('fSms').value;
   const lv=document.getElementById('fLv').value;
+  const md=document.getElementById('fMode').value;
   filtered=ALARM_PROJECTS.filter(p=>{
     if(name&&p.indexOf(name)<0)return false;
     const cfg=$alarmPushCfgGet(p);
     if(sms!==''&&cfg.enabled!==(sms==='1'))return false;
     if(lv!==''&&!(cfg.scope.levels||[]).includes(+lv))return false;
+    if(md!==''&&(cfg.strategy.mode==='daily'?'daily':'realtime')!==md)return false;
     return true;
   });
   pg.page=1;pg.total=filtered.length;
@@ -270,7 +212,7 @@ function doQuery(){
 }
 function doReset(){
   ['fName'].forEach(id=>document.getElementById(id).value='');
-  ['fSms','fLv'].forEach(id=>document.getElementById(id).value='');
+  ['fSms','fLv','fMode'].forEach(id=>document.getElementById(id).value='');
   doQuery();
 }
 
@@ -284,18 +226,15 @@ function renderTable(){
       <td><span class="switch ${cfg.enabled?'on':''}" onclick="toggleCh('${p}','enabled',this)"></span></td>
       <td>${scopeText(cfg)}</td>
       <td>${cfg.strategy.mode==='daily'?'每日汇总 '+cfg.strategy.dailyTime:'实时推送'}</td>
-      <td>${maintText(cfg)}</td>
       <td>${lastPush(p)}</td>
       <td><span class="op">
-        <a onclick="openScope('${p}')">推送范围配置</a>
-        <a onclick="openDrawer('${p}')">短信推送配置</a>
-        <a onclick="openMaint('${p}')">维护窗口</a>
+        <a onclick="openDrawer('${p}')">推送配置</a>
         <a onclick="openLog('${p}')">推送记录</a>
         <a onclick="openCodeLib('${p}')">故障代码库</a>
       </span></td>
     </tr>`;
   }).join('')
-  :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  :'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 
 /* 行内开关:短信通道即时启停 */
@@ -310,12 +249,19 @@ function toggleCh(proj,key,el){
   $msg(`「${proj}」短信推送已${cfg[key]?'开启':'关闭'}`);
 }
 
-/* ── 短信推送配置抽屉 ── */
+/* ── 推送配置抽屉(本页全部为短信推送管理:开关/推送范围/接收人/推送策略) ── */
 function openDrawer(proj){
   curProj=proj;
   draft=$alarmPushCfgGet(proj);
-  document.getElementById('drawerTitle').textContent='短信推送配置 - '+proj;
+  document.getElementById('drawerTitle').textContent='推送配置 - '+proj;
   document.getElementById('dEnabled').classList.toggle('on',!!draft.enabled);
+  /* 推送范围(项目级,作用于短信推送) */
+  const sc=draft.scope||{levels:[1],cats:['ops','ac']};
+  document.getElementById('dLv1').checked=(sc.levels||[]).includes(1);
+  document.getElementById('dLv2').checked=(sc.levels||[]).includes(2);
+  document.getElementById('dLv3').checked=(sc.levels||[]).includes(3);
+  document.getElementById('dCatOps').checked=(sc.cats||[]).includes('ops');
+  document.getElementById('dCatAc').checked=(sc.cats||[]).includes('ac');
   document.getElementById('dAccSel').innerHTML='<option value="">从平台账号选择…</option>'+
     ALARM_ACCOUNTS.map(a=>`<option value="${a.name}">${a.name}(${a.phone})</option>`).join('');
   renderReceivers();
@@ -324,7 +270,6 @@ function openDrawer(proj){
   document.querySelector(`input[name="dMode"][value="${mode}"]`).checked=true;
   document.getElementById('dDailyTime').style.display=draft.strategy.mode==='daily'?'inline-block':'none';
   document.getElementById('dDailyTime').value=draft.strategy.dailyTime||'09:00';
-  document.getElementById('dFreq').classList.toggle('on',!!draft.strategy.freq24);
   document.getElementById('dDnd').classList.toggle('on',!!(draft.strategy.dnd&&draft.strategy.dnd.on));
   syncDnd();
   if(draft.strategy.dnd){
@@ -332,6 +277,9 @@ function openDrawer(proj){
     document.getElementById('dDndTo').value=draft.strategy.dnd.to||'08:00';
     document.getElementById('dExempt').checked=draft.strategy.dnd.exemptL1!==false;
   }
+  resetCodeUI();   /* 切换项目后清空未完成的验证码流程 */
+  document.getElementById('dName').value='';
+  document.getElementById('dPhone').value='';
   document.getElementById('drawerMask').classList.add('show');
   document.getElementById('drawer').classList.add('show');
 }
@@ -366,104 +314,97 @@ function addFromAccount(){
   document.getElementById('dAccSel').value='';
   renderReceivers();
 }
-function addManual(){
+/* 手动接收人:须先短信验证码验证(平台账号手机号已验证,无需此步)
+   ── 避免号码填写错误导致提醒短信误发;真实环境验证码由后端下发,原型演示直接展示 */
+let pendingCode=null;   /* {phone,code,expire} */
+let codeTimer=null;
+function phoneChanged(){
+  /* 手机号变更后原验证码作废,须对新号码重新获取 */
+  if(pendingCode&&document.getElementById('dPhone').value.trim()!==pendingCode.phone){
+    pendingCode=null;
+    document.getElementById('dCodeRow').style.display='none';
+  }
+}
+function resetCodeUI(){
+  pendingCode=null;
+  clearInterval(codeTimer);
+  document.getElementById('dCodeRow').style.display='none';
+  document.getElementById('dCode').value='';
+  const btn=document.getElementById('dSendCode');
+  btn.disabled=false;btn.textContent='发送验证码';
+}
+function sendVerifyCode(){
   const name=document.getElementById('dName').value.trim();
   const phone=document.getElementById('dPhone').value.trim();
   if(!name){$msg('请填写姓名','error');return;}
   if(!/^1\d{10}$/.test(phone)){$msg('手机号格式不正确(11 位数字,1 开头)','error');return;}
   if(draft.receivers.some(r=>r.phone===phone)){$msg('该手机号已在接收人列表中','warning');return;}
-  draft.receivers.push({name,phone,src:'手动添加'});
+  const code=String(Math.floor(100000+Math.random()*900000));
+  pendingCode={phone,code,expire:Date.now()+5*60*1000};
+  document.getElementById('dCodeRow').style.display='flex';
+  document.getElementById('dCode').value='';
+  document.getElementById('dCodeTip').textContent=`验证码已发送至 ${phone},5 分钟内有效(演示环境验证码:${code})`;
+  /* 60 秒内不可重复发送 */
+  const btn=document.getElementById('dSendCode');
+  let left=60;btn.disabled=true;btn.textContent=`重新发送(${left}s)`;
+  clearInterval(codeTimer);
+  codeTimer=setInterval(()=>{
+    left--;
+    if(left<=0){clearInterval(codeTimer);btn.disabled=false;btn.textContent='发送验证码';}
+    else btn.textContent=`重新发送(${left}s)`;
+  },1000);
+  $msg(`验证码已发送至 ${phone}`);
+}
+function verifyAndAdd(){
+  const name=document.getElementById('dName').value.trim();
+  const phone=document.getElementById('dPhone').value.trim();
+  const input=document.getElementById('dCode').value.trim();
+  if(!pendingCode||pendingCode.phone!==phone){$msg('请先获取该手机号的验证码','error');return;}
+  if(Date.now()>pendingCode.expire){$msg('验证码已失效,请重新获取','error');resetCodeUI();return;}
+  if(!input||input!==pendingCode.code){$msg('验证码错误,请重新输入','error');return;}
+  if(!name){$msg('请填写姓名','error');return;}
+  if(draft.receivers.some(r=>r.phone===phone)){$msg('该手机号已在接收人列表中','warning');return;}
+  draft.receivers.push({name,phone,src:'手动添加(已验证)'});
   document.getElementById('dName').value='';
   document.getElementById('dPhone').value='';
+  resetCodeUI();
   renderReceivers();
+  $msg('手机号验证通过,已添加接收人');
 }
 function delReceiver(i){
   draft.receivers.splice(i,1);
   renderReceivers();
 }
 
-/* 收集草稿并保存(推送范围由独立弹窗维护,此处不再收集) */
+/* 收集草稿(开关/推送范围/推送策略;接收人操作已实时写入 draft) */
 function collectDraft(){
   draft.enabled=document.getElementById('dEnabled').classList.contains('on');
+  const levels=[];
+  if(document.getElementById('dLv1').checked)levels.push(1);
+  if(document.getElementById('dLv2').checked)levels.push(2);
+  if(document.getElementById('dLv3').checked)levels.push(3);
+  const cats=[];
+  if(document.getElementById('dCatOps').checked)cats.push('ops');
+  if(document.getElementById('dCatAc').checked)cats.push('ac');
+  draft.scope={levels,cats};
   const mode=document.querySelector('input[name="dMode"]:checked').value;
   const dndOn=document.getElementById('dDnd').classList.contains('on');
   draft.strategy={
     mode,
     dailyTime:document.getElementById('dDailyTime').value||'09:00',
-    freq24:document.getElementById('dFreq').classList.contains('on'),
     dnd:{on:dndOn,from:document.getElementById('dDndFrom').value||'22:00',to:document.getElementById('dDndTo').value||'08:00',exemptL1:document.getElementById('dExempt').checked},
   };
 }
 function saveCfg(){
   collectDraft();
   if(draft.enabled&&!draft.receivers.length){$msg('已开启推送但未添加接收人,请先添加','error');return;}
-  draft.scope=$alarmPushCfgGet(curProj).scope;   /* 范围以独立配置为准,避免覆盖 */
+  if(!draft.scope.levels.length||!draft.scope.cats.length){$msg('推送范围需至少选择一个故障等级和一个故障类别','error');return;}
   $alarmPushCfgSet(curProj,draft);
   closeDrawer();
   renderTable();
-  $msg(`「${curProj}」短信推送配置已保存`);
+  $msg(`「${curProj}」推送配置已保存`);
 }
 
-/* ── 维护窗口(独立弹窗:窗口期内产生的故障全局忽略,不计数不进列表不推送) ── */
-let maintProj=null;
-function openMaint(proj){
-  maintProj=proj;
-  const m=$alarmPushCfgGet(proj).maint||{on:false,from:'',to:'',note:''};
-  document.getElementById('mtTitle').textContent='维护窗口 - '+proj;
-  document.getElementById('mOn').classList.toggle('on',!!m.on);
-  document.getElementById('mFrom').value=m.from||'';
-  document.getElementById('mTo').value=m.to||'';
-  document.getElementById('mNote').value=m.note||'';
-  $modal('dlgMaint');
-}
-function saveMaint(){
-  const on=document.getElementById('mOn').classList.contains('on');
-  const from=document.getElementById('mFrom').value;
-  const to=document.getElementById('mTo').value;
-  const note=document.getElementById('mNote').value.trim();
-  if(on){
-    if(!from||!to){$msg('请填写维护窗口的起止时间','error');return;}
-    if(to<=from){$msg('结束时间必须晚于开始时间','error');return;}
-    if(new Date(to)-new Date(from)>7*86400000){$msg('维护窗口最长 7 天,长期静默请分次设置','error');return;}
-  }
-  const cfg=$alarmPushCfgGet(maintProj);
-  cfg.maint={on,from,to,note};
-  $alarmPushCfgSet(maintProj,cfg);
-  $alarmNotifyParent();   /* 窗口影响全局计数,刷新铃铛 */
-  $modalClose('dlgMaint');
-  renderTable();
-  $msg(on?`「${maintProj}」维护窗口已启用,窗口期内故障不计入统计与推送`:`「${maintProj}」维护窗口已关闭`);
-}
-
-/* ── 推送范围配置(独立弹窗:项目级配置,作用于短信推送;铃铛提醒不受此范围限制) ── */
-let scopeProj=null;
-function openScope(proj){
-  scopeProj=proj;
-  const sc=$alarmPushCfgGet(proj).scope||{levels:[1],cats:['ops','ac']};
-  document.getElementById('scTitle').textContent='推送范围配置 - '+proj;
-  document.getElementById('sLv1').checked=(sc.levels||[]).includes(1);
-  document.getElementById('sLv2').checked=(sc.levels||[]).includes(2);
-  document.getElementById('sLv3').checked=(sc.levels||[]).includes(3);
-  document.getElementById('sCatOps').checked=(sc.cats||[]).includes('ops');
-  document.getElementById('sCatAc').checked=(sc.cats||[]).includes('ac');
-  $modal('dlgScope');
-}
-function saveScope(){
-  const levels=[];
-  if(document.getElementById('sLv1').checked)levels.push(1);
-  if(document.getElementById('sLv2').checked)levels.push(2);
-  if(document.getElementById('sLv3').checked)levels.push(3);
-  const cats=[];
-  if(document.getElementById('sCatOps').checked)cats.push('ops');
-  if(document.getElementById('sCatAc').checked)cats.push('ac');
-  if(!levels.length||!cats.length){$msg('请至少选择一个故障等级和一个故障类别','error');return;}
-  const cfg=$alarmPushCfgGet(scopeProj);
-  cfg.scope={levels,cats};
-  $alarmPushCfgSet(scopeProj,cfg);
-  $modalClose('dlgScope');
-  renderTable();
-  $msg(`「${scopeProj}」推送范围已更新`);
-}
 /* 测试推送:生成一条模拟短信记录 */
 function testPush(){
   collectDraft();
@@ -471,7 +412,7 @@ function testPush(){
   const r=draft.receivers[0];
   $alarmPushLogAdd({
     proj:curProj,chan:'短信',receiver:r.name,phone:r.phone,type:'提醒',title:'测试推送',
-    content:`【飞奕云控】${curProj} 预警推送配置测试短信,收到即表示配置生效。推送范围:${scopeText(draft).replace(/<[^>]+>/g,'')};推送方式:${draft.strategy.mode==='daily'?'每日汇总 '+draft.strategy.dailyTime:'实时推送'}。`,
+    content:`【空调集控】${curProj} 预警推送配置测试短信,收到即表示配置生效。推送范围:${scopeText(draft).replace(/<[^>]+>/g,'')};推送方式:${draft.strategy.mode==='daily'?'每日汇总 '+draft.strategy.dailyTime:'实时推送'}。`,
     tpl:'hvac_test_sms',send:'已发送',time:$alarmNow(),
   });
   $msg(`已向 ${r.name}(${r.phone}) 发送测试短信,可在「推送记录」查看`);

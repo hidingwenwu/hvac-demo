@@ -36,16 +36,11 @@
 .seg-btn:not(:last-child){border-right:1px solid var(--bd);}
 /* 饼图鼠标划过提示(数字+比例) */
 #pieTip{position:fixed;z-index:99;display:none;background:#0b1426;border:1px solid var(--bd);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--txw);pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.4);white-space:nowrap;}
-/* 维护窗口生效提示条 */
-#maintBar{display:none;align-items:center;gap:8px;background:rgba(230,162,60,.12);border:1px solid rgba(230,162,60,.35);color:var(--wn,#e6a23c);border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.6;}
 .pi-arc{cursor:pointer;transition:opacity .12s;}
 .pi-arc:hover{opacity:.8;}
 </style>
 </head>
 <body>
-<!-- 维护窗口生效提示 -->
-<div id="maintBar"></div>
-
 <!-- 统计卡片区 -->
 <div class="sc" id="cards" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
 
@@ -128,10 +123,10 @@ function renderTrend(){
   days.forEach((d,i)=>{
     const ago=N-1-i;
     if(ago<=6){
-      /* 与统计卡同口径:剔除项目屏蔽故障码与维护窗口期记录;非计费项目剔除计费分摊类 */
+      /* 与统计卡同口径:剔除项目屏蔽故障码;非计费项目剔除计费分摊类 */
       let n=0;
-      ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill')&&!$alarmInMaint(r))n++;});
-      ALARM_AC_FAULTS.forEach(f=>{if(f.devTime.slice(0,10)===d&&$alarmFaultLevelProj(f)!==0&&!$alarmInMaint(f))n++;});
+      ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill'))n++;});
+      ALARM_AC_FAULTS.forEach(f=>{if(f.devTime.slice(0,10)===d&&$alarmFaultLevelProj(f)!==0)n++;});
       news.push(n);
       /* 处理完成:仅统计「已处理」(已忽略不计),并按当前项目与计费口径过滤 */
       dones.push(Object.keys(stAll).filter(k=>{
@@ -263,18 +258,6 @@ function goRecent(i){
     :`status=&obj=${encodeURIComponent(r.obj||'')}`);
 }
 
-/* 维护窗口生效中:页顶提示(与故障详情页一致) */
-(function renderMaintBar(){
-  const m=$alarmPushCfgGet($alarmCurProj()).maint||{};
-  if(!m.on||!m.from||!m.to)return;
-  const now=$alarmNow();
-  const from=m.from.replace('T',' ')+':00';
-  const to=m.to.replace('T',' ')+':59';
-  if(now<from||now>to)return;
-  const el=document.getElementById('maintBar');
-  el.style.display='flex';
-  el.innerHTML=`当前项目处于<b>维护窗口</b>(${from.slice(5,16)} ~ ${to.slice(5,16)}${m.note?' · '+m.note:''}),窗口期内产生的故障不计入统计与列表、不触发推送。`;
-})();
 renderTrend();renderShare();renderRecent();
 </script>
 </body>

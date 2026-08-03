@@ -6,7 +6,7 @@
      fyAlarmStatus   处理状态覆盖 {id:{st:'done'|'ignored',by,time,note}}
      fyAlarmCodeLib  通用代码库覆盖 {"品牌|代码":{...}}(原型预留,UI 不维护)
      fyAlarmProjCode 项目故障码配置 { [项目]: {adds:{"品牌|代码":entry}, blocks:["品牌|代码"]} }
-     fyAlarmPushCfg  推送配置(按项目) {项目名:{enabled,receivers,scope,strategy,maint}}
+     fyAlarmPushCfg  推送配置(按项目) {项目名:{enabled,receivers,scope,strategy}}
      fyAlarmPushLog  用户产生的推送记录(测试推送等),追加在种子记录之前
    ============================================================ */
 
@@ -416,11 +416,12 @@ const ALARM_CODE_LIB_BASE=[
   {"brand":"通用","model":"网关接入通用","code":"LOST","name":"通讯中断","desc":"内机与网关通讯中断,机组失去监控与控制","advice":"1.检查设备供电 2.检查通讯线路连接 3.恢复后自动重连","level":1}
 ];
 
-/* ── 空调故障 mock 明细(使用通用库真实代码;格力-X9/海信-Z5 演示未收录代码) ── */
+/* ── 空调故障 mock 明细(使用通用库真实代码;格力-X9/海信-Z5 演示未收录代码)
+     gone=故障恢复时间(故障码复位上报,null=仍在持续);持续时长=(gone || 当前时间) - devTime ── */
 const ALARM_AC_FAULTS=(()=>{
   const rows=[];
-  const F=(bld,fl,room,addr,brand,code,devTime)=>{
-    rows.push({id:'ac-'+(rows.length+1),bld,fl,room,tenant:room,addr,brand,code,devTime,crtTime:devTime});
+  const F=(bld,fl,room,addr,brand,code,devTime,gone)=>{
+    rows.push({id:'ac-'+(rows.length+1),bld,fl,room,tenant:room,addr,brand,code,devTime,crtTime:devTime,gone:gone||null});
   };
   F('1号楼','7层',716,'1-1-23-2','格力','L1',$adtAgo(0,3));    /* 内风机保护·故障 */
   F('1号楼','7层',707,'1-2-23-5','海信','08',$adtAgo(0,4));    /* 排气温度过高·故障 */
@@ -431,20 +432,20 @@ const ALARM_AC_FAULTS=(()=>{
   F('1号楼','23层',2302,'1-1-39-4','海信','04',$adtAgo(0,20)); /* 基板与变频模块通讯异常·故障 */
   F('1号楼','3层',303,'2-2-3-2','格力','L8',$adtAgo(1,2));     /* 电源供电不足·故障 */
   F('1号楼','7层',717,'1-3-23-3','海信','01',$adtAgo(1,5));    /* 室内机保护装置动作·故障 */
-  F('1号楼','14层',1404,'2-1-30-6','格力','LL',$adtAgo(1,8));  /* 水流开关故障·故障 */
+  F('1号楼','14层',1404,'2-1-30-6','格力','LL',$adtAgo(1,8),$adtAgo(0,20)); /* 水流开关故障·故障(已恢复待确认) */
   F('1号楼','7层',714,'1-1-23-8','海信','05',$adtAgo(1,11));   /* 电源相序异常·故障 */
   F('1号楼','9层',909,'2-3-9-1','格力','L2',$adtAgo(1,14));    /* 辅热保护·警示 */
   F('1号楼','7层',718,'1-2-23-4','海信','07',$adtAgo(1,17));   /* 排气过热度过低·警示 */
   F('1号楼','23层',2305,'1-3-39-2','格力','L4',$adtAgo(1,20)); /* 线控器供电异常·警示 */
   F('1号楼','3层',308,'2-2-3-7','海信','Z5',$adtAgo(1,23));    /* 未收录→默认警示 */
-  F('1号楼','7层',719,'1-3-23-6','格力','L6',$adtAgo(2,2));    /* 模式冲突·警示 */
+  F('1号楼','7层',719,'1-3-23-6','格力','L6',$adtAgo(2,2),$adtAgo(1,20)); /* 模式冲突·警示(已恢复待确认) */
   F('1号楼','14层',1412,'2-2-30-1','海信','11',$adtAgo(2,6));  /* 回风温度传感器异常·警示 */
   F('1号楼','7层',713,'1-1-23-1','通用','LOST',$adtAgo(2,10)); /* 通讯中断·故障 */
   F('1号楼','9层',903,'2-3-9-6','海信','12',$adtAgo(2,14));    /* 出风温度传感器异常·警示 */
   F('1号楼','7层',716,'1-1-23-2','格力','LC',$adtAgo(3,2));    /* 内外机机型不匹配·警示 */
   F('1号楼','23层',2302,'1-1-39-4','海信','0b',$adtAgo(3,8));  /* 子模块设定错误·警示 */
   F('1号楼','3层',303,'2-2-3-2','格力','LH',$adtAgo(4,4));     /* 空气质量严重浑浊报警·提示 */
-  F('1号楼','7层',707,'1-2-23-5','海信','FC',$adtAgo(0,6));    /* 过滤网清洁提示·提示 */
+  F('1号楼','7层',707,'1-2-23-5','海信','FC',$adtAgo(0,6),$adtAgo(0,1)); /* 过滤网清洁提示·提示(已恢复待确认) */
   F('1号楼','7层',714,'1-1-23-8','格力','db',$adtAgo(1,0));    /* 机组调试状态·提示 */
   F('1号楼','14层',1408,'2-1-30-3','海信','EA',$adtAgo(2,3));  /* 显示屏通讯故障·提示 */
   F('1号楼','9层',909,'2-3-9-1','格力','dn',$adtAgo(3,6));     /* 扫风部件故障·提示 */
@@ -458,26 +459,22 @@ const ALARM_PUSH_LOG_SEED=(()=>{
   const add=(proj,chan,receiver,phone,type,title,content,tpl,send,time)=>
     rows.push({proj,chan,receiver,phone,type,title,content,tpl,send,time});
   add('产品部测试-按小时预付费','短信','丁文武','138****6612','故障','空调故障预警',
-    '【飞奕云控】产品部测试-按小时预付费 1号楼7层716 内机1-1-23-2 内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,3).slice(0,16)+',请及时登录平台处理。',
+    '【空调集控】产品部测试-按小时预付费 1号楼7层716 内机1-1-23-2 内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,3).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','已发送',$adtAgo(0,3));
   add('产品部测试-按小时预付费','短信','陈品','139****2210','故障','空调故障预警',
-    '【飞奕云控】产品部测试-按小时预付费 1号楼7层707 内机1-2-23-5 排气温度过高(海信-08),等级:故障,时间:'+$adtAgo(0,4).slice(0,16)+',请及时登录平台处理。',
+    '【空调集控】产品部测试-按小时预付费 1号楼7层707 内机1-2-23-5 排气温度过高(海信-08),等级:故障,时间:'+$adtAgo(0,4).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','已发送',$adtAgo(0,4));
   add('产品部测试-按小时预付费','短信','丁文武','138****6612','故障','空调故障预警',
-    '【飞奕云控】产品部测试-按小时预付费 1号楼7层713 内机1-1-23-1 通讯中断(通用-LOST),等级:故障,时间:'+$adtAgo(0,12).slice(0,16)+',请及时登录平台处理。',
+    '【空调集控】产品部测试-按小时预付费 1号楼7层713 内机1-1-23-1 通讯中断(通用-LOST),等级:故障,时间:'+$adtAgo(0,12).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','发送失败',$adtAgo(0,12));
-  /* 根因抑制示例:控制器离线的连带故障合并为一条根因推送(「××等故障 N 条」模板) */
-  add('产品部测试-按小时预付费','短信','丁文武','138****6612','故障','故障预警(根因)',
-    '【飞奕云控】产品部测试-按小时预付费 控制器 86200945 离线,其下级设备产生内机通讯中断等故障 13 条,已合并为本条推送,详情请登录平台故障详情页查看。',
-    'hvac_root_cause_sms','已发送',$adtAgo(0,10));
   add('平台测试_新计费','短信','王运维','136****5521','警示','项目运维故障预警',
-    '【飞奕云控】平台测试_新计费 电表220415113811 可能绑错空调系统(有电量没当量):当日电量 42.6kWh,绑定的空调系统无当量数据,电费将无法正常分摊,请及时登录平台处理。',
+    '【空调集控】平台测试_新计费 电表220415113811 可能绑错空调系统(有电量没当量):当日电量 42.6kWh,绑定的空调系统无当量数据,电费将无法正常分摊,请及时登录平台处理。',
     'hvac_bill_alarm_sms','已发送',$adtAgo(1,6));
   add('平台测试_新计费','短信','李工','137****8834','警示','项目运维故障预警',
-    '【飞奕云控】平台测试_新计费 电表220415114086 未绑定任何空调系统,电量无法分摊,请及时登录平台处理。',
+    '【空调集控】平台测试_新计费 电表220415114086 未绑定任何空调系统,电量无法分摊,请及时登录平台处理。',
     'hvac_base_alarm_sms','发送中',$adtAgo(0,2));
   add('二次分摊-H','短信','丁文武','138****6612','提醒','预警每日汇总',
-    '【飞奕云控】二次分摊-H 截至'+$adtAgo(1,0).slice(0,10)+' 09:00 新增预警 6 条(故障 1、警示 3、提示 2),请登录平台查看处理。',
+    '【空调集控】二次分摊-H 截至'+$adtAgo(1,0).slice(0,10)+' 09:00 新增预警 6 条(故障 1、警示 3、提示 2),请登录平台查看处理。',
     'hvac_fault_daily_sms','已发送',$adtAgo(1,0));
   return rows;
 })();
@@ -488,14 +485,14 @@ const ALARM_PUSH_CFG_SEED={
     enabled:true,
     receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'},{name:'陈品',phone:'139****2210',src:'平台账号'}],
     scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',freq24:true,dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   },
 };
 
-/* ── 项目级故障码配置种子(演示:新增监测码) ── */
+/* ── 项目级故障码配置种子(演示:项目自定义等级——通用库 L7 无主内机 警示→本项目故障) ── */
 const ALARM_PROJ_CODE_SEED={
   '产品部测试-按小时预付费':{
-    adds:{'格力|XW':{brand:'格力',model:'室内机',code:'XW',name:'新风系统通讯故障',desc:'新风系统与室内主控通讯异常',advice:'1.检查通讯线路 2.检查新风控制板',level:2}},
+    adds:{'格力|L7':{brand:'格力',code:'L7',level:1}},
     blocks:[],
   },
 };
@@ -553,8 +550,8 @@ function $alarmCodeLookup(brand,code){
   return tryBrand(brand)||(brand!=='通用'?tryBrand('通用'):null);
 }
 
-/* ── 项目级故障码配置:项目新增(含档位调整) + 项目屏蔽
-     项目生效 = 通用代码库 + 项目新增 − 项目屏蔽(按项目隔离) ── */
+/* ── 项目级故障码配置:项目自定义(仅等级自定义;通用库未收录码经飞奕维护至通用库) + 项目屏蔽
+     项目生效 = 通用代码库 + 项目自定义等级 − 项目屏蔽(按项目隔离) ── */
 function $alarmProjCodeAll(){return $lsGet('fyAlarmProjCode',{});}
 function $alarmProjCodeGet(proj){
   const saved=$alarmProjCodeAll()[proj];
@@ -593,7 +590,7 @@ function $alarmProjEntry(brand,code,proj){
   e.level=+(add.level||(uni?uni.level:2));
   return e;
 }
-/* 项目级故障档位判定:0=本项目已屏蔽;否则 项目新增/调整 > 通用库 > 默认警示 */
+/* 项目级故障档位判定:0=本项目已屏蔽;否则 项目自定义等级 > 通用库 > 默认警示 */
 function $alarmFaultLevelProj(f,proj){
   const cfg=$alarmProjCodeGet(proj||$alarmCurProj());
   if($alarmProjBlockedKey(cfg,f.brand,f.code))return 0;
@@ -650,7 +647,6 @@ function $alarmCounts(opts){
   const c={ops:0,ac:0,base:0,bill:0,ops1:0,ops2:0,ops3:0,ac1:0,ac2:0,ac3:0,lv1:0,lv2:0,lv3:0,total:0};
   ALARM_OPS_ITEMS.forEach(r=>{
     if($alarmStatusOf(r))return;
-    if($alarmInMaint(r,proj))return;
     const t=ALARM_OPS_CATS[r.cat];
     if(t==='bill'&&!withBill)return;
     const lv=$alarmOpsLevel(r);
@@ -658,7 +654,6 @@ function $alarmCounts(opts){
   });
   ALARM_AC_FAULTS.forEach(f=>{
     if($alarmStatusOf(f))return;
-    if($alarmInMaint(f,proj))return;
     const lv=$alarmFaultLevelProj(f,proj);
     if(lv===0)return;
     c.ac++;c['ac'+lv]++;c['lv'+lv]++;
@@ -677,13 +672,11 @@ function $alarmTodayNew(opts){
   ALARM_OPS_ITEMS.forEach(r=>{
     if(r.last.slice(0,10)!==today)return;
     if(!withBill&&ALARM_OPS_CATS[r.cat]==='bill')return;
-    if($alarmInMaint(r,proj))return;
     n++;
   });
   ALARM_AC_FAULTS.forEach(f=>{
     if(f.devTime.slice(0,10)!==today)return;
     if($alarmFaultLevelProj(f,proj)===0)return;
-    if($alarmInMaint(f,proj))return;
     n++;
   });
   return n;
@@ -697,28 +690,25 @@ function $alarmRecent(n,opts){
   ALARM_OPS_ITEMS.forEach(r=>{
     const catType=ALARM_OPS_CATS[r.cat];
     if(catType==='bill'&&!withBill)return;
-    if($alarmInMaint(r,proj))return;
     const lv=$alarmOpsLevel(r);
     list.push({kind:'ops',level:lv,id:r.id,title:r.cat,obj:r.obj,info:r.info,time:r.last,done:!!$alarmStatusOf(r),gone:!!r.gone});
   });
   ALARM_AC_FAULTS.forEach(f=>{
     const lv=$alarmFaultLevelProj(f,proj);
     if(lv===0)return;
-    if($alarmInMaint(f,proj))return;
     const e=$alarmProjEntry(f.brand,f.code,proj);
-    list.push({kind:'ac',level:lv,id:f.id,title:f.code+' '+(e&&e.name?e.name:'未知故障'),obj:f.room+' '+f.addr,addr:f.addr,info:(e&&e.name?e.name:'未知故障')+' · '+ALARM_LEVELS[lv].lb,time:f.devTime,done:!!$alarmStatusOf(f)});
+    list.push({kind:'ac',level:lv,id:f.id,title:f.code+' '+(e&&e.name?e.name:'未知故障'),obj:f.room+' '+f.addr,addr:f.addr,info:(e&&e.name?e.name:'未知故障')+' · '+ALARM_LEVELS[lv].lb,time:f.devTime,done:!!$alarmStatusOf(f),gone:!!f.gone});
   });
   list.sort((a,b)=>a.time<b.time?1:-1);
   return list.slice(0,n||10);
 }
 
 /* 推送配置(按项目隔离;种子配置作为默认)
-   maint=维护窗口:窗口期内产生的故障全局忽略(不计数、不进列表、不推送),关闭窗口后恢复。
-   站内提醒由顶部铃铛红点承担(全局口径,不受推送配置影响),不设站内信通道。 */
+   站内提醒由顶部铃铛红点承担(全局口径,不受推送配置影响),不设站内信通道。
+   去重为内置规则(不可配置):同一对象同一故障仅首次发生时推送,故障恢复前不重复。 */
 function $alarmPushCfgDefault(){
   return {enabled:false,receivers:[],scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',freq24:true,dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-    maint:{on:false,from:'',to:'',note:''}};
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}}};
 }
 function $alarmPushCfgAll(){return $lsGet('fyAlarmPushCfg',{});}
 function $alarmPushCfgGet(proj){
@@ -735,18 +725,7 @@ function $alarmPushCfgGet(proj){
   cfg.strategy=Object.assign({},base.strategy||d.strategy,(saved.strategy&&typeof saved.strategy==='object')?saved.strategy:{});
   cfg.strategy.dnd=Object.assign({},(base.strategy&&base.strategy.dnd)||d.strategy.dnd,(saved.strategy&&saved.strategy.dnd&&typeof saved.strategy.dnd==='object')?saved.strategy.dnd:{});
   if(cfg.strategy.mode!=='realtime'&&cfg.strategy.mode!=='daily')cfg.strategy.mode='realtime';
-  cfg.maint=Object.assign({},base.maint||d.maint,(saved.maint&&typeof saved.maint==='object')?saved.maint:{});
   return cfg;
-}
-
-/* ── 维护窗口:故障时间落在窗口期内的记录全局忽略(计数/列表/最近/今日新增/推送均排除) ── */
-function $alarmInMaint(rec,proj){
-  const m=$alarmPushCfgGet(proj||$alarmCurProj()).maint;
-  if(!m||!m.on||!m.from||!m.to)return false;
-  const t=(rec.last||rec.devTime||'');
-  const from=m.from.replace('T',' ')+':00';
-  const to=m.to.replace('T',' ')+':59';
-  return t>=from&&t<=to;
 }
 function $alarmPushCfgSet(proj,cfg){
   const all=$alarmPushCfgAll();
