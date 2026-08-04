@@ -5,9 +5,6 @@
 <title>故障推送</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* 项目名可点开配置 */
-.pj{color:var(--primary);cursor:pointer;}
-.pj:hover{color:var(--primary-hover);}
 /* 代码库弹窗标题下的小字说明 */
 .cl-sub{display:block;font-size:12px;color:var(--ts);font-weight:400;margin-top:2px;}
 /* 配置抽屉分区 */
@@ -128,7 +125,6 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
     </div>
   </div>
   <div class="df" style="border-top:1px solid var(--bd)">
-    <button class="btn" onclick="testPush()">测试推送</button>
     <button class="btn" onclick="closeDrawer()">取消</button>
     <button class="btn btnp" onclick="saveCfg()">保存</button>
   </div>
@@ -222,7 +218,7 @@ function renderTable(){
   document.getElementById('tbody').innerHTML=rows.length?rows.map(p=>{
     const cfg=$alarmPushCfgGet(p);
     return `<tr>
-      <td><span class="pj" onclick="openDrawer('${p}')">${p}</span></td>
+      <td>${p}</td>
       <td><span class="switch ${cfg.enabled?'on':''}" onclick="toggleCh('${p}','enabled',this)"></span></td>
       <td>${scopeText(cfg)}</td>
       <td>${cfg.strategy.mode==='daily'?'每日汇总 '+cfg.strategy.dailyTime:'实时推送'}</td>
@@ -403,20 +399,6 @@ function saveCfg(){
   closeDrawer();
   renderTable();
   $msg(`「${curProj}」推送配置已保存`);
-}
-
-/* 测试推送:生成一条模拟短信记录 */
-function testPush(){
-  collectDraft();
-  if(!draft.receivers.length){$msg('请先添加接收人','error');return;}
-  const r=draft.receivers[0];
-  $alarmPushLogAdd({
-    proj:curProj,chan:'短信',receiver:r.name,phone:r.phone,type:'提醒',title:'测试推送',
-    content:`【空调集控】${curProj} 预警推送配置测试短信,收到即表示配置生效。推送范围:${scopeText(draft).replace(/<[^>]+>/g,'')};推送方式:${draft.strategy.mode==='daily'?'每日汇总 '+draft.strategy.dailyTime:'实时推送'}。`,
-    tpl:'hvac_test_sms',send:'已发送',time:$alarmNow(),
-  });
-  $msg(`已向 ${r.name}(${r.phone}) 发送测试短信,可在「推送记录」查看`);
-  renderTable();
 }
 
 /* ── 推送记录弹窗(按项目) ── */

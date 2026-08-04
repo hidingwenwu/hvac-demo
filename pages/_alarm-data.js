@@ -7,7 +7,7 @@
      fyAlarmCodeLib  通用代码库覆盖 {"品牌|代码":{...}}(原型预留,UI 不维护)
      fyAlarmProjCode 项目故障码配置 { [项目]: {adds:{"品牌|代码":entry}, blocks:["品牌|代码"]} }
      fyAlarmPushCfg  推送配置(按项目) {项目名:{enabled,receivers,scope,strategy}}
-     fyAlarmPushLog  用户产生的推送记录(测试推送等),追加在种子记录之前
+     fyAlarmPushLog  用户产生的推送记录,追加在种子记录之前
    ============================================================ */
 
 /* ── 时间助手:mock 数据相对当前时间生成,保证"持续时长/今日新增/趋势"始终真实。
@@ -697,7 +697,7 @@ function $alarmRecent(n,opts){
     const lv=$alarmFaultLevelProj(f,proj);
     if(lv===0)return;
     const e=$alarmProjEntry(f.brand,f.code,proj);
-    list.push({kind:'ac',level:lv,id:f.id,title:f.code+' '+(e&&e.name?e.name:'未知故障'),obj:f.room+' '+f.addr,addr:f.addr,info:(e&&e.name?e.name:'未知故障')+' · '+ALARM_LEVELS[lv].lb,time:f.devTime,done:!!$alarmStatusOf(f),gone:!!f.gone});
+    list.push({kind:'ac',level:lv,id:f.id,title:f.code+' '+(e&&e.name?e.name:'未知故障'),obj:f.room+' '+f.addr,addr:f.addr,code:f.code,bld:f.bld,fl:f.fl,room:f.room,info:(e&&e.name?e.name:'未知故障')+' · '+ALARM_LEVELS[lv].lb,time:f.devTime,done:!!$alarmStatusOf(f),gone:!!f.gone});
   });
   list.sort((a,b)=>a.time<b.time?1:-1);
   return list.slice(0,n||10);
@@ -733,7 +733,7 @@ function $alarmPushCfgSet(proj,cfg){
   $lsSet('fyAlarmPushCfg',all);
 }
 
-/* 推送记录:用户产生(测试推送等) + 种子,按时间倒序 */
+/* 推送记录:用户产生(真实发送写入,原型页面暂无写入入口) + 种子,按时间倒序 */
 function $alarmPushLogGet(){
   const user=$lsGet('fyAlarmPushLog',[]);
   return user.concat(ALARM_PUSH_LOG_SEED).sort((a,b)=>a.time<b.time?1:-1);

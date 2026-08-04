@@ -27,9 +27,6 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
 .detail-grid .v{color:var(--tx);word-break:break-all;line-height:1.6;}
 .advice-box{background:var(--bg-input);border:1px solid var(--bd);border-radius:4px;padding:10px 14px;line-height:1.8;white-space:pre-line;}
 .hd-sum{background:var(--bg-input);border:1px solid var(--bd);border-radius:4px;padding:10px 14px;font-size:13px;line-height:1.7;margin-bottom:14px;}
-/* 故障代码库弹窗(iframe) */
-.cl-iframe{width:100%;height:66vh;border:none;display:block;background:var(--bg);}
-.cl-sub{display:block;font-size:12px;color:var(--ts);font-weight:400;margin-top:2px;}
 /* 批量操作工具条 */
 .batch-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .batch-bar .bc-cnt{font-size:12px;color:var(--ts);}
@@ -161,17 +158,6 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
     <div class="db"><div class="detail-grid" id="acDetailGrid"></div></div>
     <div class="df">
       <button class="btn" onclick="$modalClose('dlgAcDetail')">关闭</button>
-      <button class="btn" onclick="$modalClose('dlgAcDetail');openCodeLib()">前往故障代码库</button>
-    </div>
-  </div>
-</div>
-
-<!-- 故障代码库弹窗(iframe 复用页面,当前项目;由空调故障详情「前往故障代码库」打开) -->
-<div class="modal" id="dlgCodeLib">
-  <div class="dialog" style="width:1180px;max-width:96vw">
-    <div class="dh" style="align-items:flex-start"><span><span id="clTitle">故障代码库</span><span class="cl-sub">配置仅对当前项目生效</span></span><span class="dx" onclick="closeCodeLib()">✕</span></div>
-    <div class="db" style="padding:0;max-height:none">
-      <iframe class="cl-iframe" id="clFrame" src="about:blank"></iframe>
     </div>
   </div>
 </div>
@@ -332,10 +318,9 @@ function showOpsDetail(idx){
     <span class="k">故障等级:</span><span class="v">${lvTag($alarmOpsLevel(r))}</span>
     <span class="k">故障名称:</span><span class="v">${r.cat}</span>
     <span class="k">故障对象:</span><span class="v">${r.obj}</span>
-    <span class="k">故障发生时间:</span><span class="v">${r.last}<span class="text-sub" style="margin-left:8px">本次故障开始时间</span></span>
-    <span class="k">首次发生:</span><span class="v">${r.first}<span class="text-sub" style="margin-left:8px">该设备历史首次出现同类故障</span></span>
-    ${r.gone?`<span class="k">故障恢复时间:</span><span class="v text-ok">${r.gone}</span>`:''}
-    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.last,r.gone)}${r.gone?'':'<span class="text-sub" style="margin-left:8px">至今</span>'}</span>
+    <span class="k">故障发生时间:</span><span class="v">${r.last}</span>
+    <span class="k">故障恢复时间:</span><span class="v">${r.gone?`<span class="text-ok">${r.gone}</span>`:'—'}</span>
+    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.last,r.gone)}</span>
     <span class="k">状态:</span><span class="v">${stTag(st)}</span>
     ${st==='gone'?`<span class="k">恢复确认:</span><span class="v text-wn">故障已自动恢复,请人工确认故障期间的数据是否完整(如当量/抄表数据已成功自动补拉),确认无误后点「处理」闭环。</span>`:''}
     ${sRec?`<span class="k">处理人:</span><span class="v">${sRec.by}</span>
@@ -438,19 +423,10 @@ function renderAcTable(){
 function showAcDetail(idx){
   const r=acFiltered[idx];
   const lv=lvOfAc(r);
-  const uniEntry=$alarmFaultEntry(r);
   const entry=$alarmProjEntry(r.brand,r.code);
   const st=stOf(r);
   const sRec=$alarmStatusOf(r);
-  const projCfg=$alarmProjCodeGet($alarmCurProj());
-  const padd=$alarmProjAdd(projCfg,r.brand,r.code);
-  const blocked=!!$alarmProjBlockedKey(projCfg,r.brand,r.code);
-  const adjusted=!blocked&&!!padd&&!!uniEntry;
-  let lvNote;
-  if(blocked)lvNote=`本项目已屏蔽该故障码,不产生预警计数与短信推送${uniEntry?`(通用库等级:${ALARM_LEVELS[uniEntry.level].lb})`:''}`;
-  else if(adjusted)lvNote=`依据项目自定义:通用${ALARM_LEVELS[uniEntry.level].short} → 本项目${ALARM_LEVELS[lv].short}`;
-  else if(uniEntry)lvNote=`依据通用代码库:${uniEntry.brand}-${uniEntry.code}`;
-  else lvNote='未收录代码,默认按警示处理';
+  const blocked=!!$alarmProjBlockedKey($alarmProjCodeGet($alarmCurProj()),r.brand,r.code);
   document.getElementById('acDetailGrid').innerHTML=`
     <span class="k">楼栋:</span><span class="v">${r.bld}</span>
     <span class="k">楼层:</span><span class="v">${r.fl}</span>
@@ -459,13 +435,13 @@ function showAcDetail(idx){
     <span class="k">品牌:</span><span class="v">${r.brand}</span>
     <span class="k">故障代码:</span><span class="v text-er">${r.code}</span>
     <span class="k">故障描述:</span><span class="v">${entry&&entry.name?entry.name:'<span class="text-wn">未知故障</span>'}</span>
-    <span class="k">故障等级:</span><span class="v">${lvTag(lv)}<span class="text-sub" style="margin-left:8px">${lvNote}</span></span>
+    <span class="k">故障等级:</span><span class="v">${lvTag(lv)}</span>
     ${entry&&entry.advice?`
     <span class="k">排查建议:</span><span class="v"><div class="advice-box">${entry.advice}</div></span>`
-    :(blocked?'':`<span class="k">提示:</span><span class="v text-wn">该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。</span>`)}
+    :(blocked?'':`<span class="k">排查建议:</span><span class="v"><div class="advice-box">该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。</div></span>`)}
     <span class="k">故障发生时间:</span><span class="v">${r.devTime}</span>
-    ${r.gone?`<span class="k">故障恢复时间:</span><span class="v text-ok">${r.gone}</span>`:''}
-    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.devTime,r.gone)}${r.gone?'':'<span class="text-sub" style="margin-left:8px">至今</span>'}</span>
+    <span class="k">故障恢复时间:</span><span class="v">${r.gone?`<span class="text-ok">${r.gone}</span>`:'—'}</span>
+    <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.devTime,r.gone)}</span>
     <span class="k">状态:</span><span class="v">${stTag(st)}</span>
     ${st==='gone'?`<span class="k">恢复确认:</span><span class="v text-wn">故障码已复位(故障自动恢复),请人工确认现场机组运行正常后点「处理」闭环。</span>`:''}
     ${sRec?`<span class="k">处理人:</span><span class="v">${sRec.by}</span>
@@ -473,21 +449,6 @@ function showAcDetail(idx){
     <span class="k">处理备注:</span><span class="v">${sRec.note||'—'}</span>`:''}`;
   $modal('dlgAcDetail');
 }
-/* ── 故障代码库:本页直接弹窗打开(当前项目),不再跳转仅飞奕人员可用的故障推送页 ── */
-function openCodeLib(){
-  const p=$alarmCurProj();
-  document.getElementById('clTitle').textContent=`故障代码库(当前项目:${p})`;
-  document.getElementById('clFrame').src='alarm-code-lib.html?proj='+encodeURIComponent(p);
-  $modal('dlgCodeLib');
-}
-function closeCodeLib(){
-  $modalClose('dlgCodeLib');
-  document.getElementById('clFrame').src='about:blank';
-  $alarmNotifyParent();   /* 屏蔽/调档可能已变化:通知主框架刷新铃铛 */
-  if(tab==='ac')doQueryAc();else doQueryOps();
-}
-/* 点遮罩关闭同样走 closeCodeLib,保证列表与计数刷新 */
-document.getElementById('dlgCodeLib').addEventListener('click',e=>{if(e.target.id==='dlgCodeLib')closeCodeLib();});
 
 /* ═══════ 多选与批量操作(两个 Tab 共用) ═══════ */
 const opsSel=new Set(),acSel=new Set();
