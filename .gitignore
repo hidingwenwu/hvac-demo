@@ -5,3 +5,5 @@ testcase/live-full/
 testcase/live-ac-cards/
 # 故障预警端到端验证截图产物(verify-alarm.cjs 每次运行重新生成)
 testcase/live-alarm/
+# superpower相关记录，仅本地保留。
+docs\superpowers
