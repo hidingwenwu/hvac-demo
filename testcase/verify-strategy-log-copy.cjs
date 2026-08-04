@@ -45,6 +45,10 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
 
     /* ───── 极致节能 ───── */
     await page.goto(`${BASE}/pages/strategy-ultimate.html`);
+    // 任务列表示例 10 条
+    assert.equal(await page.locator('#tbody tr').count(), 10, 'ULT 默认任务应为 10 条');
+    assert.equal(await page.locator('#tbody tr').nth(0).locator('td').nth(1).textContent(), '午休时段定时节能');
+    assert.equal(await page.locator('#tbody tr').nth(9).locator('td').nth(1).textContent(), '凌晨防冻保温');
     // 任务1:午休时段定时节能(开机/制冷/26/高,12:00起,间隔15)
     await openTaskLog(page, 0);
     assert.equal(await modalVisible(page), true, 'ULT 日志弹窗应打开');
@@ -75,7 +79,22 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
     assert.equal(rs[0].text, '执行空调控制：制冷 / 27℃ / 低风，部分空调（1-2-1-2、1-2-1-3）由于【设备离线】未执行成功。');
     assert.equal(rs[2].time, '2026-07-02 22:00:01');
     assert.equal(rs[2].text, '执行空调控制：制冷 / 27℃ / 低风。');
-    console.log('极致节能 ✓ 6 条示例(成功/部分失败×2种原因/全部失败),文案与时间正确');
+    await page.locator('#dlgLog .dx').click();
+    // 任务4(索引3):下班统一关机(仅关机,18:30起,间隔30)
+    await openTaskLog(page, 3);
+    rs = await rows(page);
+    assert.equal(rs.length, 6);
+    assert.equal(rs[0].time, '2026-07-02 19:30:03');
+    assert.equal(rs[0].text, '执行空调控制：关机，部分空调（1-2-1-2、1-2-1-3）由于【设备离线】未执行成功。');
+    assert.equal(rs[1].time, '2026-07-02 19:00:02');
+    assert.equal(rs[1].text, '执行空调控制：关机。');
+    assert.equal(rs[2].time, '2026-07-02 18:30:01');
+    await page.locator('#dlgLog .dx').click();
+    // 任务5(索引4):全天温度纠偏(仅温度项)
+    await openTaskLog(page, 4);
+    rs = await rows(page);
+    assert.equal(rs[1].text, '执行空调控制：26℃。');
+    console.log('极致节能 ✓ 10 条任务示例;6 条日志示例(成功/部分失败×2种原因/全部失败),文案与时间正确');
 
     /* ───── 环境感知联动 ───── */
     await page.goto(`${BASE}/pages/strategy-env.html`);
