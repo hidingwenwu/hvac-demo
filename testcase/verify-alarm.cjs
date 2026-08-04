@@ -1,7 +1,7 @@
 /* 故障预警功能端到端验证(2026-08-04 评审修改后形态):
    菜单(故障预警组位于电费相关与智慧运维之间,3 个子项) / 站内提醒=铃铛红点(无站内信/登录弹窗) /
    铃铛(红点;下拉面板=今日新增·未处理总数·故障级三卡片+最近3条故障级) /
-   故障总览(趋势统计7/30日柱状图切换,故障分类双饼图=未处理口径;最近故障四要素=类别-等级/名称·代码/发生对象/发生时间) /
+   故障总览(趋势统计7/30日柱状图切换,故障分类双饼图=未处理口径;最近故障列=类别/等级/名称·代码/发生对象/发生时间,从左到右) /
    故障详情(项目运维一期8类;双 Tab 均含 故障发生/恢复时间·持续时长 列与恢复时间筛选;
      空调列表无故障名称列、故障代码纯文本、经操作列-详情看明细;批量处理/批量忽略,无批量删除;
      详情弹窗:等级仅展示标签(未收录默认警示的提示并入排查建议)、时间字段无后缀文案、恢复时间常显、无「前往故障代码库」) /
@@ -164,13 +164,18 @@ const server = http.createServer((req, res) => {
     assert.ok(/条(.*%)/.test(tip0) || /条\(\d+(\.\d+)?%\)/.test(tip0), 'hover 提示应含数字与比例: ' + tip0);
     assert.ok((await page.frameLocator('#fr').locator('#share').innerText()).includes('当前全部未处理故障'), '注释应说明未处理口径');
     assert.equal(await page.frameLocator('#fr').locator('.recent-row').count(), 10);
-    /* 最近故障四要素(2026-08-04 评审):类别-等级标签 / 名称·代码 / 发生对象 / 故障发生时间(完整时间戳) */
-    const recRows = await page.frameLocator('#fr').locator('.recent-row').allTextContents();
-    assert.ok(recRows.every(t => /(项目运维|空调故障)-(故障|警示|提示)/.test(t)), '每行应含「类别-等级」标签');
-    assert.ok(recRows.every(t => /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(t)), '每行应含完整故障发生时间: ' + recRows[0]);
-    const recAc = recRows.find(t => t.includes('空调故障'));
-    assert.ok(recAc && /号楼-\d+层-\d+\(\d+-\d+-\d+-\d+\)/.test(recAc), '空调行发生对象应为 楼栋-楼层-房间(内机地址): ' + recAc);
-    assert.ok(!recRows.some(t => t.includes('已处理')), '最近故障不再展示已处理标记');
+    /* 最近故障(2026-08-04 评审):类别与等级分列,名称·代码/发生对象/发生时间从左到右依次排列 */
+    const recChk = await fr.evaluate(() => [...document.querySelectorAll('.recent-row')].map(row => ({
+      cat: row.querySelector('.rcat').textContent.trim(),
+      lv: row.querySelector('.rlv .tag').textContent.trim(),
+      obj: row.querySelector('.ro').textContent.trim(),
+      time: row.querySelector('.rm').textContent.trim(),
+    })));
+    assert.ok(recChk.every(x => ['项目运维', '空调故障'].includes(x.cat)), '故障类别应分列展示: ' + JSON.stringify(recChk[0]));
+    assert.ok(recChk.every(x => ['故障', '警示', '提示'].includes(x.lv)), '故障等级应独立成列(标签): ' + JSON.stringify(recChk[0]));
+    assert.ok(recChk.every(x => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(x.time)), '发生时间应为完整时间戳: ' + recChk[0].time);
+    const recAc = recChk.find(x => x.cat === '空调故障');
+    assert.ok(recAc && /号楼-\d+层-\d+\(\d+-\d+-\d+-\d+\)/.test(recAc.obj), '空调发生对象应为 楼栋-楼层-房间(内机地址): ' + recAc.obj);
     await page.screenshot({ path: path.join(SHOT, 'alarm-overview.png') });
     console.log('OK 故障总览:7 卡片(未处理45/运维18/空调27/故障19/警示20/提示6),趋势7↔30切换,故障分类双饼图');
 
