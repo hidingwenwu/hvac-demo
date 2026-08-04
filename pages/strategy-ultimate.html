@@ -204,12 +204,8 @@
 
 <div class="modal" id="dlgLog">
   <div class="dialog" style="width:640px">
-    <div class="dh"><span>空调控制指令记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
-    <div class="db">
-      <div class="log-row"><span class="lt">2026-07-02 12:00:01</span><span>801会议室、803会议室：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
-      <div class="log-row"><span class="lt">2026-07-02 12:15:02</span><span>产品部办公区：下发开机制冷 26℃ 高风</span><span class="tag tok">成功</span></div>
-      <div class="log-row"><span class="lt">2026-07-02 12:30:01</span><span>研发部 2 台离线，其他空调下发成功</span><span class="tag twn">部分成功</span></div>
-    </div>
+    <div class="dh"><span id="logTitle">空调控制指令记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
+    <div class="db" id="logBody"></div>
     <div class="df"><button class="btn" onclick="$modalClose('dlgLog')">关闭</button></div>
   </div>
 </div>
@@ -275,7 +271,7 @@ function renderTable(){
       <td><span class="op">
         <a onclick="openTask('edit',${i})">编辑</a>
         <a onclick="openTask('copy',${i})">复制</a>
-        <a onclick="openLog()">日志</a>
+        <a onclick="openLog(${i})">日志</a>
         <a class="danger" onclick="deleteTask(${i})">删除</a>
       </span></td>
     </tr>`;}).join('')
@@ -475,7 +471,32 @@ function openTask(mode,i){
   $modal('dlgTask');
 }
 function openUltimateHelp(){$modal('dlgUltimateHelp');}
-function openLog(){$modal('dlgLog');}
+/* 日志指令文本:已设置项以 " / " 连接(与追溯文案模板一致) */
+function logCmdText(r){
+  const parts=[];
+  if(r.power&&r.power!=='不设置') parts.push(r.power);
+  if(r.mode&&r.mode!=='不设置') parts.push(r.mode);
+  if(r.temp) parts.push(r.temp+'℃');
+  if(r.fan&&r.fan!=='不设置') parts.push(r.fan+'风');
+  return parts.join(' / ');
+}
+/* 日志仅记录对空调的控制动作与执行结果(不体现房间,房间范围以任务为准),用于空调状态追溯、明确控制指令来源;异常原因按实际情况填写 */
+function openLog(i){
+  const r=TASKS[i];
+  document.getElementById('logTitle').textContent=`空调控制指令记录 - ${r.name}`;
+  const cmd=logCmdText(r),t0=minutesFromTime(r.ts);
+  const logs=[
+    [`2026-07-02 ${fmt(t0+r.iv*2)}:03`,`执行空调控制：${cmd}，部分空调（1-2-1-2、1-2-1-3）由于【设备离线】未执行成功。`,'ter','异常'],
+    [`2026-07-02 ${fmt(t0+r.iv)}:02`,`执行空调控制：${cmd}。`,'tok','成功'],
+    [`2026-07-02 ${fmt(t0)}:01`,`执行空调控制：${cmd}。`,'tok','成功'],
+    [`2026-07-01 ${fmt(t0+r.iv*2)}:03`,`执行空调控制：${cmd}，部分空调（1-2-1-5）由于【状态锁定】未执行成功。`,'ter','异常'],
+    [`2026-07-01 ${fmt(t0+r.iv)}:02`,`执行空调控制：${cmd}。`,'tok','成功'],
+    [`2026-07-01 ${fmt(t0)}:01`,`执行空调控制：${cmd}，全部空调由于【设备离线】未执行成功。`,'ter','异常'],
+  ];
+  document.getElementById('logBody').innerHTML=logs.map(l=>
+    `<div class="log-row"><span class="lt">${l[0]}</span><span>${l[1]}</span><span class="tag ${l[2]}">${l[3]}</span></div>`).join('');
+  $modal('dlgLog');
+}
 
 /* ══════════ 校验与保存(原版规则全部保留) ══════════ */
 function numberInRange(value,min,max,decimals){
