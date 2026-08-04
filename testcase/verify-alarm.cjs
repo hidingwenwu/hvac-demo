@@ -237,10 +237,9 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#dlgOpsDetail button', { hasText: '关闭' }).click();
     await page.waitForTimeout(200);
     await page.frameLocator('#fr').locator('#opsBody .op a', { hasText: '处理' }).first().click();
-    /* 处理弹窗摘要(2026-08-04 评审):运维仅 故障名称+故障对象 */
+    /* 处理弹窗摘要(2026-08-04 评审):运维仅一行 故障对象:故障名称 */
     const opsHandleSum = await page.frameLocator('#fr').locator('#handleSum').innerText();
-    assert.ok(opsHandleSum.includes('控制器离线') && opsHandleSum.includes('86200945'), '运维处理弹窗摘要应含故障名称+故障对象');
-    assert.ok(!opsHandleSum.includes('起离线') && !opsHandleSum.includes('基础配置') && !opsHandleSum.includes('持续 10 小时'), '运维处理弹窗摘要不应含故障描述/子类/等级信息');
+    assert.ok(opsHandleSum.trim() === '控制器 86200945:控制器离线', '运维处理弹窗摘要应为一行 故障对象:故障名称: ' + opsHandleSum);
     await page.frameLocator('#fr').locator('#handleNote').fill('已现场处理,控制器恢复在线');
     await page.frameLocator('#fr').locator('#handleBy').fill('张三');
     await page.frameLocator('#fr').locator('#dlgHandle button', { hasText: '确认处理' }).click();

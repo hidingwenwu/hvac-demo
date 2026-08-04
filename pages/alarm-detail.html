@@ -486,8 +486,8 @@ function openHandle(kind,idx){
   handleCtx={kind,items:[{id:r.id,occur:r.last||r.devTime}]};   /* occur=本次故障时间:复发后旧状态自动失效 */
   let sum;
   if(kind==='ops'){
-    /* 摘要仅:故障名称 + 故障对象 */
-    sum=`<b>${r.cat}</b><br>${r.obj}`;
+    /* 摘要仅一行:故障对象:故障名称 */
+    sum=`<b>${r.obj}:${r.cat}</b>`;
   }else{
     /* 摘要仅:内机位置(楼栋楼层房间)/内机地址/故障代码/故障描述/排查建议(未收录码提示与详情弹窗一致) */
     const entry=$alarmProjEntry(r.brand,r.code);
