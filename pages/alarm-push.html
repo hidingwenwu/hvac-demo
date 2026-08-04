@@ -111,7 +111,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         <label class="ck"><input type="radio" name="dMode" value="daily"> 每日汇总</label>
         <input type="time" id="dDailyTime" value="09:00" style="width:110px;display:none">
       </div>
-      <div class="st-row">
+      <div class="st-row" id="dDndRow">
         <span class="fl2">免打扰时段</span>
         <span class="switch" id="dDnd" onclick="this.classList.toggle('on');syncDnd()"></span>
         <span id="dDndRange" style="display:none;align-items:center;gap:6px">
@@ -121,7 +121,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         </span>
       </div>
       <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内产生的预警不发送短信(时段结束后不补发);勾选「<b>故障级豁免</b>」后,故障级预警不受免打扰限制、仍照常推送,确保严重故障不漏报。豁免仅决定是否发送短信,平台内记录与统计不受影响。</div>
-      <div class="tip">推送策略仅作用于短信(铃铛红点为全局提醒,不适用);生效优先级:推送方式 → 免打扰(故障级豁免仅对实时推送生效;每日汇总时刻落入免打扰时段时,顺延至时段结束后发送)。</div>
+      <div class="tip">推送策略仅作用于短信(铃铛红点为全局提醒,不适用);生效优先级:推送方式 → 免打扰;免打扰时段(含故障级豁免)仅对实时推送生效,选择每日汇总时无需设定免打扰。</div>
     </div>
   </div>
   <div class="df" style="border-top:1px solid var(--bd)">
@@ -264,10 +264,9 @@ function openDrawer(proj){
   /* 策略(mode 已在数据层合并防御,此处再兜底一次) */
   const mode=(draft.strategy.mode==='daily')?'daily':'realtime';
   document.querySelector(`input[name="dMode"][value="${mode}"]`).checked=true;
-  document.getElementById('dDailyTime').style.display=draft.strategy.mode==='daily'?'inline-block':'none';
   document.getElementById('dDailyTime').value=draft.strategy.dailyTime||'09:00';
   document.getElementById('dDnd').classList.toggle('on',!!(draft.strategy.dnd&&draft.strategy.dnd.on));
-  syncDnd();
+  syncMode();syncDnd();
   if(draft.strategy.dnd){
     document.getElementById('dDndFrom').value=draft.strategy.dnd.from||'22:00';
     document.getElementById('dDndTo').value=draft.strategy.dnd.to||'08:00';
@@ -288,11 +287,16 @@ function syncDnd(){
   document.getElementById('dDndRange').style.display=on?'inline-flex':'none';
   document.getElementById('dDndTip').style.display=on?'block':'none';
 }
+/* 推送方式联动:每日汇总显示汇总时刻;免打扰时段仅实时推送可设(每日汇总无需设定) */
+function syncMode(){
+  const daily=document.querySelector('input[name="dMode"]:checked').value==='daily';
+  document.getElementById('dDailyTime').style.display=daily?'inline-block':'none';
+  document.getElementById('dDndRow').style.display=daily?'none':'flex';
+  if(daily)document.getElementById('dDndTip').style.display='none';
+  else syncDnd();
+}
 document.querySelectorAll('input[name="dMode"]').forEach(r=>{
-  r.addEventListener('change',()=>{
-    document.getElementById('dDailyTime').style.display=
-      document.querySelector('input[name="dMode"]:checked').value==='daily'?'inline-block':'none';
-  });
+  r.addEventListener('change',syncMode);
 });
 
 /* 接收人编辑 */
@@ -384,7 +388,7 @@ function collectDraft(){
   if(document.getElementById('dCatAc').checked)cats.push('ac');
   draft.scope={levels,cats};
   const mode=document.querySelector('input[name="dMode"]:checked').value;
-  const dndOn=document.getElementById('dDnd').classList.contains('on');
+  const dndOn=mode!=='daily'&&document.getElementById('dDnd').classList.contains('on');   /* 每日汇总无免打扰,保存即不生效 */
   draft.strategy={
     mode,
     dailyTime:document.getElementById('dDailyTime').value||'09:00',

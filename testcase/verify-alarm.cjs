@@ -514,6 +514,25 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.frameLocator('#fr').locator('#drawer button', { hasText: '测试推送' }).count(), 0, '抽屉应无「测试推送」按钮');
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.waitForTimeout(200);
+    /* 每日汇总无需免打扰(2026-08-04):选每日汇总隐藏免打扰设置且保存后不生效,切回实时恢复 */
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
+    await page.frameLocator('#fr').locator('#drawer.show').waitFor();
+    assert.ok(await page.frameLocator('#fr').locator('#dDndRow').isVisible(), '实时推送应展示免打扰设置');
+    await page.frameLocator('#fr').locator('input[name="dMode"][value="daily"]').check();
+    assert.ok(await page.frameLocator('#fr').locator('#dDailyTime').isVisible(), '每日汇总应显示汇总时刻');
+    assert.ok(await page.frameLocator('#fr').locator('#dDndRow').isHidden(), '每日汇总时不展示免打扰设置');
+    await page.frameLocator('#fr').locator('#drawer button', { hasText: '保存' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#tbody tr').first().innerText()).includes('每日汇总'), '保存后列表应显示每日汇总');
+    assert.equal(await fr.evaluate(() => window.$alarmPushCfgGet('产品部测试-按小时预付费').strategy.dnd.on), false, '每日汇总保存后免打扰不生效');
+    /* 恢复实时推送(演示默认态) */
+    await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
+    await page.frameLocator('#fr').locator('#drawer.show').waitFor();
+    await page.frameLocator('#fr').locator('input[name="dMode"][value="realtime"]').check();
+    assert.ok(await page.frameLocator('#fr').locator('#dDndRow').isVisible(), '切回实时应恢复免打扰设置');
+    await page.frameLocator('#fr').locator('#drawer button', { hasText: '保存' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('#tbody tr').first().innerText()).includes('实时推送'), '恢复后列表应显示实时推送');
     /* 故障代码库:操作列按项目弹窗(iframe 带 ?proj=),标题=故障代码库(当前项目:xxx)+小字说明 */
     await page.frameLocator('#fr').locator('#tbody .op a', { hasText: '故障代码库' }).first().click();
     await page.waitForTimeout(900);
@@ -565,7 +584,7 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.waitForTimeout(200);
     await page.screenshot({ path: path.join(SHOT, 'alarm-push.png') });
-    console.log('OK 故障推送:6 列表格、项目名纯文本、推送方式筛选、合并推送配置抽屉(范围+接收人+策略;去重后台内置不展示;无测试推送)、推送记录 3 条种子、代码库弹窗、001 手机号验证码验证后添加保存');
+    console.log('OK 故障推送:6 列表格、项目名纯文本、推送方式筛选、合并推送配置抽屉(范围+接收人+策略;去重后台内置不展示;无测试推送)、每日汇总免打扰联动、推送记录 3 条种子、代码库弹窗、001 手机号验证码验证后添加保存');
 
     /* ── 9. 非计费项目(001):计费分摊过滤 ── */
     await page.selectOption('#projSel', '001');
