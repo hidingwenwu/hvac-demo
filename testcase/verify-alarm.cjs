@@ -237,6 +237,10 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#dlgOpsDetail button', { hasText: '关闭' }).click();
     await page.waitForTimeout(200);
     await page.frameLocator('#fr').locator('#opsBody .op a', { hasText: '处理' }).first().click();
+    /* 处理弹窗摘要(2026-08-04 评审):运维仅 故障名称+故障对象 */
+    const opsHandleSum = await page.frameLocator('#fr').locator('#handleSum').innerText();
+    assert.ok(opsHandleSum.includes('控制器离线') && opsHandleSum.includes('86200945'), '运维处理弹窗摘要应含故障名称+故障对象');
+    assert.ok(!opsHandleSum.includes('起离线') && !opsHandleSum.includes('基础配置') && !opsHandleSum.includes('持续 10 小时'), '运维处理弹窗摘要不应含故障描述/子类/等级信息');
     await page.frameLocator('#fr').locator('#handleNote').fill('已现场处理,控制器恢复在线');
     await page.frameLocator('#fr').locator('#handleBy').fill('张三');
     await page.frameLocator('#fr').locator('#dlgHandle button', { hasText: '确认处理' }).click();
@@ -248,7 +252,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await fr.evaluate(() => window.$alarmStatus('ops-1').by), '张三');
     assert.equal(await bellTotal(), 44);
     await page.screenshot({ path: path.join(SHOT, 'alarm-detail-ops.png') });
-    console.log('OK 项目运维 Tab:一期8类名称、三档卡 8/10/0、含待确认口径 18→17、计费分摊 8、铃铛总数 44');
+    console.log('OK 项目运维 Tab:一期8类名称、三档卡 8/10/0、含待确认口径 18→17、计费分摊 8、处理摘要=名称+对象、铃铛总数 44');
 
     /* ── 6. 故障详情-空调故障 Tab(?tab=ac 直达) ── */
     fr = await nav('alarm-detail', 'tab=ac');
@@ -292,6 +296,14 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.frameLocator('#fr').locator('#dlgCodeLib').count(), 0, '故障详情页不再内嵌代码库弹窗');
     await page.frameLocator('#fr').locator('#dlgAcDetail button', { hasText: '关闭' }).click();
     await page.waitForTimeout(200);
+    /* 处理弹窗摘要(2026-08-04 评审):空调仅 内机位置/内机地址/故障代码/故障描述/排查建议 */
+    await page.frameLocator('#fr').locator('#acBody .op a', { hasText: '处理' }).first().click();
+    const acHandleSum = await page.frameLocator('#fr').locator('#handleSum').innerText();
+    assert.ok(acHandleSum.includes('1号楼') && acHandleSum.includes('7层') && acHandleSum.includes('716') && acHandleSum.includes('1-1-23-2'), '空调处理弹窗摘要应含内机位置与内机地址');
+    assert.ok(acHandleSum.includes('L1') && acHandleSum.includes('内风机保护') && acHandleSum.includes('排查建议'), '空调处理弹窗摘要应含故障代码/故障描述/排查建议');
+    assert.ok(!acHandleSum.includes('依据通用代码库') && !acHandleSum.includes('故障级'), '空调处理弹窗摘要不应含等级/判定依据信息');
+    await page.frameLocator('#fr').locator('#dlgHandle button', { hasText: '取消' }).click();
+    await page.waitForTimeout(200);
     /* 未收录代码 X9:未知故障 + 默认警示 + 提示并入排查建议 */
     await page.frameLocator('#fr').locator('#aCode').fill('X9');
     await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
@@ -302,7 +314,7 @@ const server = http.createServer((req, res) => {
     assert.ok(x9Detail.includes('排查建议') && x9Detail.includes('请联系飞奕维护至通用故障码库'), '未收录提示应并入排查建议');
     await page.frameLocator('#fr').locator('#dlgAcDetail button', { hasText: '关闭' }).click();
     await page.screenshot({ path: path.join(SHOT, 'alarm-detail-ac.png') });
-    console.log('OK 空调故障 Tab:27 条、三档卡 11/10/6、无名称列/代码纯文本、恢复时间+持续时长、已恢复待确认 3 条、详情联查通用库(描述/排查建议)、无前往代码库入口、未收录默认警示提示入排查建议');
+    console.log('OK 空调故障 Tab:27 条、三档卡 11/10/6、无名称列/代码纯文本、恢复时间+持续时长、已恢复待确认 3 条、详情联查通用库(描述/排查建议)、无前往代码库入口、未收录默认警示提示入排查建议、处理摘要=位置/地址/代码/描述/建议');
 
     /* ── 7. 故障代码库(直达页面):项目自定义(仅等级自定义)+ 屏蔽联动 ── */
     fr = await nav('alarm-code-lib');

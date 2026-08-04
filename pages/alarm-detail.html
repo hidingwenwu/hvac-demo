@@ -486,11 +486,14 @@ function openHandle(kind,idx){
   handleCtx={kind,items:[{id:r.id,occur:r.last||r.devTime}]};   /* occur=本次故障时间:复发后旧状态自动失效 */
   let sum;
   if(kind==='ops'){
-    sum=`<b>${r.obj}</b> · ${r.cat}(${ALARM_OPS_CAT_LABEL[ALARM_OPS_CATS[r.cat]]} · ${ALARM_LEVELS[$alarmOpsLevel(r)].lb})<br>${r.info}`;
+    /* 摘要仅:故障名称 + 故障对象 */
+    sum=`<b>${r.cat}</b><br>${r.obj}`;
   }else{
+    /* 摘要仅:内机位置(楼栋楼层房间)/内机地址/故障代码/故障描述/排查建议(未收录码提示与详情弹窗一致) */
     const entry=$alarmProjEntry(r.brand,r.code);
-    const lv=lvOfAc(r);
-    sum=`<b>${r.bld} ${r.fl} ${r.room}</b> · 内机 ${r.addr}<br>${r.brand}-${r.code} ${entry&&entry.name?entry.name:'未知故障'} · ${lv===0?'已屏蔽':ALARM_LEVELS[lv].lb}`;
+    const blocked=!!$alarmProjBlockedKey($alarmProjCodeGet($alarmCurProj()),r.brand,r.code);
+    const advice=entry&&entry.advice?entry.advice:(blocked?'—':'该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。');
+    sum=`<b>${r.bld} ${r.fl} ${r.room}</b> · 内机 ${r.addr}<br>故障代码 ${r.code} · ${entry&&entry.name?entry.name:'未知故障'}<br><div style="white-space:pre-line">排查建议:${advice}</div>`;
   }
   document.getElementById('handleSum').innerHTML=sum;
   document.getElementById('handleNote').value='';
