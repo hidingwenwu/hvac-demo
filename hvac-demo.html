@@ -493,18 +493,23 @@ initAnnouncement();
 
 /* ── 预警通知(铃铛角标 + 下拉面板,数据来自共享数据层 _alarm-data.js) ── */
 const alarmPanel=document.getElementById('alarmPanel');
-function toggleAlarmPanel(e){
-  e.stopPropagation();
-  if(alarmPanel.classList.contains('show')){alarmPanel.classList.remove('show');return;}
+function openAlarmPanel(){
   renderAlarmPanel();
   const rect=document.getElementById('alarmBell').getBoundingClientRect();
   alarmPanel.style.top=(rect.bottom+8)+'px';
   alarmPanel.style.left=Math.max(8,rect.right-380)+'px';
   alarmPanel.classList.add('show');
 }
+function toggleAlarmPanel(e){
+  e.stopPropagation();
+  if(alarmPanel.classList.contains('show')){alarmPanel.classList.remove('show');return;}
+  openAlarmPanel();
+}
 document.addEventListener('click',e=>{
   if(!alarmPanel.contains(e.target)&&e.target.closest('#alarmBell')==null)alarmPanel.classList.remove('show');
 });
+/* 点击子页面(iframe)区域时顶层窗口失焦,同样收起面板 */
+window.addEventListener('blur',()=>alarmPanel.classList.remove('show'));
 function goAlarm(id,query){
   alarmPanel.classList.remove('show');
   nav(id,query);
@@ -555,6 +560,18 @@ refreshBell();
 
 /* 站内提醒由顶部铃铛承担:有未处理故障即红点(全局口径,不依赖任何推送配置),
    点开面板预览、进详情页查看;不单独建设站内信/登录弹窗 */
+
+/* ── 登录提醒:项目物业管理员(即项目主账号)登录后,若存在未处理故障,自动展开铃铛故障摘要一次;
+     点击页面其他位置、刷新或跳转其他页面后自动隐藏(每个登录会话仅自动展开一次,刷新不重复弹出);
+     其他角色登录不自动展开,可手动点击铃铛查看。原型以项目主账号视角演示 ── */
+(function autoShowAlarmPanel(){
+  try{
+    if(sessionStorage.getItem('fyBellAutoShown'))return;
+    sessionStorage.setItem('fyBellAutoShown','1');
+  }catch(e){}
+  if(!$alarmCounts({bill:$alarmProjBill(projSel.value)}).total)return;   /* 无未处理故障不提醒 */
+  setTimeout(openAlarmPanel,300);
+})();
 
 applyProjMeta();renderBC();
 </script>

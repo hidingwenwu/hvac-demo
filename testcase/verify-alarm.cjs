@@ -1,6 +1,6 @@
 /* 故障预警功能端到端验证(2026-08-04 评审修改后形态):
    菜单(故障预警组位于电费相关与智慧运维之间,3 个子项) / 站内提醒=铃铛红点(无站内信/登录弹窗) /
-   铃铛(红点;下拉面板=今日新增·未处理总数·故障级三卡片+最近3条故障级) /
+   铃铛(红点;登录自动展开故障摘要一次=项目物业管理员视角,点他处/子页面/刷新自动隐藏;下拉面板=今日新增·未处理总数·故障级三卡片+最近3条故障级) /
    故障总览(趋势统计7/30日柱状图切换,故障分类双饼图=未处理口径;最近故障列=类别/等级/名称·代码/发生对象/发生时间,从左到右) /
    故障详情(项目运维一期8类;双 Tab 均含 故障发生/恢复时间·持续时长 列与恢复时间筛选;
      空调列表无故障名称列、故障代码纯文本、经操作列-详情看明细;批量处理/批量忽略,无批量删除;
@@ -81,8 +81,8 @@ const server = http.createServer((req, res) => {
     /* ── 3. 铃铛角标(红点)与下拉面板(三卡片:今日新增/未处理总数/故障级 + 最近3条故障级) ── */
     assert.ok(await page.locator('#alarmBdg').isVisible(), '有未处理故障时铃铛应显红点');
     assert.equal((await page.locator('#alarmBdg').innerText()).trim(), '', '铃铛红点不应展示数量');
-    await page.click('#alarmBell');
-    await page.waitForSelector('#alarmPanel.show');
+    /* 登录提醒(项目物业管理员=项目主账号):登录后自动展开铃铛故障摘要一次(有未处理故障才展开) */
+    await page.waitForSelector('#alarmPanel.show', { timeout: 3000 });
     const cnts = await page.evaluate(() => [...document.querySelectorAll('.ap-cnt .n')].map(e => +e.textContent));
     const expToday = await page.evaluate(() => window.$alarmTodayNew());
     assert.deepEqual(cnts, [expToday, 45, 19]);   // 今日新增(动态)/未处理总数/故障级
@@ -92,8 +92,20 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('.ap-item').count(), 3, '明细仅展示最近 3 条故障级');
     assert.ok((await page.locator('#alarmPanel').innerText()).includes('查看详情'));
     await page.screenshot({ path: path.join(SHOT, 'shell-bell.png') });
+    /* 点击页面其他位置自动隐藏 */
     await page.click('.hd-left');
-    console.log(`OK 铃铛:红点;三卡片 今日新增${expToday}/未处理45/故障级19,明细3条故障级`);
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator('#alarmPanel.show').count(), 0, '点击面板外区域后应自动隐藏');
+    /* 刷新后不再自动展开(每登录会话仅一次);手动点击铃铛可再展开 */
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(900);
+    assert.equal(await page.locator('#alarmPanel.show').count(), 0, '刷新后不应再自动展开(每登录会话仅一次)');
+    await page.click('#alarmBell');
+    await page.waitForSelector('#alarmPanel.show');
+    await page.click('.hd-left');
+    await page.waitForTimeout(200);
+    console.log(`OK 铃铛:红点;登录自动展开摘要一次(点他处/刷新自动隐藏);三卡片 今日新增${expToday}/未处理45/故障级19,明细3条故障级`);
 
     /* 子页面导航助手 */
     async function nav(id, q) {
@@ -176,6 +188,12 @@ const server = http.createServer((req, res) => {
     assert.ok(recChk.every(x => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(x.time)), '发生时间应为完整时间戳: ' + recChk[0].time);
     const recAc = recChk.find(x => x.cat === '空调故障');
     assert.ok(recAc && /号楼-\d+层-\d+\(\d+-\d+-\d+-\d+\)/.test(recAc.obj), '空调发生对象应为 楼栋-楼层-房间(内机地址): ' + recAc.obj);
+    /* 铃铛面板:点击子页面(iframe)区域自动隐藏(登录提醒交互;点在面板遮挡不到的「最近故障」标题) */
+    await page.click('#alarmBell');
+    await page.waitForSelector('#alarmPanel.show');
+    await page.frameLocator('#fr').locator('.panel-title', { hasText: '最近故障' }).click();
+    await page.waitForTimeout(250);
+    assert.equal(await page.locator('#alarmPanel.show').count(), 0, '点击子页面区域后面板应自动隐藏');
     await page.screenshot({ path: path.join(SHOT, 'alarm-overview.png') });
     console.log('OK 故障总览:7 卡片(未处理45/运维18/空调27/故障19/警示20/提示6),趋势7↔30切换,故障分类双饼图');
 
