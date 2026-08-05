@@ -38,7 +38,7 @@
   <div class="hint-bar">
     <span class="hi">ⓘ</span>
     <span>以下故障码在本项目按自定义等级生效（不影响通用代码库与其他项目）。<br>
-    <span class="sub">适用场景：通用代码库中的故障等级与本项目认定不同。如遇通用代码库未收录的故障码需要监测，请联系飞奕维护至通用故障码库（维护后自动纳入全部项目监测范围）。</span></span>
+    <span class="sub">适用场景：通用代码库中的故障等级与本项目认定不同。如遇通用代码库未收录的故障码需要监测，请联系技术人员维护至通用故障码库（维护后自动纳入全部项目监测范围）。</span></span>
   </div>
   <div class="fb" style="justify-content:flex-end">
     <button class="btn btns" onclick="openProjAdd(null)">+ 添加自定义故障码</button>
@@ -215,7 +215,7 @@ function paKeyChange(keepVals){
     tip.textContent=`「${brand}」存在仅大小写不同的并存码(${$alarmCiSiblings(brand,code).map(x=>x.code+'='+x.name).join(';')}),两者为不同故障,请按设备上报的大小写精确填写。`;
   }else{
     tip.className='scn-tip s2';
-    tip.textContent='通用代码库无此故障码,无法自定义等级;如需监测该码,请联系飞奕维护至通用故障码库(维护后自动纳入监测,再按需自定义等级)。';
+    tip.textContent='通用代码库无此故障码,无法自定义等级;如需监测该码,请联技术人员维护至通用故障码库(维护后自动纳入监测,再按需自定义等级)。';
   }
 }
 function doSaveProjAdd(){
@@ -230,7 +230,7 @@ function doSaveProjAdd(){
   }
   /* 仅支持等级自定义:通用库必须已收录该码 */
   const uni=$alarmCodeLookup(brand,code);
-  if(!uni){$msg('通用代码库无此故障码,无法自定义等级;请联系飞奕维护至通用故障码库','error');return;}
+  if(!uni){$msg('通用代码库无此故障码,无法自定义等级;请联技术人员维护至通用故障码库','error');return;}
   const key=brand+'|'+code;   /* 键保留原始大小写;匹配时按规则容错(见 _alarm-data.js) */
   const cfg=$alarmProjCodeGet(curProj);
   if(!paEditKey&&$alarmProjAdd(cfg,brand,code)){$msg('该故障码已有项目自定义配置','error');return;}
