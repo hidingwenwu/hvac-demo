@@ -5,8 +5,6 @@
 <title>极致节能</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* ── 页面头:面包屑(原版分区) ── */
-.crumb{font-size:12px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px;}
 .toolbar{display:flex;gap:10px;margin-bottom:14px;}
 .status-cell{display:inline-flex;align-items:center;gap:10px;}
 
@@ -65,25 +63,24 @@
 </style>
 </head>
 <body>
-<!-- 页面头:标题 + 面包屑 + 策略说明标签(原版分区) -->
-<div class="ph">
-  <div>
-    <div class="pt">极致节能</div>
-    <div class="crumb">节能策略 <span>/</span> 极致节能</div>
-  </div>
-</div>
-
 <!-- 筛选栏 -->
 <div class="fb">
-  <div class="fi"><span class="fl">房间编号</span>
+  <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:180px"></div>
+  <div class="fi"><span class="fl">状态</span>
+    <select id="fStatus" style="width:150px"><option value="">全部状态</option><option>启用</option><option>停用</option></select>
+  </div>
+  <div class="fi"><span class="fl">房间</span>
     <select id="fRoom" style="width:200px">
       <option value="">全部房间</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">生效日期</span>
+  <div class="fi"><span class="fl">开始日期</span>
     <input type="date" id="fS1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fS2" style="width:140px">
   </div>
-  <div class="fi"><span class="fl">最后修改时间</span>
+  <div class="fi"><span class="fl">结束日期</span>
+    <input type="date" id="fE1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fE2" style="width:140px">
+  </div>
+  <div class="fi"><span class="fl">最后修改</span>
     <input type="date" id="fC1" style="width:140px"><span class="text-sub">至</span><input type="date" id="fC2" style="width:140px">
   </div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
@@ -260,9 +257,13 @@ let filtered=TASKS.slice();
 const pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
 function doQuery(){
   const v=id=>document.getElementById(id).value;
+  const n=v('fName').trim();
   filtered=TASKS.filter(r=>
+    (!n||r.name.includes(n))&&
+    (!v('fStatus')||r.status===v('fStatus'))&&
     (!v('fRoom')||r.rooms.includes(v('fRoom')))&&
-    (!v('fS1')||r.end>=v('fS1'))&&(!v('fS2')||r.start<=v('fS2'))&&
+    (!v('fS1')||r.start>=v('fS1'))&&(!v('fS2')||r.start<=v('fS2'))&&
+    (!v('fE1')||r.end>=v('fE1'))&&(!v('fE2')||r.end<=v('fE2'))&&
     (!v('fC1')||r.mt>=v('fC1'))&&(!v('fC2')||r.mt<=v('fC2')+' 23:59:59')
   );
   pg.page=1;pg.total=filtered.length;
@@ -270,7 +271,7 @@ function doQuery(){
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  ['fRoom','fS1','fS2','fC1','fC2'].forEach(id=>document.getElementById(id).value='');
+  ['fName','fStatus','fRoom','fS1','fS2','fE1','fE2','fC1','fC2'].forEach(id=>document.getElementById(id).value='');
   doQuery();
 }
 function policyText(r){

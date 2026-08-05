@@ -78,14 +78,20 @@
 <body>
 <div class="fb">
   <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:180px"></div>
-  <div class="fi"><span class="fl">生效日期</span>
-    <input type="date" id="fStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:145px">
-  </div>
-  <div class="fi"><span class="fl">最后修改时间</span>
-    <input type="date" id="fModStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fModEnd" style="width:145px">
-  </div>
-  <div class="fi"><span class="fl">任务状态</span>
+  <div class="fi"><span class="fl">状态</span>
     <select id="fStatus" style="width:150px"><option value="">请选择任务状态</option><option>启用</option><option>停用</option></select>
+  </div>
+  <div class="fi"><span class="fl">房间</span>
+    <select id="fRoom" style="width:160px"><option value="">全部房间</option></select>
+  </div>
+  <div class="fi"><span class="fl">开始日期</span>
+    <input type="date" id="fStartFrom" style="width:145px"><span class="text-sub">至</span><input type="date" id="fStartTo" style="width:145px">
+  </div>
+  <div class="fi"><span class="fl">结束日期</span>
+    <input type="date" id="fEndFrom" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEndTo" style="width:145px">
+  </div>
+  <div class="fi"><span class="fl">最后修改</span>
+    <input type="date" id="fModStart" style="width:145px"><span class="text-sub">至</span><input type="date" id="fModEnd" style="width:145px">
   </div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
@@ -234,12 +240,14 @@ const pg={total:0,page:1,size:10,onChange:()=>renderTable()};
 function doQuery(){
   const n=document.getElementById('fName').value.trim();
   const st=document.getElementById('fStatus').value;
-  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  const rm=document.getElementById('fRoom').value;
+  const s1=document.getElementById('fStartFrom').value,s2=document.getElementById('fStartTo').value;
+  const e1=document.getElementById('fEndFrom').value,e2=document.getElementById('fEndTo').value;
   const ms=document.getElementById('fModStart').value,me=document.getElementById('fModEnd').value;
-  filtered=TASKS.filter(r=>(!n||r.name.includes(n))&&(!st||(st==='启用')===r.on)&&(!s||r.end>=s)&&(!e||r.start<=e)&&(!ms||r.mt>=ms)&&(!me||r.mt<=me+' 23:59:59'));
+  filtered=TASKS.filter(r=>(!n||r.name.includes(n))&&(!st||(st==='启用')===r.on)&&(!rm||r.rooms.includes(rm))&&(!s1||r.start>=s1)&&(!s2||r.start<=s2)&&(!e1||r.end>=e1)&&(!e2||r.end<=e2)&&(!ms||r.mt>=ms)&&(!me||r.mt<=me+' 23:59:59'));
   pg.page=1;pg.total=filtered.length;$pager('pager',pg);renderTable();
 }
-function doReset(){['fName','fStart','fEnd','fModStart','fModEnd'].forEach(id=>document.getElementById(id).value='');document.getElementById('fStatus').value='';doQuery();
+function doReset(){['fName','fRoom','fStartFrom','fStartTo','fEndFrom','fEndTo','fModStart','fModEnd'].forEach(id=>document.getElementById(id).value='');document.getElementById('fStatus').value='';doQuery();
 }
 function conditionBrief(c){
   if(c.type==='presence')return c.state;
@@ -584,6 +592,12 @@ function actionText(a){
 }
 function updatePreview(){}
 
+/* ── 筛选栏:房间下拉(按楼层分组) ── */
+function populateFilterRooms(){
+  const sel=document.getElementById('fRoom');
+  sel.innerHTML='<option value="">全部房间</option>'+ROOMS[0].children.map(f=>`<optgroup label="${f.lb}">${f.children.map(r=>`<option>${r}</option>`).join('')}</optgroup>`).join('');
+}
+populateFilterRooms();
 doQuery();
 </script>
 </body>
