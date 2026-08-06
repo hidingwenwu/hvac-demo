@@ -24,7 +24,7 @@
   var DEVICE_ROWS = [
     ['凤凰台测试','MAX版',0,'美的','格力',1,'开机',136,'',''],
     ['海信产业园','标准版',0,'海信','美的',1,'开机',42,'E7',''],
-    ['中关村软件园','标准版',1,'格力','海信',0,'关机',18,'C0,E6','H4'],
+    ['中关村软件园','标准版',1,'格力','海信',0,'关机',-20,'C0,E6','H4'],
     ['临港科技城','MAX版',0,'大金','三菱电机',1,'开机',287,'','U4,A3'],
     ['南山智慧大厦','MAX版',1,'日立','东芝',1,'关机',94,'',''],
     ['','MAX版',1,'三菱电机','日立',0,'关机',33,'',''],
@@ -157,10 +157,13 @@
   }
 
   function traffic(device) {
+    var r=device.trafficRemain;
     return {
       label: device.trafficPlan + 'M/月',
-      remain: device.trafficRemain + 'M',
-      state: device.trafficRemain < 50 ? 'warning' : 'normal'
+      remain: r + 'M',
+      /* 展示文案:剩余(≥0) / 超出(<0,红色) */
+      remainText: r < 0 ? '超出' + (-r) + 'MB' : '剩余 ' + r + 'M',
+      state: r < 0 ? 'over' : (r < 50 ? 'warning' : 'normal')
     };
   }
 
@@ -182,7 +185,7 @@
       offline: list.length - online,
       running: list.filter(function (device) { return device.systemStatus === '开机'; }).length,
       faults: list.filter(hasFault).length,
-      trafficWarnings: list.filter(function (device) { return traffic(device).state === 'warning'; }).length,
+      trafficWarnings: list.filter(function (device) { return traffic(device).state !== 'normal'; }).length,
       onlineRate: list.length ? Math.round(online * 100 / list.length) : 0,
       standard: standard,
       max: list.length - standard,
