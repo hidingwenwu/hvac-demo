@@ -26,21 +26,21 @@
       <div class="fi"><span class="fl">发生时间</span>
         <input type="date" id="fStart" value="2026-07-02" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
       </div>
-      <div class="fi"><span class="fl">当量值</span>
+      <div class="fi">
         <select id="fEq" style="width:170px">
-          <option value="">请选择</option>
+          <option value="">当量值</option>
           <option value="gt0">大于0</option>
           <option value="eq0">等于0</option>
         </select>
       </div>
-      <div class="fi"><span class="fl">状态类型</span>
+      <div class="fi">
         <select id="fState" style="width:170px">
-          <option value="">请选择</option>
+          <option value="">状态类型</option>
           <option>获取成功</option>
           <option>获取失败</option>
         </select>
       </div>
-      <div class="fi"><span class="fl">内机地址</span><input id="fAddr" placeholder="请输入" style="width:170px"></div>
+      <div class="fi"><input id="fAddr" placeholder="内机地址" style="width:170px"></div>
       <button class="btn btnp" onclick="doQuery()">查询</button>
       <button class="btn" onclick="doReset()">重置</button>
       <button class="btn btnp" onclick="manualFetch()">手动获取</button>

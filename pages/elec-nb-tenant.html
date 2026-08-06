@@ -25,12 +25,12 @@
 <body>
 <!-- 筛选栏:租户名称/联系人名称/充值/余额范围 + 查询/重置/新增/设定/导出充值记录/导出变动记录(对齐线上新计费) -->
 <div class="fb">
-  <div class="fi"><span class="fl">租户名称</span><input id="fName" placeholder="请输入租户名称" style="width:150px"></div>
-  <div class="fi"><span class="fl">联系人名称</span><input id="fContact" placeholder="请输入联系人名称" style="width:150px"></div>
-  <div class="fi"><span class="fl">充值</span>
-    <select id="fCharge" style="width:110px"><option value="">请选择</option><option>已充值</option><option>未充值</option></select>
+  <div class="fi"><input id="fName" placeholder="租户名称" style="width:150px"></div>
+  <div class="fi"><input id="fContact" placeholder="联系人名称" style="width:150px"></div>
+  <div class="fi">
+    <select id="fCharge" style="width:110px"><option value="">充值</option><option>已充值</option><option>未充值</option></select>
   </div>
-  <div class="fi"><span class="fl">余额范围</span><input id="fBalMin" placeholder="请输入" style="width:80px"><span class="text-sub">—</span><input id="fBalMax" placeholder="请输入" style="width:80px"></div>
+  <div class="fi"><span class="fl">余额范围</span><input id="fBalMin" placeholder="" style="width:80px"><span class="text-sub">—</span><input id="fBalMax" placeholder="" style="width:80px"></div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn btnp" onclick="openAdd()">＋ 新增</button>

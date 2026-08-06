@@ -57,15 +57,15 @@
 <!-- 筛选栏 -->
 <div class="filter-shell">
   <div class="fb">
-    <div class="fi"><span class="fl">租户名称</span><input id="fName" placeholder="请输入租户名称" style="width:180px"></div>
-    <div class="fi"><span class="fl">联系人名称</span><input id="fContact" placeholder="请输入联系人名称" style="width:180px"></div>
-    <div class="fi pre-only"><span class="fl">充值状态</span><select id="fRecharge" style="width:120px"><option value="">全部</option><option value="recharged">充值过</option><option value="never">未充值过</option></select></div>
+    <div class="fi"><input id="fName" placeholder="租户名称" style="width:180px"></div>
+    <div class="fi"><input id="fContact" placeholder="联系人名称" style="width:180px"></div>
+    <div class="fi pre-only"><select id="fRecharge" style="width:120px"><option value="">充值状态</option><option value="recharged">充值过</option><option value="never">未充值过</option></select></div>
     <div class="fi pre-only"><span class="fl">余额范围</span><span class="range-box"><input id="fBalanceMin" type="number" step="0.01" placeholder="下限" oninput="clearQuickMode()"><span class="range-sep">—</span><input id="fBalanceMax" type="number" step="0.01" placeholder="上限" oninput="clearQuickMode()"></span></div>
     <div class="fi pre-only"><span class="fl">提醒阈值范围</span><span class="range-box"><input id="fRemindMin" type="number" step="0.01" placeholder="下限"><span class="range-sep">—</span><input id="fRemindMax" type="number" step="0.01" placeholder="上限"></span></div>
     <div class="fi pre-only"><span class="fl">锁定阈值范围</span><span class="range-box"><input id="fLockMin" type="number" step="0.01" placeholder="下限"><span class="range-sep">—</span><input id="fLockMax" type="number" step="0.01" placeholder="上限"></span></div>
-    <div class="fi pre-only"><span class="fl">欠费锁定</span><select id="fLockOn" style="width:110px"><option value="">全部</option><option value="on">启用</option><option value="off">关闭</option></select></div>
-    <div class="fi pre-only"><span class="fl">锁定状态</span><select id="fLockState" style="width:110px"><option value="">全部</option><option value="locked">已锁定</option><option value="unlocked">未锁定</option></select></div>
-    <div class="fi pre-only"><span class="fl">房间</span><select id="fRoom" style="width:200px"><option value="">全部房间</option></select></div>
+    <div class="fi pre-only"><select id="fLockOn" style="width:110px"><option value="">欠费锁定</option><option value="on">启用</option><option value="off">关闭</option></select></div>
+    <div class="fi pre-only"><select id="fLockState" style="width:110px"><option value="">锁定状态</option><option value="locked">已锁定</option><option value="unlocked">未锁定</option></select></div>
+    <div class="fi pre-only"><select id="fRoom" style="width:200px"><option value="">房间</option></select></div>
     <button class="btn btnp" id="btnQuery" onclick="doQuery()">查询</button>
     <button class="btn" id="btnReset" onclick="doReset()">重置</button>
     <button class="btn btnp" onclick="openAdd()">＋ 新增</button>

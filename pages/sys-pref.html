@@ -21,12 +21,12 @@ body{display:flex;flex-direction:column;}
 <body>
 <!-- 筛选栏:项目名称 + 5 个偏好项下拉(全部/开启/关闭) + 搜索/重置,与线上一致 -->
 <div class="fb">
-  <div class="fi"><span class="fl">项目名称</span><input id="fName" placeholder="请输入项目名称" style="width:180px"></div>
-  <div class="fi"><span class="fl">自动模式</span><select id="fAuto" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><span class="fl">风水联动</span><select id="fLink" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><span class="fl">环境感知检测</span><select id="fEnv" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><span class="fl">模式锁定增强</span><select id="fLock" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><span class="fl">极致节能</span><select id="fEco" style="width:130px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><input id="fName" placeholder="项目名称" style="width:180px"></div>
+  <div class="fi"><select id="fAuto" style="width:130px"><option value="">自动模式</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fLink" style="width:130px"><option value="">风水联动</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fEnv" style="width:130px"><option value="">环境感知检测</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fLock" style="width:130px"><option value="">模式锁定增强</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fEco" style="width:130px"><option value="">极致节能</option><option value="1">开启</option><option value="0">关闭</option></select></div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
 </div>

@@ -33,11 +33,11 @@ td.cell-key{max-width:380px;text-align:left;white-space:normal;line-height:1.5;p
 
 <!-- 筛选栏 -->
 <div class="fb">
-  <div class="fi"><span class="fl">异常类型</span><select id="fCat" style="width:170px"><option value="">全部类型</option></select></div>
-  <div class="fi"><span class="fl">异常对象</span><input id="fObj" placeholder="请输入异常对象" style="width:170px"></div>
-  <div class="fi"><span class="fl">状态</span>
+  <div class="fi"><select id="fCat" style="width:170px"><option value="">异常类型</option></select></div>
+  <div class="fi"><input id="fObj" placeholder="异常对象" style="width:170px"></div>
+  <div class="fi">
     <select id="fSt" style="width:150px">
-      <option value="">全部</option>
+      <option value="">状态</option>
       <option value="new" selected>未处理</option>
       <option value="gone">已恢复(待确认)</option>
       <option value="done">已处理</option>

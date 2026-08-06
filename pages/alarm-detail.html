@@ -45,17 +45,17 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
   <div class="lv-cards" id="opsLvCards"></div>
   <!-- 筛选栏 -->
   <div class="fb">
-    <div class="fi"><span class="fl">故障等级</span>
-      <select id="oLevel" style="width:110px"><option value="">全部</option><option value="1">故障</option><option value="2">警示</option><option value="3">提示</option></select>
+    <div class="fi">
+      <select id="oLevel" style="width:110px"><option value="">故障等级</option><option value="1">故障</option><option value="2">警示</option><option value="3">提示</option></select>
     </div>
-    <div class="fi"><span class="fl">故障子类</span>
-      <select id="oCat" style="width:130px" onchange="renderNameOpts()"><option value="">全部子类</option><option value="base">基础配置</option><option value="bill">计费分摊</option></select>
+    <div class="fi">
+      <select id="oCat" style="width:130px" onchange="renderNameOpts()"><option value="">故障子类</option><option value="base">基础配置</option><option value="bill">计费分摊</option></select>
     </div>
-    <div class="fi"><span class="fl">故障名称</span><select id="oName" style="width:160px"><option value="">全部名称</option></select></div>
-    <div class="fi"><span class="fl">故障对象</span><input id="oObj" placeholder="设备SN/地址/关键字" style="width:160px"></div>
-    <div class="fi"><span class="fl">状态</span>
+    <div class="fi"><select id="oName" style="width:160px"><option value="">故障名称</option></select></div>
+    <div class="fi"><input id="oObj" placeholder="故障对象" style="width:160px"></div>
+    <div class="fi">
       <select id="oSt" style="width:130px">
-        <option value="">全部</option><option value="new" selected>未处理</option>
+        <option value="">状态</option><option value="new" selected>未处理</option>
         <option value="gone">已恢复待确认</option><option value="done">已处理</option><option value="ignored">已忽略</option>
       </select>
     </div>
@@ -98,15 +98,15 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
       <div class="lv-cards" id="acLvCards"></div>
       <!-- 筛选栏 -->
       <div class="fb">
-        <div class="fi"><span class="fl">故障等级</span>
-          <select id="aLevel" style="width:110px"><option value="">全部</option><option value="1">故障</option><option value="2">警示</option><option value="3">提示</option><option value="0">已屏蔽</option></select>
+        <div class="fi">
+          <select id="aLevel" style="width:110px"><option value="">故障等级</option><option value="1">故障</option><option value="2">警示</option><option value="3">提示</option><option value="0">已屏蔽</option></select>
         </div>
-        <div class="fi"><span class="fl">品牌</span><select id="aBrand" style="width:110px"><option value="">全部品牌</option></select></div>
-        <div class="fi"><span class="fl">故障代码</span><input id="aCode" placeholder="如 L1" style="width:100px"></div>
-        <div class="fi"><span class="fl">内机全地址</span><input id="aAddr" placeholder="请输入" style="width:110px"></div>
-        <div class="fi"><span class="fl">状态</span>
+        <div class="fi"><select id="aBrand" style="width:110px"><option value="">品牌</option></select></div>
+        <div class="fi"><input id="aCode" placeholder="故障代码" style="width:100px"></div>
+        <div class="fi"><input id="aAddr" placeholder="内机全地址" style="width:110px"></div>
+        <div class="fi">
           <select id="aSt" style="width:140px">
-            <option value="">全部</option><option value="new" selected>未处理</option>
+            <option value="">状态</option><option value="new" selected>未处理</option>
             <option value="gone">已恢复待确认</option>
             <option value="done">已处理</option><option value="ignored">已忽略</option>
           </select>

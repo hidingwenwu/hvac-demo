@@ -40,20 +40,20 @@
 
     <!-- 筛选栏 -->
     <div class="fb">
-      <div class="fi"><span class="fl">故障档位</span>
+      <div class="fi">
         <select id="fLevel" style="width:150px">
-          <option value="">全部档位</option>
+          <option value="">故障档位</option>
           <option value="1">一档·严重故障</option>
           <option value="2">二档·警示</option>
           <option value="3">三档·提示</option>
           <option value="0">已屏蔽</option>
         </select>
       </div>
-      <div class="fi"><span class="fl">品牌</span><select id="fBrand" style="width:120px"><option value="">全部品牌</option></select></div>
-      <div class="fi"><span class="fl">故障代码</span><input id="fCode" placeholder="请输入故障代码" style="width:130px"></div>
-      <div class="fi"><span class="fl">内机全地址</span><input id="fAddr" placeholder="请输入内机全地址" style="width:150px"></div>
-      <div class="fi"><span class="fl">状态</span>
-        <select id="fSt" style="width:120px"><option value="">全部</option><option value="new" selected>未处理</option><option value="done">已处理</option><option value="ignored">已忽略</option></select>
+      <div class="fi"><select id="fBrand" style="width:120px"><option value="">品牌</option></select></div>
+      <div class="fi"><input id="fCode" placeholder="故障代码" style="width:130px"></div>
+      <div class="fi"><input id="fAddr" placeholder="内机全地址" style="width:150px"></div>
+      <div class="fi">
+        <select id="fSt" style="width:120px"><option value="">状态</option><option value="new" selected>未处理</option><option value="done">已处理</option><option value="ignored">已忽略</option></select>
       </div>
       <div class="fi"><span class="fl">故障发生时间</span>
         <input type="date" id="fStart" style="width:140px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:140px">

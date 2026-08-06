@@ -21,23 +21,23 @@ td.cell-content{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-spa
 <body>
 <!-- 筛选栏(渠道 / 预警类型 / 接收对象 / 创建时间) -->
 <div class="fb">
-  <div class="fi"><span class="fl">渠道</span>
+  <div class="fi">
     <select id="fChan" style="width:140px">
-      <option value="">全部渠道</option>
+      <option value="">渠道</option>
       <option>站内消息</option>
       <option>短信</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">预警类型</span>
+  <div class="fi">
     <select id="fType" style="width:170px">
-      <option value="">请选择预警类型</option>
+      <option value="">预警类型</option>
       <option>故障</option>
       <option>提醒</option>
       <option>通知</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">接收对象</span>
-    <input id="fTenant" placeholder="租户名称/接收人/手机号" style="width:180px">
+  <div class="fi">
+    <input id="fTenant" placeholder="接收对象" style="width:180px">
   </div>
   <div class="fi"><span class="fl">创建时间</span>
     <input type="date" id="fStart" value="2026-07-02" style="width:145px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-03" style="width:145px">

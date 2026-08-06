@@ -48,16 +48,16 @@
 <div id="paneTask">
   <!-- 筛选栏(照线上:任务名称/任务状态/房间范围/时间范围 + 搜索/重置/创建任务/策略管理) -->
   <div class="fb">
-    <div class="fi"><span class="fl">任务名称</span><input id="fName" placeholder="请输入任务名称" style="width:180px"></div>
-    <div class="fi"><span class="fl">任务状态</span>
+    <div class="fi"><input id="fName" placeholder="任务名称" style="width:180px"></div>
+    <div class="fi">
       <select id="fState" style="width:180px">
-        <option value="">请选择任务状态</option>
+        <option value="">任务状态</option>
         <option>执行中</option><option>停用</option><option>未开始</option><option>已过期</option>
       </select>
     </div>
-    <div class="fi"><span class="fl">房间范围</span>
+    <div class="fi">
       <select id="fRoom" style="width:180px">
-        <option value="">请选择房间</option>
+        <option value="">房间范围</option>
         <option>一楼办事大厅</option><option>二楼办事大厅</option><option>三楼会议中心</option>
         <option>四楼办公区</option><option>五楼办公区</option>
       </select>
@@ -93,9 +93,9 @@
     <span><span class="dot der"></span>离线 <b id="rsErr" class="text-er">0</b> 台</span>
   </div>
   <div class="fb">
-    <div class="fi"><span class="fl">房间范围</span>
+    <div class="fi">
       <select id="rRoom" style="width:180px" onchange="renderRun()">
-        <option value="">请选择房间</option>
+        <option value="">房间范围</option>
         <option>一楼办事大厅</option><option>二楼办事大厅</option><option>三楼会议中心</option>
         <option>四楼办公区</option><option>五楼办公区</option>
       </select>

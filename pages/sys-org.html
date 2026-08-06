@@ -21,15 +21,15 @@
 <body>
 <!-- 筛选栏:组织类型/组织名称 + 查询/重置/新增(与线上一致) -->
 <div class="fb">
-  <div class="fi"><span class="fl">组织类型</span>
+  <div class="fi">
     <select id="fType" style="width:190px">
-      <option value="">请选择组织类型</option>
+      <option value="">组织类型</option>
       <option>空调经销商及服务商</option>
       <option>网关渠道商</option>
       <option>平台</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">组织名称</span><input id="fName" placeholder="请输入组织名称" style="width:190px"></div>
+  <div class="fi"><input id="fName" placeholder="组织名称" style="width:190px"></div>
   <button class="btn btnp" onclick="doQuery()">查询</button>
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn btnp" onclick="openAdd()">＋ 新增</button>
@@ -72,7 +72,7 @@
     <div class="dh"><span>配置项目</span><span class="dx" onclick="$modalClose('dlgProj')">✕</span></div>
     <div class="db">
       <div class="fb" style="margin-bottom:10px">
-        <input id="pKw" placeholder="请输入项目名称" style="width:220px" oninput="renderProj()">
+        <input id="pKw" placeholder="项目名称" style="width:220px" oninput="renderProj()">
       </div>
       <div class="proj-list" id="projList"></div>
     </div>

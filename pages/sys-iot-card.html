@@ -53,16 +53,16 @@ td.mono{font-family:Consolas,Menlo,monospace;font-size:12px;}
 <body>
 <!-- 筛选栏(两行:基本条件 + 时间/用量条件),字段与线上一致 -->
 <div class="fb">
-  <div class="fi"><span class="fl">项目名称</span>
-    <select id="fProj" style="width:170px"><option value="">全部项目</option></select>
+  <div class="fi">
+    <select id="fProj" style="width:170px"><option value="">项目名称</option></select>
   </div>
-  <div class="fi"><span class="fl">设备编码</span><input id="fDev" placeholder="请输入设备编码" style="width:180px"></div>
-  <div class="fi"><span class="fl">物联网卡号(ICCID)</span><input id="fIccid" placeholder="请输入ICCID号" style="width:180px"></div>
-  <div class="fi"><span class="fl">运营商名称</span>
-    <select id="fIsp" style="width:150px"><option value="">全部运营商</option><option>移动</option><option>联通</option><option>电信</option></select>
+  <div class="fi"><input id="fDev" placeholder="设备编码" style="width:180px"></div>
+  <div class="fi"><input id="fIccid" placeholder="物联网卡号(ICCID)" style="width:180px"></div>
+  <div class="fi">
+    <select id="fIsp" style="width:150px"><option value="">运营商名称</option><option>移动</option><option>联通</option><option>电信</option></select>
   </div>
-  <div class="fi"><span class="fl">物联网卡供方名称</span>
-    <select id="fVendor" style="width:140px"><option value="">全部供方</option><option>度云</option><option>中移物联</option><option>联通雁飞</option></select>
+  <div class="fi">
+    <select id="fVendor" style="width:140px"><option value="">物联网卡供方名称</option><option>度云</option><option>中移物联</option><option>联通雁飞</option></select>
   </div>
   <div class="fi"><span class="fl">套餐激活时间</span>
     <input type="date" id="fActS" style="width:140px"><span class="text-sub">至</span><input type="date" id="fActE" style="width:140px">

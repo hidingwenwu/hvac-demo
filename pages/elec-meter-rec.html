@@ -14,31 +14,31 @@
 
 <!-- ── 筛选栏 · 第一行(照线上:主机信息列表 / 电表地址+选择 / 发生时间 / 电表读数 / 用量) ── -->
 <div class="fb">
-  <div class="fi"><span class="fl">主机信息列表</span>
+  <div class="fi">
     <select id="fHost" style="width:220px">
-      <option value="">请选择</option>
+      <option value="">主机信息列表</option>
       <option value="861d5345da5643d49dbd9c9e6edf7370">B2-13-15层抄表器</option>
       <option value="9c27e81b306f4d2f8f51c4a03b7de6a1">B2-16-18层抄表器</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">电表地址</span>
-    <select id="fAddr" style="width:170px"><option value="">请选择</option></select>
+  <div class="fi">
+    <select id="fAddr" style="width:170px"><option value="">电表地址</option></select>
     <button class="btn btnp" onclick="openPick()">选择</button>
   </div>
   <div class="fi"><span class="fl">发生时间</span>
     <input type="date" id="fStart" value="2026-07-01" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" value="2026-07-02" style="width:150px">
   </div>
-  <div class="fi"><span class="fl">电表读数</span>
+  <div class="fi">
     <select id="fRead" style="width:170px">
-      <option value="">请选择</option>
+      <option value="">电表读数</option>
       <option value="lt8000">8000 以下</option>
       <option value="8000-12000">8000 ~ 12000</option>
       <option value="gt12000">12000 以上</option>
     </select>
   </div>
-  <div class="fi"><span class="fl">用量</span>
+  <div class="fi">
     <select id="fUse" style="width:170px">
-      <option value="">请选择</option>
+      <option value="">用量</option>
       <option value="0-10">0 ~ 10</option>
       <option value="10-20">10 ~ 20</option>
       <option value="gt20">20 以上</option>
@@ -48,9 +48,9 @@
 
 <!-- ── 筛选栏 · 第二行(状态类型 + 操作按钮) ── -->
 <div class="fb">
-  <div class="fi"><span class="fl">状态类型</span>
+  <div class="fi">
     <select id="fStatus" style="width:190px">
-      <option value="">请选择</option>
+      <option value="">状态类型</option>
       <option>获取成功</option>
       <option>获取失败</option>
     </select>

@@ -38,10 +38,10 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 <!-- 本页仅飞奕技术支持运维人员使用,不对项目用户开放(角色约束见需求说明文档,页面内不展示) -->
 <!-- 筛选栏 -->
 <div class="fb">
-  <div class="fi"><span class="fl">项目名称</span><input id="fName" list="projList" placeholder="输入或选择项目名称" style="width:200px"><datalist id="projList"></datalist></div>
-  <div class="fi"><span class="fl">短信推送</span><select id="fSms" style="width:110px"><option value="">全部</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><span class="fl">故障等级</span><select id="fLv" style="width:110px"><option value="">全部</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
-  <div class="fi"><span class="fl">推送方式</span><select id="fMode" style="width:120px"><option value="">全部</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
+  <div class="fi"><input id="fName" list="projList" placeholder="项目名称" style="width:200px"><datalist id="projList"></datalist></div>
+  <div class="fi"><select id="fSms" style="width:110px"><option value="">短信推送</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fLv" style="width:110px"><option value="">故障等级</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
+  <div class="fi"><select id="fMode" style="width:120px"><option value="">推送方式</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
 </div>
@@ -136,9 +136,9 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
     <div class="dh"><span id="logTitle">推送记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
     <div class="db" style="max-height:84vh">
       <div class="fb">
-        <div class="fi"><span class="fl">预警类型</span><select id="lType" style="width:120px"><option value="">全部类型</option><option>故障</option><option>警示</option><option>提示</option><option>提醒</option></select></div>
-        <div class="fi"><span class="fl">发送状态</span><select id="lSend" style="width:120px"><option value="">全部状态</option><option>已发送</option><option>发送中</option><option>发送失败</option></select></div>
-        <div class="fi"><span class="fl">接收对象</span><input id="lRecv" placeholder="姓名/手机号" style="width:150px"></div>
+        <div class="fi"><select id="lType" style="width:120px"><option value="">预警类型</option><option>故障</option><option>警示</option><option>提示</option><option>提醒</option></select></div>
+        <div class="fi"><select id="lSend" style="width:120px"><option value="">发送状态</option><option>已发送</option><option>发送中</option><option>发送失败</option></select></div>
+        <div class="fi"><input id="lRecv" placeholder="接收对象" style="width:150px"></div>
         <div class="fi"><span class="fl">发生时间</span>
           <input type="date" id="lStart" style="width:135px"><span class="text-sub">至</span><input type="date" id="lEnd" style="width:135px">
         </div>
