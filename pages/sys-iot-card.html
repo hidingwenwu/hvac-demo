@@ -35,6 +35,11 @@
 .usage .fill.wn{background:var(--wn);}
 .usage .u2{font-size:12px;color:var(--ts);margin-top:5px;white-space:nowrap;}
 .usage .u2.er{color:var(--er);}
+/* 使用情况行内刷新按钮 */
+.u-refresh{float:right;color:var(--primary);font-size:12px;cursor:pointer;margin-left:8px;}
+.u-refresh:hover{color:var(--primary-hover);text-decoration:underline;}
+/* 刷新机制说明 */
+.refresh-note{font-size:12px;color:var(--ts);margin:-4px 0 10px;}
 td.mono{font-family:Consolas,Menlo,monospace;font-size:12px;}
 /* 使用行加高(线上使用情况两行导致行高更大) */
 #tbody td{height:66px;}
@@ -106,10 +111,11 @@ td.mono{font-family:Consolas,Menlo,monospace;font-size:12px;}
   <span class="count-chip" id="countChip">共 8466 张物联网卡</span>
   <span style="margin-left:auto;display:flex;gap:10px">
     <button class="btn btnp" onclick="$msg('Excel 导出任务已创建','success')">⬇ 导出Excel</button>
-    <button class="btn" onclick="doQuery();$msg('数据已刷新','success')">⟳ 刷新数据</button>
+    <button class="btn" id="btnProjRefresh" onclick="refreshByProject()" title="实时拉取所选项目下所有设备网关对应卡号的最新用量">⟳ 按项目刷新</button>
     <button class="btn" onclick="$modal('dlgWarnSet')">⚙ 预警设置</button>
   </span>
 </div>
+<div class="refresh-note">用量数据由后台每日凌晨批量更新；「按项目刷新」与列表行内「刷新」均为针对特定范围设备实时拉取最新用量</div>
 
 <!-- 卡片列表表格(列照抄线上) -->
 <div class="tw">
@@ -216,6 +222,32 @@ function doReset(){
 
 /* 预警标签筛选(再点一次取消) */
 function toggleWarn(t){warnFilter=warnFilter===t?'':t;syncChips();doQuery();}
+
+/* ══ 实时刷新:模拟实时拉取最新用量(用量为月累计,只增不减);
+     后台另有每日凌晨全量批量更新,页面两种刷新均针对特定范围设备 ══ */
+function bumpUsage(r){r.used=Math.min(150,r.used+Math.floor(Math.random()*3));r.over=r.used>=100;}
+/* 按项目刷新:必须先选择项目,查询该项目下所有设备的网关对应卡号 */
+function refreshByProject(){
+  const proj=document.getElementById('fProj').value;
+  if(!proj)return $msg('请先选择项目名称，再按项目刷新','warning');
+  const rows=CARDS.filter(r=>r.proj===proj);
+  if(!rows.length)return $msg(`「${proj}」下暂无物联网卡`,'warning');
+  const btn=document.getElementById('btnProjRefresh');
+  btn.disabled=true;btn.textContent='刷新中…';
+  setTimeout(()=>{
+    rows.forEach(bumpUsage);
+    btn.disabled=false;btn.textContent='⟳ 按项目刷新';
+    doQuery();                       /* 自动实时刷新数据展示 */
+    $msg(`已实时刷新「${proj}」下 ${rows.length} 台设备网关对应卡号的最新用量`,'success');
+  },700);
+}
+/* 单台刷新:行内实时刷新该卡流量数据 */
+function refreshOne(e,idx){
+  e.stopPropagation();
+  const r=filtered[idx];if(!r)return;
+  bumpUsage(r);renderTable();        /* 保持当前页,就地刷新 */
+  $msg(`卡号 ${r.iccid} 已实时刷新最新用量`,'success');
+}
 function syncChips(){
   document.getElementById('chipOver').classList.toggle('on',warnFilter==='over');
   document.getElementById('chipExpire').classList.toggle('on',warnFilter==='expire');
@@ -234,7 +266,7 @@ function usageCell(r,idx){
   const pct=r.used,total=100,left=Math.max(0,total-pct);
   const cls=pct>=100?'er':(pct>=80?'wn':'');
   return `<td class="usage" onclick="showUsage(${idx})" title="点击查看流量使用统计详情">
-    <div class="u1">${pct}MB / ${total}MB (${pct}%)</div>
+    <div class="u1">${pct}MB / ${total}MB (${pct}%)<span class="u-refresh" onclick="refreshOne(event,${idx})" title="实时刷新该卡最新用量">⟳ 刷新</span></div>
     <div class="bar"><div class="fill ${cls}" style="width:${Math.min(100,pct)}%"></div></div>
     <div class="u2 ${pct>=100?'er':''}">剩余: ${left}MB</div></td>`;
 }
