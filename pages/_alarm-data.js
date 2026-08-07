@@ -27,6 +27,12 @@ function $adtAgo(d,h){return $adtFmt(new Date($ADT_NOW.getTime()-(d*24+(h||0))*3
 
 /* ── 项目与平台账号(与主框架项目选择器同源) ── */
 const ALARM_PROJECTS=['产品部测试-按小时预付费','平台测试_新计费','二次分摊-H','分摊计费-ly','平台测试_后付费','001'];
+/* 故障推送页项目列表示例:真实项目 + 演示项目补齐 100 个(仅推送页使用,不影响主框架项目选择器) */
+const ALARM_PUSH_PROJECTS=(()=>{
+  const list=ALARM_PROJECTS.slice();
+  for(let i=list.length+1;i<=100;i++)list.push('演示项目-'+String(i).padStart(3,'0'));
+  return list;
+})();
 const ALARM_ACCOUNTS=[
   {name:'丁文武',phone:'138****6612'},
   {name:'陈品',phone:'139****2210'},
@@ -450,6 +456,17 @@ const ALARM_AC_FAULTS=(()=>{
   F('1号楼','14层',1408,'2-1-30-3','海信','EA',$adtAgo(2,3));  /* 显示屏通讯故障·提示 */
   F('1号楼','9层',909,'2-3-9-1','格力','dn',$adtAgo(3,6));     /* 扫风部件故障·提示 */
   F('1号楼','7层',715,'1-2-23-7','海信','Ee',$adtAgo(4,8));    /* EEPROM数据错误·提示 */
+  /* ── 多楼栋示例(建筑物树选可演示到房间级筛选) ── */
+  F('1号楼','7层',720,'1-3-23-9','海信','E0',$adtAgo(2,16));   /* 室内环境传感器异常·警示 */
+  F('1号楼','9层',905,'2-3-9-8','格力','d3',$adtAgo(3,11));    /* 环境温度传感器故障·警示 */
+  F('2号楼','5层',502,'3-1-12-1','格力','L3',$adtAgo(0,6));    /* 水满保护·故障 */
+  F('2号楼','5层',505,'3-1-12-4','海信','11',$adtAgo(1,3));    /* 回风温度传感器异常·警示 */
+  F('2号楼','8层',801,'3-2-18-2','格力','L1',$adtAgo(0,5));    /* 内风机保护·故障(推送记录示例关联) */
+  F('2号楼','8层',806,'3-2-18-6','海信','A6',$adtAgo(2,9));    /* 室内盘管故障·警示 */
+  F('2号楼','12层',1203,'4-1-25-3','格力','L6',$adtAgo(3,4),$adtAgo(2,22)); /* 模式冲突·警示(已恢复待确认) */
+  F('3号楼','2层',201,'5-1-6-1','海信','03',$adtAgo(1,9));     /* 通讯异常·故障 */
+  F('3号楼','2层',206,'5-1-6-5','格力','dn',$adtAgo(4,2));     /* 扫风部件故障·提示 */
+  F('3号楼','6层',602,'5-2-9-2','格力','L8',$adtAgo(0,21),$adtAgo(0,9)); /* 电源供电不足·故障(已恢复待确认) */
   return rows;
 })();
 
@@ -476,15 +493,72 @@ const ALARM_PUSH_LOG_SEED=(()=>{
   add('二次分摊-H','短信','丁文武','138****6612','提醒','预警每日汇总',
     '【空调集控】二次分摊-H 截至'+$adtAgo(1,0).slice(0,10)+' 09:00 新增预警 6 条(故障 1、警示 3、提示 2),请登录平台查看处理。',
     'hvac_fault_daily_sms','已发送',$adtAgo(1,0));
+  add('演示项目-009','短信','丁文武','138****6612','故障','空调故障预警',
+    '【空调集控】演示项目-009 2号楼8层801 内机3-2-18-2 内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,5).slice(0,16)+',请及时登录平台处理。',
+    'hvac_fault_sms','已发送',$adtAgo(0,5));
   return rows;
 })();
 
-/* ── 推送配置种子(演示项目默认开启:短信一档) ── */
+/* ── 推送配置种子(覆盖多种配置状态示例;不在此表且 localStorage 无记录的项目=从未配置,
+     推送列表的推送范围/推送方式列显示「—」)
+     已启用有推送:产品部测试(实时) / 平台测试_新计费(每日汇总) / 演示项目-009
+     已启用未推送:分摊计费-ly / 演示项目-007
+     已配置未启用:二次分摊-H(有历史记录) / 平台测试_后付费 / 演示项目-008 ── */
 const ALARM_PUSH_CFG_SEED={
+  /* 已启用·实时·有推送记录 */
   '产品部测试-按小时预付费':{
     enabled:true,
     receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'},{name:'陈品',phone:'139****2210',src:'平台账号'}],
     scope:{levels:[1],cats:['ops','ac']},
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 已启用·每日汇总·有推送记录 */
+  '平台测试_新计费':{
+    enabled:true,
+    receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
+    scope:{levels:[1,2],cats:['ops','ac']},
+    strategy:{mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 已配置·未启用(有一条历史每日汇总推送记录) */
+  '二次分摊-H':{
+    enabled:false,
+    receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
+    scope:{levels:[1,2,3],cats:['ops','ac']},
+    strategy:{mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 已配置·已启用·从未推送(免打扰时段开启示例) */
+  '分摊计费-ly':{
+    enabled:true,
+    receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
+    scope:{levels:[1],cats:['ops','ac']},
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:true,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 已配置·未启用(仅空调故障示例) */
+  '平台测试_后付费':{
+    enabled:false,
+    receivers:[{name:'陈品',phone:'139****2210',src:'平台账号'},{name:'张技术支持',phone:'135****9012',src:'平台账号'}],
+    scope:{levels:[1,2],cats:['ac']},
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 演示项目:已启用·从未推送 */
+  '演示项目-007':{
+    enabled:true,
+    receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
+    scope:{levels:[1],cats:['ops','ac']},
+    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 演示项目:已配置·未启用 */
+  '演示项目-008':{
+    enabled:false,
+    receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
+    scope:{levels:[1,2],cats:['ac']},
+    strategy:{mode:'daily',dailyTime:'18:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  },
+  /* 演示项目:已启用·有推送记录 */
+  '演示项目-009':{
+    enabled:true,
+    receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
+    scope:{levels:[1,2,3],cats:['ops','ac']},
     strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   },
 };

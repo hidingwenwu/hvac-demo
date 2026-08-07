@@ -36,12 +36,12 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 </head>
 <body>
 <!-- 本页仅飞奕技术支持运维人员使用,不对项目用户开放(角色约束见需求说明文档,页面内不展示) -->
-<!-- 筛选栏 -->
+<!-- 筛选栏:下拉选择即生效,项目名称输入即筛 -->
 <div class="fb">
-  <div class="fi"><input id="fName" list="projList" placeholder="项目名称" style="width:200px"><datalist id="projList"></datalist></div>
-  <div class="fi"><select id="fSms" style="width:110px"><option value="">短信推送</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><select id="fLv" style="width:110px"><option value="">故障等级</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
-  <div class="fi"><select id="fMode" style="width:120px"><option value="">推送方式</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
+  <div class="fi"><input id="fName" list="projList" placeholder="项目名称" style="width:200px" oninput="doQuery()"><datalist id="projList"></datalist></div>
+  <div class="fi"><select id="fSms" style="width:110px" onchange="doQuery()"><option value="">短信推送</option><option value="1">开启</option><option value="0">关闭</option></select></div>
+  <div class="fi"><select id="fLv" style="width:110px" onchange="doQuery()"><option value="">故障等级</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
+  <div class="fi"><select id="fMode" style="width:120px" onchange="doQuery()"><option value="">推送方式</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
 </div>
@@ -172,7 +172,8 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 <script src="_ui.js"></script>
 <script src="_alarm-data.js"></script>
 <script>
-let filtered=ALARM_PROJECTS.slice();
+/* 项目列表:真实项目 + 演示项目共 100 个示例(数据层 ALARM_PUSH_PROJECTS,不影响主框架项目选择器) */
+let filtered=ALARM_PUSH_PROJECTS.slice();
 const pg={total:filtered.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
 let curProj=null;
 let draft=null;
@@ -190,17 +191,23 @@ function scopeText(cfg){
     parts.push(cfg.scope.cats.map(c=>c==='ops'?'项目运维':'空调故障').join('+'));
   return parts.length?parts.join(' · '):'<span class="text-sub">未选择</span>';
 }
+/* 项目推送配置:null=从未配置(种子与本地存储均无记录),列表推送范围/推送方式列显示「—」 */
+function cfgOf(p){
+  const saved=$alarmPushCfgAll()[p];
+  return ((saved&&typeof saved==='object')||ALARM_PUSH_CFG_SEED[p])?$alarmPushCfgGet(p):null;
+}
 function doQuery(){
   const name=document.getElementById('fName').value.trim();
   const sms=document.getElementById('fSms').value;
   const lv=document.getElementById('fLv').value;
   const md=document.getElementById('fMode').value;
-  filtered=ALARM_PROJECTS.filter(p=>{
+  filtered=ALARM_PUSH_PROJECTS.filter(p=>{
     if(name&&p.indexOf(name)<0)return false;
-    const cfg=$alarmPushCfgGet(p);
-    if(sms!==''&&cfg.enabled!==(sms==='1'))return false;
-    if(lv!==''&&!(cfg.scope.levels||[]).includes(+lv))return false;
-    if(md!==''&&(cfg.strategy.mode==='daily'?'daily':'realtime')!==md)return false;
+    const cfg=cfgOf(p);
+    const enabled=cfg?cfg.enabled:false;   /* 从未配置视同关闭 */
+    if(sms!==''&&enabled!==(sms==='1'))return false;
+    if(lv!==''&&(!cfg||!(cfg.scope.levels||[]).includes(+lv)))return false;
+    if(md!==''&&(!cfg||(cfg.strategy.mode==='daily'?'daily':'realtime')!==md))return false;
     return true;
   });
   pg.page=1;pg.total=filtered.length;
@@ -216,12 +223,12 @@ function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
   document.getElementById('tbody').innerHTML=rows.length?rows.map(p=>{
-    const cfg=$alarmPushCfgGet(p);
+    const cfg=cfgOf(p);   /* null=从未配置:推送范围/推送方式显示「—」 */
     return `<tr>
       <td>${p}</td>
-      <td><span class="switch ${cfg.enabled?'on':''}" onclick="toggleCh('${p}','enabled',this)"></span></td>
-      <td>${scopeText(cfg)}</td>
-      <td>${cfg.strategy.mode==='daily'?'每日汇总 '+cfg.strategy.dailyTime:'实时推送'}</td>
+      <td><span class="switch ${cfg&&cfg.enabled?'on':''}" onclick="toggleCh('${p}','enabled',this)"></span></td>
+      <td>${cfg?scopeText(cfg):'—'}</td>
+      <td>${cfg?(cfg.strategy.mode==='daily'?'每日汇总 '+cfg.strategy.dailyTime:'实时推送'):'—'}</td>
       <td>${lastPush(p)}</td>
       <td><span class="op">
         <a onclick="openDrawer('${p}')">推送配置</a>
@@ -473,7 +480,7 @@ function closeCodeLib(){
 document.getElementById('dlgCodeLib').addEventListener('click',e=>{if(e.target.id==='dlgCodeLib')closeCodeLib();});
 
 /* 项目名称筛选:支持手动输入或下拉选择 */
-document.getElementById('projList').innerHTML=ALARM_PROJECTS.map(p=>`<option value="${p}">`).join('');
+document.getElementById('projList').innerHTML=ALARM_PUSH_PROJECTS.map(p=>`<option value="${p}">`).join('');
 doQuery();
 </script>
 </body>
