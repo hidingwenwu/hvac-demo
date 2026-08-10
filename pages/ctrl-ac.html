@@ -103,18 +103,20 @@
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;font-size:12px;}
 .info-grid .ig-k{color:var(--ts);margin-bottom:3px;}
 .info-grid .ig-v{color:#fff;word-break:break-all;}
-/* 名称行:标签+值同行,不加框(名称多为用户未设定的空值,默认'—',不抢位置卡焦点) */
-.info-name-row{grid-column:1/3;display:flex;align-items:baseline;gap:8px;}
-.info-name-row .ig-k{margin-bottom:0;}
-/* 位置高亮卡:蓝色渐变突出"当前控制对象",纯文字无图标 */
-.info-location-card{grid-column:1/3;padding:10px 12px;border-radius:8px;background:linear-gradient(135deg,rgba(31,101,255,.16),rgba(31,101,255,.06));border:1px solid rgba(31,101,255,.22);}
-.info-location-card .ig-k{margin-bottom:4px;color:#8eb2ff;}
-.info-location-card .ig-v{font-size:14px;font-weight:600;color:#f4f8ff;word-break:normal;}
+/* 名称+位置合并卡:蓝色渐变整体轮廓,两行各自标签+值同行,位置值超宽自然换行 */
+.info-location-card{grid-column:1/3;padding:10px 12px;border-radius:8px;background:linear-gradient(135deg,rgba(31,101,255,.16),rgba(31,101,255,.06));border:1px solid rgba(31,101,255,.22);display:flex;flex-direction:column;gap:6px;}
+.info-location-card .ig-k{color:#8eb2ff;}
+.info-location-card .info-name-row{display:flex;align-items:baseline;gap:8px;}
+.info-location-card .info-name-row .ig-k{margin-bottom:0;}
+.info-location-card .info-loc-row{display:flex;align-items:baseline;gap:8px;}
+.info-location-card .info-loc-row .ig-k{margin-bottom:0;flex-shrink:0;white-space:nowrap;}
+.info-location-card .info-loc-row .ig-v{font-size:14px;font-weight:600;color:#f4f8ff;min-width:0;word-break:normal;}
 .ig-fault{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11px;font-weight:700;color:var(--er);background:var(--er-dim);border:1px solid rgba(245,108,108,.4);}
-.info-host{grid-column:1/3;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
-.info-host .ih-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
-.info-host .ih-hd .ig-k{margin-bottom:0;}
-.ih-copy{font-size:11px;color:var(--primary);cursor:pointer;user-select:none;white-space:nowrap;}
+/* 主机编号:去背景框,标签独占一行,SN与复制按钮同行 */
+.info-host{grid-column:1/3;}
+.info-host .ih-sn{display:flex;align-items:center;gap:8px;}
+.info-host .ih-sn .ig-v{min-width:0;}
+.ih-copy{font-size:11px;color:var(--primary);cursor:pointer;user-select:none;white-space:nowrap;flex-shrink:0;}
 .ih-copy:hover{color:var(--primary-hover);}
 .info-host .ig-v{font-family:ui-monospace,'SF Mono',Consolas,Menlo,monospace;font-size:11px;letter-spacing:.4px;line-height:1.55;color:#cfd8ea;}
 /* 底部分页行 */
@@ -260,18 +262,17 @@
     <div class="cp" id="detailPanel" style="display:none">
       <div class="cp-hd"><span class="t">详细信息</span></div>
       <div class="info-grid" id="infoGrid">
-        <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">—</span></div>
         <div class="info-location-card">
-          <div class="ig-k">空调位置</div>
-          <div class="ig-v">—</div>
+          <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">—</span></div>
+          <div class="info-loc-row"><span class="ig-k">空调位置</span><span class="ig-v">—</span></div>
         </div>
         <div><div class="ig-k">空调品牌</div><div class="ig-v">—</div></div>
         <div><div class="ig-k">空调容量</div><div class="ig-v">—</div></div>
         <div><div class="ig-k">空调地址</div><div class="ig-v">—</div></div>
         <div><div class="ig-k">故障代码</div><div class="ig-v">—</div></div>
         <div class="info-host">
-          <div class="ih-hd"><span class="ig-k">主机编号</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
-          <div class="ig-v" id="hostVal">—</div>
+          <div class="ig-k">主机编号</div>
+          <div class="ih-sn"><span class="ig-v" id="hostVal">—</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
         </div>
       </div>
     </div>
@@ -576,21 +577,20 @@ function syncDetailVisibility(){
     if(sel.size===0)resetCtrlPanels();  /* 未选中:控制面板回默认态 */
   }
 }
-/* 详情卡内容顺序按查看频率排列:名称(常为空,轻量同行展示)→位置(高亮确认对象)→品牌/容量/地址/故障(设备与状态)→主机编号(低频长串置底) */
+/* 详情卡内容顺序按查看频率排列:名称+位置(合并高亮卡,确认对象)→品牌/容量/地址/故障(设备与状态)→主机编号(低频长串置底) */
 function fillInfo(a){
   document.getElementById('infoGrid').innerHTML=`
-    <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">${a.indoorId||'—'}</span></div>
     <div class="info-location-card">
-      <div class="ig-k">空调位置</div>
-      <div class="ig-v">${a.bld} · ${a.fl}层 · ${a.room}室</div>
+      <div class="info-name-row"><span class="ig-k">空调名称</span><span class="ig-v">${a.indoorId||'—'}</span></div>
+      <div class="info-loc-row"><span class="ig-k">空调位置</span><span class="ig-v">${a.bld} · ${a.fl}层 · ${a.room}室</span></div>
     </div>
     <div><div class="ig-k">空调品牌</div><div class="ig-v">${a.brand}</div></div>
     <div><div class="ig-k">空调容量</div><div class="ig-v">${a.cap}</div></div>
     <div><div class="ig-k">空调地址</div><div class="ig-v">${a.addr}</div></div>
     <div><div class="ig-k">故障代码</div><div class="ig-v">${a.lost?'<span class="ig-fault">LOST</span>':'—'}</div></div>
     <div class="info-host">
-      <div class="ih-hd"><span class="ig-k">主机编号</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
-      <div class="ig-v" id="hostVal">${a.host}</div>
+      <div class="ig-k">主机编号</div>
+      <div class="ih-sn"><span class="ig-v" id="hostVal">${a.host}</span><span class="ih-copy" onclick="copyHostNo()">⧉ 复制</span></div>
     </div>`;
 }
 function copyHostNo(){
