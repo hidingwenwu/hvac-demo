@@ -56,7 +56,7 @@ td.cell-key{max-width:380px;text-align:left;white-space:normal;line-height:1.5;p
   <table>
     <thead><tr>
       <th>序号</th><th>异常类型</th><th>异常对象</th><th>关键信息</th>
-      <th>首次发生</th><th>最近发生</th><th>持续时长</th><th>状态</th><th>处理人</th><th>操作</th>
+      <th>首次发生</th><th>最近发生</th><th>持续时长</th><th>状态</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -173,7 +173,6 @@ function renderTable(){
   const rows=filtered.slice(start,start+pg.size);
   document.getElementById('tbody').innerHTML=rows.length?rows.map((r,i)=>{
     const st=stOf(r);
-    const sRec=$alarmStatus(r.id);
     return `<tr>
       <td>${start+i+1}</td>
       <td><span class="tag ${ALARM_OPS_CAT_TAG[r.cat]||'tin'}">${r.cat}</span></td>
@@ -182,14 +181,13 @@ function renderTable(){
       <td>${r.first}</td><td>${r.last}</td>
       <td>${$alarmDuration(r.last,r.gone)}</td>
       <td>${stCell(r)}</td>
-      <td>${sRec?sRec.by:'—'}</td>
       <td><span class="op">
         <a onclick="showDetail(${start+i})">详情</a>
         ${st==='new'?`<a onclick="openHandle(${start+i})">处理</a><a class="danger" onclick="doIgnore(${start+i})">忽略</a>`:''}
       </span></td>
     </tr>`;
   }).join('')
-  :'<tr><td colspan="10"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  :'<tr><td colspan="9"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
 }
 
 /* ── 异常对象小弹卡:仅展示设备SN/空调地址 ── */

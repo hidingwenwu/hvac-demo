@@ -90,7 +90,7 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
       <thead><tr>
         <th style="width:34px"><input type="checkbox" class="all-ck" id="opsAllCk" onclick="toggleAll('ops',this.checked)"></th>
         <th>序号</th><th>故障等级</th><th>故障子类</th><th>故障名称</th><th>故障对象</th>
-        <th>故障发生时间</th><th>故障恢复时间</th><th>持续时长</th><th>故障状态</th><th>处理进度</th><th>处理人</th><th>操作</th>
+        <th>故障发生时间</th><th>故障恢复时间</th><th>持续时长</th><th>故障状态</th><th>处理进度</th><th>操作</th>
       </tr></thead>
       <tbody id="opsBody"></tbody>
     </table>
@@ -308,7 +308,6 @@ function renderOpsTable(){
   const start=(opsPg.page-1)*opsPg.size;
   const rows=opsFiltered.slice(start,start+opsPg.size);
   document.getElementById('opsBody').innerHTML=rows.length?rows.map((r,i)=>{
-    const sRec=$alarmStatusOf(r);
     return `<tr>
       <td><input type="checkbox" class="row-ck" ${opsSel.has(r.id)?'checked':''} onclick="toggleSel('ops','${r.id}',this.checked)"></td>
       <td>${start+i+1}</td>
@@ -321,14 +320,13 @@ function renderOpsTable(){
       <td>${$alarmDuration(r.last,r.gone)}</td>
       <td>${recTag(r)}</td>
       <td>${hdTag(r)}</td>
-      <td>${sRec?sRec.by:'—'}</td>
       <td><span class="op">
         <a onclick="showOpsDetail(${start+i})">详情</a>
         ${hdOf(r)==='new'?`<a onclick="openHandle('ops',${start+i})">处理</a><a class="danger" onclick="doIgnore('ops',${start+i})">忽略</a>`:''}
       </span></td>
     </tr>`;
   }).join('')
-  :'<tr><td colspan="13"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  :'<tr><td colspan="12"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
   syncSelUI('ops');
 }
 function showOpsDetail(idx){
