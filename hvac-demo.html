@@ -215,7 +215,6 @@ const ICONS={
   ctrl:'<svg viewBox="0 0 24 24"><path d="M5 4v6M5 14v6M12 4v10M12 18v2M19 4v2M19 10v10"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="16" r="2"/><circle cx="19" cy="8" r="2"/></svg>',
   alarm:'<svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>',
   strategy:'<svg viewBox="0 0 24 24"><path d="M13 3L5 13.5h5.5L10 21l8-10.5h-5.5L13 3z"/></svg>',
-  energy:'<svg viewBox="0 0 24 24"><path d="M13 3L7 12h4l-1 9 7-11h-4l0-7z"/><path d="M4 19l4-4 3 2 7-7"/></svg>',
   device:'<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>',
   elec:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M8 3v4M16 3v4M12.5 9.5l-3 4h5l-3 4"/></svg>',
   ops:'<svg viewBox="0 0 24 24"><path d="M14.5 6.5a4.5 4.5 0 0 0-6 5.7L4 16.7a1.8 1.8 0 0 0 2.5 2.6l4.6-4.5a4.5 4.5 0 0 0 5.8-5.9l-2.7 2.7-2.4-.7-.7-2.4 2.7-2.7z"/></svg>',
@@ -243,15 +242,6 @@ const MENU=[
     {id:'strategy-ultimate',lb:'极致节能',ultimate:1},
     {id:'strategy-wind',lb:'风水联动',env:1},
     {id:'strategy-load',lb:'负荷调控'},
-  ]},
-  {t:'g',ic:'energy',lb:'能耗分析',energy:1,ch:[
-    {id:'energy-overview',lb:'能耗总览'},
-    {id:'energy-trend',lb:'趋势分析'},
-    {id:'energy-compare',lb:'对比分析'},
-    {id:'energy-rank',lb:'排行与结构'},
-    {id:'energy-load',lb:'负荷分析'},
-    {id:'energy-report',lb:'能耗报表'},
-    {id:'energy-group',lb:'群组管理'},
   ]},
   {t:'g',ic:'device',lb:'项目及设备管理',ch:[
     {id:'device-project',lb:'项目管理'},
@@ -428,12 +418,12 @@ function $msgTop(t){
    env=环境感知类页面 | ultimate=极致节能 | nb=新计费功能 | admin=系统管理扩展项
    (与现网一致:菜单随项目特性动态显隐) */
 const PROJ_META={
-  '产品部测试-按小时预付费':{pay:'pre',unit:'hour',env:1,ultimate:1,nb:1,admin:1,logo:'飞奕',meters:92},
-  '平台测试_新计费':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '二次分摊-H':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '分摊计费-ly':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '平台测试_后付费':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '001':{pay:'post',unit:'day',env:1,meters:0},
+  '产品部测试-按小时预付费':{pay:'pre',unit:'hour',env:1,ultimate:1,nb:1,admin:1,logo:'飞奕'},
+  '平台测试_新计费':{pay:'post',unit:'day',nb:1,admin:1},
+  '二次分摊-H':{pay:'post',unit:'day',nb:1,admin:1},
+  '分摊计费-ly':{pay:'post',unit:'day',nb:1,admin:1},
+  '平台测试_后付费':{pay:'post',unit:'day',nb:1,admin:1},
+  '001':{pay:'post',unit:'day',env:1},
 };
 const projSel=document.getElementById('projSel');
 function curMeta(){return PROJ_META[projSel.value]||{pay:'post',unit:'day'};}
@@ -448,11 +438,7 @@ function saveProj(name){
   saveProj(projSel.value);
 })();
 /* file:// 下 contentWindow.location 跨域受限,改用重设 src 刷新 */
-projSel.onchange=function(){
-  saveProj(this.value);$msgTop('已切换到项目:'+this.value);applyProjMeta();refreshBell();
-  if(curMeta().meters===0&&String(aid).indexOf('energy-')===0)nav('overview-big');
-  else fr.setAttribute('src',fr.getAttribute('src'));
-};
+projSel.onchange=function(){saveProj(this.value);$msgTop('已切换到项目:'+this.value);applyProjMeta();refreshBell();fr.setAttribute('src',fr.getAttribute('src'));};
 /* 项目特性 → 菜单显隐 + logo(现网 logo 按项目配置,默认用整图) */
 function applyProjMeta(){
   const m=curMeta();
@@ -470,7 +456,6 @@ function menuForProj(){
   const m=curMeta();
   const ok=it=>!(it.env&&!m.env)&&!(it.ultimate&&!m.ultimate)&&!(it.nb&&!m.nb)&&!(it.admin&&!m.admin);
   return MENU.map(g=>{
-    if(g.energy&&m.meters===0)return null;
     if(g.t==='d')return g;
     const ch=g.ch.map(c=>{
       if(!ok(c))return null;

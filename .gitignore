@@ -7,5 +7,12 @@ testcase/live-ac-cards/
 testcase/live-alarm/
 # 能耗分析端到端验证截图产物(verify-energy-*.mjs 每次运行重新生成)
 testcase/live-energy/
+# 能耗分析(暂未上传,本地保留;恢复上传时移出本节并重新 git add)
+pages/energy-*.html
+pages/_energy.css
+pages/_energy-data.js
+testcase/verify-energy-*.mjs
+testcase/verify-energy-*.cjs
+docs/能耗分析功能修改总结-20260813.md
 # superpower相关记录，仅本地保留。
 docs/superpowers/
