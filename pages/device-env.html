@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"><link rel="icon" type="image/png" href="../assets/logo-icon-dark.png">
 <title>环境感知设备管理</title>
 <link rel="stylesheet" href="_base.css">
 <style>
@@ -25,6 +25,7 @@
 .kv .v .lk:hover{color:var(--primary-hover);}
 .card-f{display:flex;gap:6px;justify-content:center;margin-top:12px;}
 .card-f .btn{height:26px;padding:0 10px;font-size:12px;}
+.bind-btn{height:22px;padding:0 10px;font-size:12px;}
 </style>
 </head>
 <body>
@@ -108,7 +109,10 @@
 const VER_MAY='SVD2.XX.1.0.1.15.2025.12.05.15_May 11 2026_B2J1';
 const VER_DEC='SVD2.XX.1.0.1.15.2025.12.05.15_Dec 30 2025_B2J1';
 function mk(type,room,sn,iccid,time,extra,install){
-  return Object.assign({type,install:install||'顶装',addr:'无',room,sn,ver:extra.ver||VER_MAY,
+  /* 版本号/电量默认值按类型区分(对齐线上:温湿度=5.1.2,门窗=1;人体感知为长固件串) */
+  const dftVer=type==='th'?'5.1.2':type==='door'?'1':VER_MAY;
+  const dftBatt=type==='door'?'74%':'100%';
+  return Object.assign({type,install:install||'顶装',addr:'无',room,sn,ver:dftVer,batt:dftBatt,
     iccid,status:'正常',time},extra);
 }
 const DEVICES=[
@@ -135,33 +139,33 @@ const DEVICES=[
   mk('body','914会议室','860608071957783','89860827102590837843','2026-06-10 11:15:56',{dist:3,idle:30}),
   mk('body','915办公室','860608072096824','89860827102590837845','2026-06-10 11:14:27',{dist:4,idle:30}),
   mk('body','918会议室','860608071869931','89860827102590837849','2026-06-10 11:16:38',{dist:3,idle:30}),
-  /* 温湿度传感器(12台) */
-  mk('th','801会议室','860608073012457','89860827102590838101','2026-06-10 11:12:35',{temp:'25.6℃',humi:'58%RH'}),
-  mk('th','803会议室','860608073036182','89860827102590838103','2026-06-10 11:14:02',{temp:'26.1℃',humi:'55%RH'}),
-  mk('th','806会议室','860608073048765','89860827102590838105','2026-06-10 11:13:26',{temp:'25.2℃',humi:'61%RH'}),
-  mk('th','808办公室','860608073051239','89860827102590838108','2026-06-10 11:15:11',{temp:'24.8℃',humi:'57%RH'}),
-  mk('th','810会议室','860608073067914','89860827102590838110','2026-06-10 11:12:58',{temp:'26.4℃',humi:'52%RH',ver:VER_DEC}),
-  mk('th','812办公室','860608073079526','89860827102590838113','2026-06-10 11:16:45',{temp:'25.9℃',humi:'59%RH'}),
-  mk('th','901会议室','860608073082347','89860827102590838115','2026-06-10 11:13:52',{temp:'25.4℃',humi:'56%RH'}),
-  mk('th','905会议室','860608073095671','89860827102590838118','2026-06-10 11:15:29',{temp:'26.0℃',humi:'54%RH'}),
-  mk('th','908办公室','860608073104582','89860827102590838120','2026-06-10 11:14:37',{temp:'25.1℃',humi:'60%RH'}),
-  mk('th','910会议室','860608073117296','89860827102590838123','2026-06-10 11:12:44',{temp:'24.6℃',humi:'62%RH'}),
-  mk('th','912办公室','860608073129418','89860827102590838125','2026-06-10 11:16:18',{temp:'25.8℃',humi:'53%RH'}),
-  mk('th','916会议室','860608073135764','89860827102590838128','2026-06-10 11:13:09',{temp:'26.3℃',humi:'51%RH'}),
-  /* 门窗感知传感器(8台) */
-  mk('door','801会议室','860608074023615','89860827102590839201','2026-06-10 11:11:42',{door:'关闭'},'壁装'),
-  mk('door','803会议室','860608074038427','89860827102590839203','2026-06-10 11:13:18',{door:'关闭'},'壁装'),
-  mk('door','806会议室','860608074041953','89860827102590839205','2026-06-10 11:14:55',{door:'打开'},'壁装'),
-  mk('door','810办公室','860608074056284','89860827102590839207','2026-06-10 11:12:31',{door:'关闭'},'壁装'),
-  mk('door','901会议室','860608074067519','89860827102590839210','2026-06-10 11:15:47',{door:'关闭'},'壁装'),
-  mk('door','908会议室','860608074078342','89860827102590839212','2026-06-10 11:13:04',{door:'打开',ver:VER_DEC},'壁装'),
-  mk('door','912办公室','860608074089156','89860827102590839215','2026-06-10 11:16:12',{door:'关闭'},'壁装'),
-  mk('door','916会议室','860608074092673','89860827102590839217','2026-06-10 11:14:09',{door:'关闭'},'壁装')
+  /* 温湿度传感器(12台,前4台对齐截图:前3台未绑定房间,第4台已绑定产品部且有自定义名) */
+  mk('th','','862929080584888','89861125221099461379','2026-08-14 14:19:43',{temp:'27.4℃',humi:'62%RH'}),
+  mk('th','','862929080617324','89861125221099461387','2026-08-14 14:19:54',{temp:'27.2℃',humi:'62%RH'}),
+  mk('th','','862929080584987','89861125221099461171','2026-08-14 14:29:35',{temp:'27.7℃',humi:'61%RH'}),
+  mk('th','产品部','862929080585208','89861125221099461361','2026-08-14 14:11:46',{temp:'27.6℃',humi:'60%RH',cname:'丁文武测试-10分钟变化-1小时'}),
+  mk('th','801会议室','862929080590142','89861125221099461302','2026-08-14 14:18:22',{temp:'26.8℃',humi:'59%RH'}),
+  mk('th','803会议室','862929080591357','89861125221099461315','2026-08-14 14:17:40',{temp:'26.5℃',humi:'58%RH'}),
+  mk('th','806会议室','862929080592681','89861125221099461328','2026-08-14 14:16:09',{temp:'27.1℃',humi:'60%RH'}),
+  mk('th','808办公室','862929080593796','89861125221099461333','2026-08-14 14:15:31',{temp:'26.9℃',humi:'57%RH'}),
+  mk('th','810会议室','862929080595213','89861125221099461346','2026-08-14 14:14:52',{temp:'27.3℃',humi:'61%RH'}),
+  mk('th','901会议室','862929080596428','89861125221099461359','2026-08-14 14:13:18',{temp:'26.6℃',humi:'56%RH'}),
+  mk('th','905会议室','862929080597534','89861125221099461364','2026-08-14 14:12:47',{temp:'27.0℃',humi:'59%RH'}),
+  mk('th','908办公室','862929080598649','89861125221099461372','2026-08-14 14:11:03',{temp:'26.7℃',humi:'58%RH'}),
+  /* 门窗感知传感器(8台,首台对齐截图;线上卡片无门磁状态,展示防拆告警状态) */
+  mk('door','812会议室','861028085777133','89860861172540363074','2026-08-14 11:07:35',{tamper:'正常'},'壁装'),
+  mk('door','801会议室','861028085770246','89860861172540363055','2026-08-14 11:06:58',{tamper:'正常'},'壁装'),
+  mk('door','803会议室','861028085771359','89860861172540363061','2026-08-14 11:06:12',{tamper:'正常'},'壁装'),
+  mk('door','806会议室','861028085772462','89860861172540363088','2026-08-14 11:05:47',{tamper:'正常'},'壁装'),
+  mk('door','808办公室','861028085773575','89860861172540363093','2026-08-14 11:05:20',{tamper:'正常'},'壁装'),
+  mk('door','810会议室','861028085774688','89860861172540363106','2026-08-14 11:04:36',{tamper:'正常'},'壁装'),
+  mk('door','901会议室','861028085775791','89860861172540363112','2026-08-14 11:03:54',{tamper:'正常'},'壁装'),
+  mk('door','905会议室','861028085776805','89860861172540363129','2026-08-14 11:03:11',{tamper:'正常'},'壁装')
 ];
 
-/* 自定义名字:默认按 房间+类型 生成,通过卡片右上角编辑图标修改 */
+/* 自定义名字:人体感知默认按 房间+类型 生成;温湿度/门窗默认无名称(对齐线上),均通过卡片右上角编辑图标修改 */
 const TYPE_NAME={th:'温湿度传感器',body:'人体感知传感器',door:'门窗感知传感器'};
-DEVICES.forEach(d=>d.cname=d.room+TYPE_NAME[d.type].slice(0,-3));
+DEVICES.forEach(d=>{ if(!d.cname) d.cname=d.type==='body'?d.room+TYPE_NAME[d.type].slice(0,-3):''; });
 
 /* ══════════ 标签页 / 卡片渲染 ══════════ */
 let tab='th';
@@ -181,15 +185,7 @@ function renderCards(){
   const rows=list.slice(start,start+pg.size);
   document.getElementById('cards').innerHTML=rows.length?rows.map(d=>{
     const gi=DEVICES.indexOf(d);
-    let mid='';
-    if(tab==='body') mid=`
-      <div class="kv"><span class="k">探测距离</span><span class="v">${d.dist}${kvEdit(gi,'dist','探测距离')}</span></div>
-      <div class="kv"><span class="k">无人时间</span><span class="v">${d.idle}${kvEdit(gi,'idle','无人时间')}</span></div>`;
-    else if(tab==='th') mid=`
-      <div class="kv"><span class="k">温度</span><span class="v">${d.temp}</span></div>
-      <div class="kv"><span class="k">湿度</span><span class="v">${d.humi}</span></div>`;
-    else mid=`<div class="kv"><span class="k">门磁状态</span><span class="v ${d.door==='打开'?'text-wn':''}">${d.door}</span></div>`;
-    return `<div class="card">
+    if(tab==='body') return `<div class="card">
       <div class="card-h">
         <span class="ttl" title="查看详情" onclick="showDetail(${gi})">${d.cname}</span>
         <span class="edit-ic" title="编辑自定义名字" onclick="openName(${gi})">🖉</span>
@@ -199,13 +195,40 @@ function renderCards(){
       <div class="kv"><span class="k">房间</span><span class="v">${d.room}${kvEdit(gi,'room','房间')}</span></div>
       <div class="kv"><span class="k">设备SN</span><span class="v">${d.sn}</span></div>
       <div class="kv"><span class="k">版本号</span><span class="v">${d.ver}</span></div>
-      ${mid}
+      <div class="kv"><span class="k">探测距离</span><span class="v">${d.dist}${kvEdit(gi,'dist','探测距离')}</span></div>
+      <div class="kv"><span class="k">无人时间</span><span class="v">${d.idle}${kvEdit(gi,'idle','无人时间')}</span></div>
       <div class="kv"><span class="k">ICCID</span><span class="v">${d.iccid}</span></div>
       <div class="kv"><span class="k">设备在线状态</span><span class="v text-ok">${d.status}</span></div>
       <div class="kv"><span class="k">通信时间</span><span class="v">${d.time}</span></div>
       <div class="card-f">
         <button class="btn btnp" onclick="$msg('同步指令已下发')">手动同步</button>
         <button class="btn" onclick="doReboot(${gi})">重启</button>
+        <button class="btn" onclick="doDel(${gi})">删除</button>
+      </div>
+    </div>`;
+    /* 温湿度/门窗(对齐线上截图):默认无标题、无安装方式、未绑定房间显示[绑定房间]按钮、底部仅[删除] */
+    const roomCell=d.room?`${d.room}${kvEdit(gi,'room','房间')}`
+      :`<button class="btn btnp bind-btn" onclick="openEdit(${gi},'room','房间')">绑定房间</button>`;
+    const typed=tab==='th'?`
+      <div class="kv"><span class="k">温度</span><span class="v">${d.temp}</span></div>
+      <div class="kv"><span class="k">湿度</span><span class="v">${d.humi}</span></div>
+      <div class="kv"><span class="k">设备电量</span><span class="v">${d.batt}</span></div>`:`
+      <div class="kv"><span class="k">设备电量</span><span class="v">${d.batt}</span></div>
+      <div class="kv"><span class="k">防拆告警状态</span><span class="v">${d.tamper}</span></div>`;
+    return `<div class="card">
+      <div class="card-h">
+        ${d.cname?`<span class="ttl" style="cursor:default">${d.cname}</span>`:'<span></span>'}
+        <span class="edit-ic" title="编辑自定义名字" onclick="openName(${gi})">🖉</span>
+      </div>
+      <div class="kv"><span class="k">地址</span><span class="v">${d.addr}</span></div>
+      <div class="kv"><span class="k">房间</span><span class="v">${roomCell}</span></div>
+      <div class="kv"><span class="k">设备SN</span><span class="v">${d.sn}</span></div>
+      <div class="kv"><span class="k">版本号</span><span class="v">${d.ver}</span></div>
+      ${typed}
+      <div class="kv"><span class="k">ICCID</span><span class="v">${d.iccid}</span></div>
+      <div class="kv"><span class="k">设备在线状态</span><span class="v text-ok">${d.status}</span></div>
+      <div class="kv"><span class="k">通信时间</span><span class="v">${d.time}</span></div>
+      <div class="card-f">
         <button class="btn" onclick="doDel(${gi})">删除</button>
       </div>
     </div>`;
@@ -280,10 +303,12 @@ function saveAdd(){
   const sn=document.getElementById('aSn').value.trim();
   if(!sn){$msg('请输入设备SN','warning');return;}
   const t=document.getElementById('aType').value;
-  const extra=t==='body'?{dist:3,idle:30}:t==='th'?{temp:'25.0℃',humi:'55%RH'}:{door:'关闭'};
-  DEVICES.unshift(mk(t,document.getElementById('aRoom').value.trim()||'未分配',sn,
+  const extra=t==='body'?{dist:3,idle:30}:t==='th'?{temp:'25.0℃',humi:'55%RH'}:{tamper:'正常'};
+  const nd=mk(t,document.getElementById('aRoom').value.trim(),sn,
     '898608271025908'+String(39900+Math.floor(Math.random()*90)),
-    '2026-06-10 '+new Date().toTimeString().slice(0,8),extra,document.getElementById('aInstall').value));
+    '2026-08-14 '+new Date().toTimeString().slice(0,8),extra,document.getElementById('aInstall').value);
+  nd.cname=t==='body'&&nd.room?nd.room+TYPE_NAME[t].slice(0,-3):'';
+  DEVICES.unshift(nd);
   $modalClose('dlgAdd');setTab(t);$msg('添加成功');
 }
 function doRefresh(){ renderCards();$msg('刷新成功'); }
