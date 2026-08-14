@@ -152,7 +152,7 @@ function renderBrandList(){
   document.getElementById('paBrandList').innerHTML=brands.map(b=>`<option value="${b}">`).join('');
 }
 
-/* ═══════ 项目自定义(仅故障等级自定义;通用库无此码时须先联系飞奕维护至通用故障码库) ═══════ */
+/* ═══════ 项目自定义(仅故障等级自定义;通用库无此码时须先联系技术人员维护至通用故障码库) ═══════ */
 let paList=[];
 function projAddEntries(){
   const cfg=$alarmProjCodeGet(curProj);
@@ -197,7 +197,7 @@ function openProjAdd(key){
   paKeyChange(true);
   $modal('dlgProjAdd');
 }
-/* 品牌+代码输入后即时校验:通用库有此码方可自定义等级;无此码提示联系飞奕维护 */
+/* 品牌+代码输入后即时校验:通用库有此码方可自定义等级;无此码提示联系技术人员维护 */
 function paKeyChange(keepVals){
   const brand=document.getElementById('paBrand').value.trim();
   const code=document.getElementById('paCode').value.trim();   /* 保留原始大小写,匹配按防混淆规则容错 */

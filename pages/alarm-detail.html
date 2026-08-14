@@ -482,7 +482,7 @@ function showAcDetail(idx){
     <span class="k">故障等级:</span><span class="v">${lvTag(lv)}</span>
     ${entry&&entry.advice?`
     <span class="k">排查建议:</span><span class="v"><div class="advice-box">${entry.advice}</div></span>`
-    :(blocked?'':`<span class="k">排查建议:</span><span class="v"><div class="advice-box">该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。</div></span>`)}
+    :(blocked?'':`<span class="k">排查建议:</span><span class="v"><div class="advice-box">该代码未收录进通用代码库,默认按警示处理,请联系技术人员维护至通用故障码库。</div></span>`)}
     <span class="k">故障发生时间:</span><span class="v">${r.devTime}</span>
     <span class="k">故障恢复时间:</span><span class="v">${r.gone?`<span class="text-ok">${r.gone}</span>`:'—'}</span>
     <span class="k">持续时长:</span><span class="v">${$alarmDuration(r.devTime,r.gone)}</span>
@@ -537,7 +537,7 @@ function openHandle(kind,idx){
     /* 摘要仅:内机位置(楼栋楼层房间)/内机地址/故障代码/故障描述/排查建议(未收录码提示与详情弹窗一致) */
     const entry=$alarmProjEntry(r.brand,r.code);
     const blocked=!!$alarmProjBlockedKey($alarmProjCodeGet($alarmCurProj()),r.brand,r.code);
-    const advice=entry&&entry.advice?entry.advice:(blocked?'—':'该代码未收录进通用代码库,默认按警示处理,请联系飞奕维护至通用故障码库。');
+    const advice=entry&&entry.advice?entry.advice:(blocked?'—':'该代码未收录进通用代码库,默认按警示处理,请联系技术人员维护至通用故障码库。');
     sum=`<b>${r.bld} ${r.fl} ${r.room}</b> · 内机 ${r.addr}<br>故障代码 ${r.code} · ${entry&&entry.name?entry.name:'未知故障'}<br><div style="white-space:pre-line">排查建议:${advice}</div>`;
   }
   document.getElementById('handleSum').innerHTML=sum;
