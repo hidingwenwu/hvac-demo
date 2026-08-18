@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><link rel="icon" type="image/png" href="../assets/logo-icon-dark.png"><meta name="viewport" content="width=device-width,initial-scale=1"><title>能耗报表</title><link rel="stylesheet" href="_base.css"><link rel="stylesheet" href="_energy.css"></head>
+<body>
+<div class="energy-page">
+  <div class="energy-head"><div class="energy-head-copy"><h1>能耗报表</h1><div class="energy-head-note">（按项目计量周期生成能耗报表；仅统计能耗与运行指标）</div></div></div>
+  <div class="energy-filter"><div class="fb">
+    <div class="fi"><span class="fl">报表类型</span><select id="reportType"></select></div>
+    <div class="fi"><span class="fl">汇总层级</span><select id="reportLevel"><option value="project">项目汇总</option><option value="building">按楼栋</option><option value="tenant">按租户</option><option value="room" selected>按房间</option><option value="group">按群组</option><option value="meter">按电表</option></select></div>
+    <div class="fi" id="periodHour" style="display:none"><span class="fl">报告期</span><input type="datetime-local" step="3600"></div>
+    <div class="fi" id="periodDay" style="display:none"><span class="fl">报告期</span><input type="date"></div>
+    <div class="fi" id="periodMonth"><span class="fl">报告期</span><input type="month"></div>
+    <div class="fi" id="periodYear" style="display:none"><span class="fl">报告期</span><select></select></div>
+    <button class="btn btnp" id="queryReport">查询</button><button class="btn" id="exportReport">⬆ 导出 Excel</button>
+  </div></div>
+  <div class="energy-note">同比为本期与上年同期比较；环比为本期与上一等长周期比较。对比期无数据时显示“--”。</div>
+  <section class="energy-panel"><div class="energy-panel-head"><div><div class="energy-panel-title" id="reportTitle">能耗月报</div><div class="energy-panel-sub" id="reportPeriod">--</div></div></div>
+    <div class="tw"><table><thead><tr><th>对象</th><th>总能耗(kWh)</th><th>运行时长(h)</th><th>单位时长能耗(kWh/h)</th><th>环比</th><th>同比</th></tr></thead><tbody id="reportRows"></tbody><tfoot><tr class="energy-total-row"><td>合计</td><td id="reportTotalEnergy" data-value="0">--</td><td id="reportTotalRuntime">--</td><td>--</td><td>--</td><td>--</td></tr></tfoot></table></div><div id="reportPager"></div>
+  </section>
+</div>
+<script src="_ui.js"></script><script src="_fleet.js"></script><script src="_energy-data.js"></script>
+<script>
+var energy=HvacEnergy,report=null,dataWindow=energy.getDataWindow();
+var reportPg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:function(){renderRows();}};
+var params=new URLSearchParams(location.search);
+function fmt(value,digits){return energy.formatNumber(value,digits);}
+function dateText(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
+function minDate(left,right){return left<right?left:right;}
+function maxDate(left,right){return left>right?left:right;}
+function reportTypes(){return energy.getProject().unit==='hour'?[{value:'hour',label:'能耗时报'},{value:'day',label:'能耗日报'},{value:'month',label:'能耗月报'},{value:'year',label:'能耗年报'}]:[{value:'day',label:'能耗日报'},{value:'month',label:'能耗月报'},{value:'year',label:'能耗年报'}];}
+function fillReportTypes(){var select=document.getElementById('reportType'),types=reportTypes();select.innerHTML=types.map(function(item){return '<option value="'+item.value+'">'+item.label+'</option>';}).join('');select.value=types.some(function(item){return item.value==='month';})?'month':types[0].value;}
+function initializePeriods(){var today=dataWindow.to,now=new Date(),hour=String(now.getHours()).padStart(2,'0');document.querySelector('#periodHour input').value=today+'T'+hour+':00';document.querySelector('#periodHour input').min=dataWindow.from+'T00:00';document.querySelector('#periodHour input').max=today+'T23:00';document.querySelector('#periodDay input').value=today;document.querySelector('#periodDay input').min=dataWindow.from;document.querySelector('#periodDay input').max=today;document.querySelector('#periodMonth input').value=today.slice(0,7);document.querySelector('#periodMonth input').min=dataWindow.from.slice(0,7);document.querySelector('#periodMonth input').max=today.slice(0,7);var yearSelect=document.querySelector('#periodYear select'),start=Number(dataWindow.from.slice(0,4)),end=Number(today.slice(0,4)),years=[];for(var year=end;year>=start;year--)years.push('<option value="'+year+'">'+year+' 年</option>');yearSelect.innerHTML=years.join('');}
+function reportRange(){var type=document.getElementById('reportType').value;if(type==='hour'){var hour=document.querySelector('#periodHour input').value.replace('T',' ');return {from:hour,to:hour};}if(type==='day'){var day=document.querySelector('#periodDay input').value;return {from:day,to:day};}if(type==='year'){var year=document.querySelector('#periodYear select').value;return {from:maxDate(year+'-01-01',dataWindow.from),to:minDate(year+'-12-31',dataWindow.to)};}var month=document.querySelector('#periodMonth input').value,parts=month.split('-'),end=dateText(new Date(Number(parts[0]),Number(parts[1]),0));return {from:maxDate(month+'-01',dataWindow.from),to:minDate(end,dataWindow.to)};}
+function syncPeriod(){var type=document.getElementById('reportType').value;['Hour','Day','Month','Year'].forEach(function(name){document.getElementById('period'+name).style.display=type===name.toLowerCase()?'flex':'none';});}
+function rateCell(value,attribute){if(value==null)return '<td '+attribute+'="">--</td>';var className=value>0?'energy-up':value<0?'energy-down':'',arrow=value>0?'↑ ':value<0?'↓ ':'';return '<td class="'+className+'" '+attribute+'="'+value+'">'+arrow+Math.abs(value).toFixed(1)+'%</td>';}
+function render(){var range=reportRange(),level=document.getElementById('reportLevel').value,type=document.getElementById('reportType').value;report=energy.getReport({level:level,granularity:type,from:range.from,to:range.to});document.getElementById('reportTitle').textContent=document.getElementById('reportType').selectedOptions[0].text;document.getElementById('reportPeriod').textContent=range.from+' 至 '+range.to+' · '+document.getElementById('reportLevel').selectedOptions[0].text;reportPg.page=1;reportPg.total=report.rows.length;$pager('reportPager',reportPg);renderRows();document.getElementById('reportTotalEnergy').dataset.value=report.total.energy;document.getElementById('reportTotalEnergy').textContent=fmt(report.total.energy);document.getElementById('reportTotalRuntime').textContent=fmt(report.total.runtime);}
+function renderRows(){var start=(reportPg.page-1)*reportPg.size;document.getElementById('reportRows').innerHTML=report.rows.slice(start,start+reportPg.size).map(function(row){return '<tr><td>'+row.name+'</td><td data-energy="'+row.energy+'">'+fmt(row.energy)+'</td><td>'+fmt(row.runtime)+'</td><td>'+fmt(row.unitEnergy)+'</td>'+rateCell(row.momRate,'data-mom-rate')+rateCell(row.yoyRate,'data-yoy-rate')+'</tr>';}).join('')||'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';}
+document.getElementById('reportType').onchange=function(){syncPeriod();render();};
+document.getElementById('queryReport').onclick=render;
+document.getElementById('exportReport').onclick=function(){var range=reportRange(),type=document.getElementById('reportType').selectedOptions[0].text,level=document.getElementById('reportLevel').selectedOptions[0].text.replace('按','');$msg(type+'（'+level+'，'+range.from+' 至 '+range.to+'）导出任务已生成');};
+fillReportTypes();initializePeriods();if(params.get('type')&&reportTypes().some(function(item){return item.value===params.get('type');}))document.getElementById('reportType').value=params.get('type');syncPeriod();render();
+</script></body></html>
