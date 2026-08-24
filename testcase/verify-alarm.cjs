@@ -527,6 +527,7 @@ const server = http.createServer((req, res) => {
     assert.ok(!drawerTxt.includes('根因抑制'), '根因抑制规则已从原型移除');
     assert.ok(!drawerTxt.includes('静音'), '故障级豁免注解不应使用「静音」表述');
     assert.ok(!drawerTxt.includes('测试推送'), '推送测试功能已取消');
+    assert.ok(!drawerTxt.includes('推送策略仅作用于短信'), '「推送策略仅作用于短信…」说明提示已移除(2026-08-24)');
     assert.equal(await fr.evaluate(() => !!document.getElementById('dFreq')), false, '24h 频控配置项应移除(内置去重替代)');
     /* 推送记录弹窗(按项目):3 条短信种子(根因合并流水已移除,无站内信流水) */
     await page.frameLocator('#fr').locator('#drawer .dx').click();
@@ -537,6 +538,12 @@ const server = http.createServer((req, res) => {
     assert.ok(!logTxt.includes('等故障'), '根因合并推送流水应移除');
     assert.ok(logTxt.includes('【空调集控】'), '短信签名应为【空调集控】');
     assert.ok(!(await page.frameLocator('#fr').locator('#dlgLog').innerText()).includes('站内信'), '推送记录不应再有站内信渠道');
+    /* 「预警类型」更名「故障等级」(2026-08-24,与故障详情口径一致);每日汇总短信覆盖各级别,等级统一按「提示」记录,内容按前一自然日汇总 */
+    const logHead = await page.frameLocator('#fr').locator('#dlgLog thead').innerText();
+    assert.ok(logHead.includes('故障等级') && !logHead.includes('预警类型'), '推送记录列应为「故障等级」,与故障详情口径一致');
+    assert.ok((await page.frameLocator('#fr').locator('#lType').innerText()).includes('故障等级'), '推送记录等级筛选项应为「故障等级」');
+    const sumRows = await fr.evaluate(() => window.$alarmPushLogGet().filter(r => r.tpl === 'hvac_fault_daily_sms'));
+    assert.ok(sumRows.length >= 2 && sumRows.every(r => r.type === '提示' && !r.content.includes('截至')), '每日汇总推送记录故障等级应统一为「提示」,内容按前一自然日汇总');
     await page.frameLocator('#fr').locator('#dlgLog .dx').click();
     /* 推送测试已取消(2026-08-04 评审):抽屉底部仅 取消/保存,推送记录保持 3 条种子 */
     await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
@@ -548,9 +555,22 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('.op a', { hasText: '推送配置' }).first().click();
     await page.frameLocator('#fr').locator('#drawer.show').waitFor();
     assert.ok(await page.frameLocator('#fr').locator('#dDndRow').isVisible(), '实时推送应展示免打扰设置');
+    assert.ok(await page.frameLocator('#fr').locator('#dDailyTip').isHidden(), '实时推送不展示每日汇总提示说明');
     await page.frameLocator('#fr').locator('input[name="dMode"][value="daily"]').check();
     assert.ok(await page.frameLocator('#fr').locator('#dDailyTime').isVisible(), '每日汇总应显示汇总时刻');
     assert.ok(await page.frameLocator('#fr').locator('#dDndRow').isHidden(), '每日汇总时不展示免打扰设置');
+    /* 每日汇总时段限定 5:00-12:00(2026-08-24):min/max 属性 + 提示说明 + 超范围保存拦截 */
+    const dtRange = await fr.evaluate(() => ({ min: document.getElementById('dDailyTime').min, max: document.getElementById('dDailyTime').max }));
+    assert.deepEqual(dtRange, { min: '05:00', max: '12:00' }, '每日汇总时刻可选范围应为 5:00-12:00');
+    assert.ok(await page.frameLocator('#fr').locator('#dDailyTip').isVisible(), '每日汇总应展示提示说明');
+    const dailyTipTxt = await page.frameLocator('#fr').locator('#dDailyTip').innerText();
+    assert.ok(dailyTipTxt.includes('运营商网络') && dailyTipTxt.includes('前一个自然日'), '提示应说明:设定时刻为短信发起推送时间、到达时间取决于运营商网络、内容为前一自然日汇总');
+    await page.frameLocator('#fr').locator('#dDailyTime').fill('13:00');
+    await page.frameLocator('#fr').locator('#drawer button', { hasText: '保存' }).click();
+    await page.waitForTimeout(300);
+    assert.ok((await page.frameLocator('#fr').locator('.msg.error').allInnerTexts()).some(t => t.includes('5:00-12:00')), '超出 5:00-12:00 保存应报错拦截');
+    assert.ok(await page.frameLocator('#fr').locator('#drawer.show').isVisible(), '校验未通过时抽屉应保持打开');
+    await page.frameLocator('#fr').locator('#dDailyTime').fill('09:00');
     await page.frameLocator('#fr').locator('#drawer button', { hasText: '保存' }).click();
     await page.waitForTimeout(300);
     assert.ok((await page.frameLocator('#fr').locator('#tbody tr').first().innerText()).includes('每日汇总'), '保存后列表应显示每日汇总');
@@ -614,7 +634,7 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#drawer .dx').click();
     await page.waitForTimeout(200);
     await page.screenshot({ path: path.join(SHOT, 'alarm-push.png') });
-    console.log('OK 故障推送:6 列表格、项目名纯文本、推送方式筛选、合并推送配置抽屉(范围+接收人+策略;去重后台内置不展示;无测试推送)、每日汇总免打扰联动、推送记录 3 条种子、代码库弹窗、001 手机号验证码验证后添加保存');
+    console.log('OK 故障推送:6 列表格、项目名纯文本、推送方式筛选、合并推送配置抽屉(范围+接收人+策略;去重后台内置不展示;无测试推送;「推送策略仅作用于短信」提示已移除)、每日汇总免打扰联动、推送记录故障等级列(预警类型已更名,每日汇总统一「提示」级,含 3 条汇总示例)、每日汇总时段 5:00-12:00 限制与提示、推送记录种子、代码库弹窗、001 手机号验证码验证后添加保存');
 
     /* ── 9. 非计费项目(001):计费分摊过滤 ── */
     await page.selectOption('#projSel', '001');

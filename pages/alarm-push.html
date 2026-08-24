@@ -109,8 +109,9 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         <span class="fl2">推送方式</span>
         <label class="ck"><input type="radio" name="dMode" value="realtime" checked> 实时推送</label>
         <label class="ck"><input type="radio" name="dMode" value="daily"> 每日汇总</label>
-        <input type="time" id="dDailyTime" value="09:00" style="width:110px;display:none">
+        <input type="time" id="dDailyTime" value="09:00" min="05:00" max="12:00" style="width:110px;display:none">
       </div>
+      <div class="tip" id="dDailyTip" style="display:none;margin-left:98px">每日汇总在设定时刻(<b>可选范围 5:00-12:00</b>)发起短信推送,汇总内容为<b>前一个自然日</b>(0:00-24:00)新产生的故障预警;设定时刻为短信发起推送时间,实际到达手机的时间取决于运营商网络,可能略有延迟。</div>
       <div class="st-row" id="dDndRow">
         <span class="fl2">免打扰时段</span>
         <span class="switch" id="dDnd" onclick="this.classList.toggle('on');syncDnd()"></span>
@@ -121,7 +122,6 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         </span>
       </div>
       <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内产生的预警不发送短信(时段结束后不补发);勾选「<b>故障级豁免</b>」后,故障级预警不受免打扰限制、仍照常推送,确保严重故障不漏报。豁免仅决定是否发送短信,平台内记录与统计不受影响。</div>
-      <div class="tip">推送策略仅作用于短信(铃铛红点为全局提醒,不适用);生效优先级:推送方式 → 免打扰;免打扰时段(含故障级豁免)仅对实时推送生效,选择每日汇总时无需设定免打扰。</div>
     </div>
   </div>
   <div class="df" style="border-top:1px solid var(--bd)">
@@ -136,7 +136,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
     <div class="dh"><span id="logTitle">推送记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
     <div class="db" style="max-height:84vh">
       <div class="fb">
-        <div class="fi"><select id="lType" style="width:120px"><option value="">预警类型</option><option>故障</option><option>警示</option><option>提示</option></select></div>
+        <div class="fi"><select id="lType" style="width:120px"><option value="">故障等级</option><option>故障</option><option>警示</option><option>提示</option></select></div>
         <div class="fi"><select id="lSend" style="width:120px"><option value="">发送状态</option><option>已发送</option><option>发送中</option><option>发送失败</option></select></div>
         <div class="fi"><input id="lRecv" placeholder="接收对象" style="width:150px"></div>
         <div class="fi"><span class="fl">发生时间</span>
@@ -148,7 +148,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
       <div class="tw">
         <table>
           <thead><tr>
-            <th>序号</th><th>接收对象</th><th>预警类型</th><th>标题</th><th>内容</th>
+            <th>序号</th><th>接收对象</th><th>故障等级</th><th>标题</th><th>内容</th>
             <th>消息模版</th><th>发送状态</th><th>发生时间</th>
           </tr></thead>
           <tbody id="logBody"></tbody>
@@ -298,6 +298,7 @@ function syncDnd(){
 function syncMode(){
   const daily=document.querySelector('input[name="dMode"]:checked').value==='daily';
   document.getElementById('dDailyTime').style.display=daily?'inline-block':'none';
+  document.getElementById('dDailyTip').style.display=daily?'block':'none';
   document.getElementById('dDndRow').style.display=daily?'none':'flex';
   if(daily)document.getElementById('dDndTip').style.display='none';
   else syncDnd();
@@ -406,6 +407,11 @@ function saveCfg(){
   collectDraft();
   if(draft.enabled&&!draft.receivers.length){$msg('已开启推送但未添加接收人,请先添加','error');return;}
   if(!draft.scope.levels.length||!draft.scope.cats.length){$msg('推送范围需至少选择一个故障等级和一个故障类别','error');return;}
+  /* 每日汇总时刻限定 5:00-12:00(上午完成前一自然日汇总推送,避免午后/晚间打扰) */
+  if(draft.strategy.mode==='daily'){
+    const t=draft.strategy.dailyTime;
+    if(!t||t<'05:00'||t>'12:00'){$msg('每日汇总推送时刻可选范围为 5:00-12:00','error');return;}
+  }
   $alarmPushCfgSet(curProj,draft);
   closeDrawer();
   renderTable();
