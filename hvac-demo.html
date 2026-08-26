@@ -96,32 +96,17 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .hd-ann-popup-title{font-size:13.5px;font-weight:700;color:var(--txw);line-height:1.4;}
 .hd-ann-popup-body{font-size:12px;color:var(--ts);line-height:1.7;}
 
-/* 预警通知下拉面板(铃铛) */
+/* 故障摘要下拉面板(铃铛) */
 .alarm-panel{position:fixed;z-index:9000;width:380px;background:#1a2233;border:1px solid var(--bd);border-radius:8px;box-shadow:0 16px 48px rgba(0,0,0,.6);display:none;overflow:hidden;}
 .alarm-panel.show{display:block;}
 .ap-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);font-size:14px;font-weight:600;color:var(--txw);}
-.ap-hd .ap-all{font-size:12px;color:var(--primary);cursor:pointer;font-weight:400;}
-.ap-hd .ap-all:hover{color:var(--primary-hover,#4080ff);}
 .ap-cnts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;border-bottom:1px solid var(--bd);}
-.ap-sec{padding:10px 16px 2px;font-size:12px;color:var(--ts);}
-.ap-cnt{background:#0b1426;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;}
-.ap-cnt:hover{background:#141b30;}
+.ap-cnt{background:#0b1426;border-radius:6px;padding:8px 6px;text-align:center;}
 .ap-cnt .n{font-size:18px;font-weight:700;line-height:1.2;}
 .ap-cnt .t{font-size:11px;color:var(--ts);margin-top:2px;}
-.ap-list{max-height:300px;overflow-y:auto;}
-.ap-item{display:flex;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);}
-.ap-item:hover{background:#232d48;}
-.ap-item:last-child{border-bottom:none;}
-.ap-item .ai-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
-.ap-item .ai-main{flex:1;min-width:0;}
-.ap-item .ai-t{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ap-item .ai-t .done{color:var(--ok);font-size:11px;}
-.ap-item .ai-s{font-size:11px;color:var(--tw3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ap-item .ai-time{font-size:11px;color:var(--tw3);flex-shrink:0;margin-top:2px;}
-.ap-ft{padding:10px 16px;text-align:center;border-top:1px solid var(--bd);}
+.ap-ft{padding:10px 16px;text-align:center;}
 .ap-ft span{color:var(--primary);font-size:13px;cursor:pointer;}
 .ap-ft span:hover{color:#4080ff;}
-.ap-empty{padding:30px;text-align:center;color:var(--tw3);font-size:13px;}
 
 .content{flex:1;overflow:hidden;background:var(--bg);}
 .content iframe{width:100%;height:100%;border:none;display:block;}
@@ -168,7 +153,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <div class="hd-act" title="操作指引" onclick="window.open('pages/guide-view.html','_blank')">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.8.3-1 .9-1 1.8"/><circle cx="12" cy="16.6" r=".4" fill="currentColor"/></svg>
         </div>
-        <div class="hd-act" title="故障通知" id="alarmBell" onclick="toggleAlarmPanel(event)">
+        <div class="hd-act" title="故障摘要" id="alarmBell" onclick="toggleAlarmPanel(event)">
           <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>
           <span class="bdg" id="alarmBdg" style="display:none"></span>
         </div>
@@ -193,13 +178,11 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <div class="hd-ann-popup-body" id="hdAnnPopupBody"></div>
         </div>
       </div>
-      <!-- 预警通知下拉面板 -->
+      <!-- 故障摘要下拉面板:仅三张小卡片(今日新增/未处理总数/故障级),纯展示不跳转 -->
       <div class="alarm-panel" id="alarmPanel">
-        <div class="ap-hd"><span>故障通知</span></div>
+        <div class="ap-hd"><span>故障摘要</span></div>
         <div class="ap-cnts" id="apCnts"></div>
-        <div class="ap-sec">最近故障级预警(最新 3 条)</div>
-        <div class="ap-list" id="apList"></div>
-        <div class="ap-ft"><span onclick="goAlarm('alarm-overview')">查看详情</span></div>
+        <div class="ap-ft"><span onclick="goAlarm('alarm-overview')">故障总览</span></div>
       </div>
     </header>
     <main class="content"><iframe id="fr" src="pages/overview-big.html"></iframe></main>
@@ -521,7 +504,7 @@ function showAnnPopup(el){
 function hideAnnPopup(){document.getElementById('hdAnnPopup').classList.remove('show');}
 initAnnouncement();
 
-/* ── 预警通知(铃铛角标 + 下拉面板,数据来自共享数据层 _alarm-data.js) ── */
+/* ── 故障摘要(铃铛角标 + 下拉面板,数据来自共享数据层 _alarm-data.js) ── */
 const alarmPanel=document.getElementById('alarmPanel');
 function openAlarmPanel(){
   renderAlarmPanel();
@@ -555,41 +538,20 @@ function refreshBell(){
 function renderAlarmPanel(){
   const bill=$alarmProjBill(projSel.value);
   const c=$alarmCounts({bill});
-  /* 三个小卡片:今日新增 / 未处理总数 / 故障级(今日新增深链带当日范围+全部状态,与卡片口径一致) */
+  /* 三个小卡片:今日新增 / 未处理总数 / 故障级(纯展示,不做跳转;查看明细经底部「故障总览」进入) */
   const cells=[
-    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','today=1')"><div class="n" style="color:#5a8dff">${$alarmTodayNew({bill})}</div><div class="t">今日新增</div></div>`,
-    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','status=new')"><div class="n" style="color:#e6a23c">${c.total}</div><div class="t">未处理总数</div></div>`,
-    `<div class="ap-cnt" onclick="goAlarm('alarm-detail','level=1&status=new')"><div class="n" style="color:#f56c6c">${c.lv1}</div><div class="t">故障级</div></div>`,
+    `<div class="ap-cnt"><div class="n" style="color:#5a8dff">${$alarmTodayNew({bill})}</div><div class="t">今日新增</div></div>`,
+    `<div class="ap-cnt"><div class="n" style="color:#e6a23c">${c.total}</div><div class="t">未处理总数</div></div>`,
+    `<div class="ap-cnt"><div class="n" style="color:#f56c6c">${c.lv1}</div><div class="t">故障级</div></div>`,
   ];
   const apCnts=document.getElementById('apCnts');
   apCnts.style.gridTemplateColumns=`repeat(${cells.length},1fr)`;
   apCnts.innerHTML=cells.join('');
-  /* 明细:仅最近 3 条未处理的故障级预警;点击按该记录定位(带对象/地址筛选) */
-  bellList=$alarmRecent(50,{bill}).filter(r=>r.level===1&&!r.done).slice(0,3);
-  document.getElementById('apList').innerHTML=bellList.length?bellList.map((r,i)=>{
-    const color=ALARM_LEVELS[r.level].color;
-    return `<div class="ap-item" onclick="goBellItem(${i})">
-      <span class="ai-dot" style="background:${color}"></span>
-      <div class="ai-main">
-        <div class="ai-t">${r.title}${r.gone?' <span class="done">已恢复</span>':''}</div>
-        <div class="ai-s">${r.obj} · ${r.info}</div>
-      </div>
-      <span class="ai-time">${r.time.slice(5,16)}</span>
-    </div>`;
-  }).join(''):'<div class="ap-empty">暂无未处理的故障级预警</div>';
-}
-let bellList=[];
-function goBellItem(i){
-  const r=bellList[i];
-  if(!r)return;
-  goAlarm('alarm-detail',r.kind==='ac'
-    ?`tab=ac&level=1&status=new&addr=${encodeURIComponent(r.addr||'')}`
-    :`level=1&status=new&obj=${encodeURIComponent(r.obj||'')}`);
 }
 refreshBell();
 
 /* 站内提醒由顶部铃铛承担:有未处理故障即红点(全局口径,不依赖任何推送配置),
-   点开面板预览、进详情页查看;不单独建设站内信/登录弹窗 */
+   点开面板查看故障摘要(三卡片纯展示),底部「故障总览」进入总览页;不单独建设站内信/登录弹窗 */
 
 /* ── 登录提醒:项目物业管理员(即项目主账号)登录后,若存在未处理故障,自动展开铃铛故障摘要一次;
      点击页面其他位置、刷新或跳转其他页面后自动隐藏(每个登录会话仅自动展开一次,刷新不重复弹出);

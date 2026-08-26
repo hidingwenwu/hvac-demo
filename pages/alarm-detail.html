@@ -411,6 +411,8 @@ function doQueryAc(){
         addr=av('aAddr').trim(),rec=av('aRecSt'),st=av('aSt'),s=av('aStart'),e=av('aEnd'),
         rs=av('aRecStart'),re=av('aRecEnd');
   acFiltered=ALARM_AC_FAULTS.filter(r=>{
+    /* 等级口径:项目屏蔽码记录一律不在列表展示(任何筛选下均不可见,与计数口径一致:屏蔽即不计) */
+    if(lvOfAc(r)===0)return false;
     if(lv!==''&&String(lvOfAc(r))!==lv)return false;
     if(brand&&r.brand!==brand)return false;
     if(code&&r.code.toUpperCase().indexOf(code)<0)return false;

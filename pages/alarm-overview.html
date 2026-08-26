@@ -5,8 +5,7 @@
 <title>故障总览</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-/* 统计卡可点击 */
-.scd{cursor:pointer;}
+/* 统计卡纯展示(2026-08-26:去掉点击跳转,仅负责展示数据) */
 /* 中部布局:趋势 + 占比(双饼图需更宽) */
 .mid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 @media(max-width:1100px){.mid{grid-template-columns:1fr;}}
@@ -81,27 +80,26 @@
 const PROJ_BILL=$alarmProjBill($alarmCurProj());
 const cnt=$alarmCounts({bill:PROJ_BILL});
 
-/* ── 统计卡片 ── */
+/* ── 统计卡片(纯展示,不带跳转;查看明细经左侧菜单进入故障详情) ── */
 const cards=[
-  /* 今日新增:深链带当日时间范围+状态=全部,与卡片口径(当日产生,不区分处理状态)一致 */
-  {lb:'今日新增',v:$alarmTodayNew({bill:PROJ_BILL}),cls:'',go:()=>$alarmNav('alarm-detail','today=1')},
-  {lb:'未处理总数',v:cnt.total,cls:'scr',go:()=>$alarmNav('alarm-detail','status=new')},
-  {lb:'项目运维',v:cnt.ops,cls:'scw',go:()=>$alarmNav('alarm-detail','cat=ops&status=new')},
-  {lb:'空调故障',v:cnt.ac,cls:'',go:()=>$alarmNav('alarm-detail','tab=ac&status=new')},
-  {lb:'故障级',v:cnt.lv1,cls:'scr',go:()=>$alarmNav('alarm-detail','level=1&status=new')},
-  {lb:'警示级',v:cnt.lv2,cls:'scw',go:()=>$alarmNav('alarm-detail','level=2&status=new')},
-  {lb:'提示级',v:cnt.lv3,cls:'',go:()=>$alarmNav('alarm-detail','level=3&status=new')},
+  {lb:'今日新增',v:$alarmTodayNew({bill:PROJ_BILL}),cls:''},
+  {lb:'未处理总数',v:cnt.total,cls:'scr'},
+  {lb:'项目运维',v:cnt.ops,cls:'scw'},
+  {lb:'空调故障',v:cnt.ac,cls:''},
+  {lb:'故障级',v:cnt.lv1,cls:'scr'},
+  {lb:'警示级',v:cnt.lv2,cls:'scw'},
+  {lb:'提示级',v:cnt.lv3,cls:''},
 ];
-document.getElementById('cards').innerHTML=cards.map((c,i)=>`
-  <div class="scd" onclick="goCard(${i})">
+document.getElementById('cards').innerHTML=cards.map(c=>`
+  <div class="scd">
     <div class="sc-lb">${c.lb}</div>
     <div class="sc-v ${c.cls}">${c.v}<span class="sc-u">条</span></div>
   </div>`).join('');
-function goCard(i){cards[i].go();}
 
 /* ── 故障趋势统计:柱状图,支持近 7 日 / 近 30 日切换
      (新增=mock 明细按日统计,处理=状态记录按日统计;
-      mock 明细仅覆盖近 7 日,更早日期用确定性演示数据填充,仅趋势图使用) ── */
+      mock 明细仅覆盖近 7 日,更早日期用确定性演示数据填充;
+      近 7 日内「处理完成」当日实际为 0 时亦用确定性演示值填充,均仅趋势图使用) ── */
 let trendDays=7;
 function pickTrend(n){
   trendDays=n;
@@ -129,8 +127,9 @@ function renderTrend(){
       ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill'))n++;});
       ALARM_AC_FAULTS.forEach(f=>{if(f.devTime.slice(0,10)===d&&$alarmFaultLevelProj(f)!==0)n++;});
       news.push(n);
-      /* 处理完成:仅统计「已处理」(已忽略不计),并按当前项目与计费口径过滤 */
-      dones.push(Object.keys(stAll).filter(k=>{
+      /* 处理完成:仅统计「已处理」(已忽略不计),并按当前项目与计费口径过滤;
+         演示环境通常无真实处理记录,当日实际为 0 时用确定性演示值填充(仅趋势图展示,不影响任何计数) */
+      const dReal=Object.keys(stAll).filter(k=>{
         const s=stAll[k];
         if(s.st!=='done'||(s.time||'').slice(0,10)!==d)return false;
         const r=opsById[k];
@@ -138,7 +137,8 @@ function renderTrend(){
         const f=acById[k];
         if(f)return $alarmFaultLevelProj(f)!==0;
         return false;
-      }).length);
+      }).length;
+      dones.push(dReal>0?dReal:Math.max(0,n-((hash(d)>>3)%3)));
     }else{
       const h=hash(d);
       const nv=2+h%7;

@@ -1,6 +1,6 @@
 /* 故障预警功能端到端验证(2026-08-04 评审修改后形态):
    菜单(故障预警组位于电费相关与智慧运维之间,3 个子项) / 站内提醒=铃铛红点(无站内信/登录弹窗) /
-   铃铛(红点;登录自动展开故障摘要一次=项目物业管理员视角,点他处/子页面/刷新自动隐藏;下拉面板=今日新增·未处理总数·故障级三卡片+最近3条故障级) /
+   铃铛(红点;登录自动展开故障摘要一次=项目物业管理员视角,点他处/子页面/刷新自动隐藏;下拉面板=故障摘要:今日新增·未处理总数·故障级三卡片纯展示,底部「故障总览」入口) /
    故障总览(趋势统计7/30日柱状图切换,故障分类双饼图=未处理口径;最近故障列=类别/等级/名称·代码/发生对象/发生时间,从左到右) /
    故障详情(项目运维一期8类;双 Tab 均含 故障发生/恢复时间·持续时长 列与恢复时间筛选;
      空调列表无故障名称列、故障代码纯文本、经操作列-详情看明细;批量处理/批量忽略,无批量删除;
@@ -78,7 +78,7 @@ const server = http.createServer((req, res) => {
       .forEach(t => assert.ok(!labels.includes(t), `菜单应移除: ${t}`));
     console.log('OK 菜单:故障预警组位于电费相关与智慧运维之间,仅 3 个子项');
 
-    /* ── 3. 铃铛角标(红点)与下拉面板(三卡片:今日新增/未处理总数/故障级 + 最近3条故障级) ── */
+    /* ── 3. 铃铛角标(红点)与下拉面板(故障摘要=三卡片纯展示,无明细区,底部「故障总览」入口) ── */
     assert.ok(await page.locator('#alarmBdg').isVisible(), '有未处理故障时铃铛应显红点');
     assert.equal((await page.locator('#alarmBdg').innerText()).trim(), '', '铃铛红点不应展示数量');
     /* 登录提醒(项目物业管理员=项目主账号):登录后自动展开铃铛故障摘要一次(有未处理故障才展开) */
@@ -88,9 +88,12 @@ const server = http.createServer((req, res) => {
     assert.deepEqual(cnts, [expToday, 57, 23]);   // 今日新增(动态)/未处理总数/故障级(2026-08-14 校准:原 45/19 随数据增补漂移;含环境感知设备电量低 2 条)
     const cntsT = await page.locator('.ap-cnt .t').allTextContents();
     assert.deepEqual(cntsT, ['今日新增', '未处理总数', '故障级']);
-    assert.ok((await page.locator('.ap-sec').innerText()).includes('最近故障级预警'));
-    assert.equal(await page.locator('.ap-item').count(), 3, '明细仅展示最近 3 条故障级');
-    assert.ok((await page.locator('#alarmPanel').innerText()).includes('查看详情'));
+    /* 2026-08-26 调整:面板仅保留三卡片纯展示,去掉最近3条明细与卡片跳转;表头「故障摘要」,底部入口「故障总览」 */
+    assert.ok((await page.locator('.ap-hd').innerText()).includes('故障摘要'), '面板表头应为「故障摘要」');
+    assert.equal(await page.locator('.ap-item').count(), 0, '面板不应再有最近故障明细');
+    assert.equal(await page.locator('.ap-sec').count(), 0, '面板不应再有明细区标题');
+    assert.equal(await page.locator('.ap-cnt[onclick]').count(), 0, '三卡片应纯展示不带跳转');
+    assert.ok((await page.locator('#alarmPanel').innerText()).includes('故障总览'), '底部入口应为「故障总览」');
     await page.screenshot({ path: path.join(SHOT, 'shell-bell.png') });
     /* 点击页面其他位置自动隐藏 */
     await page.click('.hd-left');
@@ -105,7 +108,7 @@ const server = http.createServer((req, res) => {
     await page.waitForSelector('#alarmPanel.show');
     await page.click('.hd-left');
     await page.waitForTimeout(200);
-    console.log(`OK 铃铛:红点;登录自动展开摘要一次(点他处/刷新自动隐藏);三卡片 今日新增${expToday}/未处理57/故障级23,明细3条故障级`);
+    console.log(`OK 铃铛:红点;登录自动展开摘要一次(点他处/刷新自动隐藏);三卡片纯展示 今日新增${expToday}/未处理57/故障级23,底部「故障总览」入口`);
 
     /* 子页面导航助手 */
     async function nav(id, q) {
@@ -146,7 +149,7 @@ const server = http.createServer((req, res) => {
     }));
     assert.ok(todayChk.s === todayChk.today && todayChk.e === todayChk.today && todayChk.st === '', '今日新增深链应带当日范围+全部状态');
     assert.ok(+((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).replace(/\D/g, '')) >= 1, '任意时段今日至少 1 条(00:01 保底记录)');
-    /* 最近故障/铃铛明细的记录定位深链(P1 修复):对象关键字直达该记录 */
+    /* 最近故障的记录定位深链(P1 修复):对象关键字直达该记录 */
     fr0 = await nav('alarm-detail', 'status=&obj=' + encodeURIComponent('控制器 86200945'));
     assert.ok((await page.frameLocator('#fr').locator('#opsPager .pg-total').innerText()).includes('共 1 条'));
     assert.ok((await page.frameLocator('#fr').locator('#opsBody').innerText()).includes('86200945'));
@@ -158,6 +161,8 @@ const server = http.createServer((req, res) => {
     let fr = await nav('alarm-overview');
     assert.equal(await page.frameLocator('#fr').locator('.scd').count(), 7);
     const cardVals = await page.frameLocator('#fr').locator('.scd .sc-v').allTextContents();
+    /* 2026-08-26:统计卡改为纯展示,不再带跳转 */
+    assert.equal(await page.frameLocator('#fr').locator('.scd[onclick]').count(), 0, '统计卡应纯展示不带跳转');
     const expectToday = await fr.evaluate(() => window.$alarmTodayNew());
     assert.deepEqual(cardVals.map(v => v.trim()), [expectToday + '条', '57条', '20条', '37条', '23条', '27条', '7条']);
     /* 趋势统计:柱状图 + 近7日/近30日切换 */
@@ -375,12 +380,14 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.frameLocator('#fr').locator('#tbBlk tr').count(), 1);
     await page.waitForTimeout(400);
     assert.equal(await bellTotal(), 55);
+    /* 2026-08-26 口径统一:项目屏蔽码记录一律不在故障详情列表展示(任何筛选下均不可见,屏蔽即不计) */
     fr = await nav('alarm-detail', 'tab=ac');
     await page.frameLocator('#fr').locator('#aSt').selectOption('');
     await page.frameLocator('#fr').locator('#aCode').fill('LH');
     await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
     await page.waitForTimeout(300);
-    assert.ok((await page.frameLocator('#fr').locator('#acBody').innerText()).includes('已屏蔽'));
+    assert.ok(!(await page.frameLocator('#fr').locator('#acBody').innerText()).includes('LH'), '已屏蔽记录不应出现在详情列表(状态=全部亦不展示)');
+    assert.equal(await fr.evaluate(() => document.querySelector('#aLevel option[value="0"]')), null, '等级筛选不应提供「已屏蔽」选项');
     /* 取消屏蔽恢复 */
     fr = await nav('alarm-code-lib');
     await page.frameLocator('#fr').locator('.tab', { hasText: '项目屏蔽' }).click();
@@ -403,7 +410,7 @@ const server = http.createServer((req, res) => {
     await page.frameLocator('#fr').locator('#aCode').fill('db');
     await page.frameLocator('#fr').locator('#tabAc button', { hasText: '查询' }).click();
     await page.waitForTimeout(300);
-    assert.ok((await page.frameLocator('#fr').locator('#acBody').innerText()).includes('已屏蔽'), '小写码屏蔽应对故障记录生效');
+    assert.ok(!(await page.frameLocator('#fr').locator('#acBody').innerText()).includes('db'), '小写码屏蔽后记录不应出现在详情列表(任何筛选下均不展示)');
     fr = await nav('alarm-code-lib');
     await page.frameLocator('#fr').locator('.tab', { hasText: '项目屏蔽' }).click();
     await page.waitForTimeout(200);
