@@ -82,7 +82,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         <label class="ck"><input type="checkbox" id="dCatOps"> 项目运维</label>
         <label class="ck"><input type="checkbox" id="dCatAc"> 空调故障</label>
       </div>
-      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送「故障」级;项目屏蔽的故障码不产生推送;顶部铃铛红点不受此范围限制(始终按未处理全局口径提醒)。</div>
+      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送故障级;项目屏蔽的故障码不产生推送。</div>
     </div>
     <div class="sec">
       <div class="sec-t">接收人(可多个)</div>
@@ -120,7 +120,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
           <label class="ck" title="免打扰时段内,故障级预警仍照常推送"><input type="checkbox" id="dExempt" checked> 故障级豁免</label>
         </span>
       </div>
-      <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内产生的预警不发送短信(时段结束后不补发);勾选「<b>故障级豁免</b>」后,故障级预警不受免打扰限制、仍照常推送,确保严重故障不漏报。</div>
+      <div class="tip" id="dDndTip" style="display:none;margin-left:98px">免打扰时段内产生的预警不发送短信;勾选故障级豁免后,故障级预警仍按实时推送,避免漏掉严重故障。</div>
     </div>
   </div>
   <div class="df" style="border-top:1px solid var(--bd)">
