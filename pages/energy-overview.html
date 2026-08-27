@@ -10,34 +10,34 @@
 <body>
 <div class="energy-page">
   <div class="energy-head">
-    <div class="energy-head-copy"><h1>能耗总览</h1><div class="energy-head-note">（基于电表确定性模拟数据汇总；<span id="updatedAt">更新时间 --</span>）</div></div>
+    <div class="energy-head-copy"><h1>能耗总览</h1><div class="energy-head-note"><span id="updatedAt">更新时间 --</span></div></div>
   </div>
   <div class="energy-kpis" id="kpis">
-    <div class="energy-kpi clickable" id="kpiToday" data-nav="energy-trend"></div>
-    <div class="energy-kpi clickable" id="kpiMonth" data-nav="energy-trend"></div>
-    <div class="energy-kpi clickable" id="kpiYear" data-nav="energy-trend"></div>
-    <div class="energy-kpi clickable" id="kpiDaily" data-nav="energy-trend"></div>
-    <div class="energy-kpi clickable" id="kpiLoad" data-nav="energy-load"></div>
-    <div class="energy-kpi clickable" id="kpiMax" data-nav="energy-load"></div>
+    <div class="energy-kpi" id="kpiToday"></div>
+    <div class="energy-kpi" id="kpiMonth"></div>
+    <div class="energy-kpi" id="kpiYear"></div>
+    <div class="energy-kpi" id="kpiDaily"></div>
+    <div class="energy-kpi" id="kpiLoad"></div>
+    <div class="energy-kpi" id="kpiMax"></div>
   </div>
   <div class="energy-grid-2">
-    <section class="energy-panel clickable" id="trendPanel" data-nav="energy-trend">
-      <div class="energy-panel-head"><div><div class="energy-panel-title">近 30 天能耗趋势</div><div class="energy-panel-sub">日能耗与 7 日移动平均</div></div><button class="energy-link">更多 ›</button></div>
+    <section class="energy-panel" id="trendPanel">
+      <div class="energy-panel-head" style="height:auto;min-height:32px;flex-wrap:wrap;row-gap:4px"><div><div class="energy-panel-title">能耗趋势</div></div><div class="energy-segment"><button data-trend-range="week">近 7 天</button><button class="active" data-trend-range="month30">近 30 天</button><button data-trend-range="month">本月</button><button data-trend-range="year">本年</button></div><span class="text-sub" style="font-size:12px;white-space:nowrap"><span style="color:#4d94f5">■</span> <span id="trendLegendEnergy">日能耗</span><span id="trendLegendAvg">　<span style="color:#36cfc9">—</span> 7 日移动平均</span></span><button class="energy-link" id="trendMore" data-nav="energy-trend">更多 ›</button></div>
       <div class="energy-chart" id="trendChart"></div>
     </section>
-    <section class="energy-panel clickable" data-nav="energy-rank" data-q="structure=zone&amp;period=month">
-      <div class="energy-panel-head"><div><div class="energy-panel-title">本月能耗结构</div><div class="energy-panel-sub">公区与租户区</div></div><button class="energy-link">查看结构 ›</button></div>
+    <section class="energy-panel" id="structurePanel">
+      <div class="energy-panel-head" style="height:auto;min-height:32px;flex-wrap:wrap;row-gap:4px"><div><div class="energy-panel-title">能耗结构</div><div class="energy-panel-sub">本月</div></div><div class="energy-segment"><button class="active" data-structure="zone">公区/租户区</button><button data-structure="building">楼栋</button><button data-structure="tenant">租户</button></div><button class="energy-link" id="structureMore" data-nav="energy-rank" data-q="structure=zone">更多 ›</button></div>
       <div class="energy-chart" id="structureChart"></div>
     </section>
   </div>
   <div class="energy-grid-even">
-    <section class="energy-panel">
-      <div class="energy-panel-head"><div><div class="energy-panel-title">本月能耗排行 TOP10</div><div class="energy-panel-sub">按房间统计</div></div><button class="energy-link" data-nav="energy-rank" data-q="dimension=room&amp;period=month">更多 ›</button></div>
+    <section class="energy-panel" id="rankPanel">
+      <div class="energy-panel-head" style="height:auto;min-height:32px;flex-wrap:wrap;row-gap:4px"><div><div class="energy-panel-title">能耗排行</div><div class="energy-panel-sub">本月</div></div><div class="energy-segment"><button class="active" data-rank-dimension="room">房间</button><button data-rank-dimension="tenant">租户</button></div><button class="energy-link" id="rankMore" data-nav="energy-rank" data-q="dimension=room">更多 ›</button></div>
       <div id="rankList" class="energy-rank-list"></div>
     </section>
-    <section class="energy-panel">
-      <div class="energy-panel-head"><div><div class="energy-panel-title">近 7 天用能异常提示</div><div class="energy-panel-sub">异常仅提示，处理仍在原模块完成</div></div></div>
-      <div id="anomalyList" class="energy-anomaly-list"></div>
+    <section class="energy-panel" id="loadPanel">
+      <div class="energy-panel-head"><div><div class="energy-panel-title">今日负荷曲线</div><div class="energy-panel-sub" id="loadSub">15 分钟采样</div></div><button class="energy-link" id="loadMore" data-nav="energy-load">更多 ›</button></div>
+      <div class="energy-chart" id="loadChart"></div>
     </section>
   </div>
   <div id="chartFallbacks" class="energy-table-note" style="display:none">ℹ 图表资源未加载，请联网后刷新；业务数据与交互仍可使用。</div>
@@ -51,9 +51,9 @@ var energy=window.HvacEnergy;
 var data=energy.getOverview();
 var dataWindow=energy.getDataWindow(),today=dataWindow.to,monthStart=today.slice(0,8)+'01',yearStart=today.slice(0,4)+'-01-01';
 var charts=[];
-function fmt(v,d){return energy.formatNumber(v,d);}
+function fmt(v,d){return energy.formatNumber(v,d==null?1:d);}
 function rateFoot(value,label){if(value==null)return {text:'暂无可比数据',cls:''};var arrow=value>0?'↑ ':value<0?'↓ ':'';return {text:arrow+Math.abs(value).toFixed(1)+'% '+label,cls:value>0?'energy-up':value<0?'energy-down':''};}
-function kpi(id,label,value,unit,foot,cls,rateName,rateValue){var element=document.getElementById(id);element.dataset.value=value;if(rateName)element.dataset[rateName]=rateValue==null?'':rateValue;element.innerHTML='<div class="energy-kpi-label"><span>'+label+'</span><span class="energy-badge">已汇总</span></div><div class="energy-kpi-value">'+fmt(value)+'<span class="energy-kpi-unit">'+unit+'</span></div><div class="energy-kpi-foot '+(cls||'')+'">'+foot+'</div>';}
+function kpi(id,label,value,unit,foot,cls,rateName,rateValue){var element=document.getElementById(id);element.dataset.value=value;if(rateName)element.dataset[rateName]=rateValue==null?'':rateValue;element.innerHTML='<div class="energy-kpi-label"><span>'+label+'</span></div><div class="energy-kpi-value">'+fmt(value)+'<span class="energy-kpi-unit">'+unit+'</span></div><div class="energy-kpi-foot '+(cls||'')+'">'+foot+'</div>';}
 var monthFoot=rateFoot(data.month.momRate,'环比上期'),yearFoot=rateFoot(data.year.yoyRate,'同比上年同期');
 kpi('kpiToday','今日能耗',data.today.total,'kWh','按小时数据汇总','energy-info');
 kpi('kpiMonth','本月能耗',data.month.total,'kWh',monthFoot.text,monthFoot.cls,'momRate',data.month.momRate);
@@ -62,21 +62,23 @@ kpi('kpiDaily','本月日均能耗',data.month.average,'kWh','按本月已统计
 kpi('kpiLoad','实时负荷',data.load.realtime,'kW','最近一个 15 分钟采样点','energy-info');
 kpi('kpiMax','今日最大负荷',data.load.max,'kW','发生于 '+data.load.maxAt,'energy-warning');
 document.getElementById('updatedAt').textContent='更新时间 '+data.updatedAt;
-document.getElementById('kpiToday').dataset.q='gran=hour&from='+today+'&to='+today+'&obj=project&metric=energy';
-document.getElementById('kpiMonth').dataset.q=document.getElementById('kpiDaily').dataset.q='gran=day&from='+monthStart+'&to='+today+'&obj=project&metric=energy';
-document.getElementById('kpiYear').dataset.q='gran=month&from='+yearStart+'&to='+today+'&obj=project&metric=energy';
-document.getElementById('kpiLoad').dataset.q=document.getElementById('kpiMax').dataset.q='date='+today;
-document.getElementById('trendPanel').dataset.q='gran=day&from='+data.trend[0].label+'&to='+today+'&obj=project&metric=energy';
 document.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(event){if(event.target.closest('button'))event.stopPropagation();parent.postMessage({nav:el.dataset.nav,q:el.dataset.q||''},'*');});});
-var rankMax=data.ranking[0]&&data.ranking[0].energy||1;
-document.getElementById('rankList').innerHTML=data.ranking.map(function(row,index){return '<div class="energy-rank-item" data-id="'+row.id+'"><span class="energy-rank-no '+(index<3?'top':'')+'">'+(index+1)+'</span><span class="energy-rank-name" title="'+row.name+'">'+row.name+'</span><span class="energy-rank-bar"><i style="width:'+Math.max(4,row.energy*100/rankMax)+'%"></i></span><span class="energy-rank-value">'+fmt(row.energy)+' kWh</span></div>';}).join('');
-document.querySelectorAll('.energy-rank-item').forEach(function(el){el.onclick=function(){parent.postMessage({nav:'energy-trend',q:'gran=day&from='+monthStart+'&to='+today+'&obj='+encodeURIComponent(el.dataset.id)+'&metric=energy'},'*');};});
-document.getElementById('anomalyList').innerHTML=data.anomalies.map(function(item,index){return '<div class="energy-anomaly-item" data-index="'+index+'"><span class="energy-badge '+(item.level==='警示'?'warning':'')+'">'+item.level+'</span><div class="energy-anomaly-main"><div class="energy-anomaly-title">'+item.title+'</div><div class="energy-anomaly-time">'+item.time+'</div></div><span class="energy-link">去处理 ›</span></div>';}).join('')||'<div class="empty" style="padding:42px 20px"><span class="ei">✓</span><span class="et">当前统计窗口内暂无可确认异常</span></div>';
-document.querySelectorAll('.energy-anomaly-item').forEach(function(el){el.onclick=function(){parent.postMessage({nav:Number(el.dataset.index)?'alarm-detail':'elec-nb-stat'},'*');};});
-function chartOrFallback(id,option){var el=document.getElementById(id);if(!window.echarts){el.innerHTML='<div class="energy-chart-fallback">图表资源未加载<br>请联网后刷新</div>';document.getElementById('chartFallbacks').style.display='flex';return;}var chart=echarts.init(el);chart.setOption(option);charts.push(chart);}
-document.getElementById('trendChart').dataset.seriesCount='2';
-chartOrFallback('trendChart',{grid:{left:45,right:20,top:26,bottom:34},tooltip:{trigger:'axis'},legend:{top:0,textStyle:{color:'#aab5ca'},data:['日能耗','7 日移动平均']},xAxis:{type:'category',data:data.trend.map(function(p){return p.label.slice(5);}),axisLine:{lineStyle:{color:'#35415f'}},axisLabel:{color:'#8492ad'}},yAxis:{type:'value',name:'kWh',nameTextStyle:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}},axisLabel:{color:'#8492ad'}},series:[{name:'日能耗',type:'bar',data:data.trend.map(function(p){return p.energy;}),barMaxWidth:18,itemStyle:{borderRadius:[3,3,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#9fd4ff'},{offset:.5,color:'#4d94f5'},{offset:1,color:'#1b4fd0'}]}}},{name:'7 日移动平均',type:'line',smooth:true,showSymbol:false,data:data.trendAverage,lineStyle:{color:'#36cfc9',width:2}}]});
-chartOrFallback('structureChart',{tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{color:'#aab5ca'},formatter:function(name){var row=data.structure.find(function(item){return item.name===name;});return name+'  '+fmt(row.energy)+' kWh';}},series:[{type:'pie',radius:['48%','70%'],center:['50%','43%'],label:{color:'#d8deeb',formatter:'{b}\n{d}%'},data:data.structure.map(function(row,index){return {name:row.name,value:row.energy,itemStyle:{color:index?'#409eff':'#36cfc9'}};})}]});
+var rankDimension='room';
+function renderRank(){var rows=energy.getRanking({dimension:rankDimension,metric:'energy',from:monthStart,to:today,limit:10}).rows,rankMax=rows[0]&&rows[0].energy||1;document.getElementById('rankList').innerHTML=rows.map(function(row,index){return '<div class="energy-rank-item"><span class="energy-rank-no '+(index<3?'top':'')+'">'+(index+1)+'</span><span class="energy-rank-name" title="'+row.name+'">'+row.name+'</span><span class="energy-rank-bar"><i style="width:'+Math.max(4,row.energy*100/rankMax)+'%"></i></span><span class="energy-rank-value">'+fmt(row.energy)+' kWh</span></div>';}).join('');document.getElementById('rankMore').dataset.q='dimension='+rankDimension;}
+renderRank();
+document.querySelectorAll('[data-rank-dimension]').forEach(function(btn){btn.onclick=function(){if(btn.dataset.rankDimension===rankDimension)return;document.querySelectorAll('[data-rank-dimension]').forEach(function(item){item.classList.toggle('active',item===btn);});rankDimension=btn.dataset.rankDimension;renderRank();};});
+var trendChart=null,structureChart=null,loadChart=null,trendRange='month30',structureDimension='zone';
+function chartFallback(id){document.getElementById(id).innerHTML='<div class="energy-chart-fallback">图表资源未加载<br>请联网后刷新</div>';document.getElementById('chartFallbacks').style.display='flex';}
+function shiftDate(value,days){var date=new Date(value+'T00:00:00');date.setDate(date.getDate()+days);return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
+function movingAvg(points,size){return points.map(function(_,index){var start=Math.max(0,index-size+1),sum=0,i;for(i=start;i<=index;i++)sum+=points[i].energy;return Math.round(sum/(index-start+1)*100)/100;});}
+function trendQuery(){if(trendRange==='week')return {granularity:'day',from:shiftDate(today,-6),to:today};if(trendRange==='month')return {granularity:'day',from:monthStart,to:today};if(trendRange==='year')return {granularity:'month',from:yearStart,to:today};return {granularity:'day',from:shiftDate(today,-29),to:today};}
+function renderTrend(){var query=trendQuery(),points=energy.queryTrend({obj:'project',granularity:query.granularity,from:query.from,to:query.to}).points,isMonth=query.granularity==='month',energyName=isMonth?'月能耗':'日能耗';document.getElementById('trendMore').dataset.q='';document.getElementById('trendLegendEnergy').textContent=energyName;document.getElementById('trendLegendAvg').style.display=isMonth?'none':'';var series=[{name:energyName,type:'bar',data:points.map(function(p){return p.energy;}),barMaxWidth:18,itemStyle:{borderRadius:[3,3,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#9fd4ff'},{offset:.5,color:'#4d94f5'},{offset:1,color:'#1b4fd0'}]}}}];if(!isMonth)series.push({name:'7 日移动平均',type:'line',smooth:true,showSymbol:false,data:movingAvg(points,7),lineStyle:{color:'#36cfc9',width:2}});document.getElementById('trendChart').dataset.seriesCount=String(series.length);if(!window.echarts){chartFallback('trendChart');return;}trendChart=trendChart||echarts.init(document.getElementById('trendChart'));if(charts.indexOf(trendChart)<0)charts.push(trendChart);trendChart.setOption({grid:{left:45,right:20,top:26,bottom:34},tooltip:{trigger:'axis'},xAxis:{type:'category',data:points.map(function(p){return isMonth?Number(p.label.slice(5))+' 月':p.label.slice(5);}),axisLine:{lineStyle:{color:'#35415f'}},axisLabel:{color:'#8492ad'}},yAxis:{type:'value',name:'kWh',nameTextStyle:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}},axisLabel:{color:'#8492ad'}},series:series},true);}
+var STRUCTURE_COLORS=['#36cfc9','#409eff','#e6a23c','#67c23a','#909399','#9fd4ff','#c456eb','#ff8f5c'];
+function renderStructure(){var rows=energy.getStructure({dimension:structureDimension,from:monthStart,to:today}).rows;document.getElementById('structureMore').dataset.q='structure='+structureDimension;if(!window.echarts){chartFallback('structureChart');return;}structureChart=structureChart||echarts.init(document.getElementById('structureChart'));if(charts.indexOf(structureChart)<0)charts.push(structureChart);structureChart.setOption({tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{color:'#aab5ca'},formatter:function(name){var row=rows.find(function(item){return item.name===name;});return name+'  '+fmt(row.energy)+' kWh';}},series:[{type:'pie',radius:['40%','58%'],center:['50%','46%'],label:{color:'#d8deeb',formatter:'{b}\n{d}%'},labelLine:{length:12,length2:8},data:rows.map(function(row,index){return {name:row.name,value:row.energy,itemStyle:{color:STRUCTURE_COLORS[index%STRUCTURE_COLORS.length]}};})}]},true);}
+function renderLoad(){var load=energy.queryLoad({date:today,obj:'project'});document.getElementById('loadSub').textContent=load.summary.max==null?'15 分钟采样':'15 分钟采样 · 峰值 '+fmt(load.summary.max)+' kW（'+load.summary.maxAt+'）';document.getElementById('loadMore').dataset.q='date='+today;if(!window.echarts){chartFallback('loadChart');return;}loadChart=loadChart||echarts.init(document.getElementById('loadChart'));if(charts.indexOf(loadChart)<0)charts.push(loadChart);loadChart.setOption({grid:{left:45,right:20,top:30,bottom:30},tooltip:{trigger:'axis'},xAxis:{type:'category',data:load.points.map(function(p){return p.label;}),axisLabel:{color:'#8492ad',interval:7},axisLine:{lineStyle:{color:'#35415f'}}},yAxis:{type:'value',name:'kW',nameTextStyle:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}},axisLabel:{color:'#8492ad'}},series:[{name:'负荷',type:'line',smooth:.2,showSymbol:false,data:load.points.map(function(p){return p.load;}),lineStyle:{width:2,color:'#409eff'},areaStyle:{color:'rgba(64,158,255,.12)'},markPoint:{symbolSize:44,label:{formatter:function(p){return fmt(Number(p.value))+' kW';}},data:[{type:'max',name:'最大负荷'}]}}]},true);}
+document.querySelectorAll('[data-trend-range]').forEach(function(btn){btn.onclick=function(event){event.stopPropagation();if(btn.dataset.trendRange===trendRange)return;document.querySelectorAll('[data-trend-range]').forEach(function(item){item.classList.toggle('active',item===btn);});trendRange=btn.dataset.trendRange;renderTrend();};});
+document.querySelectorAll('[data-structure]').forEach(function(btn){btn.onclick=function(event){event.stopPropagation();if(btn.dataset.structure===structureDimension)return;document.querySelectorAll('[data-structure]').forEach(function(item){item.classList.toggle('active',item===btn);});structureDimension=btn.dataset.structure;renderStructure();};});
+renderTrend();renderStructure();renderLoad();
 window.addEventListener('resize',function(){charts.forEach(function(chart){chart.resize();});});
 </script>
 </body>

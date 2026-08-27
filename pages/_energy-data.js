@@ -5,10 +5,54 @@
   var LEGACY_GROUP_KEY = 'hvacEnergyGroups:v1';
   var PROJECT_DEFAULT = '产品部测试-按小时预付费';
   var GRAN_LIMITS = { hour: 24, day: 366, month: 24, year: 2 };
-  var GRAN_LABELS = { hour: '按时', day: '按日', month: '按月', year: '按年' };
+  var GRAN_LABELS = { hour: '按小时', day: '按日', month: '按月', year: '按年' };
   var MONTH_FACTORS = [1.32, 1.18, 0.18, 0.12, 0.22, 1.05, 1.36, 1.42, 1.12, 0.18, 0.34, 1.24];
   var projectCache = null;
   var energyCache = {};
+  var FLEET_STORAGE_KEY = 'hvacFleetV2';
+
+  /* 派生数据记忆层：机队/房间/电表/目录/对象解析只算一次；
+     以 localStorage 原文串做签名，机队或群组被其他页面改写后自动失效重建 */
+  var metaCache = freshMetaCache();
+
+  function freshMetaCache() {
+    return { sigs: null, units: null, rooms: null, meters: null, catalogs: {}, objects: {}, unitSources: {}, weights: {}, dateParts: {}, meterScale: {}, yearAnnual: {}, meterEntries: null };
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return global.localStorage.getItem(key);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function projectName() {
+    if (!projectCache) projectCache = projectMeta();
+    return projectCache.name;
+  }
+
+  function ensureFresh() {
+    var fleetSig = safeStorageGet(global.HvacFleet && global.HvacFleet.key ? global.HvacFleet.key() : FLEET_STORAGE_KEY);
+    var groupSig = safeStorageGet(GROUP_KEY + ':' + projectName());
+    if (metaCache.sigs && metaCache.sigs.fleet === fleetSig && metaCache.sigs.group === groupSig) return;
+    var fleetChanged = !metaCache.sigs || metaCache.sigs.fleet !== fleetSig;
+    var groupChanged = !metaCache.sigs || metaCache.sigs.group !== groupSig;
+    if (fleetChanged) {
+      metaCache.units = null;
+      metaCache.rooms = null;
+      metaCache.meters = null;
+      metaCache.catalogs = {};
+      metaCache.unitSources = {};
+      metaCache.weights = {};
+      metaCache.meterEntries = null;
+    }
+    if (fleetChanged || groupChanged) {
+      metaCache.objects = {};
+      if (metaCache.catalogs) delete metaCache.catalogs.group;
+    }
+    metaCache.sigs = { fleet: fleetSig, group: groupSig };
+  }
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -97,10 +141,11 @@
 
   function hash(text) {
     var result = 2166136261;
-    String(text).split('').forEach(function (character) {
-      result ^= character.charCodeAt(0);
+    var str = String(text);
+    for (var index = 0; index < str.length; index++) {
+      result ^= str.charCodeAt(index);
       result = Math.imul(result, 16777619);
-    });
+    }
     return result >>> 0;
   }
 
@@ -132,6 +177,7 @@
   function refreshProject() {
     projectCache = null;
     energyCache = {};
+    metaCache = freshMetaCache();
     return getProject();
   }
 
@@ -163,7 +209,9 @@
   }
 
   function units() {
-    return fleet().units || [];
+    ensureFresh();
+    if (!metaCache.units) metaCache.units = fleet().units || [];
+    return metaCache.units;
   }
 
   function unitRoomId(unit) {
@@ -175,6 +223,12 @@
   }
 
   function roomRows() {
+    ensureFresh();
+    if (!metaCache.rooms) metaCache.rooms = buildRoomRows();
+    return metaCache.rooms;
+  }
+
+  function buildRoomRows() {
     var map = {};
     units().forEach(function (unit) {
       var id = unitRoomId(unit);
@@ -201,6 +255,12 @@
   }
 
   function meterRows() {
+    ensureFresh();
+    if (!metaCache.meters) metaCache.meters = buildMeterRows();
+    return metaCache.meters;
+  }
+
+  function buildMeterRows() {
     var project = getProject();
     var currentUnits = units();
     if (!project.hasMeters) return [];
@@ -220,6 +280,16 @@
   }
 
   function catalog(type) {
+    ensureFresh();
+    if (!metaCache.catalogs[type]) {
+      var built = buildCatalog(type);
+      /* 构建期间可能触发群组种子持久化 → ensureFresh 重置 catalogs，须重取当前对象再赋值 */
+      metaCache.catalogs[type] = built;
+    }
+    return metaCache.catalogs[type];
+  }
+
+  function buildCatalog(type) {
     var currentUnits = units();
     var rooms = roomRows();
     var result = [];
@@ -356,11 +426,11 @@
         return item;
       });
     }
-    return clone(result);
+    return result;
   }
 
   function getCatalog(type) {
-    return catalog(type);
+    return clone(catalog(type));
   }
 
   function allUnitsForObject(objectId) {
@@ -381,6 +451,17 @@
   }
 
   function resolveObject(id) {
+    ensureFresh();
+    var key = id || 'project';
+    if (!Object.prototype.hasOwnProperty.call(metaCache.objects, key)) {
+      /* 解析期间可能触发群组种子持久化 → ensureFresh 重置 objects，须先算后赋（重取当前 objects） */
+      var resolved = resolveObjectUncached(key);
+      metaCache.objects[key] = resolved;
+    }
+    return metaCache.objects[key];
+  }
+
+  function resolveObjectUncached(id) {
     if (!id || id === 'project') {
       return {
         id: 'project',
@@ -399,16 +480,41 @@
     return null;
   }
 
+  /* 日期解析记忆：同一日期字符串只构造一次 Date（热路径每天被调用数千次） */
+  function dateParts(date) {
+    var key = String(date).slice(0, 10);
+    var cached = metaCache.dateParts[key];
+    if (!cached) {
+      var parsed = dateObj(key);
+      cached = { year: parsed.getFullYear(), month: parsed.getMonth(), dow: parsed.getDay() };
+      metaCache.dateParts[key] = cached;
+    }
+    return cached;
+  }
+
+  function meterScale(rawId) {
+    if (metaCache.meterScale[rawId] == null) {
+      metaCache.meterScale[rawId] = 18 + hash(projectName() + '|meter|' + rawId) % 25;
+    }
+    return metaCache.meterScale[rawId];
+  }
+
+  function yearAnnual(year) {
+    if (metaCache.yearAnnual[year] == null) {
+      metaCache.yearAnnual[year] = 0.96 + (hash(projectName() + '|year|' + year) % 9) / 100;
+    }
+    return metaCache.yearAnnual[year];
+  }
+
   function meterHourCents(meter, date, hour) {
     if (!meter) return 0;
-    var sourceDate = dateObj(date);
-    var season = MONTH_FACTORS[sourceDate.getMonth()];
-    var day = sourceDate.getDay();
-    var workday = day === 0 || day === 6 ? 0.72 : 1;
+    var parts = dateParts(date);
+    var season = MONTH_FACTORS[parts.month];
+    var workday = parts.dow === 0 || parts.dow === 6 ? 0.72 : 1;
     var active = hour >= 8 && hour <= 19 ? 1 : hour >= 20 && hour <= 22 ? 0.55 : 0.18;
-    var scale = 18 + hash(getProject().name + '|meter|' + meter.rawId) % 25;
-    var annual = 0.96 + (hash(getProject().name + '|year|' + sourceDate.getFullYear()) % 9) / 100;
-    var variation = 0.92 + rand(getProject().name + '|meter-energy|' + meter.rawId + '|' + date + '|' + hour) * 0.16;
+    var scale = meterScale(meter.rawId);
+    var annual = yearAnnual(parts.year);
+    var variation = 0.92 + rand(projectName() + '|meter-energy|' + meter.rawId + '|' + date + '|' + hour) * 0.16;
     return Math.max(0, Math.round(scale * season * workday * active * annual * variation));
   }
 
@@ -420,8 +526,12 @@
   }
 
   function unitWeight(unit) {
-    var capacity = Number(unit && unit.cap) || 50;
-    return capacity * (0.85 + rand(getProject().name + '|unit-share|' + (unit ? unit.uid : 0)) * 0.3);
+    var uid = unit ? unit.uid : 0;
+    if (metaCache.weights[uid] == null) {
+      var capacity = Number(unit && unit.cap) || 50;
+      metaCache.weights[uid] = capacity * (0.85 + rand(projectName() + '|unit-share|' + uid) * 0.3);
+    }
+    return metaCache.weights[uid];
   }
 
   function allocateInteger(total, entries) {
@@ -430,9 +540,13 @@
         return { id: entry.id, value: 0 };
       });
     }
-    var weightTotal = entries.reduce(function (sum, entry) {
-      return sum + entry.weight;
-    }, 0);
+    var weightTotal = entries._weightTotal;
+    if (weightTotal == null) {
+      weightTotal = entries.reduce(function (sum, entry) {
+        return sum + entry.weight;
+      }, 0);
+      entries._weightTotal = weightTotal;
+    }
     var values = entries.map(function (entry) {
       var exact = weightTotal ? total * entry.weight / weightTotal : total / entries.length;
       return {
@@ -454,7 +568,7 @@
   }
 
   function hourMeterCents(date, hour) {
-    var key = getProject().name + '|meter-hour|' + date + '|' + hour;
+    var key = projectName() + '|meter-hour|' + date + '|' + hour;
     if (energyCache[key]) return energyCache[key].slice();
     var values = meterRows().map(function (meter) {
       return meterHourCents(meter, date, hour);
@@ -463,32 +577,41 @@
     return values.slice();
   }
 
+  /* 每台电表的成员权重清单在项目内不变，构建一次复用（权重来自 unitWeight 记忆值） */
+  function meterWeightEntries() {
+    if (!metaCache.meterEntries) {
+      var unitById = {};
+      units().forEach(function (unit) {
+        unitById[unit.uid] = unit;
+      });
+      metaCache.meterEntries = meterRows().map(function (meter) {
+        return meter.unitIds.map(function (unitId) {
+          return { id: unitId, weight: unitWeight(unitById[unitId]) };
+        });
+      });
+    }
+    return metaCache.meterEntries;
+  }
+
   function hourUnitCents(date, hour) {
-    var key = getProject().name + '|unit-hour|' + date + '|' + hour;
+    var key = projectName() + '|unit-hour|' + date + '|' + hour;
     if (energyCache[key]) return energyCache[key].slice();
-    var currentUnits = units();
-    var unitById = {};
-    currentUnits.forEach(function (unit) {
-      unitById[unit.uid] = unit;
-    });
-    var values = Array.from({ length: currentUnits.length }, function () {
+    var values = Array.from({ length: units().length }, function () {
       return 0;
     });
     var meterValues = hourMeterCents(date, hour);
-    meterRows().forEach(function (meter, meterIndex) {
-      var entries = meter.unitIds.map(function (unitId) {
-        return { id: unitId, weight: unitWeight(unitById[unitId]) };
-      });
-      allocateInteger(meterValues[meterIndex] || 0, entries).forEach(function (entry) {
+    var entriesList = meterWeightEntries();
+    for (var meterIndex = 0; meterIndex < entriesList.length; meterIndex++) {
+      allocateInteger(meterValues[meterIndex] || 0, entriesList[meterIndex]).forEach(function (entry) {
         values[entry.id] = entry.value;
       });
-    });
+    }
     energyCache[key] = values;
     return values.slice();
   }
 
   function dayMeterCents(date) {
-    var key = getProject().name + '|meter-day|' + date;
+    var key = projectName() + '|meter-day|' + date;
     if (energyCache[key]) return energyCache[key].slice();
     var values = Array.from({ length: getProject().meterCount }, function () {
       return 0;
@@ -504,7 +627,7 @@
   }
 
   function dayUnitCents(date) {
-    var key = getProject().name + '|unit-day|' + date;
+    var key = projectName() + '|unit-day|' + date;
     if (energyCache[key]) return energyCache[key].slice();
     var values = Array.from({ length: units().length }, function () {
       return 0;
@@ -568,25 +691,44 @@
   }
 
   function unitRuntimeHundredths(unitId, date) {
-    var season = MONTH_FACTORS[dateObj(date).getMonth()];
-    var day = dateObj(date).getDay();
-    var workday = day === 0 || day === 6 ? 0.72 : 1;
-    var base = 0.45 + rand(getProject().name + '|runtime|' + unitId + '|' + date) * 5.8;
+    var parts = dateParts(date);
+    var season = MONTH_FACTORS[parts.month];
+    var workday = parts.dow === 0 || parts.dow === 6 ? 0.72 : 1;
+    var base = 0.45 + rand(projectName() + '|runtime|' + unitId + '|' + date) * 5.8;
     return Math.max(0, Math.round(base * Math.min(1.2, season) * workday * 100));
   }
 
   function sourceUnitIds(source) {
     if (source.mode === 'unit') return source.ids.slice();
-    var meters = meterRows();
-    return Array.from(new Set(source.ids.reduce(function (all, meterIndex) {
-      var meter = meters[meterIndex];
-      return meter ? all.concat(meter.unitIds) : all;
-    }, [])));
+    var key = source.ids.join(',');
+    if (!metaCache.unitSources[key]) {
+      var meters = meterRows();
+      var collected = Array.from(new Set(source.ids.reduce(function (all, meterIndex) {
+        var meter = meters[meterIndex];
+        return meter ? all.concat(meter.unitIds) : all;
+      }, [])));
+      metaCache.unitSources[key] = collected;
+    }
+    return metaCache.unitSources[key].slice();
+  }
+
+  function dayUnitRuntimeHundredths(date) {
+    var key = projectName() + '|runtime-day|' + date;
+    var values = energyCache[key];
+    if (!values) {
+      values = {};
+      units().forEach(function (unit) {
+        values[unit.uid] = unitRuntimeHundredths(unit.uid, date);
+      });
+      energyCache[key] = values;
+    }
+    return values;
   }
 
   function sourceDayRuntimeHundredths(source, date) {
+    var dayValues = dayUnitRuntimeHundredths(date);
     return sourceUnitIds(source).reduce(function (sum, unitId) {
-      return sum + unitRuntimeHundredths(unitId, date);
+      return sum + (dayValues[unitId] || 0);
     }, 0);
   }
 
@@ -610,22 +752,43 @@
       toDate = windowRange.to;
     }
     var empty = fromDate > toDate;
+    var truncated = false;
     if (granularity === 'hour' && hasTime && !empty) {
       var currentLimit = windowRange.to + ' ' + pad(new Date().getHours()) + ':00';
       if (to > currentLimit) to = currentLimit;
       if (from > to) empty = true;
       if (!empty && hoursBetween(from, to) > GRAN_LIMITS.hour) {
         from = addHours(to, -(GRAN_LIMITS.hour - 1));
+        truncated = true;
       }
     }
     if (granularity === 'day' && !empty && daysBetween(from, to) > GRAN_LIMITS.day) {
       from = addDays(to, -(GRAN_LIMITS.day - 1));
+      truncated = true;
+    }
+    var pointCount = 0;
+    if (!empty) {
+      if (granularity === 'hour') {
+        pointCount = hasTime ? hoursBetween(from, to) : Math.max(0, hourLimitForDate(fromDate) + 1);
+      } else if (granularity === 'day') {
+        pointCount = daysBetween(from, to);
+      } else if (granularity === 'month') {
+        var monthCount = (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + (Number(to.slice(5, 7)) - Number(from.slice(5, 7))) + 1;
+        if (monthCount > GRAN_LIMITS.month) truncated = true;
+        pointCount = Math.min(monthCount, GRAN_LIMITS.month);
+      } else {
+        var yearCount = Number(toDate.slice(0, 4)) - Number(fromDate.slice(0, 4)) + 1;
+        if (yearCount > GRAN_LIMITS.year) truncated = true;
+        pointCount = Math.min(yearCount, GRAN_LIMITS.year);
+      }
     }
     return {
       granularity: granularity,
       from: from,
       to: to,
       empty: empty,
+      truncated: truncated,
+      pointCount: pointCount,
       label: GRAN_LABELS[granularity]
     };
   }
@@ -735,6 +898,7 @@
 
   function changeRate(current, previous) {
     if (current == null || previous == null || Number(previous) === 0) return null;
+    if (Math.abs(Number(previous)) < 1) return null;
     return round((Number(current) - Number(previous)) * 100 / Number(previous), 1);
   }
 
@@ -773,7 +937,11 @@
       return { from: shiftYears(from, -1), to: shiftYears(to, -1) };
     }
     if (granularity === 'hour') {
-      var hourFrom = from.length > 10 ? from : from.slice(0, 10) + ' 00:00';
+      /* 单日模式（from/to 为纯日期）：环比=昨日同时段 */
+      if (from.length <= 10 && to.length <= 10) {
+        return { from: addDays(from, -1), to: addDays(to, -1) };
+      }
+      var hourFrom = from.slice(0, 10) + ' 00:00';
       var hourTo = to.length > 10 ? to : to.slice(0, 10) + ' 23:00';
       return { from: addHours(hourFrom, -1), to: addHours(hourTo, -1) };
     }
@@ -789,10 +957,12 @@
   function pointComparisonLabel(label, granularity, mode) {
     if (granularity === 'year') return String(Number(label) - 1);
     if (mode === 'yoy') {
+      if (granularity === 'hour') return label;
       if (granularity === 'month') return shiftYears(label + '-01', -1).slice(0, 7);
       return shiftYears(label, -1);
     }
-    if (granularity === 'hour') return addHours(label, -1);
+    /* 小时点位按相同时钟标签对齐（今日 08:00 ↔ 昨日/去年同期 08:00） */
+    if (granularity === 'hour') return label;
     if (granularity === 'month') return shiftMonths(label + '-01', -1).slice(0, 7);
     return addDays(label, -1);
   }
@@ -1010,7 +1180,8 @@
         }
       ];
     }
-    return catalog(dimension === 'building' ? 'building' : 'tenant').slice(0, 8);
+    var catalogType = dimension === 'building' ? 'building' : dimension === 'floor' ? 'floor' : 'tenant';
+    return catalog(catalogType).slice(0, 8);
   }
 
   function getStructure(options) {
@@ -1189,7 +1360,7 @@
   }
 
   function groupStorageKey(prefix) {
-    return prefix + ':' + getProject().name;
+    return prefix + ':' + projectName();
   }
 
   function normalizeGroup(group) {

@@ -1,19 +1,64 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><link rel="icon" type="image/png" href="../assets/logo-icon-dark.png"><meta name="viewport" content="width=device-width,initial-scale=1"><title>负荷分析</title><link rel="stylesheet" href="_base.css"><link rel="stylesheet" href="_energy.css"></head>
-<body><div class="energy-page"><div class="energy-head"><div class="energy-head-copy"><h1>负荷分析</h1><div class="energy-head-note">（15 分钟采样，每日最多 96 点；负荷积分与日能耗一致）</div></div></div>
-<div class="energy-filter"><div class="fb"><div class="fi"><span class="fl">分析日期</span><input type="date" id="loadDate"></div><label class="fi"><input type="checkbox" id="showSetTemp"> 平均设定温度</label><label class="fi"><input type="checkbox" id="showRoomTemp"> 平均室内温度</label><button class="btn btnp" id="queryLoad">查询</button><button class="btn" id="exportLoad">⬆ 导出</button></div></div>
-<div class="energy-kpis" style="grid-template-columns:repeat(4,minmax(180px,1fr))">
-  <div class="energy-kpi"><div class="energy-kpi-label">最大负荷</div><div class="energy-kpi-value" id="maxLoad" data-value="0">--</div><div class="energy-kpi-foot energy-warning" id="maxAt">--</div></div>
-  <div class="energy-kpi"><div class="energy-kpi-label">平均负荷</div><div class="energy-kpi-value" id="avgLoad">--</div><div class="energy-kpi-foot">统计期负荷均值</div></div>
-  <div class="energy-kpi"><div class="energy-kpi-label">负荷率</div><div class="energy-kpi-value" id="loadRate">--</div><div class="energy-kpi-foot">平均负荷 ÷ 最大负荷</div></div>
-  <div class="energy-kpi"><div class="energy-kpi-label">同比最大负荷</div><div class="energy-kpi-value" id="loadYoy" data-value="">--</div><div class="energy-kpi-foot">较去年同日</div></div>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><link rel="icon" type="image/png" href="../assets/logo-icon-dark.png"><meta name="viewport" content="width=device-width,initial-scale=1"><title>负荷分析</title><link rel="stylesheet" href="_base.css"><link rel="stylesheet" href="_energy.css"></head>
+<body>
+<div class="energy-page">
+  <div class="energy-head"><div class="energy-head-copy"><h1>负荷分析</h1></div></div>
+  <div class="energy-filter"><div class="fb">
+    <div class="fi"><span class="fl">统计对象</span><span id="objBox"></span></div>
+    <div class="fi"><span class="fl">分析日期</span><span id="dateBox"></span></div>
+    <button class="btn btnp" id="queryLoad">查询</button><button class="btn" id="exportLoad">导出</button>
+  </div></div>
+  <div class="energy-kpis" style="grid-template-columns:repeat(4,minmax(180px,1fr))">
+    <div class="energy-kpi"><div class="energy-kpi-label">最大负荷</div><div class="energy-kpi-value" id="maxLoad" data-value="0">--</div><div class="energy-kpi-foot energy-warning" id="maxAt">--</div></div>
+    <div class="energy-kpi"><div class="energy-kpi-label">平均负荷</div><div class="energy-kpi-value" id="avgLoad">--</div><div class="energy-kpi-foot">当日 15 分钟点均值</div></div>
+    <div class="energy-kpi"><div class="energy-kpi-label">日平均设定温度</div><div class="energy-kpi-value" id="avgSetTemp">--</div><div class="energy-kpi-foot">当日设定温度均值</div></div>
+    <div class="energy-kpi"><div class="energy-kpi-label">日平均室内温度</div><div class="energy-kpi-value" id="avgRoomTemp">--</div><div class="energy-kpi-foot">当日室内温度均值</div></div>
+  </div>
+  <section class="energy-panel" style="margin-bottom:14px"><div class="energy-panel-head"><div><div class="energy-panel-title">日负荷曲线</div></div></div><div class="energy-chart lg" id="loadChart"></div></section>
+  <div class="tw"><table><thead><tr><th>时刻</th><th>负荷(kW)</th><th>平均设定温度(℃)</th><th>平均室内温度(℃)</th></tr></thead><tbody id="loadRows"></tbody></table></div><div id="pager"></div>
 </div>
-<section class="energy-panel" style="margin-bottom:14px"><div class="energy-panel-head"><div><div class="energy-panel-title">日负荷曲线</div><div class="energy-panel-sub">最高负荷点自动标注；温度曲线按需叠加</div></div></div><div class="energy-chart lg" id="loadChart"></div></section>
-<div class="tw"><table><thead><tr><th>日期</th><th>能耗(kWh)</th><th>最大负荷(kW)</th><th>发生时间</th><th>平均负荷(kW)</th><th>负荷率</th></tr></thead><tbody id="loadRows"></tbody></table></div><div id="pager"></div>
-</div><script src="_ui.js"></script><script src="_fleet.js"></script><script src="_energy-data.js"></script><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><script>
-var energy=HvacEnergy,chart=null,loadResult=null,dataWindow=energy.getDataWindow();var params=new URLSearchParams(location.search),loadDate=document.getElementById('loadDate');loadDate.value=params.get('date')||dataWindow.to;loadDate.min=dataWindow.from;loadDate.max=dataWindow.to;var pg={total:30,page:1,size:10,sizes:[10,20,30],onChange:function(){renderRows();}};
-function fmt(v,d){return energy.formatNumber(v,d);}function renderRate(value){var element=document.getElementById('loadYoy');element.dataset.value=value==null?'':value;element.className='energy-kpi-value '+(value>0?'energy-up':value<0?'energy-down':'');element.innerHTML=value==null?'--':(value>0?'↑ ':value<0?'↓ ':'')+Math.abs(value).toFixed(1)+'<span class="energy-kpi-unit">%</span>';}
-function query(){loadResult=energy.queryLoad({date:loadDate.value,obj:'project'});var s=loadResult.summary;document.getElementById('maxLoad').dataset.value=s.max;document.getElementById('maxLoad').innerHTML=fmt(s.max)+'<span class="energy-kpi-unit">kW</span>';document.getElementById('avgLoad').innerHTML=fmt(s.average)+'<span class="energy-kpi-unit">kW</span>';document.getElementById('loadRate').innerHTML=fmt(s.rate)+'<span class="energy-kpi-unit">%</span>';document.getElementById('maxAt').textContent='发生于 '+s.maxAt;renderRate(s.yoyRate);renderChart();pg.page=1;pg.total=Math.min(30,Math.floor((new Date(loadDate.value)-new Date(dataWindow.from))/86400000)+1);$pager('pager',pg);renderRows();}
-function renderChart(){var el=document.getElementById('loadChart');if(!window.echarts){el.innerHTML='<div class="energy-chart-fallback">图表资源未加载，请联网后刷新<br>负荷指标与明细仍可使用</div>';return;}chart=chart||echarts.init(el);var series=[{name:'负荷',type:'line',smooth:.2,showSymbol:false,data:loadResult.points.map(function(p){return p.load;}),lineStyle:{width:2,color:'#409eff'},areaStyle:{color:'rgba(64,158,255,.12)'},markPoint:{symbolSize:44,label:{formatter:function(p){return p.value+' kW';}},data:[{type:'max',name:'最大负荷'}]}}];if(document.getElementById('showSetTemp').checked)series.push({name:'平均设定温度',type:'line',yAxisIndex:1,showSymbol:false,data:loadResult.points.map(function(p){return p.setTemp;}),lineStyle:{color:'#e6a23c'}});if(document.getElementById('showRoomTemp').checked)series.push({name:'平均室内温度',type:'line',yAxisIndex:1,showSymbol:false,data:loadResult.points.map(function(p){return p.roomTemp;}),lineStyle:{color:'#67c23a'}});chart.setOption({tooltip:{trigger:'axis'},legend:{top:0,textStyle:{color:'#aab5ca'}},grid:{left:55,right:55,top:40,bottom:35},xAxis:{type:'category',data:loadResult.points.map(function(p){return p.label;}),axisLabel:{color:'#8492ad',interval:7},axisLine:{lineStyle:{color:'#35415f'}}},yAxis:[{type:'value',name:'kW',axisLabel:{color:'#8492ad'},nameTextStyle:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},{type:'value',name:'℃',min:18,max:32,axisLabel:{color:'#8492ad'},nameTextStyle:{color:'#8492ad'},splitLine:{show:false}}],series:series},true);}
-function renderRows(){var base=new Date(loadDate.value+'T00:00:00');var rows=Array.from({length:pg.total},function(_,i){var date=new Date(base);date.setDate(date.getDate()-i);var text=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');return energy.queryLoad({date:text,obj:'project'});});var start=(pg.page-1)*pg.size;document.getElementById('loadRows').innerHTML=rows.slice(start,start+pg.size).map(function(row){var s=row.summary;return '<tr><td>'+row.date+'</td><td>'+fmt(s.energy)+'</td><td>'+fmt(s.max)+'</td><td>'+s.maxAt+'</td><td>'+fmt(s.average)+'</td><td>'+fmt(s.rate)+'%</td></tr>';}).join('');}
-document.getElementById('queryLoad').onclick=query;document.getElementById('exportLoad').onclick=function(){$msg('导出任务已生成，请稍候下载');};document.getElementById('showSetTemp').onchange=renderChart;document.getElementById('showRoomTemp').onchange=renderChart;window.addEventListener('resize',function(){if(chart)chart.resize();});query();
-</script></body></html>
+<script src="_ui.js"></script><script src="_fleet.js"></script><script src="_allocation.js"></script><script src="_energy-data.js"></script><script src="_energy-filter.js"></script><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+var energy=HvacEnergy,chart=null,loadResult=null,dataWindow=energy.getDataWindow();
+var params=new URLSearchParams(location.search);
+var pg={total:0,page:1,size:24,sizes:[24,48,96],onChange:function(){renderRows();}};
+function fmt(v,d){return energy.formatNumber(v,d==null?1:d);}
+var selectedObj='project';
+var datePicker=$erange('dateBox',{mode:'single',from:params.get('date')||dataWindow.to,to:params.get('date')||dataWindow.to,min:dataWindow.from,max:dataWindow.to});
+var objSelector=$eobj('objBox',{types:['project','meter','group'],filterGroupType:'meter',onChange:function(id){selectedObj=id;}});
+if(params.get('obj')){objSelector.setValue(params.get('obj'));selectedObj=objSelector.getValue();}
+function query(){
+  loadResult=energy.queryLoad({date:datePicker.getRange().from,obj:selectedObj});
+  var s=loadResult.summary,points=loadResult.points;
+  document.getElementById('maxLoad').dataset.value=s.max;
+  document.getElementById('maxLoad').innerHTML=fmt(s.max)+'<span class="energy-kpi-unit">kW</span>';
+  document.getElementById('avgLoad').innerHTML=fmt(s.average)+'<span class="energy-kpi-unit">kW</span>';
+  document.getElementById('maxAt').textContent=s.maxAt==='--'?'暂无数据':'发生于 '+s.maxAt;
+  var avgSet=points.length?points.reduce(function(sum,p){return sum+p.setTemp;},0)/points.length:null;
+  var avgRoom=points.length?points.reduce(function(sum,p){return sum+p.roomTemp;},0)/points.length:null;
+  document.getElementById('avgSetTemp').innerHTML=fmt(avgSet)+'<span class="energy-kpi-unit">℃</span>';
+  document.getElementById('avgRoomTemp').innerHTML=fmt(avgRoom)+'<span class="energy-kpi-unit">℃</span>';
+  renderChart();pg.page=1;pg.total=points.length;$pager('pager',pg);renderRows();
+}
+function renderChart(){
+  var el=document.getElementById('loadChart');
+  if(!window.echarts){el.innerHTML='<div class="energy-chart-fallback">图表资源未加载，请联网后刷新<br>负荷指标与明细仍可使用</div>';return;}
+  chart=chart||echarts.init(el);
+  chart.setOption({tooltip:{trigger:'axis'},legend:{top:0,textStyle:{color:'#aab5ca'}},grid:{left:55,right:55,top:40,bottom:35},xAxis:{type:'category',data:loadResult.points.map(function(p){return p.label;}),axisLabel:{color:'#8492ad',interval:7},axisLine:{lineStyle:{color:'#35415f'}}},yAxis:[{type:'value',name:'kW',axisLabel:{color:'#8492ad'},nameTextStyle:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},{type:'value',name:'℃',min:18,max:32,axisLabel:{color:'#8492ad'},nameTextStyle:{color:'#8492ad'},splitLine:{show:false}}],series:[
+    {name:'负荷',type:'line',smooth:.2,showSymbol:false,data:loadResult.points.map(function(p){return p.load;}),lineStyle:{width:2,color:'#409eff'},areaStyle:{color:'rgba(64,158,255,.12)'},markPoint:{symbolSize:44,label:{formatter:function(p){return p.value+' kW';}},data:[{type:'max',name:'最大负荷'}]}},
+    {name:'平均设定温度',type:'line',yAxisIndex:1,showSymbol:false,data:loadResult.points.map(function(p){return p.setTemp;}),lineStyle:{color:'#e6a23c'}},
+    {name:'平均室内温度',type:'line',yAxisIndex:1,showSymbol:false,data:loadResult.points.map(function(p){return p.roomTemp;}),lineStyle:{color:'#67c23a'}}
+  ]},true);
+}
+function renderRows(){
+  var start=(pg.page-1)*pg.size;
+  document.getElementById('loadRows').innerHTML=loadResult.points.slice(start,start+pg.size).map(function(p){return '<tr><td>'+p.label+'</td><td>'+fmt(p.load)+'</td><td>'+fmt(p.setTemp)+'</td><td>'+fmt(p.roomTemp)+'</td></tr>';}).join('')||'<tr><td colspan="4"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+}
+document.getElementById('queryLoad').onclick=query;
+document.getElementById('exportLoad').onclick=function(){$msg('导出任务已生成，请稍候下载');};
+window.addEventListener('resize',function(){if(chart)chart.resize();});
+query();
+</script>
+</body>
+</html>

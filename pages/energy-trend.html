@@ -6,60 +6,73 @@
 <link rel="stylesheet" href="_base.css"><link rel="stylesheet" href="_energy.css">
 </head>
 <body>
-<div class="energy-main-layout">
-  <aside class="side-tree" id="buildingTree"><div class="st-title">建筑物信息</div><div id="tree"></div></aside>
-  <main class="energy-main">
-    <div class="energy-head"><div class="energy-head-copy"><h1>趋势分析</h1><div class="energy-head-note">（按统计对象与时间范围分析能耗；多电表请先建立电表群组）</div></div></div>
-    <div class="energy-filter">
-      <div class="fb">
-        <div class="fi"><span class="fl">统计对象</span><select id="objectType" style="width:124px"><option value="project">项目整体</option><option value="building">楼栋</option><option value="floor">楼层</option><option value="room">房间</option><option value="tenant">租户</option><option value="system">空调系统</option><option value="group">群组</option><option value="meter">电表</option></select><select id="objectSelect" style="width:180px;display:none"></select></div>
-        <div class="fi"><span class="fl">时间粒度</span><select id="granularity" style="width:100px"></select></div>
-        <div class="fi"><span class="fl">快捷范围</span><select id="quickRange" style="width:100px"><option value="custom">自定义</option><option value="today">今日</option><option value="yesterday">昨日</option><option value="month">本月</option><option value="lastMonth">上月</option><option value="year">本年</option></select></div>
-        <div class="fi"><span class="fl">时间范围</span><input id="dateFrom" type="date" style="width:145px"><span class="text-sub">至</span><input id="dateTo" type="date" style="width:145px"></div>
-        <div class="fi"><span class="fl">指标</span><select id="metric" style="width:100px"><option value="energy">能耗</option><option value="runtime">运行时长</option></select></div>
-        <label class="fi"><input id="overlayMom" type="checkbox"> 环比期</label><label class="fi"><input id="overlayYoy" type="checkbox"> 同比期</label>
-        <button class="btn btnp" id="queryBtn">查询</button><button class="btn" id="resetBtn">重置</button><button class="btn" id="exportBtn">⬆ 导出</button>
-      </div>
-    </div>
-    <div class="energy-summary">
-      <div class="energy-summary-item"><div class="energy-summary-label" id="sumTotalLabel">总能耗</div><div class="energy-summary-value" id="sumTotal" data-value="0">--</div></div>
-      <div class="energy-summary-item"><div class="energy-summary-label">周期均值</div><div class="energy-summary-value" id="sumAverage">--</div></div>
-      <div class="energy-summary-item"><div class="energy-summary-label">最大值</div><div class="energy-summary-value" id="sumMax">--</div></div>
-      <div class="energy-summary-item"><div class="energy-summary-label">最小值</div><div class="energy-summary-value" id="sumMin">--</div></div>
-    </div>
-    <section class="energy-panel" style="margin-bottom:14px"><div class="energy-panel-head"><div><div class="energy-panel-title" id="chartTitle">项目整体能耗趋势</div><div class="energy-panel-sub" id="rangeNote"></div></div></div><div class="energy-chart lg" id="trendChart"></div></section>
-    <div class="energy-note">环比曲线按每个点位的上一周期对齐（如 6 月对 5 月），同比曲线按上年同期点位对齐。</div>
-    <div class="tw"><table><thead><tr><th>时间</th><th>能耗(kWh)</th><th>环比</th><th>同比</th><th id="runtimeHead">运行时长(h)</th></tr></thead><tbody id="trendRows"></tbody></table></div>
-    <div id="pager"></div>
-  </main>
+<div class="energy-page">
+  <div class="energy-head"><div class="energy-head-copy"><h1>趋势分析</h1></div></div>
+  <div class="energy-filter"><div class="fb">
+    <div class="fi"><span class="fl">统计对象</span><span id="objBox"></span></div>
+    <div class="fi"><span class="fl">时间粒度</span><select id="granularity" style="width:100px"></select></div>
+    <div class="fi"><span class="fl">时间范围</span><span id="rangeBox"></span></div>
+    <button class="btn btnp" id="queryBtn">查询</button><button class="btn" id="resetBtn">重置</button><button class="btn" id="exportBtn">导出</button>
+  </div></div>
+  <div class="energy-summary">
+    <div class="energy-summary-item"><div class="energy-summary-label">总能耗</div><div class="energy-summary-value" id="sumTotal" data-value="0">--</div></div>
+    <div class="energy-summary-item"><div class="energy-summary-label">周期均值</div><div class="energy-summary-value" id="sumAverage">--</div></div>
+    <div class="energy-summary-item"><div class="energy-summary-label">最大值</div><div class="energy-summary-value" id="sumMax">--</div></div>
+    <div class="energy-summary-item"><div class="energy-summary-label">最小值</div><div class="energy-summary-value" id="sumMin">--</div></div>
+  </div>
+  <section class="energy-panel" style="margin-bottom:14px"><div class="energy-panel-head"><div><div class="energy-panel-title" id="chartTitle">项目整体能耗趋势</div></div></div><div class="energy-chart lg" id="trendChart"></div></section>
+  <div class="tw"><table><thead><tr><th>时间</th><th>能耗(kWh)</th><th>环比期能耗(kWh)</th><th>环比</th><th>同比期能耗(kWh)</th><th>同比</th></tr></thead><tbody id="trendRows"></tbody></table></div>
+  <div id="pager"></div>
 </div>
-<script src="_ui.js"></script><script src="_fleet.js"></script><script src="_allocation.js"></script><script src="_energy-data.js"></script><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="_ui.js"></script><script src="_fleet.js"></script><script src="_allocation.js"></script><script src="_energy-data.js"></script><script src="_energy-filter.js"></script><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script>
-var energy=window.HvacEnergy,chart=null,result=null,selectedObj='project',treeSel=null,lastChartOption=null,dataWindow=energy.getDataWindow();
+var energy=window.HvacEnergy,chart=null,result=null,selectedObj='project',dataWindow=energy.getDataWindow();
 var params=new URLSearchParams(location.search);
-var state={granularity:params.get('gran')||'day',from:params.get('from')||dataWindow.to.slice(0,8)+'01',to:params.get('to')||dataWindow.to,obj:params.get('obj')||'project',metric:params.get('metric')==='runtime'?'runtime':'energy'};
+var state={granularity:params.get('gran')||'day',from:params.get('from')||dataWindow.to.slice(0,8)+'01',to:params.get('to')||dataWindow.to,obj:params.get('obj')||'project'};
 var pg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:function(){renderTable();}};
-function fmt(v,d){return energy.formatNumber(v,d);}
-function objectTypeFromId(id){return id==='project'?'project':String(id).split(':')[0];}
-function renderTree(){var rooms=energy.getCatalog('room').map(function(r){return {bld:r.bld,fl:r.fl,room:r.room};});$tree3('tree',$tree3From(rooms),function(sel){treeSel=sel;if(!sel){selectedObj='project';return;}selectedObj=sel.room?'room:'+sel.bld+'|'+sel.fl+'|'+sel.room:sel.fl?'floor:'+sel.bld+'|'+sel.fl:'building:'+sel.bld;});}
-function fillGranularities(){var select=document.getElementById('granularity'),items=energy.getGranularities();select.innerHTML=items.map(function(item){return '<option value="'+item.value+'">'+item.label+'</option>';}).join('');if(!items.some(function(item){return item.value===state.granularity;}))state.granularity='day';}
-function fillObjects(type){var select=document.getElementById('objectSelect');select.removeAttribute('multiple');select.removeAttribute('size');if(type==='project'||['building','floor','room'].includes(type)){select.style.display='none';document.getElementById('buildingTree').style.display='block';selectedObj='project';return;}document.getElementById('buildingTree').style.display='none';select.style.display='';var rows=energy.getCatalog(type);select.innerHTML=rows.length?rows.map(function(item){return '<option value="'+item.id+'">'+item.name+(item.invalidCount?'（'+item.invalidCount+' 个成员失效）':'')+'</option>';}).join(''):'<option value="">暂无可选对象</option>';if(rows.length){var wanted=rows.some(function(item){return item.id===state.obj;})?state.obj:rows[0].id;select.value=wanted;selectedObj=wanted;}else selectedObj='';}
-function dateText(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
-function monthEnd(value){var parts=value.split('-');return dateText(new Date(Number(parts[0]),Number(parts[1]),0));}
-function syncDateInputs(from,to){var gran=document.getElementById('granularity').value,fromEl=document.getElementById('dateFrom'),toEl=document.getElementById('dateTo'),fromText=String(from||''),toText=String(to||'');if(gran==='month'){fromEl.type=toEl.type='month';fromEl.removeAttribute('min');fromEl.removeAttribute('max');toEl.removeAttribute('min');toEl.removeAttribute('max');fromEl.value=/^\d{4}$/.test(fromText)?fromText+'-01':fromText.slice(0,7);toEl.value=/^\d{4}$/.test(toText)?toText+'-12':toText.slice(0,7);}else if(gran==='year'){fromEl.type=toEl.type='number';fromEl.min=toEl.min=dataWindow.from.slice(0,4);fromEl.max=toEl.max=dataWindow.to.slice(0,4);fromEl.step=toEl.step='1';fromEl.value=fromText.slice(0,4)||dataWindow.to.slice(0,4);toEl.value=toText.slice(0,4)||dataWindow.to.slice(0,4);}else{fromEl.type=toEl.type='date';fromEl.min=toEl.min=dataWindow.from;fromEl.max=toEl.max=dataWindow.to;fromEl.value=/^\d{4}$/.test(fromText)?fromText+'-01-01':/^\d{4}-\d{2}$/.test(fromText)?fromText+'-01':fromText.slice(0,10);toEl.value=/^\d{4}$/.test(toText)?toText+'-12-31':/^\d{4}-\d{2}$/.test(toText)?monthEnd(toText):toText.slice(0,10);}}
-function inputRange(){var gran=document.getElementById('granularity').value,from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;if(gran==='month')return {from:from+'-01',to:monthEnd(to)};if(gran==='year')return {from:from+'-01-01',to:to+'-12-31'};return {from:from,to:to};}
-function shiftDate(value,days){var date=new Date(value+'T00:00:00');date.setDate(date.getDate()+days);return dateText(date);}
-function applyQuickRange(){var preset=this.value;if(preset==='custom')return;var today=dataWindow.to,yesterday=shiftDate(today,-1),lastMonthEnd=shiftDate(today.slice(0,8)+'01',-1),dates={today:[today,today],yesterday:[yesterday,yesterday],month:[today.slice(0,8)+'01',today],lastMonth:[lastMonthEnd.slice(0,8)+'01',lastMonthEnd],year:[today.slice(0,4)+'-01-01',today]},range=dates[preset];syncDateInputs(range[0],range[1]);}
-function applyInitial(){fillGranularities();document.getElementById('granularity').value=state.granularity;syncDateInputs(state.from,state.to);document.getElementById('metric').value=state.metric;var resolved=energy.resolveObject(state.obj),type=resolved?objectTypeFromId(state.obj):'project';if(!resolved&&state.obj!=='project'){$msg('下钻对象已失效，已切换为项目整体','warning');state.obj='project';}document.getElementById('objectType').value=type;fillObjects(type);if(type!=='project'&&state.obj)selectedObj=state.obj;}
-function query(){var gran=document.getElementById('granularity').value,inputs=inputRange();var range=energy.normalizeRange(gran,inputs.from,inputs.to);if(range.truncated)$msg('最长可查询 '+range.pointCount+' 个点位，已自动截断','warning');syncDateInputs(range.from,range.to);result=energy.queryComparison({obj:selectedObj||'project',granularity:gran,from:range.from,to:range.to});renderSummary(result.current.summary);renderChart();pg.page=1;pg.total=result.rows.length;$pager('pager',pg);renderTable();}
-function metricMeta(){var metric=document.getElementById('metric').value;return metric==='runtime'?{key:'runtime',name:'运行时长',totalLabel:'总运行时长',unit:'h'}:{key:'energy',name:'能耗',totalLabel:'总能耗',unit:'kWh'};}
-function renderSummary(summary){var current=result.current,meta=metricMeta(),values=current.points.map(function(point){return Number(point[meta.key]||0);}),total=meta.key==='energy'?summary.total:summary.runtime,average=values.length?values.reduce(function(sum,value){return sum+value;},0)/values.length:0,max=values.length?Math.max.apply(null,values):null,min=values.length?Math.min.apply(null,values):null,unit=' '+meta.unit;document.getElementById('sumTotalLabel').textContent=meta.totalLabel;document.getElementById('sumTotal').dataset.value=total;document.getElementById('sumTotal').textContent=fmt(total)+unit;document.getElementById('sumAverage').textContent=fmt(average)+unit;document.getElementById('sumMax').textContent=fmt(max)+unit;document.getElementById('sumMin').textContent=fmt(min)+unit;document.getElementById('chartTitle').textContent=current.object.name+' '+meta.name+'趋势';document.getElementById('rangeNote').textContent=current.range.from+' 至 '+current.range.to+' · '+current.range.label;}
-function comparisonSeries(name,comparison,meta,color){var values=comparison.points.map(function(point){return point[meta.key];});if(!values.some(function(value){return value!=null;}))return null;return {name:name,type:'line',smooth:true,showSymbol:false,data:values,lineStyle:{color:color,width:2}};}
-function renderChart(){var el=document.getElementById('trendChart'),meta=metricMeta(),current=result.current,values=current.points.map(function(point){return point[meta.key];}),series=[{name:'本期',type:'bar',data:values,barMaxWidth:22,itemStyle:{borderRadius:[3,3,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#9fd4ff'},{offset:.5,color:'#4d94f5'},{offset:1,color:'#1b4fd0'}]}}}];if(document.getElementById('overlayMom').checked){var momSeries=comparisonSeries('环比期',result.pointMom,meta,'#67c23a');if(momSeries)series.push(momSeries);}if(document.getElementById('overlayYoy').checked){var yoySeries=comparisonSeries('同比期',result.pointYoy,meta,'#e6a23c');if(yoySeries)series.push(yoySeries);}lastChartOption={tooltip:{trigger:'axis'},legend:{top:0,textStyle:{color:'#aab5ca'}},grid:{left:55,right:28,top:38,bottom:40},xAxis:{type:'category',data:current.points.map(function(point){return point.label;}),axisLabel:{color:'#8492ad',hideOverlap:true},axisLine:{lineStyle:{color:'#35415f'}}},yAxis:{type:'value',name:meta.unit,nameTextStyle:{color:'#8492ad'},axisLabel:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},series:series};if(!window.echarts){el.innerHTML='<div class="energy-chart-fallback">图表资源未加载，请联网后刷新<br>下方明细数据仍可使用</div>';return;}if(!chart)chart=echarts.init(el);chart.setOption(lastChartOption,true);}
-function rateCell(value,attribute){if(value==null)return '<td '+attribute+'="">--</td>';var className=value>0?'energy-up':value<0?'energy-down':'',arrow=value>0?'↑ ':value<0?'↓ ':'';return '<td class="'+className+'" '+attribute+'="'+value+'">'+arrow+Math.abs(value).toFixed(1)+'%</td>';}
-function renderTable(){var hourly=result.current.range.granularity==='hour';document.getElementById('runtimeHead').style.display=hourly?'none':'';var start=(pg.page-1)*pg.size,rows=result.rows.slice(start,start+pg.size);document.getElementById('trendRows').innerHTML=rows.map(function(row){return '<tr><td>'+row.label+'</td><td data-energy="'+row.current+'">'+fmt(row.current)+'</td>'+rateCell(row.momRate,'data-mom-rate')+rateCell(row.yoyRate,'data-yoy-rate')+(hourly?'':'<td>'+fmt(row.runtime)+'</td>')+'</tr>';}).join('')||'<tr><td colspan="5"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';}
-document.getElementById('objectType').onchange=function(){state.obj='';fillObjects(this.value);};document.getElementById('objectSelect').onchange=function(){selectedObj=this.value;};document.getElementById('granularity').onchange=function(){var from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;syncDateInputs(from,to);document.getElementById('quickRange').value='custom';};document.getElementById('quickRange').onchange=applyQuickRange;document.getElementById('queryBtn').onclick=query;document.getElementById('resetBtn').onclick=function(){state={granularity:'day',from:dataWindow.to.slice(0,8)+'01',to:dataWindow.to,obj:'project',metric:'energy'};document.getElementById('quickRange').value='custom';applyInitial();query();};document.getElementById('exportBtn').onclick=function(){$msg('导出任务已生成，请稍候下载');};['overlayMom','overlayYoy'].forEach(function(id){document.getElementById(id).onchange=renderChart;});window.addEventListener('resize',function(){if(chart)chart.resize();});
-renderTree();applyInitial();query();
+function fmt(v,d){return energy.formatNumber(v,d==null?1:d);}
+var RANGE_MODE={hour:'single',day:'date',month:'month',year:'year'};
+var rangePicker=$erange('rangeBox',{mode:RANGE_MODE[state.granularity]||'date',from:state.from,to:state.to,min:dataWindow.from,max:dataWindow.to,onChange:function(range){state.from=range.from;state.to=range.to;}});
+var objSelector=$eobj('objBox',{types:['project','building','floor','room','tenant','group','meter'],onChange:function(id){selectedObj=id;}});
+function fillGranularities(){var items=energy.getGranularities();document.getElementById('granularity').innerHTML=items.map(function(item){return '<option value="'+item.value+'">'+item.label+'</option>';}).join('');if(!items.some(function(item){return item.value===state.granularity;}))state.granularity='day';document.getElementById('granularity').value=state.granularity;}
+function applyInitial(){fillGranularities();rangePicker.setMode(RANGE_MODE[state.granularity]||'date');rangePicker.setRange(state.from,state.to);var resolved=energy.resolveObject(state.obj);if(!resolved&&state.obj!=='project'){$msg('下钻对象已失效，已切换为项目整体','warning');state.obj='project';}objSelector.setValue(state.obj);selectedObj=state.obj;}
+function query(){
+  var gran=document.getElementById('granularity').value,range=rangePicker.getRange();
+  var from=range.from,to=range.to;
+  if(gran==='hour')to=from;
+  var normalized=energy.normalizeRange(gran,from,to);
+  if(normalized.truncated)$msg('查询范围过大，已自动截断','warning');
+  from=normalized.from;to=normalized.to;
+  if(gran==='hour'){from=String(from).slice(0,10);to=from;}
+  state.from=from;state.to=to;state.granularity=gran;
+  result=energy.queryComparison({obj:selectedObj||'project',granularity:gran,from:from,to:to});
+  renderSummary();renderChart();pg.page=1;pg.total=result.rows.length;$pager('pager',pg);renderTable();
+}
+function renderSummary(){var s=result.current.summary;document.getElementById('sumTotal').dataset.value=s.total;document.getElementById('sumTotal').textContent=fmt(s.total)+' kWh';document.getElementById('sumAverage').textContent=fmt(s.average)+' kWh';document.getElementById('sumMax').textContent=fmt(s.max)+' kWh';document.getElementById('sumMin').textContent=fmt(s.min)+' kWh';document.getElementById('chartTitle').textContent=result.current.object.name+' 能耗趋势';}
+function comparisonSeries(name,comparison,color){var values=comparison.points.map(function(point){return point.energy;});if(!values.some(function(value){return value!=null;}))return null;return {name:name,type:'line',smooth:true,showSymbol:false,data:values,lineStyle:{color:color,width:2}};}
+function renderChart(){
+  var el=document.getElementById('trendChart'),series=[{name:'本期',type:'bar',data:result.current.points.map(function(point){return point.energy;}),barMaxWidth:22,itemStyle:{borderRadius:[3,3,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#9fd4ff'},{offset:.5,color:'#4d94f5'},{offset:1,color:'#1b4fd0'}]}}}];
+  var momSeries=comparisonSeries('环比期',result.pointMom,'#67c23a');if(momSeries)series.push(momSeries);
+  var yoySeries=comparisonSeries('同比期',result.pointYoy,'#e6a23c');if(yoySeries)series.push(yoySeries);
+  var option={tooltip:{trigger:'axis'},grid:{left:55,right:28,top:38,bottom:40},xAxis:{type:'category',data:result.current.points.map(function(point){return point.label;}),axisLabel:{color:'#8492ad',hideOverlap:true},axisLine:{lineStyle:{color:'#35415f'}}},yAxis:{type:'value',name:'kWh',nameTextStyle:{color:'#8492ad'},axisLabel:{color:'#8492ad'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},series:series};
+  if(series.length>1)option.legend={top:0,textStyle:{color:'#aab5ca'}};
+  if(!window.echarts){el.innerHTML='<div class="energy-chart-fallback">图表资源未加载，请联网后刷新<br>下方明细数据仍可使用</div>';return;}
+  if(!chart)chart=echarts.init(el);chart.setOption(option,true);
+}
+function rateCell(value){if(value==null)return '<td>--</td>';var className=value>0?'energy-up':value<0?'energy-down':'',arrow=value>0?'↑ ':value<0?'↓ ':'';return '<td class="'+className+'">'+arrow+Math.abs(value).toFixed(1)+'%</td>';}
+function energyCell(value){return '<td>'+(value==null?'--':fmt(value))+'</td>';}
+function renderTable(){var start=(pg.page-1)*pg.size,rows=result.rows.slice(start,start+pg.size);document.getElementById('trendRows').innerHTML=rows.map(function(row){return '<tr><td>'+row.label+'</td><td data-energy="'+row.current+'">'+fmt(row.current)+'</td>'+energyCell(row.mom)+rateCell(row.momRate)+energyCell(row.yoy)+rateCell(row.yoyRate)+'</tr>';}).join('')||'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';}
+document.getElementById('granularity').onchange=function(){
+  var gran=this.value,range=rangePicker.getRange();
+  if(gran==='hour')rangePicker.setRange(range.to,range.to);
+  else if(RANGE_MODE[state.granularity]==='single')rangePicker.setRange(range.to.slice(0,8)+'01',range.to);
+  rangePicker.setMode(RANGE_MODE[gran]||'date');
+};
+document.getElementById('queryBtn').onclick=query;
+document.getElementById('resetBtn').onclick=function(){state={granularity:'day',from:dataWindow.to.slice(0,8)+'01',to:dataWindow.to,obj:'project'};applyInitial();query();};
+document.getElementById('exportBtn').onclick=function(){$msg('导出任务已生成，请稍候下载');};
+window.addEventListener('resize',function(){if(chart)chart.resize();});
+applyInitial();query();
 </script>
 </body>
 </html>
