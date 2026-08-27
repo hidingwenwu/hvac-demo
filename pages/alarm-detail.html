@@ -39,18 +39,18 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
 </style>
 </head>
 <body>
-<!-- 顶部行:Tab(项目运维 | 空调故障) + 档位统计卡(随 Tab 切换,与 Tab 同一行靠右) -->
+<!-- 顶部行:Tab(空调故障 | 项目运维) + 档位统计卡(随 Tab 切换,与 Tab 同一行靠右) -->
 <div class="tab-strip">
   <div class="tabs">
-    <div class="tab active" data-t="ops" onclick="pickTab('ops')">项目运维</div>
-    <div class="tab" data-t="ac" onclick="pickTab('ac')">空调故障</div>
+    <div class="tab active" data-t="ac" onclick="pickTab('ac')">空调故障</div>
+    <div class="tab" data-t="ops" onclick="pickTab('ops')">项目运维</div>
   </div>
-  <div class="lv-cards" id="opsLvCards"></div>
-  <div class="lv-cards" id="acLvCards" style="display:none"></div>
+  <div class="lv-cards" id="opsLvCards" style="display:none"></div>
+  <div class="lv-cards" id="acLvCards"></div>
 </div>
 
-<!-- ═══════ Tab1:项目运维 ═══════ -->
-<div id="tabOps">
+<!-- ═══════ Tab2:项目运维 ═══════ -->
+<div id="tabOps" style="display:none">
   <!-- 筛选栏:下拉/日期选择即生效,故障对象回车生效 -->
   <div class="fb">
     <div class="fi">
@@ -98,8 +98,8 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
   <div id="opsPager"></div>
 </div>
 
-<!-- ═══════ Tab2:空调故障 ═══════ -->
-<div id="tabAc" style="display:none">
+<!-- ═══════ Tab1:空调故障 ═══════ -->
+<div id="tabAc">
   <!-- 筛选栏:建筑物为树选下拉(楼栋/楼层/房间合并);下拉/日期选择即生效,文本框回车生效 -->
   <div class="fb">
     <div class="fi">
@@ -202,7 +202,7 @@ td.cell-key{max-width:340px;text-align:left;white-space:normal;line-height:1.5;p
 <script>
 const PROJ_BILL=$alarmProjBill($alarmCurProj());
 if(!PROJ_BILL)document.querySelector('#oCat option[value="bill"]').remove();
-let tab='ops';
+let tab='ac';
 
 /* ── 状态二维模型:故障状态 × 处理进度
      故障状态 recOf:'active' 未恢复 / 'gone' 已恢复(由恢复时间 gone 决定,设备侧客观状态)
@@ -648,13 +648,15 @@ function applyDeepFilter(){
     doQueryOps();
     return;
   }
-  /* 无等级:项目运维 Tab 按状态落地 */
+  /* 无等级:默认落地空调故障;cat=ops 时落项目运维 Tab 并按状态筛选 */
   setSt('o',st0);
   if(cat==='ops'){   /* 仅项目运维类故障 */
     document.getElementById('oCat').value='';
     renderNameOpts();
+    doQueryOps();
+    return;
   }
-  doQueryOps();
+  pickTab('ac');
 }
 applyDeepFilter();
 </script>
