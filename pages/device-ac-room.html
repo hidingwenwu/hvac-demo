@@ -215,7 +215,11 @@ function setSeg(v){
   renderTree();
 }
 function renderTree(){
+  /* 重建前保留楼栋/楼层展开态(公区标记切换、增删节点后树不塌) */
+  const openBlds=new Set(),openFls=new Set();
+  if(Array.isArray(TREE))TREE.forEach(b=>{if(b.open)openBlds.add(b.name);b.children.forEach(f=>{if(f.open)openFls.add(b.name+'|'+f.name);});});
   TREE=window.HvacFleet.tree(store);
+  TREE.forEach(b=>{b.open=openBlds.has(b.name);b.children.forEach(f=>{f.open=openFls.has(b.name+'|'+f.name);});});
   refreshBoundRooms();
   const tb=document.getElementById('treeBody');
   const rows=[];

@@ -235,7 +235,7 @@ if(!PRE)document.querySelectorAll('.pre-only').forEach(el=>el.style.display='non
 
 /* ── 模拟数据 ──
    预付费:对齐线上截图(会议室类租户,共37条,含负余额)
-   后付费:对齐线上(数字型租户名、余额0.00、同批创建时间,共621条) */
+   后付费:按项目出示例(物业型项目仅一个物业租户;常规型项目为公司租户),未列名项目保持线上数字型口径(共621条) */
 const fmt2=v=>(+v).toFixed(2);
 /* 项目全局默认阈值:未单独配置(custom)的租户使用此值 */
 let DEF_TH={remind:100,lock:0,lockOn:true};
@@ -271,6 +271,22 @@ if(PRE){
 }else{
   const CRT='2025-06-24 16:48:25';
   const CONTACTS=['','','','','','','','','','','王芳','李建国','张伟','刘敏','陈静'];
+  /* 分项目租户示例:物业型项目仅一个物业租户(房间名即租户名);常规型项目为公司租户;未列名项目保持线上数字型口径 */
+  const NAMED={
+    '平台测试_新计费':['恒信物业','公区'],
+    '二次分摊-H':['恒安物业','公区'],
+    '分摊计费-ly':['蓝海科技','云启信息','恒润贸易','博雅咨询','公区'],
+    '平台测试_后付费':['晨曦广告','众合律所','大成装饰','优选电商','公区'],
+    '001':['启明工作室','远航物流','公区']
+  };
+  if(NAMED[PROJ.name]){
+    TENANTS=NAMED[PROJ.name].map((n,i)=>({
+      id:nextTenantId(),name:n,
+      contact:n==='公区'?'公区':CONTACTS[10+(i%5)],
+      balance:i===0?222.00:0,
+      records:[],rooms:[],crt:CRT,upd:CRT
+    }));
+  }else{
   TENANTS=(()=>{
     const names=['1','10'];
     for(let f=10;f<=39;f++)for(let r=1;r<=20;r++)names.push(''+(f*100+r));
@@ -285,6 +301,7 @@ if(PRE){
       crt:CRT,upd:CRT
     }));
   })();
+  }
 }
 
 /* ── 表头(预付费含阈值列) ── */

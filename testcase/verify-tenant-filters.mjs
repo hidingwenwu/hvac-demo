@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('C:/Users/dingd/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/.pnpm/playwright@1.61.1/node_modules/playwright');
+const { chromium } = require('playwright-core');
 const pageUrl = 'file:///D:/workspace/hvac-demo/pages/elec-tenant.html';
 const prepaid = { name: '平台产品测试-预付费', pay: 'pre', unit: 'hour' };
 const postpaid = { name: '平台产品测试-后付费', pay: 'post', unit: 'day' };
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: 'chrome' });
 
 async function open(project) {
   const context = await browser.newContext({ viewport: { width: 1760, height: 1000 } });
@@ -31,11 +31,11 @@ try {
   assert.equal(await page.evaluate(() =>
     document.getElementById('btnQuery').parentElement===document.getElementById('fRoom').closest('.fb')
   ), true, '查询按钮应紧随筛选框放在同一容器');
-  const filterLabels = await page.locator('.filter-shell .fl').allTextContents();
-  assert.ok(filterLabels.includes('租户名称'));
-  assert.ok(filterLabels.includes('联系人名称'));
-  assert.equal(filterLabels.includes('账户租户名称'), false);
-  assert.equal(filterLabels.includes('联系人真实名称'), false);
+  const filterPlaceholders = await page.locator('.filter-shell input[placeholder]').evaluateAll(elements => elements.map(element => element.placeholder));
+  assert.ok(filterPlaceholders.includes('租户名称'));
+  assert.ok(filterPlaceholders.includes('联系人名称'));
+  assert.equal(filterPlaceholders.includes('账户租户名称'), false);
+  assert.equal(filterPlaceholders.includes('联系人真实名称'), false);
   const headers = await page.locator('#thead th').allTextContents();
   assert.ok(headers.includes('租户名称'));
   assert.ok(headers.includes('联系人名称'));

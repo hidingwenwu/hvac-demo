@@ -16,7 +16,7 @@ assert.match(html, /<span class="new-badge" id="visualNewBadge">New<\/span>/);
 assert.match(html, /function syncVisualNewBadge\(\)/);
 assert.match(html, /badge\.style\.display=localStorage\.getItem\(AC_VISUAL_PROMO_KEY\)\?'none':''/);
 assert.match(html, /localStorage\.setItem\(AC_VISUAL_PROMO_KEY,'1'\);\s*syncVisualNewBadge\(\);\s*\$modal\('dlgPromo'\)/);
-assert.match(html, /setPow\(false\);\s*syncVisualNewBadge\(\);/);
+assert.match(html, /\nsyncVisualNewBadge\(\);\s*<\/script>|\nsyncVisualNewBadge\(\);\s*\n/, '初始化时必须同步一次 NEW 徽标显隐');
 assert.match(html, /<div class="promo-tip"><span>请点击右上角<\/span><svg class="promo-guide-icon"[^>]*>[\s\S]*?<\/svg><span>参考操作指引页面内视频说明<\/span><\/div>/);
 assert.match(html, /<svg class="promo-guide-icon"[^>]*><circle cx="12" cy="12" r="9\.2"\/><path d="M9\.6 9\.3a2\.5 2\.5 0 1 1 3\.4 2\.4c-\.8\.3-1 \.9-1 1\.8"\/><circle cx="12" cy="16\.6" r="\.4" fill="currentColor"\/><\/svg>/);
 assert.match(html, /<div class="promo-left">\s*<div class="promo-img" id="promoImg"><\/div>\s*<div class="promo-tip">/);

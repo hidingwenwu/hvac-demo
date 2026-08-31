@@ -1,12 +1,12 @@
 const assert = require('node:assert/strict');
 const os = require('node:os');
 const path = require('node:path');
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-core');
 
 const BASE_URL = 'http://127.0.0.1:8802';
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   try {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     const errors = [];
@@ -41,19 +41,19 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.ok(onlineStates.length > 0 && onlineStates.every((value) => value.trim() === '在线'));
     await page.locator('#summaryTotal').click();
 
-    await page.locator('#snFilter').fill('240612');
+    await page.locator('#snFilter').fill('2426');
     await page.getByRole('button', { name: '查询' }).click();
     assert.equal(await page.locator('#deviceBody tr').count(), 1);
-    assert.match(await page.locator('#deviceBody').innerText(), /R7-110108-240612-0007/);
+    assert.match(await page.locator('#deviceBody').innerText(), /R7-110108-2426-175/);
 
     await page.getByRole('button', { name: '重置' }).click();
     await page.locator('#summaryTotal').click();
     assert.ok(await page.locator('#deviceBody tr').count() > 1);
 
-    let unboundRow = page.locator('#deviceBody tr', { hasText: 'R7-510107-240318-0036' });
+    let unboundRow = page.locator('#deviceBody tr', { hasText: 'R7-320505-2406-035' });
     if (!await unboundRow.count()) {
       await page.locator('#devicePager .pg-size').selectOption('20');
-      unboundRow = page.locator('#deviceBody tr', { hasText: 'R7-510107-240318-0036' });
+      unboundRow = page.locator('#deviceBody tr', { hasText: 'R7-320505-2406-035' });
     }
     await unboundRow.getByRole('button', { name: '绑定项目' }).click();
     await page.locator('#bindProjectSelect').selectOption({ label: '凤凰台测试' });
@@ -61,18 +61,18 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.match(await page.locator('#deviceBody').innerText(), /凤凰台测试/);
     await page.reload();
     await page.waitForLoadState('networkidle');
-    let reboundRow = page.locator('#deviceBody tr', { hasText: 'R7-510107-240318-0036' });
+    let reboundRow = page.locator('#deviceBody tr', { hasText: 'R7-320505-2406-035' });
     if (!await reboundRow.count()) {
       await page.locator('#devicePager .pg-size').selectOption('20');
-      reboundRow = page.locator('#deviceBody tr', { hasText: 'R7-510107-240318-0036' });
+      reboundRow = page.locator('#deviceBody tr', { hasText: 'R7-320505-2406-035' });
     }
     assert.match(await reboundRow.innerText(), /凤凰台测试/);
     await page.screenshot({ path: path.join(os.tmpdir(), 'r7-list-verified.png'), fullPage: true });
 
-    await page.locator('#snFilter').fill('240612');
+    await page.locator('#snFilter').fill('2426');
     await page.getByRole('button', { name: '查询' }).click();
     await page.getByRole('button', { name: '详情' }).click();
-    assert.equal(await page.evaluate(() => sessionStorage.getItem('hvac:r7:selectedSn')), 'R7-110108-240612-0007');
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('hvac:r7:selectedSn')), 'R7-110108-2426-175');
 
     await page.goto(`${BASE_URL}/pages/ops-r7.html`);
     await page.waitForLoadState('networkidle');
@@ -86,7 +86,7 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.match(await page.locator('.msg-wrap').innerText(), /请选择项目/);
     await page.locator('#gatewayProjectSelect').selectOption({ label: '中关村软件园' });
     await page.locator('#gatewayFilterDialog').getByRole('button', { name: '查询' }).click();
-    assert.match(await page.locator('#gatewayDeviceBody').innerText(), /R7-110108-240612-0007/);
+    assert.match(await page.locator('#gatewayDeviceBody').innerText(), /R7-110108-2426-175/);
     await page.screenshot({ path: path.join(os.tmpdir(), 'r7-detail-selector-verified.png'), fullPage: true });
     await page.setViewportSize({ width: 480, height: 900 });
     const selectorDialogBox = await page.locator('#gatewayFilterDialog .dialog').boundingBox();
@@ -95,18 +95,18 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.equal(await page.locator('.gateway-select-table').evaluate((node) => node.scrollWidth > node.clientWidth), true);
     await page.screenshot({ path: path.join(os.tmpdir(), 'r7-detail-selector-mobile-verified.png'), fullPage: true });
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.locator('#gatewayDeviceBody input[type="radio"]').check();
+    await page.locator('#gatewayDeviceBody input[type="radio"][value="R7-110108-2426-175"]').check();
     await page.locator('#gatewayFilterDialog').getByRole('button', { name: '确定' }).click();
-    assert.equal(await page.locator('#snInput').inputValue(), 'R7-110108-240612-0007');
+    assert.equal(await page.locator('#snInput').inputValue(), 'R7-110108-2426-175');
     assert.equal(await page.locator('#detailContent').isVisible(), false);
     await page.getByRole('button', { name: '读取' }).click();
     assert.equal(await page.locator('#detailContent').isVisible(), true);
-    assert.match(await page.locator('#basicGrid').innerText(), /R7-110108-240612-0007/);
+    assert.match(await page.locator('#basicGrid').innerText(), /R7-110108-2426-175/);
 
-    await page.goto(`${BASE_URL}/pages/ops-r7.html?sn=R7-110108-240612-0007`);
+    await page.goto(`${BASE_URL}/pages/ops-r7.html?sn=R7-110108-2426-175`);
     await page.waitForLoadState('networkidle');
     assert.equal(await page.locator('#detailContent').isVisible(), true);
-    assert.match(await page.locator('#basicGrid').innerText(), /R7-110108-240612-0007/);
+    assert.match(await page.locator('#basicGrid').innerText(), /R7-110108-2426-175/);
     await page.getByRole('button', { name: /刷新/ }).click();
     assert.match(await page.locator('.msg-wrap').innerText(), /设备信息刷新成功/);
 
@@ -166,7 +166,7 @@ const BASE_URL = 'http://127.0.0.1:8802';
 
     await page.goto(`${BASE_URL}/pages/ops-r7-dashboard.html`);
     await page.waitForLoadState('networkidle');
-    assert.equal(await page.locator('#metricTotal').innerText(), '12');
+    assert.equal(await page.locator('#metricTotal').innerText(), '42');
     assert.equal(await page.locator('#totalMetricCard').count(), 1);
     assert.equal(await page.locator('#metricQuartet .metric-mini').count(), 4);
     assert.ok((await page.locator('#versionPie').getAttribute('style')).includes('conic-gradient'));
@@ -174,14 +174,14 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.ok((await page.locator('#combinationPie').getAttribute('style')).includes('conic-gradient'));
     assert.ok(await page.locator('#combinationBars .combo-row').count() > 0);
     assert.ok(await page.locator('#combinationBars .combo-row').count() <= 20);
-    assert.equal(await page.locator('.card-head > span').count(), 0);
+    assert.deepEqual(await page.locator('#versionToggle .rtab').allTextContents(), ['全部', 'MAX版', '标准版'], '版本分布卡应提供全部/MAX版/标准版切换');
     assert.equal(await page.locator('.distribution-layout').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length), 3);
     await page.locator('#onlineDonut').hover({ position: { x: 18, y: 63 } });
     assert.match(await page.locator('#pieTooltip').getAttribute('class'), /is-visible/);
     assert.match(await page.locator('#pieTooltip').innerText(), /\d+ 台 · \d+%/);
     await page.locator('#versionPie').hover({ position: { x: 18, y: 58 } });
     assert.match(await page.locator('#pieTooltip').getAttribute('class'), /is-visible/);
-    assert.match(await page.locator('#pieTooltip').innerText(), /R7\.2\./);
+    assert.match(await page.locator('#pieTooltip').innerText(), /\d+\.\d+\.\d+\.\d+/);
     await page.locator('body').hover({ position: { x: 5, y: 5 } });
     assert.doesNotMatch(await page.locator('#pieTooltip').getAttribute('class'), /is-visible/);
     assert.match(await page.locator('#combinationBars').innerText(), /大金 \+ 三菱电机/);
@@ -208,11 +208,11 @@ const BASE_URL = 'http://127.0.0.1:8802';
     assert.match(await page.locator('#fr').getAttribute('src'), /pages\/ops-r7-list\.html/);
     assert.match(await page.locator('#bc').innerText(), /智慧运维[\s\S]*R7设备列表/);
     const r7ListFrame = page.frameLocator('#fr');
-    await r7ListFrame.locator('#snFilter').fill('240612');
+    await r7ListFrame.locator('#snFilter').fill('2426');
     await r7ListFrame.getByRole('button', { name: '查询' }).click();
     await r7ListFrame.getByRole('button', { name: '详情' }).click();
     await page.waitForFunction(() => document.querySelector('#fr').getAttribute('src').includes('?sn='));
-    assert.match(await page.locator('#fr').getAttribute('src'), /pages\/ops-r7\.html\?sn=R7-110108-240612-0007/);
+    assert.match(await page.locator('#fr').getAttribute('src'), /pages\/ops-r7\.html\?sn=R7-110108-2426-175/);
     assert.match(await page.locator('#bc').innerText(), /智慧运维[\s\S]*R7设备详情/);
     await page.locator('#nav').getByText('R7设备详情', { exact: true }).click();
     await page.waitForFunction(() => document.querySelector('#fr').getAttribute('src') === 'pages/ops-r7.html');

@@ -113,10 +113,10 @@ assert.match(roomPage, /<th[^>]*>公区标记<\/th>/);
 assert.match(roomPage, /class="switch[^"`]*\$\{isPublic/);
 assert.match(roomPage, /allocation\.setPublicRoom/);
 assert.match(roomPage, /allocation\.subscribe/);
-assert.equal((roomPage.match(/<td class="pub-placeholder">[^<]+<\/td>/g) || []).length, 2);
+assert.equal((roomPage.match(/<td class="pub-placeholder">[^<]+<\/td>/g) || []).length, 4);
 assert.doesNotMatch(roomPage, /class="pub-state/);
 assert.match(roomPage, /function pickRoom\([\s\S]*?renderTree\(\);renderSlots\(\);relQuery\(\);/);
-assert.match(roomPage, /!selRoom\|\|\(r\.fl===selRoom\.fl&&r\.room===selRoom\.name\)/);
+assert.match(roomPage, /selRoom&&selRoom\.name===r\.name&&selRoom\.fl===f\.name/);
 
 const billingPage = read('pages/elec-query.html');
 assert.match(billingPage, /按房间/);

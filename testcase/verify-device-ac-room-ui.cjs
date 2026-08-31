@@ -1,10 +1,10 @@
 const assert = require('node:assert/strict');
 const os = require('node:os');
 const path = require('node:path');
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-core');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   try {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const consoleErrors = [];
@@ -23,7 +23,7 @@ const { chromium } = require('playwright');
   });
   await page.evaluate(() => {
     const row = [...document.querySelectorAll('#treeBody tr')]
-      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '13层');
+      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '3层');
     row.querySelector('.arr').click();
   });
 
@@ -33,9 +33,9 @@ const { chromium } = require('playwright');
       row.querySelector('.cell-name span:last-child')?.textContent === name);
     return {
       building: byName('1号楼').children[2].textContent.trim(),
-      floor: byName('13层').children[2].textContent.trim(),
-      roomSwitches: byName('1301').children[2].querySelectorAll('.switch').length,
-      roomText: byName('1301').children[2].textContent.trim()
+      floor: byName('3层').children[2].textContent.trim(),
+      roomSwitches: byName('301').children[2].querySelectorAll('.switch').length,
+      roomText: byName('301').children[2].textContent.trim()
     };
   });
   assert.deepEqual(markerState, {
@@ -47,12 +47,12 @@ const { chromium } = require('playwright');
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll('#treeBody tr')]
-      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '1302');
+      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '302');
     row.querySelector('.switch').click();
   });
   assert.deepEqual(await page.evaluate(() => {
     const row = [...document.querySelectorAll('#treeBody tr')]
-      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '1302');
+      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '302');
     const button = row.querySelector('.switch');
     return {
       active: button.classList.contains('on'),
@@ -62,14 +62,14 @@ const { chromium } = require('playwright');
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll('#treeBody tr')]
-      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '1301');
+      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '301');
     row.querySelector('input[type="checkbox"]').click();
   });
   const selectedRows = await page.evaluate(() => relFiltered.map((row) =>
     [row.bld, row.fl, row.room]));
   assert.ok(selectedRows.length > 0);
   assert.ok(selectedRows.every((row) =>
-    row[0] === '1号楼' && row[1] === '13层' && row[2] === '1301'));
+    row[0] === '1号楼' && String(row[1]).replace('层', '') === '3' && row[2] === '301'));
   await page.screenshot({
     path: path.join(os.tmpdir(), 'device-ac-room-filtered.png'),
     fullPage: true
@@ -77,7 +77,7 @@ const { chromium } = require('playwright');
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll('#treeBody tr')]
-      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '1301');
+      .find((item) => item.querySelector('.cell-name span:last-child')?.textContent === '301');
     row.querySelector('input[type="checkbox"]').click();
   });
   assert.equal(await page.evaluate(() => relFiltered.length), 618);

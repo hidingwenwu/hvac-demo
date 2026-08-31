@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('C:/Users/dingd/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/.pnpm/playwright@1.61.1/node_modules/playwright');
+const { chromium } = require('playwright-core');
 const pageUrl = 'file:///D:/workspace/hvac-demo/pages/elec-tenant.html';
 const prepaid = { name: '平台产品测试-预付费', pay: 'pre', unit: 'hour' };
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: 'chrome' });
 
 function tenantRow(page, name) {
   return page.locator('#tbody tr').filter({

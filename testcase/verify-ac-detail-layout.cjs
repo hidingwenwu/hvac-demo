@@ -42,11 +42,11 @@ const server = http.createServer((req, res) => {
     await firstCard.click();
     assert.equal(await panel.isVisible(), true, '单选应显示详情');
     const order = await page.$$eval('#infoGrid > div', (ds) => ds.map((d) => d.className || d.querySelector('.ig-k').textContent));
-    assert.equal(order[0], 'info-name-row', '名称行应为第一项');
-    assert.equal(order[1], 'info-location-card', '位置卡应为第二项');
+    assert.equal(order[0], 'info-location-card', '名称+位置合并卡应为第一项');
+    assert.deepEqual(await page.$$eval('.info-location-card > div', (ds) => ds.map((d) => d.className)), ['info-name-row', 'info-loc-row'], '合并卡内名称行在前、位置行在后');
     assert.equal(order[order.length - 1], 'info-host', '主机编号应为最后一项');
-    assert.deepEqual(order.slice(2, 6), ['空调品牌', '空调容量', '空调地址', '故障代码'], '中部字段顺序');
-    assert.equal((await page.locator('.info-location-card .ig-v').innerText()).trim().replace(/\s/g, ''), ('1号楼·3层·' + cardLoc.split('-')[0] + '室').replace(/\s/g, ''), '详情位置应与卡片一致');
+    assert.deepEqual(order.slice(1, 5), ['空调品牌', '空调容量', '空调地址', '故障代码'], '中部字段顺序');
+    assert.equal((await page.locator('.info-loc-row .ig-v').innerText()).trim().replace(/\s/g, ''), ('1号楼·3层·' + cardLoc.split('-')[0] + '室').replace(/\s/g, ''), '详情位置应与卡片一致');
     const nameInTitle = cardLoc.includes('-') ? cardLoc.split('-').slice(1).join('-') : '';
     if (nameInTitle) assert.equal((await page.locator('.info-name-row .ig-v').innerText()).trim(), nameInTitle, '详情名称应与卡片一致');
     assert.match(await page.locator('.info-host .ig-v').innerText(), /^B\d+$/, '主机编号应为完整序列号');
@@ -98,7 +98,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('.ac-card.sel').count(), 1, '筛选后应仅保留结果内的选择');
     assert.match(await page.locator('#pager .pg-total').innerText(), /已选择 1 条/, '分页栏计数应同步');
     assert.equal(await panel.isVisible(), true, '恰余1台时详情应自动显示');
-    assert.match(await page.locator('.info-location-card .ig-v').innerText(), /306室/, '详情应为保留的故障空调');
+    assert.match(await page.locator('.info-loc-row .ig-v').innerText(), /306室/, '详情应为保留的故障空调');
     await page.evaluate(() => { document.getElementById('fFault').value = '正常'; applyFilter(); });
     assert.equal(await page.locator('.ac-card.sel').count(), 0, '再次筛选应修剪至0台');
     assert.equal(await panel.isVisible(), false, '选择清空后详情应隐藏');
@@ -109,7 +109,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await panel.isVisible(), false, '进入可视化时详情应隐藏');
     await page.locator('.fan').first().click();
     assert.equal(await panel.isVisible(), true, '点击风机应显示详情');
-    assert.match(await page.locator('.info-location-card .ig-v').innerText(), /1号楼 · \d+层 · \d+室/);
+    assert.match(await page.locator('.info-loc-row .ig-v').innerText(), /1号楼 · \d+层 · \d+室/);
     await page.locator('#vtCard').click();
     assert.equal(await panel.isVisible(), false, '切回卡片视图且无勾选应隐藏');
 
