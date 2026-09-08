@@ -130,7 +130,13 @@
                 <div class="time-range"><input type="date" id="tStart" value="2026-07-01"><span class="text-sub">至</span><input type="date" id="tEnd" value="2026-12-31"></div>
               </div>
               <div class="form-item"><span class="fl"><span class="req">*</span>生效时间</span>
-                <div class="time-range"><select id="tFrom"></select><span class="text-sub">至</span><select id="tTo"></select></div>
+                <div class="time-range">
+                  <select id="tFromHour"></select><span class="text-sub">:</span>
+                  <select id="tFromMin"></select>
+                  <span class="text-sub">至</span>
+                  <select id="tToHour" onchange="syncEndMin()"></select><span class="text-sub">:</span>
+                  <select id="tToMin"></select>
+                </div>
               </div>
             </div>
             <div class="form-grid" style="margin-top:12px">
@@ -521,24 +527,42 @@ function validateActions(){
   if(actions[actions.length-1].type==='delay')return '\u6700\u540e\u4e00\u4e2a\u6267\u884c\u52a8\u4f5c\u4e0d\u80fd\u662f\u5ef6\u65f6';
   return '';
 }
+/* 生效时间段下拉:小时与分钟分别选择,分钟仅提供 5 分钟倍数的时间点(00-55);结束小时可选 24 */
 function populateTimeSelects(){
   const p=n=>String(n).padStart(2,'0');
-  const starts=[],ends=[];
-  for(let h=0;h<24;h++)for(let m=0;m<60;m+=5){const t=p(h)+':'+p(m);starts.push(t);ends.push(t);}
-  ends.push('24:00');
-  document.getElementById('tFrom').innerHTML=starts.map(t=>`<option value="${t}">${t}</option>`).join('');
-  document.getElementById('tTo').innerHTML=ends.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const hours=Array.from({length:24},(_,h)=>`<option>${p(h)}</option>`).join('');
+  const mins=Array.from({length:12},(_,i)=>`<option>${p(i*5)}</option>`).join('');
+  document.getElementById('tFromHour').innerHTML=hours;
+  document.getElementById('tToHour').innerHTML=hours+'<option>24</option>';
+  ['tFromMin','tToMin'].forEach(id=>document.getElementById(id).innerHTML=mins);
+}
+/* 结束小时选 24 时,分钟只能是 00 */
+function syncEndMin(){
+  const isFull=document.getElementById('tToHour').value==='24';
+  const tToMin=document.getElementById('tToMin');
+  if(isFull) tToMin.value='00';
+  tToMin.disabled=isFull;
+}
+/* 读/写 时+分 组合选择器,值形如 "HH:MM" */
+function getTime(prefix){
+  return document.getElementById(prefix+'Hour').value+':'+document.getElementById(prefix+'Min').value;
+}
+function setTime(prefix,v){
+  const [h,m]=(v||'00:00').split(':');
+  document.getElementById(prefix+'Hour').value=h;
+  document.getElementById(prefix+'Min').value=m;
+  if(prefix==='tTo') syncEndMin();
 }
 function minutesFromTime(v){if(v==='24:00')return 1440;const p=v.split(':').map(Number);return p[0]*60+p[1];}
 function validateTask(){
   if(!document.getElementById('tName').value.trim())return '请输入任务名称';
   if(!picked.length)return '请选择房间/传感器';
   if(document.getElementById('tStart').value>document.getElementById('tEnd').value)return '生效结束日期不能早于开始日期';
-  if(minutesFromTime(document.getElementById('tTo').value)<=minutesFromTime(document.getElementById('tFrom').value))return '生效结束时间必须晚于开始时间';
+  if(minutesFromTime(getTime('tTo'))<=minutesFromTime(getTime('tFrom')))return '生效结束时间必须晚于开始时间';
   if(!weekOn.some(Boolean))return '请至少选择一个周重复时间';
   return validateConditions()||validateActions();
 }
-function collectTask(){return {name:document.getElementById('tName').value.trim(),desc:document.getElementById('taskDesc').value.trim(),start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,ts:document.getElementById('tFrom').value,te:document.getElementById('tTo').value,week:weekOn.slice(),exclude:excludeDates.slice(),durationOn:document.getElementById('durationEnabled').checked,duration:document.getElementById('durationEnabled').checked?+document.getElementById('durationMin').value:0,rooms:picked.slice(),conditions:cloneTask(conds),actions:cloneTask(actions)};}
+function collectTask(){return {name:document.getElementById('tName').value.trim(),desc:document.getElementById('taskDesc').value.trim(),start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,ts:getTime('tFrom'),te:getTime('tTo'),week:weekOn.slice(),exclude:excludeDates.slice(),durationOn:document.getElementById('durationEnabled').checked,duration:document.getElementById('durationEnabled').checked?+document.getElementById('durationMin').value:0,rooms:picked.slice(),conditions:cloneTask(conds),actions:cloneTask(actions)};}
 function saveTask(){const err=validateTask();if(err){$msg(err,'warning');return;}const data=collectTask();if(editIdx>=0)Object.assign(TASKS[editIdx],data,{mt:now()});else TASKS.unshift({...data,on:true,mt:now()});$modalClose('dlgTask');doQuery();$msg(editIdx>=0?'保存成功':'新建任务成功');}
 
 let editIdx=-1;
@@ -552,8 +576,8 @@ function openDlg(i,mode){
   document.getElementById('tStart').value=r?r.start:'2026-07-01';
   document.getElementById('tEnd').value=r?r.end:'2026-12-31';
   populateTimeSelects();
-  document.getElementById('tFrom').value=r?r.ts:'00:00';
-  document.getElementById('tTo').value=r?r.te:'24:00';
+  setTime('tFrom',r?r.ts:'00:00');
+  setTime('tTo',r?r.te:'24:00');
   weekOn=r?r.week.slice():DEFAULT_WEEK.slice();
   excludeDates=r?(r.exclude||[]).slice():[];
   picked=r?(r.rooms||[]).slice():['801会议室'];
