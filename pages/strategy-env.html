@@ -187,6 +187,8 @@
       <p class="help-intro">环境感知联动通过房间内的人体、门窗、温湿度等传感器实时感知环境变化，当环境满足设定条件时，自动对所选房间的空调执行控制动作，实现按需用能、无感节能。</p>
       <ul class="help-list">
         <li>任务在生效日期、生效时间、周重复时间内执行，排除日期不执行。</li>
+        <li>条件判定数据来自所选房间绑定的传感器，取最新上报状态：人在状态 ← 人体存在传感器，门窗状态 ← 门窗存在传感器，湿度 ← 温湿度传感器；温度优先取温湿度传感器，房间未绑定时使用空调上报的回风温度（室内温度）。</li>
+        <li>除温度条件外，所选每个房间均需绑定对应的传感器设备，任一房间未绑定时任务不允许保存。</li>
         <li>执行动作支持最多 16 个组合动作；相邻动作不允许相同，且不能以延时作为最后一个动作。</li>
         <li>延时动作可设置 5-240 分钟，用于拉开相邻控制动作的执行间隔，避免短时间内频繁控制空调。</li>
         <li>锁定控制中的“不锁定”表示解除对应锁定；全部不锁定表示解除全部锁定。</li>
@@ -310,6 +312,17 @@ function now(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.get
 function cloneTask(t){return JSON.parse(JSON.stringify(t));}
 
 const ROOMS=[{lb:'青岛飞奕科技',open:true,children:[{lb:'8层',open:true,children:['801会议室','803会议室','产品部','运营部']},{lb:'9层',open:false,children:['901会议室','903会议室','技术部','研发部']}]}];
+/* 房间-传感器绑定关系(模拟数据):presence 人体存在传感器 / door 门窗存在传感器 / th 温湿度传感器;未列出的类型即未绑定 */
+const ROOM_SENSORS={
+  '801会议室':['presence','door','th'],
+  '803会议室':['presence','door','th'],
+  '产品部':['presence','door'],
+  '运营部':['presence'],
+  '901会议室':['door'],
+  '903会议室':['door'],
+  '技术部':['presence'],
+  '研发部':['presence','th'],
+};
 let picked=[];
 function renderTree(){
   const kw=(document.getElementById('treeSearch')?.value||'').trim();
@@ -465,6 +478,16 @@ function validateConditions(){
   const seen=new Set();
   for(const c of conds){if(seen.has(c.type))return '同一类触发条件最多配置一次';seen.add(c.type);if(c.type==='temp'&&!numberInRange(c.val,-10,50))return '温度触发值请输入 -10~50℃ 的整数';if(c.type==='humi'&&!numberInRange(c.val,1,99))return '湿度触发值请输入 1~99% 的整数';}
   if(document.getElementById('durationEnabled').checked&&!numberInRange(document.getElementById('durationMin')?.value,1,60))return '持续满足条件时长请输入 1-60 分钟的整数';
+  return validateSensorBinding();
+}
+/* 除温度外,条件类型要求所选每个房间均已绑定对应传感器,任一房间未绑定则阻止保存 */
+function validateSensorBinding(){
+  const need={presence:{sensor:'presence',name:'人体存在传感器'},door:{sensor:'door',name:'门窗存在传感器'},humi:{sensor:'th',name:'温湿度传感器'}};
+  for(const type of ['presence','door','humi']){
+    if(!conds.some(c=>c.type===type))continue;
+    const n=need[type];
+    if(picked.some(rm=>!(ROOM_SENSORS[rm]||[]).includes(n.sensor)))return `存在未绑定${n.name}的房间，无法使用${COND_TYPES[type]}条件`;
+  }
   return '';
 }
 function validateLockAction(a){
