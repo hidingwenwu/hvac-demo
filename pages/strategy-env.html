@@ -423,7 +423,7 @@ function setAction(i,k,v){
   if(k==='type')actions[i]=newAction(v);
   else if(k==='lockTempEnabled'){
     actions[i].lockTempEnabled=v==='1';
-    if(actions[i].lockTempEnabled){actions[i].lockTempMin=actions[i].lockTempMin||'16';actions[i].lockTempMax=actions[i].lockTempMax||'30';}
+    if(actions[i].lockTempEnabled){actions[i].lockTempMin=actions[i].lockTempMin||'16';actions[i].lockTempMax=actions[i].lockTempMax||'31';}
     else{actions[i].lockTempMin='';actions[i].lockTempMax='';}
   }else actions[i][k]=v;
   renderActions();
@@ -443,10 +443,10 @@ function setLockMode(i,mode,on){
 function setLockTemp(i,k,input){
   const a=actions[i];
   let v=+input.value;
-  if(k==='lockTempMin'&&v>+(a.lockTempMax||30))v=+(a.lockTempMax||30);
+  if(k==='lockTempMin'&&v>+(a.lockTempMax||31))v=+(a.lockTempMax||31);
   if(k==='lockTempMax'&&v<+(a.lockTempMin||16))v=+(a.lockTempMin||16);
   input.value=v;a[k]=String(v);
-  const pct=x=>(x-16)/(30-16)*100;
+  const pct=x=>(x-16)/(31-16)*100;
   const fill=document.getElementById('lockTempFill'+i);
   if(fill){fill.style.left=pct(+a.lockTempMin)+'%';fill.style.right=(100-pct(+a.lockTempMax))+'%';}
   const lbl=document.getElementById('lockTempLbl'+i);
@@ -463,20 +463,20 @@ function renderActions(){
     else if(a.type==='lock') {
       const modes=Array.isArray(a.lockModes)?a.lockModes:[];
       const tempOn=a.lockTempEnabled||!!(a.lockTempMin&&a.lockTempMax);
-      const lo=a.lockTempMin||'16',hi=a.lockTempMax||'30';
-      const pct=v=>(v-16)/(30-16)*100;
+      const lo=a.lockTempMin||'16',hi=a.lockTempMax||'31';
+      const pct=v=>(v-16)/(31-16)*100;
       body=`<select class="lock-sel" onchange="setAction(${i},'lockPower',this.value)"><option value="">\u5f00\u5173\u673a\u4e0d\u9501\u5b9a</option><option value="\u7981\u6b62\u5173\u673a" ${a.lockPower==='\u7981\u6b62\u5173\u673a'?'selected':''}>\u7981\u6b62\u5173\u673a</option><option value="\u7981\u6b62\u542f\u52a8" ${a.lockPower==='\u7981\u6b62\u542f\u52a8'?'selected':''}>\u7981\u6b62\u542f\u52a8</option></select>`
         +`<span class="msel ${openLockMenu===i?'open':''}"><button type="button" class="msel-btn" onclick="toggleLockMenu(${i});event.stopPropagation()">${modes.length?'\u9501\u5b9a'+modes.join('\u3001'):'\u6a21\u5f0f\u4e0d\u9501\u5b9a'} <span class="msel-arr">\u25be</span></button>
             <div class="msel-menu" onclick="event.stopPropagation()">${['\u5236\u51b7','\u5236\u70ed','\u9001\u98ce','\u9664\u6e7f'].map(m=>`<label class="msel-item"><input type="checkbox" ${modes.includes(m)?'checked':''} onchange="setLockMode(${i},'${m}',this.checked)"> ${m}</label>`).join('')}</div>
           </span>`
         +`<span class="lock-temp-group"><label class="lock-temp-ck"><input type="checkbox" ${tempOn?'checked':''} onchange="setAction(${i},'lockTempEnabled',this.checked?'1':'0')"> \u6e29\u5ea6\u9501\u5b9a</label>`
         +(tempOn?`<span class="dual-range"><span class="dr-lbl" id="lockTempLbl${i}">${lo}\u2103 ~ ${hi}\u2103</span><span class="dr-track"></span><span class="dr-fill" id="lockTempFill${i}" style="left:${pct(lo)}%;right:${100-pct(hi)}%"></span>
-            <input type="range" min="16" max="30" step="1" value="${lo}" oninput="setLockTemp(${i},'lockTempMin',this)">
-            <input type="range" min="16" max="30" step="1" value="${hi}" oninput="setLockTemp(${i},'lockTempMax',this)">
+            <input type="range" min="16" max="31" step="1" value="${lo}" oninput="setLockTemp(${i},'lockTempMin',this)">
+            <input type="range" min="16" max="31" step="1" value="${hi}" oninput="setLockTemp(${i},'lockTempMax',this)">
           </span>`:'')+`</span>`;
     }else body=`<select onchange="setAction(${i},'power',this.value)"><option value="">\u5f00\u5173\u4e0d\u63a7\u5236</option><option ${a.power==='\u5f00\u673a'?'selected':''}>\u5f00\u673a</option><option ${a.power==='\u5173\u673a'?'selected':''}>\u5173\u673a</option></select>`
       +`<select onchange="setAction(${i},'mode',this.value)"><option value="">\u6a21\u5f0f\u4e0d\u63a7\u5236</option><option ${a.mode==='\u5236\u51b7'?'selected':''}>\u5236\u51b7</option><option ${a.mode==='\u5236\u70ed'?'selected':''}>\u5236\u70ed</option><option ${a.mode==='\u9001\u98ce'?'selected':''}>\u9001\u98ce</option><option ${a.mode==='\u9664\u6e7f'?'selected':''}>\u9664\u6e7f</option></select>`
-      +`<input type="number" min="16" max="30" step="1" value="${a.temp||''}" placeholder="\u6e29\u5ea6\u4e0d\u63a7\u5236" onchange="setAction(${i},'temp',this.value)">`
+      +`<input type="number" min="16" max="31" step="1" value="${a.temp||''}" placeholder="\u6e29\u5ea6\u4e0d\u63a7\u5236" onchange="setAction(${i},'temp',this.value)">`
       +`<select onchange="setAction(${i},'fan',this.value)"><option value="">\u98ce\u901f\u4e0d\u63a7\u5236</option><option ${a.fan==='\u9ad8'?'selected':''}>\u9ad8</option><option ${a.fan==='\u4e2d'?'selected':''}>\u4e2d</option><option ${a.fan==='\u4f4e'?'selected':''}>\u4f4e</option></select>`;
     return `<div class="action-row"><span class="cond-prefix">${i+1}</span><select onchange="setAction(${i},'type',this.value)"><option value="control" ${a.type==='control'?'selected':''}>\u7a7a\u8c03\u63a7\u5236</option><option value="lock" ${a.type==='lock'?'selected':''}>\u9501\u5b9a\u63a7\u5236</option><option value="delay" ${a.type==='delay'?'selected':''}>\u5ef6\u65f6</option></select><div class="action-body">${body}</div><span class="action-del" onclick="delAction(${i})">×</span></div>`;
   }).join('');
@@ -506,7 +506,7 @@ function validateLockAction(a){
   const hasMin=a.lockTempMin!==''&&a.lockTempMin!==undefined,hasMax=a.lockTempMax!==''&&a.lockTempMax!==undefined;
   if(a.lockModes.includes('\u5236\u70ed')&&(a.lockModes.includes('\u5236\u51b7')||a.lockModes.includes('\u9664\u6e7f')))return '\u5236\u70ed\u4e0d\u80fd\u4e0e\u5236\u51b7\u6216\u9664\u6e7f\u540c\u65f6\u9501\u5b9a';
   if(tempOn&&hasMin&&hasMax){
-    if(!numberInRange(a.lockTempMin,16,30)||!numberInRange(a.lockTempMax,16,30))return '\u9501\u5b9a\u6e29\u5ea6\u4e0a\u4e0b\u9650\u8bf7\u8f93\u5165 16~30\u2103 \u7684\u6574\u6570';
+    if(!numberInRange(a.lockTempMin,16,31)||!numberInRange(a.lockTempMax,16,31))return '\u9501\u5b9a\u6e29\u5ea6\u4e0a\u4e0b\u9650\u8bf7\u8f93\u5165 16~31\u2103 \u7684\u6574\u6570';
     if(Number(a.lockTempMin)>Number(a.lockTempMax))return '\u6e29\u5ea6\u4e0b\u9650\u4e0d\u80fd\u9ad8\u4e8e\u6e29\u5ea6\u4e0a\u9650';
   }
   return '';
@@ -522,7 +522,7 @@ function validateActions(){
     if(a.type==='delay'&&!numberInRange(a.minutes,5,240))return '延时时长请输入 5-240 分钟的整数';
     if(a.type==='control'){
       if(!a.power&&!a.mode&&!a.temp&&!a.fan)return '\u6bcf\u4e2a\u7a7a\u8c03\u63a7\u5236\u52a8\u4f5c\u81f3\u5c11\u9009\u62e9\u4e00\u4e2a\u63a7\u5236\u53c2\u6570';
-      if(a.temp&&!numberInRange(a.temp,16,30))return '\u7a7a\u8c03\u63a7\u5236\u6e29\u5ea6\u8bf7\u8f93\u5165 16~30\u2103 \u7684\u6574\u6570';
+      if(a.temp&&!numberInRange(a.temp,16,31))return '\u7a7a\u8c03\u63a7\u5236\u6e29\u5ea6\u8bf7\u8f93\u5165 16~31\u2103 \u7684\u6574\u6570';
     }
     if(a.type==='lock'){
       const err=validateLockAction(a);
