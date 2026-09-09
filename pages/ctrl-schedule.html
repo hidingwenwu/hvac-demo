@@ -484,7 +484,7 @@ function renderLockSettings(){
     <div class="lock-setting-row">
       <label class="lock-setting-toggle"><input type="checkbox" onchange="toggleLockType('onOff')"${checked('onOff')?' checked':''}>是否开关锁定</label>
       ${checked('onOff')?`<div class="lock-setting-detail">
-        ${[['开','锁定开机'],['关','锁定关机']].map(([value,label])=>`<label class="lock-choice"><input type="radio" name="lockOnOff" onchange="setLockOnOff('${value}')"${lockOnOff===value?' checked':''}>${label}</label>`).join('')}
+        ${[['开','禁止关机'],['关','禁止启动']].map(([value,label])=>`<label class="lock-choice"><input type="radio" name="lockOnOff" onchange="setLockOnOff('${value}')"${lockOnOff===value?' checked':''}>${label}</label>`).join('')}
       </div>`:''}
     </div>
     <div class="lock-setting-row">

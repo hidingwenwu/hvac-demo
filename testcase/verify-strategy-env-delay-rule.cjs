@@ -67,6 +67,14 @@ const rowType = (page, i) => page.locator('#actionList .action-row').nth(i).loca
     assert.equal(await page.locator('#dlgTask').evaluate((el) => el.classList.contains('show')), false, '保存成功后弹窗关闭');
     assert.equal(await page.locator('#tbody tr').nth(0).locator('td').nth(0).textContent(), '测试控制后须延时', '新任务插入列表首行');
 
+    /* 新建任务写入状态变动记录:日志首行为“创建任务”,无执行结果标签 */
+    await page.locator('#tbody tr').nth(0).locator('a', { hasText: '日志' }).click();
+    await page.waitForTimeout(200);
+    const firstRow = page.locator('#dlgLog .log-row').first();
+    assert.equal(await firstRow.locator('span').nth(1).textContent(), '创建任务', '日志应记录创建任务');
+    assert.equal(await firstRow.locator('span').nth(2).textContent(), '', '状态变动记录不标执行结果');
+    await page.locator('#dlgLog .dx').click();
+
     assert.deepEqual(errors, [], '页面不应有 JS 错误');
     console.log('环境感知联动·动作链序列新规 ✓ 控制后须延时/相邻优先/锁定后默认延时/末位免延时');
   } finally {

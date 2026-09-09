@@ -198,6 +198,7 @@
         <li>执行动作支持最多 16 个组合动作；相邻动作不允许相同；空调控制或锁定控制后必须紧跟一个延时（最后一个动作除外），避免控制器接收指令处理不及；不能以延时作为最后一个动作。</li>
         <li>延时动作可设置 5-240 分钟，用于拉开相邻控制动作的执行间隔，避免短时间内频繁控制空调。</li>
         <li>锁定控制中的“不锁定”表示解除对应锁定；全部不锁定表示解除全部锁定。</li>
+        <li>任务日志除动作执行记录外，同时记录任务状态变动（创建 / 编辑 / 启用 / 停用）；编辑记录列出实际变更的配置维度。</li>
       </ul>
     </div>
     <div class="df"><button class="btn" onclick="$modalClose('dlgEnvHelp')">关闭</button></div>
@@ -231,11 +232,11 @@ const OPS=[
 ];
 
 let TASKS=[
-  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'lock',lockPower:'禁止关机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true},
+  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'lock',lockPower:'禁止关机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true,history:[{t:'2026-06-28 09:12:33',text:'创建任务'},{t:'2026-06-30 16:58:57',text:'编辑任务内容（判断条件、执行动作）'}]},
   {name:'产品部门窗开启关机',start:'2026-07-01',end:'2026-10-31',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:10,rooms:['产品部'],conditions:[{type:'door',state:'开启'}],actions:[{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-28 10:22:45',on:true},
   {name:'会议室门窗开启延时关机',start:'2026-07-01',end:'2026-12-31',ts:'08:00',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['901会议室','903会议室'],conditions:[{type:'door',state:'开启'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-27 16:40:11',on:true},
   {name:'高湿自动除湿',start:'2026-07-01',end:'2026-09-30',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:5,rooms:['研发部'],conditions:[{type:'humi',op:'gte',val:'70'}],actions:[{type:'control',power:'开机',mode:'除湿',temp:'',fan:'低'}],mt:'2026-06-27 11:05:33',on:true},
-  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'delay',minutes:'5'},{type:'lock',lockPower:'禁止启动',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true},
+  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'delay',minutes:'5'},{type:'lock',lockPower:'禁止启动',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true,history:[{t:'2026-06-26 18:22:40',text:'创建任务'},{t:'2026-07-03 08:55:12',text:'停用任务'},{t:'2026-07-03 09:03:40',text:'启用任务'},{t:'2026-09-09 10:37:51',text:'编辑任务内容（生效日期、周重复时间、判断条件、执行动作、房间信息）'}]},
   {name:'办公区午休延时关机',start:'2026-07-01',end:'2026-12-31',ts:'12:00',te:'14:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['产品部','运营部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'30'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-26 09:12:07',on:true},
   {name:'门窗关闭恢复制冷',start:'2026-07-01',end:'2026-09-30',ts:'08:00',te:'20:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:false,duration:0,rooms:['803会议室'],conditions:[{type:'door',state:'关闭'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'}],mt:'2026-06-25 15:30:58',on:true},
   {name:'高温分段降温策略',start:'2026-07-15',end:'2026-09-15',ts:'09:00',te:'18:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:5,rooms:['运营部'],conditions:[{type:'temp',op:'gte',val:'30'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'control',power:'',mode:'',temp:'27',fan:''}],mt:'2026-06-25 09:14:02',on:false},
@@ -303,16 +304,18 @@ function renderTable(){
     </tr>`;
   }).join(''):'<tr><td colspan="7"><div class="empty"><span class="ei">□</span><span class="et">暂无数据</span></div></td></tr>';
 }
+/* 状态变动记录:创建/编辑/启用/停用 写入 history,日志弹窗与动作执行记录合并展示 */
+function pushHistory(r,text){r.history=r.history||[];r.history.push({t:now(),text});}
 function toggleTask(i){
   if(TASKS[i].on){
     $confirm(`停用任务“${TASKS[i].name}”后，正在执行中的联动任务将被立即终止，确定停用吗？`,()=>{
-      TASKS[i].on=false;TASKS[i].mt=now();renderTable();$msg('任务已停用');
+      TASKS[i].on=false;TASKS[i].mt=now();pushHistory(TASKS[i],'停用任务');renderTable();$msg('任务已停用');
     });
   }else{
-    TASKS[i].on=true;TASKS[i].mt=now();renderTable();$msg('任务已启用');
+    TASKS[i].on=true;TASKS[i].mt=now();pushHistory(TASKS[i],'启用任务');renderTable();$msg('任务已启用');
   }
 }
-function copyTask(i){const r=TASKS[i];TASKS.push(cloneTask({...r,name:r.name+'-副本',on:false,mt:now()}));doQuery();$msg('复制成功');}
+function copyTask(i){const r=TASKS[i];const t=now();TASKS.push(cloneTask({...r,name:r.name+'-副本',on:false,mt:t,history:[{t,text:'创建任务'}]}));doQuery();$msg('复制成功');}
 function delTask(i){$confirm(`删除任务“${TASKS[i].name}”后，正在执行中的联动任务将被立即终止，且不可恢复，确定删除吗？`,()=>{TASKS.splice(i,1);doQuery();$msg('删除成功');});}
 function now(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
 function cloneTask(t){return JSON.parse(JSON.stringify(t));}
@@ -565,7 +568,23 @@ function validateTask(){
   return validateConditions()||validateActions();
 }
 function collectTask(){return {name:document.getElementById('tName').value.trim(),desc:document.getElementById('taskDesc').value.trim(),start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,ts:getTime('tFrom'),te:getTime('tTo'),week:weekOn.slice(),exclude:excludeDates.slice(),durationOn:document.getElementById('durationEnabled').checked,duration:document.getElementById('durationEnabled').checked?+document.getElementById('durationMin').value:0,rooms:picked.slice(),conditions:cloneTask(conds),actions:cloneTask(actions)};}
-function saveTask(){const err=validateTask();if(err){$msg(err,'warning');return;}const data=collectTask();if(editIdx>=0)Object.assign(TASKS[editIdx],data,{mt:now()});else TASKS.unshift({...data,on:true,mt:now()});$modalClose('dlgTask');doQuery();$msg(editIdx>=0?'保存成功':'新建任务成功');}
+/* 编辑保存时按维度对比原配置,实际变更项写入状态变动记录(维度命名见需求文档 6.4) */
+const EDIT_DIMS=[['name','任务名称'],['desc','任务描述'],['start','生效日期'],['end','生效日期'],['ts','生效时间'],['te','生效时间'],['week','周重复时间'],['exclude','排除日期'],['rooms','房间信息'],['conditions','判断条件'],['durationOn','持续满足条件'],['duration','持续满足条件'],['actions','执行动作']];
+function changedDims(oldTask,data){
+  const names=[];
+  EDIT_DIMS.forEach(([k,lb])=>{const ov=oldTask[k]===undefined?'':oldTask[k];const nv=data[k]===undefined?'':data[k];if(JSON.stringify(ov)!==JSON.stringify(nv)&&!names.includes(lb))names.push(lb);});
+  return names;
+}
+function saveTask(){
+  const err=validateTask();if(err){$msg(err,'warning');return;}
+  const data=collectTask();const t=now();
+  if(editIdx>=0){
+    const dims=changedDims(TASKS[editIdx],data);
+    Object.assign(TASKS[editIdx],data,{mt:t});
+    if(dims.length)pushHistory(TASKS[editIdx],`编辑任务内容（${dims.join('、')}）`);
+  }else TASKS.unshift({...data,on:true,mt:t,history:[{t,text:'创建任务'}]});
+  $modalClose('dlgTask');doQuery();$msg(editIdx>=0?'保存成功':'新建任务成功');
+}
 
 let editIdx=-1;
 function openDlg(i,mode){
@@ -592,7 +611,7 @@ function openDlg(i,mode){
   $modal('dlgTask');
 }
 function openEnvHelp(){$modal('dlgEnvHelp');}
-/* 日志仅记录条件满足状态与空调控制/空调锁定/延时动作(不罗列组合条件内容),用于空调状态追溯、明确控制指令来源;异常原因按实际情况填写 */
+/* 日志记录两类内容:动作执行记录(条件满足状态+空调控制/空调锁定/延时动作,不罗列组合条件内容,用于空调状态追溯、明确控制指令来源,异常原因按实际情况填写)与任务状态变动记录(创建/编辑/启用/停用,不带前缀、不标执行结果) */
 function addMinutes(ts,n){const d=new Date(ts.replace(/-/g,'/'));d.setMinutes(d.getMinutes()+n);const p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
 function openLog(i){
   const r=TASKS[i];
@@ -605,20 +624,28 @@ function openLog(i){
   const logs=[];
   /* 最近一次触发:动作链逐动作记录,仅首个动作带条件状态前缀 */
   let t=at(t0+Math.max(10,Math.floor((t1-t0)/2))),first=true;
+  const chainStart=t;
   (r.actions||[]).forEach(a=>{
     const prefix=first?`${condState}，`:'';
     if(a.type==='delay'){logs.push([t,`${prefix}执行延时：${a.minutes} 分钟。`,'tok','成功']);t=addMinutes(t,+a.minutes);}
     else logs.push([t,`${prefix}执行${actionText(a)}。`,'tok','成功']);
     first=false;
   });
-  /* 历史记录示例:异常(部分下发失败,原因按实际情况填写)、跳过(持续复核未通过) */
+  /* 历史动作记录示例:异常(部分下发失败,原因按实际情况填写)、跳过(持续复核未通过) */
+  const oldRows=[];
   const ctrl=(r.actions||[]).find(a=>a.type==='control');
   if(ctrl){
-    logs.push([at(t0+20,'2026-07-02','41'),`${condState}，执行${actionText(ctrl)}，部分空调（1-2-1-2）由于【设备离线】未执行成功。`,'ter','异常']);
-    if(r.durationOn)logs.push([at(t0+15,'2026-07-01','18'),'未持续满足组合条件，本次不执行动作。','twn','跳过']);
-    logs.push([at(t0+10,'2026-07-01','05'),`${condState}，执行${actionText(ctrl)}，部分空调（1-2-1-3）由于【状态锁定】未执行成功。`,'ter','异常']);
-  }else if(r.durationOn)logs.push([at(t0+15,'2026-07-01','18'),'未持续满足组合条件，本次不执行动作。','twn','跳过']);
-  document.getElementById('logBody').innerHTML=logs.map(l=>`<div class="log-row"><span class="t">${l[0]}</span><span>${l[1]}</span><span class="tag ${l[2]}">${l[3]}</span></div>`).join('');
+    oldRows.push([at(t0+20,'2026-07-02','41'),`${condState}，执行${actionText(ctrl)}，部分空调（1-2-1-2）由于【设备离线】未执行成功。`,'ter','异常']);
+    if(r.durationOn)oldRows.push([at(t0+15,'2026-07-01','18'),'未持续满足组合条件，本次不执行动作。','twn','跳过']);
+    oldRows.push([at(t0+10,'2026-07-01','05'),`${condState}，执行${actionText(ctrl)}，部分空调（1-2-1-3）由于【状态锁定】未执行成功。`,'ter','异常']);
+  }else if(r.durationOn)oldRows.push([at(t0+15,'2026-07-01','18'),'未持续满足组合条件，本次不执行动作。','twn','跳过']);
+  /* 状态变动记录:与动作记录按时间倒序合并;晚于最近执行实例的置于链块之前,早于的并入历史区 */
+  const hist=(r.history||[]).map(h=>[h.t,h.text,'','']);
+  const newer=hist.filter(h=>h[0]>=chainStart).sort((a,b)=>b[0]<a[0]?-1:1);
+  const older=hist.filter(h=>h[0]<chainStart);
+  const tail=oldRows.concat(older).sort((a,b)=>b[0]<a[0]?-1:b[0]>a[0]?1:0);
+  const all=newer.concat(logs,tail);
+  document.getElementById('logBody').innerHTML=all.map(l=>`<div class="log-row"><span class="t">${l[0]}</span><span>${l[1]}</span>${l[2]?`<span class="tag ${l[2]}">${l[3]}</span>`:'<span></span>'}</div>`).join('');
   $modal('dlgLog');
 }
 function lockBrief(a){

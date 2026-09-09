@@ -113,9 +113,11 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
       '执行空调锁定：禁止关机 / 模式锁定制冷 / 温度锁定16-30℃。',
       '满足组合条件，执行空调控制：开机 / 制冷 / 26℃ / 中风，部分空调（1-2-1-2）由于【设备离线】未执行成功。',
       '满足组合条件，执行空调控制：开机 / 制冷 / 26℃ / 中风，部分空调（1-2-1-3）由于【状态锁定】未执行成功。',
+      '编辑任务内容（判断条件、执行动作）',
+      '创建任务',
     ]);
-    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 14:15:05', '2026-07-02 14:15:05', '2026-07-02 14:25:05', '2026-07-02 08:50:41', '2026-07-01 08:40:05']);
-    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '异常', '异常']);
+    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 14:15:05', '2026-07-02 14:15:05', '2026-07-02 14:25:05', '2026-07-02 08:50:41', '2026-07-01 08:40:05', '2026-06-30 16:58:57', '2026-06-28 09:12:33']);
+    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '异常', '异常', '', '']);
     assert.ok(!rs.some((r) => /下发控制指令|人在状态|有人|门窗|温度>/.test(r.text)), 'ENV 日志不应含"下发控制指令"或组合条件内容');
     await page.screenshot({ path: path.join(__dirname, 'log-env-task1.png') });
     await page.locator('#dlgLog .dx').click();
@@ -133,10 +135,13 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
     assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '异常', '异常']);
     await page.locator('#dlgLog .dx').click();
 
-    // 任务4:人走关机锁定(持续20分钟,18:00-23:00,中点 20:30;延时15→关机→延时5→禁止启动)
+    // 任务4:人走关机锁定(持续20分钟,18:00-23:00,中点 20:30;延时15→关机→延时5→禁止启动;含状态变动记录)
     await openTaskLog(page, 4);
     rs = await rows(page);
     assert.deepEqual(texts(rs), [
+      '编辑任务内容（生效日期、周重复时间、判断条件、执行动作、房间信息）',
+      '启用任务',
+      '停用任务',
       '持续满足组合条件，执行延时：15 分钟。',
       '执行空调控制：关机。',
       '执行延时：5 分钟。',
@@ -144,10 +149,11 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
       '持续满足组合条件，执行空调控制：关机，部分空调（1-2-1-2）由于【设备离线】未执行成功。',
       '未持续满足组合条件，本次不执行动作。',
       '持续满足组合条件，执行空调控制：关机，部分空调（1-2-1-3）由于【状态锁定】未执行成功。',
+      '创建任务',
     ]);
-    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 20:30:05', '2026-07-02 20:45:05', '2026-07-02 20:45:05', '2026-07-02 20:50:05', '2026-07-02 18:20:41', '2026-07-01 18:15:18', '2026-07-01 18:10:05']);
-    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '成功', '异常', '跳过', '异常']);
-    assert.ok(rs[5].cls.includes('twn') && rs[4].cls.includes('ter'));
+    assert.deepEqual(rs.map((r) => r.time), ['2026-09-09 10:37:51', '2026-07-03 09:03:40', '2026-07-03 08:55:12', '2026-07-02 20:30:05', '2026-07-02 20:45:05', '2026-07-02 20:45:05', '2026-07-02 20:50:05', '2026-07-02 18:20:41', '2026-07-01 18:15:18', '2026-07-01 18:10:05', '2026-06-26 18:22:40']);
+    assert.deepEqual(rs.map((r) => r.tag), ['', '', '', '成功', '成功', '成功', '成功', '异常', '跳过', '异常', '']);
+    assert.ok(rs[8].cls.includes('twn') && rs[7].cls.includes('ter'));
     await page.screenshot({ path: path.join(__dirname, 'log-env-task2.png') });
     await page.locator('#dlgLog .dx').click();
 
@@ -164,7 +170,7 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
     ]);
     assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 13:30:05', '2026-07-02 13:30:05', '2026-07-02 13:40:05', '2026-07-02 09:20:41', '2026-07-01 09:15:18', '2026-07-01 09:10:05']);
     await page.screenshot({ path: path.join(__dirname, 'log-env-task3.png') });
-    console.log('环境感知联动 ✓ 10 条任务示例;延时/锁定/控制三类动作、三种条件状态、成功/异常/跳过均符合模板');
+    console.log('环境感知联动 ✓ 10 条任务示例;延时/锁定/控制三类动作、三种条件状态、成功/异常/跳过、创建/编辑/启停状态变动记录均符合模板');
 
     assert.deepEqual(errors, [], '页面不应有 JS 错误');
     console.log('全部断言通过,无 JS 报错');

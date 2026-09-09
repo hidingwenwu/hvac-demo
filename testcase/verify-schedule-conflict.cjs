@@ -113,7 +113,7 @@ test('锁定设定按现网顺序校验锁定项和子选项', () => {
   assert.equal(validateDraft(validDraft({ act: '锁定设定', lockTypes: [] })), '请选择至少一个锁定项');
   assert.equal(validateDraft(validDraft({
     act: '锁定设定', lockTypes: ['onOff'], lockOnOff: '',
-  })), '请选择锁定开机或者关机');
+  })), '请选择禁止关机或者禁止启动');
   assert.equal(validateDraft(validDraft({
     act: '锁定设定', lockTypes: ['mode'], lockModes: [],
   })), '请选择锁定制冷或制热或送风或除湿');
@@ -235,8 +235,8 @@ test('创建弹窗复刻现网字段与最新冲突文案', () => {
   assert.match(html, /解锁并开机/);
   assert.match(html, /锁定设定/);
   assert.match(html, /是否开关锁定/);
-  assert.match(html, /锁定开机/);
-  assert.match(html, /锁定关机/);
+  assert.match(html, /禁止关机/);
+  assert.match(html, /禁止启动/);
   assert.match(html, /是否模式锁定/);
   assert.match(html, /是否温度锁定/);
   assert.match(html, /温度上限/);

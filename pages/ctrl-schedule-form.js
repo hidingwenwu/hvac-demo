@@ -61,7 +61,7 @@
     if (draft.act === '开机' && !draft.mode) return '请选择空调模式';
     if (draft.act === '锁定设定') {
       if (!(draft.lockTypes || []).length) return '请选择至少一个锁定项';
-      if (draft.lockTypes.includes('onOff') && !draft.lockOnOff) return '请选择锁定开机或者关机';
+      if (draft.lockTypes.includes('onOff') && !draft.lockOnOff) return '请选择禁止关机或者禁止启动';
       if (draft.lockTypes.includes('mode') && !(draft.lockModes || []).length) return '请选择锁定制冷或制热或送风或除湿';
     }
     return '';
