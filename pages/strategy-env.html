@@ -195,7 +195,7 @@
         <li>任务在生效日期、生效时间、周重复时间内执行，排除日期不执行。</li>
         <li>条件判定数据来自所选房间绑定的传感器，取最新上报状态：人在状态 ← 人体存在传感器，门窗状态 ← 门窗存在传感器，湿度 ← 温湿度传感器；温度优先取温湿度传感器，房间未绑定时使用空调上报的回风温度（室内温度）。</li>
         <li>除温度条件外，所选每个房间均需绑定对应的传感器设备，任一房间未绑定时任务不允许保存。</li>
-        <li>执行动作支持最多 16 个组合动作；相邻动作不允许相同，且不能以延时作为最后一个动作。</li>
+        <li>执行动作支持最多 16 个组合动作；相邻动作不允许相同；空调控制或锁定控制后必须紧跟一个延时（最后一个动作除外），避免控制器接收指令处理不及；不能以延时作为最后一个动作。</li>
         <li>延时动作可设置 5-240 分钟，用于拉开相邻控制动作的执行间隔，避免短时间内频繁控制空调。</li>
         <li>锁定控制中的“不锁定”表示解除对应锁定；全部不锁定表示解除全部锁定。</li>
       </ul>
@@ -231,11 +231,11 @@ const OPS=[
 ];
 
 let TASKS=[
-  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'lock',lockPower:'锁定开机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true},
+  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'lock',lockPower:'禁止关机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true},
   {name:'产品部门窗开启关机',start:'2026-07-01',end:'2026-10-31',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:10,rooms:['产品部'],conditions:[{type:'door',state:'开启'}],actions:[{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-28 10:22:45',on:true},
   {name:'会议室门窗开启延时关机',start:'2026-07-01',end:'2026-12-31',ts:'08:00',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['901会议室','903会议室'],conditions:[{type:'door',state:'开启'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-27 16:40:11',on:true},
   {name:'高湿自动除湿',start:'2026-07-01',end:'2026-09-30',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:5,rooms:['研发部'],conditions:[{type:'humi',op:'gte',val:'70'}],actions:[{type:'control',power:'开机',mode:'除湿',temp:'',fan:'低'}],mt:'2026-06-27 11:05:33',on:true},
-  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'lock',lockPower:'锁定关机',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true},
+  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'delay',minutes:'5'},{type:'lock',lockPower:'禁止启动',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true},
   {name:'办公区午休延时关机',start:'2026-07-01',end:'2026-12-31',ts:'12:00',te:'14:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['产品部','运营部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'30'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-26 09:12:07',on:true},
   {name:'门窗关闭恢复制冷',start:'2026-07-01',end:'2026-09-30',ts:'08:00',te:'20:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:false,duration:0,rooms:['803会议室'],conditions:[{type:'door',state:'关闭'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'}],mt:'2026-06-25 15:30:58',on:true},
   {name:'高温分段降温策略',start:'2026-07-15',end:'2026-09-15',ts:'09:00',te:'18:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:5,rooms:['运营部'],conditions:[{type:'temp',op:'gte',val:'30'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'control',power:'',mode:'',temp:'27',fan:''}],mt:'2026-06-25 09:14:02',on:false},
@@ -411,7 +411,7 @@ function newAction(type){
 function addAction(){
   if(actions.length>=16){$msg('\u6267\u884c\u52a8\u4f5c\u6700\u591a\u914d\u7f6e 16 \u4e2a','warning');return;}
   const last=actions[actions.length-1];
-  actions.push(newAction(last&&last.type==='control'?'delay':'control'));
+  actions.push(newAction(last&&(last.type==='control'||last.type==='lock')?'delay':'control'));
   renderActions();
 }
 function delAction(i){if(actions.length<=1){$msg('\u81f3\u5c11\u4fdd\u7559 1 \u4e2a\u6267\u884c\u52a8\u4f5c','warning');return;}actions.splice(i,1);renderActions();}
@@ -461,7 +461,7 @@ function renderActions(){
       const tempOn=a.lockTempEnabled||!!(a.lockTempMin&&a.lockTempMax);
       const lo=a.lockTempMin||'16',hi=a.lockTempMax||'30';
       const pct=v=>(v-16)/(30-16)*100;
-      body=`<select class="lock-sel" onchange="setAction(${i},'lockPower',this.value)"><option value="">\u5f00\u5173\u673a\u4e0d\u9501\u5b9a</option><option value="\u9501\u5b9a\u5f00\u673a" ${a.lockPower==='\u9501\u5b9a\u5f00\u673a'?'selected':''}>\u9501\u5b9a\u5f00\u673a</option><option value="\u9501\u5b9a\u5173\u673a" ${a.lockPower==='\u9501\u5b9a\u5173\u673a'?'selected':''}>\u9501\u5b9a\u5173\u673a</option></select>`
+      body=`<select class="lock-sel" onchange="setAction(${i},'lockPower',this.value)"><option value="">\u5f00\u5173\u673a\u4e0d\u9501\u5b9a</option><option value="\u7981\u6b62\u5173\u673a" ${a.lockPower==='\u7981\u6b62\u5173\u673a'?'selected':''}>\u7981\u6b62\u5173\u673a</option><option value="\u7981\u6b62\u542f\u52a8" ${a.lockPower==='\u7981\u6b62\u542f\u52a8'?'selected':''}>\u7981\u6b62\u542f\u52a8</option></select>`
         +`<span class="msel ${openLockMenu===i?'open':''}"><button type="button" class="msel-btn" onclick="toggleLockMenu(${i});event.stopPropagation()">${modes.length?'\u9501\u5b9a'+modes.join('\u3001'):'\u6a21\u5f0f\u4e0d\u9501\u5b9a'} <span class="msel-arr">\u25be</span></button>
             <div class="msel-menu" onclick="event.stopPropagation()">${['\u5236\u51b7','\u5236\u70ed','\u9001\u98ce','\u9664\u6e7f'].map(m=>`<label class="msel-item"><input type="checkbox" ${modes.includes(m)?'checked':''} onchange="setLockMode(${i},'${m}',this.checked)"> ${m}</label>`).join('')}</div>
           </span>`
@@ -511,9 +511,11 @@ function validateLockAction(a){
 function validateActions(){
   if(!actions.length)return '\u8bf7\u81f3\u5c11\u914d\u7f6e 1 \u4e2a\u6267\u884c\u52a8\u4f5c';
   if(actions.length>16)return '\u6267\u884c\u52a8\u4f5c\u6700\u591a\u914d\u7f6e 16 \u4e2a';
+  for(let i=1;i<actions.length;i++)if(actions[i].type===actions[i-1].type)return '\u76f8\u90bb\u4e24\u4e2a\u6267\u884c\u52a8\u4f5c\u4e0d\u5141\u8bb8\u76f8\u540c';
+    /* \u63a7\u5236\u7c7b\u52a8\u4f5c(\u7a7a\u8c03\u63a7\u5236/\u9501\u5b9a\u63a7\u5236)\u4e4b\u540e\u5fc5\u987b\u7d27\u8ddf\u5ef6\u65f6,\u672b\u4f4d\u52a8\u4f5c\u9664\u5916:\u907f\u514d\u63a7\u5236\u5668\u63a5\u6536\u6307\u4ee4\u5904\u7406\u4e0d\u53ca */
+  for(let i=0;i<actions.length-1;i++){const t=actions[i].type;if((t==='control'||t==='lock')&&actions[i+1].type!=='delay')return '\u7a7a\u8c03\u63a7\u5236\u6216\u9501\u5b9a\u63a7\u5236\u540e\u5fc5\u987b\u7d27\u8ddf\u4e00\u4e2a\u5ef6\u65f6\u52a8\u4f5c';}
   for(let i=0;i<actions.length;i++){
     const a=actions[i];
-    if(i>0&&a.type===actions[i-1].type)return '\u76f8\u90bb\u4e24\u4e2a\u6267\u884c\u52a8\u4f5c\u4e0d\u5141\u8bb8\u76f8\u540c';
     if(a.type==='delay'&&!numberInRange(a.minutes,5,240))return '延时时长请输入 5-240 分钟的整数';
     if(a.type==='control'){
       if(!a.power&&!a.mode&&!a.temp&&!a.fan)return '\u6bcf\u4e2a\u7a7a\u8c03\u63a7\u5236\u52a8\u4f5c\u81f3\u5c11\u9009\u62e9\u4e00\u4e2a\u63a7\u5236\u53c2\u6570';

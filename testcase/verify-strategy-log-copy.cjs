@@ -103,18 +103,19 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
     assert.equal(await page.locator('#tbody tr').nth(0).locator('td').nth(0).textContent(), '会议室有人联动舒适控制');
     assert.equal(await page.locator('#tbody tr').nth(9).locator('td').nth(0).textContent(), '夜间低温保温');
 
-    // 任务0:无持续条件,动作=控制+锁定(窗口 08:30-20:00,中点 14:15)
+    // 任务0:无持续条件,动作=控制+延时10+锁定(窗口 08:30-20:00,中点 14:15)
     await openTaskLog(page, 0);
     assert.equal(await page.locator('#dlgLog #logTitle').textContent(), '任务执行日志 - 会议室有人联动舒适控制');
     rs = await rows(page);
     assert.deepEqual(texts(rs), [
       '满足组合条件，执行空调控制：开机 / 制冷 / 26℃ / 中风。',
-      '执行空调锁定：锁定开机 / 模式锁定制冷 / 温度锁定16-30℃。',
+      '执行延时：10 分钟。',
+      '执行空调锁定：禁止关机 / 模式锁定制冷 / 温度锁定16-30℃。',
       '满足组合条件，执行空调控制：开机 / 制冷 / 26℃ / 中风，部分空调（1-2-1-2）由于【设备离线】未执行成功。',
       '满足组合条件，执行空调控制：开机 / 制冷 / 26℃ / 中风，部分空调（1-2-1-3）由于【状态锁定】未执行成功。',
     ]);
-    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 14:15:05', '2026-07-02 14:15:05', '2026-07-02 08:50:41', '2026-07-01 08:40:05']);
-    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '异常', '异常']);
+    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 14:15:05', '2026-07-02 14:15:05', '2026-07-02 14:25:05', '2026-07-02 08:50:41', '2026-07-01 08:40:05']);
+    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '异常', '异常']);
     assert.ok(!rs.some((r) => /下发控制指令|人在状态|有人|门窗|温度>/.test(r.text)), 'ENV 日志不应含"下发控制指令"或组合条件内容');
     await page.screenshot({ path: path.join(__dirname, 'log-env-task1.png') });
     await page.locator('#dlgLog .dx').click();
@@ -132,20 +133,21 @@ const modalVisible = (page) => page.locator('#dlgLog').evaluate((el) => getCompu
     assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '异常', '异常']);
     await page.locator('#dlgLog .dx').click();
 
-    // 任务4:人走关机锁定(持续20分钟,18:00-23:00,中点 20:30;延时→关机→锁定)
+    // 任务4:人走关机锁定(持续20分钟,18:00-23:00,中点 20:30;延时15→关机→延时5→禁止启动)
     await openTaskLog(page, 4);
     rs = await rows(page);
     assert.deepEqual(texts(rs), [
       '持续满足组合条件，执行延时：15 分钟。',
       '执行空调控制：关机。',
-      '执行空调锁定：锁定关机。',
+      '执行延时：5 分钟。',
+      '执行空调锁定：禁止启动。',
       '持续满足组合条件，执行空调控制：关机，部分空调（1-2-1-2）由于【设备离线】未执行成功。',
       '未持续满足组合条件，本次不执行动作。',
       '持续满足组合条件，执行空调控制：关机，部分空调（1-2-1-3）由于【状态锁定】未执行成功。',
     ]);
-    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 20:30:05', '2026-07-02 20:45:05', '2026-07-02 20:45:05', '2026-07-02 18:20:41', '2026-07-01 18:15:18', '2026-07-01 18:10:05']);
-    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '异常', '跳过', '异常']);
-    assert.ok(rs[4].cls.includes('twn') && rs[3].cls.includes('ter'));
+    assert.deepEqual(rs.map((r) => r.time), ['2026-07-02 20:30:05', '2026-07-02 20:45:05', '2026-07-02 20:45:05', '2026-07-02 20:50:05', '2026-07-02 18:20:41', '2026-07-01 18:15:18', '2026-07-01 18:10:05']);
+    assert.deepEqual(rs.map((r) => r.tag), ['成功', '成功', '成功', '成功', '异常', '跳过', '异常']);
+    assert.ok(rs[5].cls.includes('twn') && rs[4].cls.includes('ter'));
     await page.screenshot({ path: path.join(__dirname, 'log-env-task2.png') });
     await page.locator('#dlgLog .dx').click();
 
