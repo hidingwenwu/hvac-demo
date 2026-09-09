@@ -48,6 +48,7 @@
 .action-row>select{width:104px;}
 .action-row select.lock-sel{width:120px;}
 .lock-temp-group{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap;}
+.lock-temp-ck{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap;}
 
 /* ── 模式锁定:勾选式多选下拉 ── */
 .msel{position:relative;display:inline-block;}
@@ -232,11 +233,11 @@ const OPS=[
 ];
 
 let TASKS=[
-  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'lock',lockPower:'禁止关机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true,history:[{t:'2026-06-28 09:12:33',text:'创建任务'},{t:'2026-06-30 16:58:57',text:'编辑任务内容（判断条件、执行动作）'}]},
+  {name:'会议室有人联动舒适控制',start:'2026-07-01',end:'2026-12-31',ts:'08:30',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:['2026-10-01'],durationOn:false,duration:0,rooms:['801会议室','803会议室'],conditions:[{type:'presence',state:'有人'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'lock',lockPower:'禁止关机',lockModes:['制冷'],lockTempEnabled:true,lockTempMin:'16',lockTempMax:'30'}],mt:'2026-06-30 16:58:57',on:true,history:[{t:'2026-06-28 09:12:33',text:'创建任务'},{t:'2026-06-30 16:58:57',text:'编辑任务内容'}]},
   {name:'产品部门窗开启关机',start:'2026-07-01',end:'2026-10-31',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:10,rooms:['产品部'],conditions:[{type:'door',state:'开启'}],actions:[{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-28 10:22:45',on:true},
   {name:'会议室门窗开启延时关机',start:'2026-07-01',end:'2026-12-31',ts:'08:00',te:'20:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['901会议室','903会议室'],conditions:[{type:'door',state:'开启'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-27 16:40:11',on:true},
   {name:'高湿自动除湿',start:'2026-07-01',end:'2026-09-30',ts:'00:00',te:'24:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:true,duration:5,rooms:['研发部'],conditions:[{type:'humi',op:'gte',val:'70'}],actions:[{type:'control',power:'开机',mode:'除湿',temp:'',fan:'低'}],mt:'2026-06-27 11:05:33',on:true},
-  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'delay',minutes:'5'},{type:'lock',lockPower:'禁止启动',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true,history:[{t:'2026-06-26 18:22:40',text:'创建任务'},{t:'2026-07-03 08:55:12',text:'停用任务'},{t:'2026-07-03 09:03:40',text:'启用任务'},{t:'2026-09-09 10:37:51',text:'编辑任务内容（生效日期、周重复时间、判断条件、执行动作、房间信息）'}]},
+  {name:'下班后人走关机锁定',start:'2026-07-01',end:'2026-12-31',ts:'18:00',te:'23:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:20,rooms:['技术部','研发部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'15'},{type:'control',power:'关机',mode:'',temp:'',fan:''},{type:'delay',minutes:'5'},{type:'lock',lockPower:'禁止启动',lockModes:[],lockTempEnabled:false,lockTempMin:'',lockTempMax:''}],mt:'2026-06-26 18:22:40',on:true,history:[{t:'2026-06-26 18:22:40',text:'创建任务'},{t:'2026-07-03 08:55:12',text:'停用任务'},{t:'2026-07-03 09:03:40',text:'启用任务'},{t:'2026-09-09 10:37:51',text:'编辑任务内容'}]},
   {name:'办公区午休延时关机',start:'2026-07-01',end:'2026-12-31',ts:'12:00',te:'14:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:false,duration:0,rooms:['产品部','运营部'],conditions:[{type:'presence',state:'无人'}],actions:[{type:'delay',minutes:'30'},{type:'control',power:'关机',mode:'',temp:'',fan:''}],mt:'2026-06-26 09:12:07',on:true},
   {name:'门窗关闭恢复制冷',start:'2026-07-01',end:'2026-09-30',ts:'08:00',te:'20:00',week:[1,1,1,1,1,1,1],exclude:[],durationOn:false,duration:0,rooms:['803会议室'],conditions:[{type:'door',state:'关闭'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'}],mt:'2026-06-25 15:30:58',on:true},
   {name:'高温分段降温策略',start:'2026-07-15',end:'2026-09-15',ts:'09:00',te:'18:00',week:DEFAULT_WEEK.slice(),exclude:[],durationOn:true,duration:5,rooms:['运营部'],conditions:[{type:'temp',op:'gte',val:'30'}],actions:[{type:'control',power:'开机',mode:'制冷',temp:'26',fan:'中'},{type:'delay',minutes:'10'},{type:'control',power:'',mode:'',temp:'27',fan:''}],mt:'2026-06-25 09:14:02',on:false},
@@ -468,7 +469,7 @@ function renderActions(){
         +`<span class="msel ${openLockMenu===i?'open':''}"><button type="button" class="msel-btn" onclick="toggleLockMenu(${i});event.stopPropagation()">${modes.length?'\u9501\u5b9a'+modes.join('\u3001'):'\u6a21\u5f0f\u4e0d\u9501\u5b9a'} <span class="msel-arr">\u25be</span></button>
             <div class="msel-menu" onclick="event.stopPropagation()">${['\u5236\u51b7','\u5236\u70ed','\u9001\u98ce','\u9664\u6e7f'].map(m=>`<label class="msel-item"><input type="checkbox" ${modes.includes(m)?'checked':''} onchange="setLockMode(${i},'${m}',this.checked)"> ${m}</label>`).join('')}</div>
           </span>`
-        +`<span class="lock-temp-group"><select class="lock-sel" onchange="setAction(${i},'lockTempEnabled',this.value)"><option value="0" ${!tempOn?'selected':''}>\u6e29\u5ea6\u4e0d\u9501\u5b9a</option><option value="1" ${tempOn?'selected':''}>\u9501\u5b9a\u6e29\u5ea6\u8303\u56f4</option></select>`
+        +`<span class="lock-temp-group"><label class="lock-temp-ck"><input type="checkbox" ${tempOn?'checked':''} onchange="setAction(${i},'lockTempEnabled',this.checked?'1':'0')"> \u6e29\u5ea6\u9501\u5b9a</label>`
         +(tempOn?`<span class="dual-range"><span class="dr-lbl" id="lockTempLbl${i}">${lo}\u2103 ~ ${hi}\u2103</span><span class="dr-track"></span><span class="dr-fill" id="lockTempFill${i}" style="left:${pct(lo)}%;right:${100-pct(hi)}%"></span>
             <input type="range" min="16" max="30" step="1" value="${lo}" oninput="setLockTemp(${i},'lockTempMin',this)">
             <input type="range" min="16" max="30" step="1" value="${hi}" oninput="setLockTemp(${i},'lockTempMax',this)">
@@ -504,7 +505,6 @@ function validateLockAction(a){
   const tempOn=a.lockTempEnabled||!!(a.lockTempMin||a.lockTempMax);
   const hasMin=a.lockTempMin!==''&&a.lockTempMin!==undefined,hasMax=a.lockTempMax!==''&&a.lockTempMax!==undefined;
   if(a.lockModes.includes('\u5236\u70ed')&&(a.lockModes.includes('\u5236\u51b7')||a.lockModes.includes('\u9664\u6e7f')))return '\u5236\u70ed\u4e0d\u80fd\u4e0e\u5236\u51b7\u6216\u9664\u6e7f\u540c\u65f6\u9501\u5b9a';
-  if(tempOn&&hasMin!==hasMax)return '\u6e29\u5ea6\u4e0a\u9650\u548c\u4e0b\u9650\u5fc5\u987b\u4e00\u8d77\u8bbe\u5b9a';
   if(tempOn&&hasMin&&hasMax){
     if(!numberInRange(a.lockTempMin,16,30)||!numberInRange(a.lockTempMax,16,30))return '\u9501\u5b9a\u6e29\u5ea6\u4e0a\u4e0b\u9650\u8bf7\u8f93\u5165 16~30\u2103 \u7684\u6574\u6570';
     if(Number(a.lockTempMin)>Number(a.lockTempMax))return '\u6e29\u5ea6\u4e0b\u9650\u4e0d\u80fd\u9ad8\u4e8e\u6e29\u5ea6\u4e0a\u9650';
@@ -568,20 +568,13 @@ function validateTask(){
   return validateConditions()||validateActions();
 }
 function collectTask(){return {name:document.getElementById('tName').value.trim(),desc:document.getElementById('taskDesc').value.trim(),start:document.getElementById('tStart').value,end:document.getElementById('tEnd').value,ts:getTime('tFrom'),te:getTime('tTo'),week:weekOn.slice(),exclude:excludeDates.slice(),durationOn:document.getElementById('durationEnabled').checked,duration:document.getElementById('durationEnabled').checked?+document.getElementById('durationMin').value:0,rooms:picked.slice(),conditions:cloneTask(conds),actions:cloneTask(actions)};}
-/* 编辑保存时按维度对比原配置,实际变更项写入状态变动记录(维度命名见需求文档 6.4) */
-const EDIT_DIMS=[['name','任务名称'],['desc','任务描述'],['start','生效日期'],['end','生效日期'],['ts','生效时间'],['te','生效时间'],['week','周重复时间'],['exclude','排除日期'],['rooms','房间信息'],['conditions','判断条件'],['durationOn','持续满足条件'],['duration','持续满足条件'],['actions','执行动作']];
-function changedDims(oldTask,data){
-  const names=[];
-  EDIT_DIMS.forEach(([k,lb])=>{const ov=oldTask[k]===undefined?'':oldTask[k];const nv=data[k]===undefined?'':data[k];if(JSON.stringify(ov)!==JSON.stringify(nv)&&!names.includes(lb))names.push(lb);});
-  return names;
-}
+/* 编辑保存只记录编辑动作本身,不罗列变更维度(需求文档 6.4) */
 function saveTask(){
   const err=validateTask();if(err){$msg(err,'warning');return;}
   const data=collectTask();const t=now();
   if(editIdx>=0){
-    const dims=changedDims(TASKS[editIdx],data);
     Object.assign(TASKS[editIdx],data,{mt:t});
-    if(dims.length)pushHistory(TASKS[editIdx],`编辑任务内容（${dims.join('、')}）`);
+    pushHistory(TASKS[editIdx],'编辑任务内容');
   }else TASKS.unshift({...data,on:true,mt:t,history:[{t,text:'创建任务'}]});
   $modalClose('dlgTask');doQuery();$msg(editIdx>=0?'保存成功':'新建任务成功');
 }

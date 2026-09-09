@@ -37,4 +37,7 @@ test('环境感知联动开关机锁定选项更名为禁止关机/禁止启动'
   assert.match(dec, /禁止关机/);
   assert.match(dec, /禁止启动/);
   assert.ok(!/锁定开机|锁定关机/.test(dec), '不应再出现 锁定开机/锁定关机 旧文案');
+  /* V1.4:温度锁定由下拉改为勾选框 */
+  assert.match(dec, /type="checkbox"[^>]*lockTempEnabled/);
+  assert.ok(!/温度不锁定|锁定温度范围/.test(dec), '不应再出现温度锁定旧下拉选项');
 });
