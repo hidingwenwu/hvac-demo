@@ -115,7 +115,7 @@
     <div class="db">
       <div class="cfg-body">
         <aside class="pick-pane">
-          <div class="pp-title">选择房间 / 传感器</div>
+          <div class="pp-title">选择房间</div>
           <input class="search" id="treeSearch" placeholder="搜索楼栋、楼层、房间" oninput="renderTree()">
           <div id="roomTree"></div>
         </aside>
@@ -561,7 +561,7 @@ function setTime(prefix,v){
 function minutesFromTime(v){if(v==='24:00')return 1440;const p=v.split(':').map(Number);return p[0]*60+p[1];}
 function validateTask(){
   if(!document.getElementById('tName').value.trim())return '请输入任务名称';
-  if(!picked.length)return '请选择房间/传感器';
+  if(!picked.length)return '请选择房间';
   if(document.getElementById('tStart').value>document.getElementById('tEnd').value)return '生效结束日期不能早于开始日期';
   if(minutesFromTime(getTime('tTo'))<=minutesFromTime(getTime('tFrom')))return '生效结束时间必须晚于开始时间';
   if(!weekOn.some(Boolean))return '请至少选择一个周重复时间';
