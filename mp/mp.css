@@ -1,0 +1,1031 @@
+/* ============================================================
+   空调集控管家 · 小程序原型公共样式
+   浅色商务风：细边框 / 14px 圆角卡片 / 柔和扩散阴影 / 44px 热区
+   R2 视觉升级：SVG 线性图标体系（.mp-ic）/ 毛玻璃导航 / 数字字体栈
+   R8 视觉对齐（gwdbg 蓝白体系）：色板换深蓝主色 #2457D6 + 蓝黑正文 #17233A；
+     卡片一律「1px 淡边框 + 14px 圆角 + 柔和大扩散阴影」；主按钮由渐变改为
+     实心主色 + 主色投影（gwdbg .button.primary 口径）；选中态统一语言
+     ——「主色描边 + 淡蓝底 + 主色文字 + 700 字重」，卡片级另加 2px 主色光环；
+     字重整体加重一档（600→700/720），信息层级靠字重而非纯字号。
+   组件类统一 mp- 前缀；全局禁止 ES module，本文件被 hvac-demo-mp.html 直接引用
+   ============================================================ */
+
+:root{
+  --mp-bg:#F3F6FA; --mp-card:#FFFFFF;
+  /* 主色：gwdbg --blue / --blue-deep / --blue-soft（dim 由 10% 透明改为实色淡蓝，压色更稳） */
+  --mp-primary:#2457D6; --mp-primary-hover:#1946BC; --mp-primary-dim:#EDF3FF;
+  --mp-primary-ring:rgba(36,87,214,.12);   /* 选中卡片 2px 光环 */
+  /* 状态色：绿改沉稳墨绿、红改偏玫红、黄改琥珀（对齐 gwdbg --green/--red/--amber） */
+  --mp-ok:#22A06B; --mp-ok-dim:#EAF8F2; --mp-wn:#BB7414; --mp-wn-dim:#FDF3E4;
+  --mp-er:#D9485F; --mp-er-dim:#FDEEF0; --mp-info:#6D788B;
+  /* 文字与线：正文蓝黑，弱化色整体偏冷灰蓝 */
+  --mp-tx:#17233A; --mp-ts:#6D788B; --mp-tw3:#9CA5B4; --mp-bd:#E7EBF1;
+  --mp-card-bd:rgba(225,230,238,.9);   /* 卡片 1px 描边（gwdbg 卡片标配，与阴影同时存在） */
+  --mp-r:14px;
+  --mp-shadow:0 8px 24px rgba(28,49,81,.06);
+  --mp-btn-grad:#2457D6;   /* 变量名沿用，值由渐变改实心；主按钮的立体感改由主色投影承担 */
+  --mp-font:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',sans-serif;
+  --mp-num-font:'DIN Alternate','Bahnschrift','Helvetica Neue',Helvetica,'PingFang SC','Microsoft YaHei',Arial,sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--mp-font);font-size:14px;color:var(--mp-tx);background:#DDE4EE;
+  -webkit-font-smoothing:antialiased}
+
+/* ── 桌面演示手机壳 ── */
+#stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 0}
+#phone{position:relative;width:375px;height:min(812px,100vh);background:var(--mp-bg);
+  border-radius:24px;box-shadow:0 12px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.12);
+  overflow:hidden;display:flex;flex-direction:column}
+@media (max-width:430px){
+  #stage{padding:0}
+  #phone{width:100%;height:100vh;border-radius:0;box-shadow:none}
+}
+
+/* ── 页面容器：navbar 与 tabbar 之间滚动区 ── */
+#pages{position:relative;flex:1;overflow:hidden}
+.mp-page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:var(--mp-bg);padding-bottom:16px}
+
+/* ── 页面转场（200ms 横滑） ── */
+.pg-in-right{transform:translateX(100%);transition:transform .2s ease-out}
+.pg-out-left{transform:translateX(-30%);opacity:.6;transition:transform .2s ease-out,opacity .2s ease-out}
+
+/* ── 顶部导航栏（48px 毛玻璃：半透明白底 + backdrop-filter 模糊，左返回 ‹ / 居中标题 / 右侧槽位） ── */
+#navbar,.mp-navbar{height:48px;flex:0 0 auto;display:flex;align-items:center;
+  background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(235,238,245,.85);position:relative;z-index:5}
+#nb-back,.mp-navbar .nb-back{width:48px;height:48px;line-height:48px;text-align:center;
+  font-size:26px;color:var(--mp-tx);cursor:pointer;user-select:none}
+#nb-title,.mp-navbar .nb-title{flex:1;text-align:center;font-size:16px;font-weight:600;
+  color:var(--mp-tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nb-right,.mp-navbar .nb-right{min-width:48px;height:48px;display:flex;align-items:center;
+  justify-content:center;padding:0 12px}
+.mp-note-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:44px;
+  color:var(--mp-primary);cursor:pointer;margin-right:2px}
+.mp-note-btn .mp-ic{width:19px;height:19px}
+
+/* ── 底部 TabBar（3 项，SVG 图标 22px + 文字 11px，选中态主色 + 图标微放大） ── */
+#tabbar,.mp-tabbar{flex:0 0 auto;display:flex;background:var(--mp-card);border-top:1px solid var(--mp-bd);
+  padding-bottom:env(safe-area-inset-bottom,0)}
+.mp-tab{flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;color:var(--mp-tw3);cursor:pointer;user-select:none}
+.mp-tab i{width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  transition:transform .18s ease}
+.mp-tab i .mp-ic{width:22px;height:22px}
+.mp-tab span{font-size:11px;line-height:1}
+.mp-tab.on{color:var(--mp-primary)}
+.mp-tab.on i{transform:scale(1.1)}
+
+/* ── 卡片（gwdbg 口径：1px 淡描边 + 14px 圆角 + 柔和大扩散阴影） ── */
+.mp-card{background:var(--mp-card);border:1px solid var(--mp-card-bd);border-radius:var(--mp-r);
+  margin:10px 12px;padding:14px;box-shadow:var(--mp-shadow)}
+.mp-card .mp-card-t{font-size:15px;font-weight:700;color:var(--mp-tx);margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between}
+.mp-card .mp-card-t .more{font-size:12px;font-weight:400;color:var(--mp-tw3);cursor:pointer}
+
+/* ── 列表（左图标 + 中文本 + 右 ›，项高 ≥44px） ── */
+.mp-list{background:var(--mp-card);border:1px solid var(--mp-card-bd);border-radius:var(--mp-r);
+  margin:10px 12px;overflow:hidden;box-shadow:var(--mp-shadow)}
+.mp-item{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px 14px;
+  border-bottom:1px solid var(--mp-bd);cursor:pointer;user-select:none}
+.mp-item:last-child{border-bottom:none}
+.mp-item:active{background:#F2F3F5}
+.mp-item .ic{flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;font-weight:800;background:var(--mp-primary-dim);color:var(--mp-primary)}
+.mp-item .bd{flex:1;min-width:0}
+.mp-item .bd .t1{font-size:15px;font-weight:650;color:var(--mp-tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-item .bd .t2{font-size:12px;color:var(--mp-tw3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-item .ft{flex:0 0 auto;font-size:13px;color:var(--mp-tw3);text-align:right}
+.mp-item .arrow{flex:0 0 auto;color:#C0C4CC;font-size:16px;margin-left:4px}
+.mp-item .arrow::before{content:'›'}
+
+/* ── 按钮：实心主色 / 描边 / 危险；mp-btn-block 底部固定大按钮
+   R8 对齐 gwdbg：46px 高、字重 700、主按钮实心主色 + 主色投影（不再用渐变） ── */
+.mp-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;
+  padding:0 20px;border-radius:10px;border:1px solid #DFE4EC;background:var(--mp-card);
+  color:var(--mp-tx);font-size:15px;font-weight:700;font-family:var(--mp-font);cursor:pointer;user-select:none;
+  transition:transform .12s ease,box-shadow .2s ease}
+.mp-btn:active{opacity:.85}
+.mp-btn-primary{background:var(--mp-btn-grad);border-color:var(--mp-primary);color:#fff;
+  box-shadow:0 8px 20px rgba(36,87,214,.2)}
+.mp-btn-primary:active{opacity:1;transform:scale(.97);box-shadow:0 3px 8px rgba(36,87,214,.18)}
+.mp-btn-plain{background:var(--mp-card);border-color:var(--mp-primary);color:var(--mp-primary)}
+.mp-btn-danger{background:var(--mp-er);border-color:var(--mp-er);color:#fff}
+.mp-btn[disabled]{opacity:.45;pointer-events:none}
+.mp-btn-block{display:flex;width:calc(100% - 24px);margin:12px}
+/* 底部固定操作条（配合 mp-btn-block 使用） */
+.mp-footer{position:sticky;bottom:0;background:var(--mp-card);border-top:1px solid var(--mp-bd);
+  padding:8px 0 calc(8px + env(safe-area-inset-bottom,0));z-index:4}
+
+/* ── 步进器（温度 +/- 圆钮） ── */
+.mp-stepper{display:inline-flex;align-items:center;gap:14px}
+.mp-stepper .st-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--mp-bd);
+  background:var(--mp-card);color:var(--mp-primary);font-size:22px;line-height:1;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
+.mp-stepper .st-btn:active{background:var(--mp-primary-dim)}
+.mp-stepper .st-btn.off{color:#C0C4CC;pointer-events:none}
+.mp-stepper .st-btn.edge{color:#C0C4CC}   /* 到边界仅置灰，仍可点击以触发边界 toast */
+.mp-stepper .st-val{min-width:56px;text-align:center;font-size:22px;font-weight:600;color:var(--mp-tx)}
+
+/* ── 开关 ── */
+.mp-switch{position:relative;width:52px;height:32px;flex:0 0 auto;cursor:pointer}
+.mp-switch input{display:none}
+.mp-switch .tk{position:absolute;inset:0;border-radius:16px;background:#DCDFE6;transition:background .2s}
+.mp-switch .tk::after{content:'';position:absolute;top:2px;left:2px;width:28px;height:28px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.mp-switch input:checked + .tk{background:var(--mp-primary)}
+.mp-switch input:checked + .tk::after{transform:translateX(20px)}
+
+/* ── 遮罩（弹层公共）：深蓝灰半透明，比纯黑柔和 ── */
+.mp-mask{position:absolute;inset:0;background:rgba(15,23,42,.45);z-index:100;
+  display:flex;align-items:center;justify-content:center;animation:mp-fade .2s}
+.mp-mask-sheet{align-items:flex-end}
+@keyframes mp-fade{from{opacity:0}to{opacity:1}}
+
+/* ── 底部弹层 ActionSheet（顶部 16px 圆角） ── */
+.mp-sheet{width:100%;background:var(--mp-bg);border-radius:16px 16px 0 0;overflow:hidden;
+  animation:mp-up .22s ease-out;padding-bottom:env(safe-area-inset-bottom,0)}
+@keyframes mp-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mp-sheet .t{padding:14px;text-align:center;font-size:13px;color:var(--mp-tw3);
+  background:var(--mp-card);border-bottom:1px solid var(--mp-bd)}
+.mp-sheet-item{min-height:52px;display:flex;align-items:center;justify-content:center;
+  background:var(--mp-card);border-bottom:1px solid var(--mp-bd);font-size:16px;color:var(--mp-tx);
+  cursor:pointer;user-select:none}
+.mp-sheet-item:active{background:#F2F3F5}
+.mp-sheet-item.danger{color:var(--mp-er)}
+.mp-sheet-cancel{min-height:52px;margin-top:8px;display:flex;align-items:center;justify-content:center;
+  background:var(--mp-card);font-size:16px;color:var(--mp-ts);cursor:pointer;user-select:none}
+.mp-sheet-cancel:active{background:#F2F3F5}
+
+/* ── 居中确认框 Modal ── */
+.mp-modal{width:300px;background:var(--mp-card);border-radius:16px;overflow:hidden;
+  animation:mp-pop .2s ease-out}
+@keyframes mp-pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.mp-modal .t{padding:20px 16px 8px;text-align:center;font-size:16px;font-weight:600;color:var(--mp-tx)}
+.mp-modal .c{padding:8px 20px 20px;text-align:center;font-size:14px;color:var(--mp-ts);line-height:1.6}
+.mp-modal .f{display:flex;gap:10px;padding:0 16px 16px}
+.mp-modal .f .mp-btn{flex:1}
+.mp-modal.mp-note{width:320px;text-align:left}
+.mp-modal.mp-note .c{max-height:320px;overflow-y:auto;text-align:left}
+.mp-note-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;
+  color:var(--mp-ts);line-height:1.5}
+.mp-note-row .mp-tag{flex:0 0 auto;margin-top:1px}
+
+/* ── Toast（顶部居中，黑底白字 80% 透明，轻微上移入场） ── */
+/* ui-layer 与手机壳同位：弹层/toast 只覆盖手机区域，桌面演示更真实 */
+#ui-layer{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:375px;height:min(812px,100vh);pointer-events:none;z-index:999}
+#ui-layer>*{pointer-events:auto}
+@media (max-width:430px){#ui-layer{width:100%;height:100vh}}
+.mp-toast{position:absolute;top:12%;left:50%;transform:translateX(-50%);max-width:80%;
+  background:rgba(0,0,0,.8);color:#fff;font-size:14px;padding:10px 18px;border-radius:8px;
+  text-align:center;animation:mp-toast-in .24s ease-out;z-index:200}
+@keyframes mp-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.mp-toast.out{opacity:0;transition:opacity .3s}
+.mp-toast.ok{background:rgba(103,194,58,.92)}
+.mp-toast.er{background:rgba(245,108,108,.92)}
+
+/* ── Loading ── */
+.mp-loading{flex-direction:column;gap:12px;color:#fff;font-size:14px;background:rgba(0,0,0,.35)}
+.mp-spinner{width:32px;height:32px;border-radius:50%;border:3px solid rgba(255,255,255,.35);
+  border-top-color:#fff;animation:mp-spin .8s linear infinite}
+@keyframes mp-spin{to{transform:rotate(360deg)}}
+
+/* ── 骨架屏（灰色呼吸条） ── */
+.mp-skeleton{border-radius:6px;background:linear-gradient(90deg,#F0F2F5 25%,#E6E9EE 37%,#F0F2F5 63%);
+  background-size:400% 100%;animation:mp-skeleton 1.4s ease infinite}
+@keyframes mp-skeleton{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.mp-skeleton-line{height:14px;margin:10px 0}
+.mp-skeleton-card{height:120px;margin:10px 12px;border-radius:var(--mp-r)}
+
+/* ── 空态（SVG 线性图标 + 文案） ── */
+.mp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:56px 24px;color:var(--mp-tw3)}
+.mp-empty .ic{margin-bottom:12px;color:#C4C9D1;display:flex}
+.mp-empty .ic .mp-ic{width:46px;height:46px}
+.mp-empty .tx{font-size:14px}
+
+/* ── 状态标签：在线绿 / 离线灰 / 故障红 / 模式蓝 / 预警橙 ── */
+.mp-tag{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:6px;
+  font-size:11px;font-weight:650;line-height:1;white-space:nowrap}
+.mp-tag .mp-ic{width:12px;height:12px}
+.tag-ok{background:var(--mp-ok-dim);color:var(--mp-ok)}
+.tag-info{background:#F0F2F5;color:var(--mp-info)}
+.tag-er{background:var(--mp-er-dim);color:var(--mp-er)}
+.tag-primary{background:var(--mp-primary-dim);color:var(--mp-primary)}
+.tag-wn{background:var(--mp-wn-dim);color:var(--mp-wn)}
+
+/* ── 通用工具类 ── */
+.mp-row{display:flex;align-items:center}
+.mp-muted{color:var(--mp-tw3)}
+.mp-sub{font-size:12px;color:var(--mp-tw3)}
+.mp-sec{padding:14px 14px 6px;font-size:13px;color:var(--mp-tw3)}
+.mp-divider{height:1px;background:var(--mp-bd);margin:0 14px}
+
+/* ── SVG 线性图标体系（R2）：MP.icon(name) 输出 .mp-ic，颜色随 CSS color 继承 ──
+   默认 20px；行内小图标用 .xs(12)/.sm(16)；容器级尺寸由所在组件 CSS 覆盖
+   （TabBar 22 / 宫格 23 / 模式格 22 / 空态 46 / 登录 LOGO 32 等，见各组件节） */
+.mp-ic{width:20px;height:20px;flex:0 0 auto;vertical-align:middle}
+.mp-ic.xs{width:12px;height:12px}
+.mp-ic.sm{width:16px;height:16px}
+
+/* ── 大数字工具类（首页统计/报表数字用，R3 起使用） ── */
+.mp-num{font-size:28px;font-weight:600;line-height:1.15;letter-spacing:-.01em}
+
+/* ── 数字字体：大字数字统一 DIN Alternate 优先 + tabular-nums 等宽数字（纯 CSS，不引外部字体） ── */
+.mp-num,.mp-dev-card .tp,.mp-dd-tempv .n,.mp-lim-rv .n,.mp-grp-head .g-stats .n,
+.mp-elec-sum .sv,.mp-tn-balance .val,.mp-env-rd .rv,.mp-sch-card .tm,
+.mp-bill-r .amt,.mp-rc-amt{
+  font-family:var(--mp-num-font);font-variant-numeric:tabular-nums}
+
+/* ── 登录页 ── */
+.mp-login-brand{display:flex;flex-direction:column;align-items:center;padding:42px 16px 20px}
+.mp-login-logo{width:64px;height:64px;border-radius:16px;background:var(--mp-btn-grad);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  box-shadow:0 6px 16px rgba(31,101,255,.28)}
+.mp-login-logo .mp-ic{width:32px;height:32px}
+.mp-login-name{font-size:20px;font-weight:600;margin-top:14px;color:var(--mp-tx)}
+.mp-login-sub{font-size:12px;color:var(--mp-tw3);margin-top:6px}
+.mp-login-tabs{display:flex;background:var(--mp-card);border-radius:var(--mp-r);margin:0 12px 10px;
+  padding:4px;box-shadow:var(--mp-shadow)}
+.mp-login-tab{flex:1;height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--mp-ts);border-radius:8px;cursor:pointer;user-select:none}
+.mp-login-tab.on{background:var(--mp-primary-dim);color:var(--mp-primary);font-weight:600}
+.mp-field{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;
+  border-bottom:1px solid var(--mp-bd)}
+.mp-field:last-child{border-bottom:none}
+.mp-field .lab{flex:0 0 auto;width:72px;font-size:14px;color:var(--mp-ts)}
+.mp-field .req{color:var(--mp-er);margin-right:2px}
+.mp-field input{flex:1;min-width:0;height:36px;border:none;outline:none;background:transparent;
+  font-size:15px;color:var(--mp-tx);font-family:var(--mp-font)}
+.mp-code-btn{flex:0 0 auto;min-height:44px;padding:8px 12px;border:1px solid var(--mp-primary);border-radius:6px;
+  background:var(--mp-card);color:var(--mp-primary);font-size:13px;font-family:var(--mp-font);
+  cursor:pointer;white-space:nowrap}
+.mp-code-btn[disabled]{color:var(--mp-tw3);border-color:var(--mp-bd);pointer-events:none}
+.mp-btn-wx{background:#07C160;border-color:#07C160;color:#fff}
+.mp-btn-wx:active{background:#06AD56;border-color:#06AD56}
+.mp-copyright{padding:22px 0 8px;text-align:center;font-size:12px;color:var(--mp-tw3)}
+.mp-wx-auth{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0}
+.mp-wx-auth .avatar{width:52px;height:52px;border-radius:50%;background:#07C160;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:24px}
+.mp-wx-auth .avatar .mp-ic{width:26px;height:26px}
+
+/* ── 首页 ── */
+/* 下拉刷新头：高度由 touch 拖动动态撑开 */
+.mp-home-refresh{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--mp-tw3);transition:height .18s ease-out}
+
+/* 自定义 banner 条：56px 高，LOGO + 当前项目名 + 切换入口 */
+.mp-card.mp-home-banner{display:flex;align-items:center;gap:12px;height:56px;padding:6px 14px;
+  cursor:pointer;user-select:none}
+.mp-home-banner:active{opacity:.85}
+.mp-home-banner .logo{flex:0 0 auto;width:40px;height:40px;border-radius:8px;object-fit:cover}
+.mp-home-banner .logo.ph{background:#E4E7ED;color:var(--mp-tw3);font-size:11px;
+  display:flex;align-items:center;justify-content:center;letter-spacing:1px}
+.mp-home-banner .pj{flex:1;min-width:0}
+.mp-home-banner .pj-name{font-size:15px;font-weight:600;color:var(--mp-tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-home-banner .pj-sub{font-size:11px;color:var(--mp-tw3);margin-top:2px}
+.mp-home-banner .sw{flex:0 0 auto;font-size:12px;color:var(--mp-primary)}
+
+/* ── 首页 V2（R3：对齐现行小程序首页——快捷功能卡 + 环形在线率状态卡 + 锁定卡 + 日程/群组概览卡） ── */
+/* 快捷功能卡：3 张横排，彩色圆角底块 + 白色图标 + 名称 */
+.mp-card.mp-home-quick{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 14px 14px}
+.mp-home-quick .qk{display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:2px 0;cursor:pointer;user-select:none;border-radius:10px}
+.mp-home-quick .qk:active{opacity:.75}
+.mp-home-quick .qb{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;color:#fff}
+.mp-home-quick .qb .mp-ic{width:26px;height:26px}
+.mp-home-quick .qk-b{background:var(--mp-btn-grad);box-shadow:0 4px 10px rgba(31,101,255,.26)}
+.mp-home-quick .qk-o{background:linear-gradient(135deg,#FFB25C,#F58A1F);box-shadow:0 4px 10px rgba(245,138,31,.24)}
+.mp-home-quick .qk-g{background:linear-gradient(135deg,#6FD66F,#3FA313);box-shadow:0 4px 10px rgba(63,163,19,.22)}
+.mp-home-quick .ql{font-size:13px;color:var(--mp-tx)}
+
+/* 室内机设备状态卡：左环形进度（SVG，非 canvas）+ 右 2×2 四格 */
+.mp-home-devstat{display:flex;align-items:center;gap:10px}
+.mp-home-ring{position:relative;flex:0 0 auto;width:132px;height:132px}
+.mp-home-ring svg{width:132px;height:132px;display:block}
+.mp-home-ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.mp-home-ring .bg{stroke:#EEF1F6}
+.mp-home-ring .fg{stroke:var(--mp-primary);transition:stroke-dashoffset .6s ease}
+.mp-home-ring .rc{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.mp-home-ring .rl{font-size:11px;color:var(--mp-tw3)}
+.mp-home-ring .rn{font-size:26px;color:var(--mp-tx);margin-top:2px}
+.mp-home-ring .rn .u{font-size:12px;font-weight:400;color:var(--mp-tw3);margin-left:2px}
+.mp-home-dev4{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 0}
+.mp-home-dev4 .cell{padding:6px 0;text-align:center;cursor:pointer;user-select:none;border-radius:8px}
+.mp-home-dev4 .cell:active{background:#F2F3F5}
+.mp-home-dev4 .n{font-size:24px}
+.mp-home-dev4 .n.pri{color:var(--mp-primary)}
+.mp-home-dev4 .n.mut{color:var(--mp-tw3)}
+.mp-home-dev4 .n.er{color:var(--mp-er)}
+.mp-home-dev4 .n.dk{color:var(--mp-ts)}
+.mp-home-dev4 .t{font-size:12px;color:var(--mp-tw3);margin-top:2px}
+.mp-home-dev4 .t i{font-style:normal;color:#C0C4CC;margin-left:2px}
+/* 状态卡底部 chips：平均设定/室内温度（在线开机设备实时平均） */
+.mp-home-chips{display:flex;gap:8px;margin-top:12px}
+.mp-home-chips .chip{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:36px;
+  border-radius:8px;background:#F5F7FA;font-size:12px;color:var(--mp-tw3)}
+.mp-home-chips .chip b{font-size:15px;font-weight:600;color:var(--mp-tx);
+  font-family:var(--mp-num-font);font-variant-numeric:tabular-nums}
+
+/* 锁定状态卡：模式/温度/开关锁定三格大数字 */
+.mp-home-lock{display:flex}
+.mp-home-lock .lk{flex:1;text-align:center;padding:6px 0}
+.mp-home-lock .n{font-size:26px;color:var(--mp-tx)}
+.mp-home-lock .t{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+
+/* 日程/群组概览卡：标题 + 查看全部（主色）+ 大数字 + 小标签，整卡可点 */
+.mp-home-mini{cursor:pointer;user-select:none}
+.mp-home-mini:active{background:#F8F9FB}
+.mp-home-mini .mp-card-t{margin-bottom:2px}
+.mp-home-mini .more{color:var(--mp-primary)}
+.mp-home-mini .mn{font-size:28px;color:var(--mp-tx)}
+.mp-home-mini .ms{font-size:12px;color:var(--mp-tw3);margin-top:2px}
+
+/* 常用功能宫格：2 行 4 列；图标为彩色圆角底块 + SVG 线性图标（对齐现行小程序视觉） */
+.mp-home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 0}
+.mp-home-grid-item{display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 0;cursor:pointer;user-select:none;border-radius:10px}
+.mp-home-grid-item:active{background:#F2F3F5}
+.mp-home-grid-item .gi{width:44px;height:44px;border-radius:12px;display:flex;
+  align-items:center;justify-content:center}
+.mp-home-grid-item .gi .mp-ic{width:23px;height:23px}
+.mp-home-grid-item .gl{font-size:12px;color:var(--mp-ts);white-space:nowrap}
+/* 宫格底色板：浅色底 + 同色图标，8 个色相区分（b 蓝 / c 青 / g 绿 / o 橙 / p 紫 / y 金 / d 玫红 / s 灰蓝；
+   R3：d 由深蓝 #2F54EB 改玫红，消除与 b 主蓝的色相重复） */
+.mp-home-grid-item .gi-b{background:rgba(31,101,255,.10);color:#1F65FF}
+.mp-home-grid-item .gi-c{background:rgba(19,194,194,.10);color:#0FA3A3}
+.mp-home-grid-item .gi-g{background:rgba(82,196,26,.10);color:#3FA313}
+.mp-home-grid-item .gi-o{background:rgba(250,140,22,.10);color:#E87D0D}
+.mp-home-grid-item .gi-p{background:rgba(114,46,209,.10);color:#722ED1}
+.mp-home-grid-item .gi-y{background:rgba(212,136,6,.10);color:#B4740A}
+.mp-home-grid-item .gi-d{background:rgba(214,51,108,.10);color:#D6336C}
+.mp-home-grid-item .gi-s{background:rgba(100,116,139,.10);color:#5B6B7F}
+
+/* ── 我的（个人中心） ── */
+/* 用户卡：圆形头像（账号首字符，固定物业管理员蓝色渐变）+ 账号名 + 角色标签 + 所属项目 */
+.mp-card.mp-me-user{display:flex;align-items:center;gap:12px}
+.mp-me-avatar{flex:0 0 auto;width:56px;height:56px;border-radius:50%;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600}
+.mp-me-avatar.admin{background:var(--mp-btn-grad);box-shadow:0 4px 12px rgba(31,101,255,.28)}
+.mp-me-user .bd{flex:1;min-width:0}
+.mp-me-user .t1{font-size:17px;font-weight:600;color:var(--mp-tx);display:flex;align-items:center;gap:8px}
+.mp-me-user .t2{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+/* 红色描边按钮：退出登录等危险但非主流程操作 */
+.mp-btn-danger-plain{background:var(--mp-card);border-color:var(--mp-er);color:var(--mp-er)}
+.mp-btn-danger-plain:active{background:rgba(245,108,108,.08)}
+
+/* ── 设备控制（device 列表 + device-detail 控制面板） ── */
+/* 顶部：搜索框 + 批量控制入口 */
+.mp-dev-top{display:flex;align-items:center;gap:10px;margin:10px 12px 0}
+.mp-dev-search{flex:1;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;
+  background:var(--mp-card);border-radius:20px;box-shadow:var(--mp-shadow)}
+.mp-dev-search .ic{display:flex;color:#A0A4AB}
+.mp-dev-search input{flex:1;min-width:0;height:100%;border:none;outline:none;background:transparent;
+  font-size:14px;color:var(--mp-tx);font-family:var(--mp-font)}
+.mp-dev-batch-btn{flex:0 0 auto;min-height:40px;display:flex;align-items:center;padding:0 4px;
+  font-size:14px;color:var(--mp-primary);cursor:pointer;user-select:none;white-space:nowrap}
+.mp-dev-batch-btn:active{opacity:.7}
+
+/* 状态筛选 chips：横向滚动，单选主色底 */
+.mp-dev-chips{display:flex;gap:8px;overflow-x:auto;padding:10px 12px 2px;scrollbar-width:none}
+.mp-dev-chips::-webkit-scrollbar{display:none}
+/* chips：R8 对齐 gwdbg .chip —— 未选为白底细边框，选中为「主色描边 + 淡蓝底 + 主色文字 + 700」，
+   不再用主色实心反白（与全站选中语言统一，也让横向 chips 行整体更轻） */
+.mp-chip{flex:0 0 auto;height:32px;padding:0 14px;border-radius:9px;display:flex;align-items:center;
+  border:1px solid var(--mp-bd);background:var(--mp-card);color:var(--mp-tx);font-size:13px;
+  cursor:pointer;user-select:none}
+.mp-chip.on{border-color:var(--mp-primary);background:var(--mp-primary-dim);color:var(--mp-primary);font-weight:700}
+
+/* 设备卡：左（勾选圈+名称/房间/状态） 右（温度+模式风速+电源钮）
+   R8：补 1px 卡片描边；选中态由 outline 改为「主色描边 + 2px 主色光环」（全站统一选中语言） */
+.mp-dev-card{display:flex;align-items:center;gap:10px;background:var(--mp-card);
+  border:1px solid var(--mp-card-bd);border-radius:var(--mp-r);
+  margin:10px 12px;padding:12px 14px;box-shadow:var(--mp-shadow);cursor:pointer;user-select:none;
+  transition:border-color .15s ease,box-shadow .15s ease}
+.mp-dev-card:active{background:#F8F9FB}
+.mp-dev-card.off{opacity:.6}
+.mp-dev-card.sel{border-color:var(--mp-primary);box-shadow:0 0 0 2px var(--mp-primary-ring)}
+.mp-dev-card .bd{flex:1;min-width:0}
+.mp-dev-card .t1{font-size:15px;font-weight:700;color:var(--mp-tx);display:flex;align-items:center;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-dev-card .t2{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+.mp-dev-card .rt{flex:0 0 auto;text-align:right}
+.mp-dev-card .tp{font-size:24px;font-weight:600;color:var(--mp-tx);line-height:1.1}
+.mp-dev-card .tp .u{font-size:12px;font-weight:400;color:var(--mp-tw3);margin-left:1px}
+.mp-dev-card .mw{font-size:11px;color:var(--mp-tw3);margin-top:2px}
+
+/* 圆形电源钮：开机主色实心 / 关机灰描边 / 离线禁用 */
+.mp-pow{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:1.5px solid #C3CCD9;color:var(--mp-ts);cursor:pointer;background:var(--mp-card)}
+.mp-pow svg{width:18px;height:18px}
+.mp-pow.on{background:var(--mp-primary);border-color:var(--mp-primary);color:#fff;
+  box-shadow:0 6px 14px rgba(36,87,214,.26)}
+.mp-pow:active{transform:scale(.94)}
+.mp-pow.dis{opacity:.45;pointer-events:auto}
+
+/* 多选勾选圈 */
+.mp-check{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.5px solid #C3CCD9;
+  background:var(--mp-card);position:relative}
+/* 方形勾选（R8）：设备网格卡底部用，对齐 gwdbg .ac-chk 的 18px 圆角方框 + 白勾 */
+.mp-chk-sq{flex:0 0 auto;width:18px;height:18px;border-radius:4px;border:1.5px solid #C3CCD9;
+  background:var(--mp-card);display:inline-block;position:relative}
+.mp-chk-sq.on{background:var(--mp-primary);border-color:var(--mp-primary)}
+.mp-chk-sq.on::after{content:'';position:absolute;left:5px;top:2px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.mp-chk-sq.dis{opacity:.4}
+.mp-check.on{background:var(--mp-primary);border-color:var(--mp-primary)}
+.mp-check.on::after{content:'';position:absolute;left:7px;top:4px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.mp-check.dis{opacity:.4}
+
+/* ── 设备网格（R4 起 2 列卡片网格；group-detail 仍用上方单列 row 卡）
+   R8 重排（对齐 gwdbg .ac-unit-card 信息骨架）：
+     ① 顶部行 = 左模式/风速图标 + 右「开/关」状态文字（gwdbg .card-onoff，开=墨绿 关=浅灰）
+     ② 设备名行（含离线/故障 tag）
+     ③ 设定温度大字（26px/500 + tabular-nums，关机显示 --）
+     ④ 室温小字（gwdbg .card-return 量级，10px 弱化色）
+     ⑤ 模式·风速主色小字行（gwdbg .card-modes，把原先只在 row 卡出现的模式/风速文字补进网格卡）
+     ⑥ 底部行 = 方形勾选（多选态）+ 房间名 + 右侧电源钮
+   电源钮由「绝对定位垂直居中」改为底部行内，不再压住名称/温度行，卡片留白更干净 ── */
+.mp-dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 12px 0}
+.mp-dev-grid .mp-empty{grid-column:1/-1}
+.mp-dev-card.grid{display:block;position:relative;margin:0;padding:12px}
+/* ① 顶部行 */
+.mp-dev-card.grid .g-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.mp-dev-card.grid .g-icons{display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+  border-radius:9px;background:#F0F2F5;color:#9CA5B4}
+.mp-dev-card.grid .g-icons .mp-ic{width:20px;height:20px}
+.mp-dev-card.grid .g-icons.on{background:var(--mp-primary-dim);color:var(--mp-primary)}
+.mp-dev-card.grid .g-onoff{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--mp-tw3)}
+.mp-dev-card.grid .g-onoff.on{color:var(--mp-ok)}
+/* ② 名称行：单行省略 + 状态小 tag（离线灰/故障红，单状态表达） */
+.mp-dev-card.grid .g-name{display:flex;align-items:center;gap:4px;margin-top:9px;
+  font-size:14px;font-weight:700;color:var(--mp-tx)}
+.mp-dev-card.grid .g-name .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ③ 温度行：锁定小锁 + 设定温度大字（关机 --） */
+.mp-dev-card.grid .g-temp{display:flex;align-items:center;gap:4px;margin-top:4px;min-height:30px}
+.mp-dev-card.grid .g-temp .lk{display:inline-flex;color:var(--mp-wn)}
+.mp-dev-card.grid .g-temp .tv{font-size:26px;font-weight:500;line-height:1.1;color:var(--mp-tx)}
+.mp-dev-card.grid .g-temp .tv .u{font-size:12px;font-weight:400;color:var(--mp-tw3);margin-left:1px}
+/* ④ 室温小字 */
+.mp-dev-card.grid .g-return{display:block;font-size:10px;color:var(--mp-ts);white-space:nowrap}
+/* ⑤ 模式·风速主色行 */
+.mp-dev-card.grid .g-modes{display:flex;align-items:center;gap:5px;margin-top:8px;
+  font-size:11px;font-weight:650;color:var(--mp-primary);white-space:nowrap;overflow:hidden}
+.mp-dev-card.grid .g-modes .mp-ic{width:12px;height:12px;flex:0 0 auto}
+.mp-dev-card.grid .g-modes .sp{color:#C3CCD9}
+.mp-dev-card.grid.off .g-modes{color:var(--mp-tw3)}
+/* ⑥ 底部行：勾选 + 房间名 + 电源钮 */
+.mp-dev-card.grid .g-foot{display:flex;align-items:center;gap:7px;margin-top:10px;min-height:40px}
+.mp-dev-card.grid .g-room{flex:1;min-width:0;font-size:11px;color:var(--mp-ts);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-dev-card.grid .mp-pow{width:40px;height:40px}
+
+/* 多选模式底部操作栏（sticky 浮起） */
+.mp-batch-bar{position:sticky;bottom:0;margin-top:10px;background:var(--mp-card);
+  border-top:1px solid var(--mp-bd);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0));z-index:4}
+.mp-batch-bar .cnt{text-align:center;font-size:12px;color:var(--mp-tw3);padding:2px 0 8px}
+.mp-batch-bar .acts{display:flex;gap:6px}
+.mp-batch-bar .act{flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;background:var(--mp-primary-dim);color:var(--mp-primary);font-size:13px;
+  cursor:pointer;user-select:none}
+.mp-batch-bar .act:active{opacity:.75}
+.mp-batch-bar .act.cancel{background:#F2F3F5;color:var(--mp-ts)}
+
+/* 上拉加载条 */
+.mp-dev-more{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;
+  font-size:12px;color:var(--mp-tw3)}
+.mp-spinner.sm{width:16px;height:16px;border-width:2px;border-color:rgba(144,147,153,.3);border-top-color:var(--mp-tw3)}
+
+/* 异常横幅：故障红 / 离线黄 */
+.mp-dd-banner{margin:10px 12px 0;padding:10px 14px;border-radius:var(--mp-r);font-size:13px;
+  display:flex;align-items:center;gap:6px}
+.mp-dd-banner.er{background:rgba(245,108,108,.1);color:var(--mp-er)}
+.mp-dd-banner.wn{background:rgba(230,162,60,.12);color:var(--mp-wn)}
+
+/* 锁定小标（区头内联：锁图标 + 文案 + 灰字「已被平台锁定」） */
+.mp-dd-lock{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:4px;
+  font-size:11px;font-weight:400;background:rgba(230,162,60,.14);color:var(--mp-wn)}
+.mp-dd-lock .mp-ic{width:12px;height:12px}
+.mp-dd-lock .mp-sub{color:var(--mp-wn)}
+
+/* ── 控制面板 V2（R5：device-detail 双页签 模式设置/限定设置，对齐现行小程序截图） ── */
+/* 分区禁用：仅降透明（不截断 pointer-events），交互由 JS 拦截并 toast 原因 */
+.mp-dd-dim{opacity:.45}
+/* 防双重降透明：禁用区内的禁用卡不再叠加透明度 */
+.mp-dd-dim .mp-dd-pcard.dis,.mp-dd-dim .mp-dd-icard.dis{opacity:1}
+
+/* 顶部设备卡：左（已选择空调 / 项目·房间路径 / 设备名+状态 tag），右室内机占位图 */
+.mp-card.mp-dd-head{display:flex;align-items:center;gap:12px}
+.mp-dd-head .bd{flex:1;min-width:0}
+.mp-dd-head .lab{font-size:12px;color:var(--mp-tw3)}
+.mp-dd-head .path{font-size:16px;font-weight:600;color:var(--mp-tx);margin-top:4px;line-height:1.45}
+.mp-dd-head .nrow{display:flex;align-items:center;gap:6px;margin-top:6px}
+.mp-dd-head .nrow .nm{font-size:13px;color:var(--mp-ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-dd-unit{flex:0 0 auto;width:64px;height:64px;border-radius:10px;background:#F0F3F8;color:#9AA9BC;
+  display:flex;align-items:center;justify-content:center}
+.mp-dd-unit svg{width:46px;height:46px}
+
+/* 胶囊页签：选中=主色渐变胶囊白字；未选=白底灰字 */
+.mp-dd-tabs{display:flex;justify-content:center;gap:12px;margin:12px 12px 2px}
+.mp-dd-tab{min-width:120px;height:40px;padding:0 22px;border-radius:20px;display:flex;align-items:center;
+  justify-content:center;background:var(--mp-card);color:var(--mp-ts);font-size:14px;
+  cursor:pointer;user-select:none;box-shadow:var(--mp-shadow)}
+.mp-dd-tab:active{opacity:.85}
+.mp-dd-tab.on{background:var(--mp-btn-grad);color:#fff;font-weight:600;
+  box-shadow:0 4px 10px rgba(31,101,255,.28)}
+
+/* 设备开关机双大卡：选中=主色渐变实底白字；未选=灰底灰字；禁用降透明（点击由 JS 提示原因） */
+.mp-dd-pcards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mp-dd-pcard{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 0;border-radius:12px;
+  background:#F5F7FA;color:var(--mp-ts);font-size:14px;cursor:pointer;user-select:none}
+.mp-dd-pcard .mp-ic{width:26px;height:26px}
+.mp-dd-pcard.on{background:var(--mp-btn-grad);color:#fff;box-shadow:0 4px 12px rgba(31,101,255,.26)}
+.mp-dd-pcard.dis{opacity:.45}
+
+/* 图标卡（设定模式/设定风速共用）：选中=主色 1.5px 描边+白底+主色字（R2 评审校准，不用渐变实底） */
+.mp-dd-icards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mp-dd-icard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0 10px;
+  border-radius:10px;border:1.5px solid transparent;background:#F5F7FA;color:var(--mp-ts);
+  font-size:12px;cursor:pointer;user-select:none}
+.mp-dd-icard .mi{display:flex;line-height:1}
+.mp-dd-icard .mi .mp-ic{width:22px;height:22px}
+.mp-dd-icard.sz-auto .mp-ic{width:20px;height:20px}
+.mp-dd-icard.sz-low .mp-ic{width:16px;height:16px}
+.mp-dd-icard.sz-mid .mp-ic{width:20px;height:20px}
+.mp-dd-icard.sz-high .mp-ic{width:24px;height:24px}
+.mp-dd-icard.on{border-color:var(--mp-primary);background:var(--mp-card);color:var(--mp-primary);font-weight:600}
+.mp-dd-icard.dis{opacity:.45}
+
+/* 设定温度：48px 大字居中 + 滑块行（- 圆钮 + 定制 range + + 圆钮），刻度行在轨道下 */
+.mp-dd-tempv{text-align:center;padding:4px 0 0}
+.mp-dd-tempv .n{font-size:48px;font-weight:600;color:var(--mp-tx);line-height:1.1}
+.mp-dd-tempv .u{font-size:16px;font-weight:400;color:var(--mp-tw3);margin-left:2px}
+.mp-dd-slider{display:flex;align-items:flex-start;gap:10px;padding:0 0 4px}
+.mp-sbtn{flex:0 0 auto;width:32px;height:32px;margin-top:-5px;border-radius:50%;background:#F0F2F5;
+  color:var(--mp-ts);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none}
+.mp-sbtn:active{background:var(--mp-primary-dim);color:var(--mp-primary)}
+.mp-dd-swrap{flex:1;min-width:0}
+/* 定制 range：轨道背景由 CSS 变量 --trk 承载（JS 按当前值写渐变填充），thumb 22px 白底主色描边 */
+.mp-range{-webkit-appearance:none;appearance:none;width:100%;height:22px;margin:0;display:block;
+  background:transparent;outline:none;cursor:pointer}
+.mp-range::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--trk,#E9ECF2)}
+.mp-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-9px;
+  border-radius:50%;background:#fff;border:2px solid var(--mp-primary);
+  box-shadow:0 1px 5px rgba(31,101,255,.35);cursor:pointer}
+.mp-range::-moz-range-track{height:4px;border-radius:2px;background:#E9ECF2}
+.mp-range::-moz-range-progress{height:4px;border-radius:2px;background:linear-gradient(90deg,#4080FF,#1F65FF)}
+.mp-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;
+  border:2px solid var(--mp-primary);box-shadow:0 1px 5px rgba(31,101,255,.35);cursor:pointer}
+.mp-range[disabled]{opacity:.5;cursor:default}
+/* 刻度行：逐值细刻线（左右内缩 11px 对齐 thumb 行程）+ 两端数值标签 */
+.mp-ticks{display:flex;justify-content:space-between;height:5px;padding:0 11px;margin-top:2px}
+.mp-ticks i{width:1px;height:5px;background:#D8DCE3}
+.mp-ticklab{display:flex;justify-content:space-between;padding:2px 2px 0;font-size:10px;color:var(--mp-tw3)}
+
+/* 双滑块区间选择器（温度范围限定）：两条 range 叠加，轨道透明、仅 thumb 可拖（pointer-events 分层） */
+.mp-drange{position:relative;height:28px;margin:4px 0 0}
+.mp-drange .tr{position:absolute;left:11px;right:11px;top:12px;height:4px;border-radius:2px;background:#E9ECF2}
+.mp-drange .tr .in{position:absolute;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,#4080FF,#1F65FF)}
+.mp-drange input{position:absolute;left:0;top:3px;width:100%;height:22px;margin:0;
+  -webkit-appearance:none;appearance:none;background:transparent;outline:none;pointer-events:none}
+.mp-drange input::-webkit-slider-runnable-track{height:4px;background:transparent}
+.mp-drange input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;
+  width:22px;height:22px;margin-top:-9px;border-radius:50%;background:#fff;
+  border:2px solid var(--mp-primary);box-shadow:0 1px 5px rgba(31,101,255,.35);cursor:pointer}
+.mp-drange input::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;
+  background:#fff;border:2px solid var(--mp-primary);box-shadow:0 1px 5px rgba(31,101,255,.35);cursor:pointer}
+
+/* 限定设置：开关行卡（左 15px 标签 + 右 .mp-switch）；温度范围限定卡可展开区间区 */
+.mp-card.mp-lim{display:flex;align-items:center;justify-content:space-between;padding:14px}
+.mp-lim .lb{font-size:15px;color:var(--mp-tx)}
+.mp-lim-col .mp-lim{display:flex;align-items:center;justify-content:space-between}
+.mp-lim-expand{padding-top:4px}
+.mp-lim-rv{text-align:center;padding:8px 0 0}
+.mp-lim-rv .n{font-size:34px;font-weight:600;color:var(--mp-tx);line-height:1.15}
+.mp-lim-rv .u{font-size:14px;font-weight:400;color:var(--mp-tw3);margin-left:2px}
+/* 限定设置底部双按钮：解除锁定（浅蓝底 flex2）+ 设置起效（蓝渐变 flex3） */
+.mp-lim-ft{display:flex;gap:10px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0))}
+.mp-lim-ft .mp-btn{margin:0}
+.mp-lim-ft #lmUnlock{flex:2}
+.mp-lim-ft #lmApply{flex:3}
+.mp-btn-soft{background:var(--mp-primary-dim);border-color:transparent;color:var(--mp-primary)}
+.mp-btn-soft:active{opacity:.85}
+
+/* 分段器（.mp-seg 为多页共用：schedule-form 动作 / env-list tab / elec-tenant-detail tab 等；device-detail 已停用） */
+.mp-seg{display:flex;background:#EEF2F8;border-radius:10px;padding:3px}
+.mp-seg-i{flex:1;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;
+  font-size:13px;color:var(--mp-ts);cursor:pointer;user-select:none}
+.mp-seg-i.on{background:var(--mp-card);color:var(--mp-primary);font-weight:700;
+  box-shadow:0 2px 6px rgba(28,49,81,.1)}
+
+/* 卡内列表微调（设备信息卡等 .mp-card 内直嵌 .mp-item 时收紧上下距） */
+.mp-card .mp-item{padding:10px 0}
+.mp-card .mp-item:first-child{padding-top:2px}
+
+/* ── 首页宫格副标题与群组管理 ── */
+/* 纵向撑满骨架：内容区 flex:1 + 底部固定操作条（group-list / group-detail / group-form 共用，
+   内容少时操作条仍贴底，内容多时随滚动 sticky 浮底） */
+.mp-fill{display:flex;flex-direction:column;min-height:100%}
+.mp-fill>.grow{flex:1}
+
+/* 宫格副标题行：首页宫格项可选副标题（如电费查询-账单查询） */
+.mp-home-grid-item .gs{font-size:10px;color:var(--mp-tw3);white-space:nowrap;margin-top:-3px}
+
+/* 群组卡：群名 + 设备/运行统计 + 在线率进度条；长按触发删除（移动端替代左滑的统一惯例） */
+.mp-grp-card{cursor:pointer;user-select:none}
+.mp-grp-card:active{background:#F8F9FB}
+.mp-grp-card .g-t1{font-size:15px;font-weight:600;color:var(--mp-tx);
+  display:flex;align-items:center;justify-content:space-between}
+.mp-grp-card .g-t1 .cnt{font-size:12px;font-weight:400;color:var(--mp-tw3)}
+.mp-grp-card .g-sub{font-size:12px;color:var(--mp-ts);margin-top:6px}
+.mp-grp-card .g-sub b{color:var(--mp-primary);font-weight:600}
+.mp-grp-card .g-rate{display:flex;align-items:center;gap:8px;margin-top:10px}
+.mp-grp-card .g-rate .bar{flex:1;height:6px;border-radius:3px;background:#F0F2F5;overflow:hidden}
+.mp-grp-card .g-rate .bar .in{height:100%;border-radius:3px;background:linear-gradient(90deg,#4080FF,#1F65FF)}
+.mp-grp-card .g-rate .pct{font-size:11px;color:var(--mp-tw3);white-space:nowrap}
+
+/* 群组详情头：群名 + 编辑入口 + 三格统计（设备数/在线/运行中） */
+.mp-grp-head .g-name{font-size:17px;font-weight:600;color:var(--mp-tx);
+  display:flex;align-items:center;justify-content:space-between}
+.mp-grp-head .g-edit{font-size:13px;font-weight:400;color:var(--mp-primary);cursor:pointer;
+  display:inline-flex;align-items:center;min-height:44px;padding:8px 0 8px 16px;margin:-8px 0;user-select:none}
+.mp-grp-head .g-edit:active{opacity:.7}
+.mp-grp-head .g-stats{display:flex;margin-top:12px}
+.mp-grp-head .g-stats .st{flex:1;text-align:center;padding:4px 0}
+.mp-grp-head .g-stats .n{font-size:20px;font-weight:600;color:var(--mp-tx);line-height:1.2}
+.mp-grp-head .g-stats .n.ok{color:var(--mp-ok)}
+.mp-grp-head .g-stats .n.pri{color:var(--mp-primary)}
+.mp-grp-head .g-stats .t{font-size:11px;color:var(--mp-tw3);margin-top:3px}
+
+/* 群组表单：按房间分组的勾选列表（房间父级行 + 设备子级行） */
+.mp-room-head{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;
+  background:#F8F9FB;border-bottom:1px solid var(--mp-bd);cursor:pointer;user-select:none}
+.mp-room-head:active{background:#F0F2F5}
+.mp-room-head .bd{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--mp-ts)}
+.mp-room-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px 10px 26px;
+  border-bottom:1px solid var(--mp-bd);cursor:pointer;user-select:none}
+.mp-room-row:active{background:#F8F9FB}
+.mp-room-row .bd{flex:1;min-width:0}
+.mp-room-row .t1{font-size:14px;color:var(--mp-tx)}
+.mp-room-grp:last-child .mp-room-row:last-child{border-bottom:none}
+/* 父级半选态：主色圆圈内白横杠（indeterminate） */
+.mp-check.half{background:var(--mp-primary);border-color:var(--mp-primary)}
+.mp-check.half::after{content:'';position:absolute;left:5px;top:9px;width:10px;height:2px;
+  border-radius:1px;background:#fff}
+
+/* ── 日程管理（schedule-list / schedule-form） ── */
+/* 日程卡：左侧时间大字 + 名称/重复星期 chips/动作摘要，右侧启停开关；停用整卡降透明 */
+.mp-sch-card{display:flex;align-items:center;gap:12px;background:var(--mp-card);border-radius:var(--mp-r);
+  margin:10px 12px;padding:14px;box-shadow:var(--mp-shadow);cursor:pointer;user-select:none}
+.mp-sch-card:active{background:#F8F9FB}
+.mp-sch-card.off{opacity:.55}
+.mp-sch-card .tm{flex:0 0 auto;width:64px;text-align:center;font-size:22px;font-weight:600;
+  color:var(--mp-tx);line-height:1.2;font-variant-numeric:tabular-nums}
+.mp-sch-card .bd{flex:1;min-width:0}
+.mp-sch-card .nm{font-size:15px;font-weight:600;color:var(--mp-tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-sch-card .sm{font-size:12px;color:var(--mp-tw3);margin-top:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 重复星期 chips：7 个小圆点（一二三四五六日），选中主色底白字；单次显示灰字「单次」 */
+.mp-sch-days{display:flex;gap:4px;margin-top:6px}
+.mp-sch-days .d{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;background:#F0F2F5;color:var(--mp-tw3)}
+.mp-sch-days .d.on{background:var(--mp-primary);color:#fff}
+.mp-sch-days .once{font-size:12px;color:var(--mp-tw3);line-height:20px}
+
+/* 表单：执行时间原生 time 输入（样式覆盖为右对齐大字） */
+.mp-field input[type="time"]{text-align:right;font-size:17px;font-weight:600;color:var(--mp-tx)}
+/* 表单：重复星期选择，7 个圆形 chip 多选 + 灰字回显 */
+.mp-wk-chips{display:flex;justify-content:space-between;padding:10px 0 4px}
+.mp-wk-chip{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:#F0F2F5;color:var(--mp-ts);cursor:pointer;user-select:none}
+.mp-wk-chip.on{background:var(--mp-primary);color:#fff}
+.mp-wk-echo{font-size:12px;color:var(--mp-tw3);padding:4px 0 8px}
+/* 表单：动作区（开关 2 段 segmented 复用 .mp-seg；模式 4 chip 复用 .mp-chip；温度步进复用 .mp-stepper） */
+.mp-sch-modes{display:flex;gap:8px;padding:8px 0}
+.mp-sch-temp{display:flex;justify-content:center;padding:6px 0 10px}
+/* 表单：目标 picker 行（群组单选 / 设备多选，均用圆形 mp-check） */
+.mp-sch-tgt{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;
+  border-bottom:1px solid var(--mp-bd);cursor:pointer;user-select:none}
+.mp-sch-tgt:last-child{border-bottom:none}
+.mp-sch-tgt:active{background:#F8F9FB}
+.mp-sch-tgt .bd{flex:1;min-width:0;font-size:14px;color:var(--mp-tx)}
+.mp-sch-tgt .t2{font-size:12px;color:var(--mp-tw3);margin-top:2px}
+
+/* ── 节能策略（strategy-list / strategy-form） ── */
+/* 类型标签四色：env 绿 tag-ok / wind 蓝 tag-primary / load 橙 tag-wn / ultimate 紫 tag-ultimate */
+.tag-ultimate{background:rgba(142,68,173,.12);color:#8E44AD}
+/* 策略卡：名称行（策略名 + 类型 tag）+ 摘要 desc + 生效范围，右侧启停开关；停用整卡降透明 */
+.mp-stg-card{display:flex;align-items:center;gap:12px;background:var(--mp-card);border-radius:var(--mp-r);
+  margin:10px 12px;padding:14px;box-shadow:var(--mp-shadow);cursor:pointer;user-select:none}
+.mp-stg-card:active{background:#F8F9FB}
+.mp-stg-card.off{opacity:.55}
+.mp-stg-card .bd{flex:1;min-width:0}
+.mp-stg-card .nm{font-size:15px;font-weight:600;color:var(--mp-tx);display:flex;align-items:center;gap:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-stg-card .nm .mp-tag{flex:0 0 auto;font-weight:400}
+.mp-stg-card .sm{font-size:12px;color:var(--mp-tw3);margin-top:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 表单：类型 4 chip 单选（名称较长，允许换行）；编辑态只读（ro：未选中项置灰不可点） */
+.mp-stg-types{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0}
+.mp-stg-types.ro .mp-chip:not(.on){opacity:.45;pointer-events:none}
+.mp-stg-types.ro .mp-chip.on{pointer-events:none}
+/* 表单：动态参数区——每行 左标签 + 右步进器 */
+.mp-stg-param{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:52px;padding:8px 0;border-bottom:1px solid var(--mp-bd)}
+.mp-stg-param:last-child{border-bottom:none}
+.mp-stg-param .pl{flex:0 0 auto;font-size:14px;color:var(--mp-ts)}
+.mp-stg-param .mp-stepper{gap:10px}
+.mp-stg-param .mp-stepper .st-val{min-width:64px;font-size:18px}
+.mp-stepper .st-val .u{font-size:11px;font-weight:400;color:var(--mp-tw3);margin-left:2px}
+
+/* ── 环境感知（env-list 单页 3 tab 只读监测） ── */
+/* 顶部 3 tab 分段控件：复用 .mp-seg，仅加外边距 */
+.mp-env-tabs{margin:10px 12px 0}
+/* 传感器卡：头（名+房间 / 在线 tag）→ 读数区 → 电量条 → 时间行；离线整卡降透明 */
+.mp-env-card{background:var(--mp-card);border-radius:var(--mp-r);margin:10px 12px;padding:14px;
+  box-shadow:var(--mp-shadow)}
+.mp-env-card.off{opacity:.6}
+.mp-env-card .e-head{display:flex;align-items:flex-start;gap:8px}
+.mp-env-card .e-head .bd{flex:1;min-width:0}
+.mp-env-card .e-name{font-size:15px;font-weight:600;color:var(--mp-tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-env-card .e-room{font-size:12px;color:var(--mp-tw3);margin-top:2px}
+/* 读数区：温湿度双列大字（中间竖分隔线，对齐 Web 端卡片读数形态）；人体存在单列大字状态 */
+.mp-env-rd{display:flex;align-items:center;padding:14px 0 10px}
+.mp-env-rd .ri{flex:1;text-align:center;min-width:0}
+.mp-env-rd .rv{font-size:26px;font-weight:600;color:var(--mp-tx);line-height:1.2}
+.mp-env-rd .rv .u{font-size:12px;font-weight:400;color:var(--mp-tw3);margin-left:2px}
+.mp-env-rd .rl{font-size:11px;color:var(--mp-tw3);margin-top:4px}
+.mp-env-rd .rsep{width:1px;height:36px;background:var(--mp-bd);flex:0 0 auto}
+.mp-env-rd .rv.ok{color:var(--mp-ok)}
+.mp-env-rd .rv.mut{color:var(--mp-tw3)}
+/* 门窗状态行：大 tag + 右侧状态变更时间 */
+.mp-env-door{display:flex;align-items:center;justify-content:space-between;padding:12px 0 10px}
+.mp-env-door .mp-tag{font-size:13px;height:26px;padding:0 12px}
+/* 电量条：宽度=battery%，<20% 红色 */
+.mp-env-bat{display:flex;align-items:center;gap:8px}
+.mp-env-bat .lb{flex:0 0 auto;font-size:12px;color:var(--mp-tw3)}
+.mp-env-bat .bar{flex:1;height:6px;border-radius:3px;background:#F0F2F5;overflow:hidden}
+.mp-env-bat .bar .in{height:100%;border-radius:3px;background:var(--mp-ok)}
+.mp-env-bat .bar .in.low{background:var(--mp-er)}
+.mp-env-bat .pct{font-size:11px;color:var(--mp-tw3);white-space:nowrap}
+/* 时间行（上报/最后触发） */
+.mp-env-time{font-size:11px;color:var(--mp-tw3);margin-top:8px}
+
+/* ── 设备管理（ac-room 空调房间绑定 / ac-room-bind 绑定操作 / controller 控制器） ── */
+/* 展开箭头：展开 ⌄ 向下；.off 折叠态右转 -90°（ac-room 房间行 / controller 卡片共用） */
+.mp-ar-arrow{flex:0 0 auto;color:#C0C4CC;font-size:14px;transition:transform .18s}
+.mp-ar-arrow::before{content:'⌄'}
+.mp-ar-arrow.off{transform:rotate(-90deg)}
+/* 房间分组：组间拉开间距（复用 .mp-list 卡片容器） */
+.mp-ar-grp .mp-room-head{background:var(--mp-card)}
+.mp-ar-grp .mp-room-head .bd{color:var(--mp-tx)}
+.mp-room-row .t2{font-size:12px;color:var(--mp-tw3);margin-top:2px}
+/* 解绑文字钮：红色文字，扩大热区（上下 padding 13px 凑足 44px，负 margin 不撑高行） */
+.mp-ar-unbind{flex:0 0 auto;font-size:13px;color:var(--mp-er);cursor:pointer;user-select:none;
+  padding:13px 0 13px 14px;margin:-13px 0}
+.mp-ar-unbind:active{opacity:.7}
+/* 楼栋小标注（R7）：ac-room 房间分组头房间名前的所属楼栋，量级对齐 .mp-sub/.mp-tag，不抢房间名主体 */
+.mp-ar-bd{display:inline-block;margin-right:6px;padding:0 6px;height:18px;line-height:18px;
+  border-radius:4px;background:var(--mp-primary-dim);color:var(--mp-primary);
+  font-size:11px;font-weight:400;vertical-align:1px}
+
+/* ── 现场连续绑定流（ac-room-bind，R7） ── */
+/* Step ① 楼栋/楼层/房间三级折叠树：左内边距体现层级，字号/字重逐级递减；箭头复用 .mp-ar-arrow */
+.mp-arb-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;
+  border-bottom:1px solid var(--mp-bd);cursor:pointer;user-select:none}
+.mp-arb-row:last-child{border-bottom:none}
+.mp-arb-row:active{background:#F8F9FB}
+.mp-arb-row .bd{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-arb-row.lv1{background:#F8F9FB}
+.mp-arb-row.lv1:active{background:#F0F2F5}
+.mp-arb-row.lv1 .bd{font-size:15px;font-weight:600;color:var(--mp-tx)}
+.mp-arb-row.lv2{padding-left:30px}
+.mp-arb-row.lv2 .bd{font-size:14px;font-weight:600;color:var(--mp-ts)}
+.mp-arb-row.lv3{padding-left:52px}
+.mp-arb-row.lv3 .bd{font-size:14px;color:var(--mp-tx)}
+/* 房间行右侧进入箭头（同 .mp-item .arrow 视觉，作用域不同故单列） */
+.mp-arb-row .arrow{flex:0 0 auto;color:#C0C4CC;font-size:16px;margin-left:4px}
+.mp-arb-row .arrow::before{content:'›'}
+
+/* Step ② 当前房间路径条：面包屑「楼栋 › 楼层 › 房间」+ 右侧「更换房间」文字钮 */
+.mp-arb-path{display:flex;align-items:center;gap:10px}
+.mp-arb-path .bd{flex:1;min-width:0}
+.mp-arb-path .lab{font-size:12px;color:var(--mp-tw3)}
+.mp-arb-path .pt{font-size:16px;font-weight:600;color:var(--mp-tx);margin-top:4px;line-height:1.45;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 更换房间文字钮：扩大热区（上下 padding 13px 凑足 44px，负 margin 不撑高行），同 .mp-ar-unbind 手法 */
+.mp-arb-chg{flex:0 0 auto;font-size:13px;color:var(--mp-primary);cursor:pointer;user-select:none;
+  padding:13px 0 13px 14px;margin:-13px 0}
+.mp-arb-chg:active{opacity:.7}
+/* 全部 / 按控制器分组：复用 .mp-seg 胶囊，仅加外边距（同 .mp-env-tabs 惯例） */
+.mp-arb-seg{margin:10px 12px 0}
+/* 按控制器分组的组内小标题：控制器名 + 组内待绑台数 */
+.mp-arb-gh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;
+  background:#F8F9FB;border-bottom:1px solid var(--mp-bd);font-size:13px;font-weight:600;color:var(--mp-ts)}
+/* 底部摘要条：「已选 N 台（其中 M 台不在当前筛选内）→ 房间名」+ 清空钮 + 确认绑定按钮（复用 .mp-footer） */
+.mp-arb-foot .sum{display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:13px;color:var(--mp-ts)}
+.mp-arb-foot .sum .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-arb-foot .sum b{font-size:16px;color:var(--mp-primary);margin:0 2px}
+/* 筛选外已选台数：橙色警示，提示存在当前屏幕上看不见的勾选（防现场绑错） */
+.mp-arb-foot .sum .out{color:var(--mp-wn)}
+/* 一键清空勾选：扩大热区，N=0 时由 JS 隐藏 */
+.mp-arb-foot .sum .clr{flex:0 0 auto;color:var(--mp-primary);cursor:pointer;user-select:none;
+  padding:6px 0 6px 10px;margin:-6px 0}
+.mp-arb-foot .sum .clr:active{opacity:.7}
+/* 置灰但仍可点击（区别于 .mp-btn[disabled] 的 pointer-events:none，需保留点击以给 toast 提示） */
+.mp-btn.dim{opacity:.5;box-shadow:none}
+
+/* 控制器卡：头（名称+在线 tag / SN）→ 2×2 台账格 → 可展开详情区 */
+.mp-ctl-card{background:var(--mp-card);border-radius:var(--mp-r);margin:10px 12px;
+  box-shadow:var(--mp-shadow);cursor:pointer;user-select:none;overflow:hidden}
+.mp-ctl-card:active{background:#F8F9FB}
+/* 离线黄条提示（卡顶部通栏） */
+.mp-ctl-offbar{padding:8px 14px;background:rgba(230,162,60,.12);color:var(--mp-wn);font-size:12px}
+.mp-ctl-card .hd{display:flex;align-items:center;gap:10px;padding:12px 14px 4px}
+.mp-ctl-card .hd .bd{flex:1;min-width:0}
+.mp-ctl-card .t1{font-size:15px;font-weight:600;color:var(--mp-tx);display:flex;align-items:center;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ctl-card .t2{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+/* 2×2 台账格：品牌 / 接控空调 / 固件版本 / 信号强度 */
+.mp-ctl-grid{display:grid;grid-template-columns:1fr 1fr;padding:6px 14px 12px}
+.mp-ctl-grid .gi{padding:8px 0 2px}
+.mp-ctl-grid .gv{font-size:14px;color:var(--mp-tx);display:flex;align-items:center;gap:4px;min-height:22px}
+.mp-ctl-grid .gl{font-size:11px;color:var(--mp-tw3);margin-top:3px}
+/* 信号强度圆点：实心绿 / 空心灰 */
+.mp-sig{font-size:10px;color:#DCDFE6;line-height:1}
+.mp-sig.on{color:var(--mp-ok)}
+/* 展开详情区：只读参数 kv 行 + 提示 */
+.mp-ctl-detail{border-top:1px solid var(--mp-bd);margin:0 14px;padding:6px 0 12px}
+.mp-ctl-detail .kv{display:flex;align-items:center;justify-content:space-between;
+  min-height:36px;padding:6px 0;border-bottom:1px dashed var(--mp-bd);font-size:13px}
+.mp-ctl-detail .kv .k{color:var(--mp-ts)}
+.mp-ctl-detail .kv .v{color:var(--mp-tx)}
+.mp-ctl-detail .kv-tip{font-size:11px;color:var(--mp-tw3);padding-top:8px}
+
+/* ── 电费查询（elec-admin 管理员账单 / elec-tenant-list 租户台账 / elec-tenant-detail 租户详情只读） ── */
+/* 只读列表项（账单/记录行不可点）：去掉手型与按压反馈 */
+.mp-item.ro{cursor:default}
+.mp-item.ro:active{background:var(--mp-card)}
+/* 月份切换横条：‹ 2026-08 ›，边界月箭头置灰 */
+.mp-elec-month{display:flex;align-items:center;justify-content:space-between;
+  background:var(--mp-card);border-radius:var(--mp-r);margin:10px 12px;padding:4px 8px;
+  box-shadow:var(--mp-shadow)}
+.mp-elec-month .arr{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:var(--mp-ts);cursor:pointer;user-select:none}
+.mp-elec-month .arr:active{color:var(--mp-primary)}
+.mp-elec-month .arr.dis{color:#DCDFE6;pointer-events:none}
+.mp-elec-month .mo{font-size:16px;font-weight:600;color:var(--mp-tx)}
+/* 汇总卡 3 数字：本月总电费 / 已缴 / 欠费 */
+.mp-elec-sum{display:flex;padding:4px 0}
+.mp-elec-sum .si{flex:1;text-align:center}
+.mp-elec-sum .sv{font-size:17px;font-weight:700;color:var(--mp-tx)}
+.mp-elec-sum .sv.ok{color:var(--mp-ok)}
+.mp-elec-sum .sv.er{color:var(--mp-er)}
+.mp-elec-sum .sl{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+/* 租户台账入口行（elec-admin 汇总卡下方，跳 elec-tenant-list，R6 新增）：卡片质感 + 右箭头 */
+.mp-elec-linkrow{display:flex;align-items:center;justify-content:space-between;
+  background:var(--mp-card);border-radius:var(--mp-r);margin:10px 12px;padding:13px 14px;
+  box-shadow:var(--mp-shadow);font-size:14px;color:var(--mp-tx);cursor:pointer;user-select:none}
+.mp-elec-linkrow:active{background:#F8F9FB}
+.mp-elec-linkrow .arr{color:#C0C4CC;font-size:16px}
+/* 账单行右侧：金额 + 状态 tag（已缴绿/欠费红/未出账灰）；elec-tenant-list 租户行右侧状态列同构复用 */
+.mp-bill-r{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mp-bill-r .amt{font-size:15px;font-weight:600;color:var(--mp-tx)}
+/* 演示范围/说明灰字 */
+.mp-elec-hint{text-align:center;font-size:12px;color:var(--mp-tw3);padding:6px 12px 14px}
+/* elec-tenant-detail 头卡：租户名+计费方式 tag / 房间（R6 新增） */
+.mp-tn-head .nm{font-size:16px;font-weight:600;color:var(--mp-tx);display:flex;align-items:center;gap:8px}
+.mp-tn-head .room{font-size:12px;color:var(--mp-tw3);margin-top:4px}
+/* 租户详情顶部通栏提示条：post 后付费黄条（当前两页均未引用，保留供后续扩展）/ low 余额不足橙条 */
+.mp-tn-bar{margin:10px 12px 0;padding:10px 14px;border-radius:var(--mp-r);font-size:12px;line-height:1.5}
+.mp-tn-bar.post{background:rgba(230,162,60,.12);color:var(--mp-wn)}
+.mp-tn-bar.low{background:rgba(230,162,60,.14);color:var(--mp-wn)}
+/* 余额大字卡 */
+.mp-tn-balance{text-align:center;padding:22px 14px}
+.mp-tn-balance .lab{font-size:13px;color:var(--mp-tw3)}
+.mp-tn-balance .val{font-size:34px;font-weight:700;margin:8px 0 10px}
+.mp-tn-balance .val.ok{color:var(--mp-ok)}
+.mp-tn-balance .val.wn{color:var(--mp-wn)}
+/* 消费/充值记录 tab 分段外边距 */
+.mp-tn-tabs{margin:10px 12px 0}
+/* 记录行右侧金额：充值绿+ / 消费红- */
+.mp-rc-amt{flex:0 0 auto;font-size:16px;font-weight:600}
+.mp-rc-amt.plus{color:var(--mp-ok)}
+.mp-rc-amt.minus{color:var(--mp-er)}
+
+/* ════════════════════════════════════════════════════════════
+   R8 · 策略表单表单件（对照 Web 端四类策略页补全字段后新增）
+   移动端表单一律「标签在上、控件在下」：中文长标签（如「负荷调控目标(幅度)」）
+   在 375px 宽下横排会被截断，纵排既保证标签完整可读，也满足可访问性的可见标签要求
+   ════════════════════════════════════════════════════════════ */
+
+/* 表单行（纵排：标签行 + 控件区 + 说明行） */
+.mp-fr{padding:12px 0;border-top:1px solid var(--mp-bd)}
+.mp-fr:first-child{border-top:none;padding-top:2px}
+.mp-fr>.lab{display:block;font-size:13px;font-weight:650;color:var(--mp-tx);margin-bottom:8px}
+.mp-fr>.lab .req{color:var(--mp-er);margin-right:2px}
+.mp-fr .hint{margin-top:7px;font-size:11px;line-height:1.6;color:var(--mp-tw3)}
+
+/* 输入框 / 文本域 / 下拉：统一 44px 高、10px 圆角、聚焦主色描边 */
+.mp-inp,.mp-sel{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--mp-bd);
+  border-radius:10px;background:var(--mp-card);color:var(--mp-tx);font-size:14px;
+  font-family:var(--mp-font);outline:none;-webkit-appearance:none;appearance:none}
+.mp-inp:focus,.mp-sel:focus{border-color:var(--mp-primary);box-shadow:0 0 0 3px var(--mp-primary-ring)}
+.mp-inp::placeholder{color:#B6BECB}
+.mp-ta{min-height:72px;padding:11px 12px;line-height:1.6;resize:none}
+/* 下拉右侧自绘箭头（-webkit-appearance:none 后原生箭头消失） */
+.mp-sel{padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%239CA5B4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:12px}
+
+/* 两列控件（日期区间 / 时间区间 / 比较符+阈值），中间可夹「至」「~」分隔字 */
+.mp-2col{display:flex;align-items:center;gap:8px}
+.mp-2col>*{flex:1;min-width:0}
+.mp-2col .sep{flex:0 0 auto;font-size:12px;color:var(--mp-tw3)}
+/* 带单位后缀的数字输入 */
+.mp-unit{position:relative;display:flex;align-items:center}
+.mp-unit .mp-inp{padding-right:44px}
+.mp-unit .u{position:absolute;right:12px;font-size:12px;color:var(--mp-tw3);pointer-events:none}
+
+/* 七天多选格 + 快捷按钮 */
+.mp-week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.mp-week .wd{height:38px;display:flex;align-items:center;justify-content:center;border-radius:9px;
+  border:1px solid var(--mp-bd);background:var(--mp-card);font-size:13px;color:var(--mp-tx);
+  cursor:pointer;user-select:none}
+.mp-week .wd.on{border-color:var(--mp-primary);background:var(--mp-primary-dim);
+  color:var(--mp-primary);font-weight:700}
+.mp-week-quick{display:flex;gap:8px;margin-top:8px}
+.mp-week-quick .qk{flex:1;height:32px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;background:#EEF2F8;color:var(--mp-ts);font-size:12px;font-weight:650;
+  cursor:pointer;user-select:none}
+.mp-week-quick .qk:active{background:#E2E8F2}
+
+/* 小按钮（+ 添加 / 一键排除节假日） */
+.mp-mini-btn{flex:0 0 auto;min-width:76px;height:44px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--mp-primary);border-radius:10px;background:var(--mp-primary-dim);
+  color:var(--mp-primary);font-size:13px;font-weight:700;cursor:pointer;user-select:none}
+.mp-mini-btn.wide{flex:1;width:100%}
+.mp-mini-btn:active{opacity:.8}
+
+/* 排除日期 chips */
+.mp-exlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mp-exlist .ex{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 6px 0 10px;
+  border-radius:8px;background:var(--mp-wn-dim);color:var(--mp-wn);font-size:12px;font-weight:650}
+.mp-exlist .ex i{font-style:normal;font-size:15px;line-height:1;padding:0 4px;cursor:pointer;opacity:.75}
+.mp-exlist .ex i:active{opacity:1}
+
+/* 动态行（触发条件 / 执行动作）：头部 = 前缀/序号 + 类型下拉 + 删除；主体 = 该类型参数区 */
+.mp-dyn-row{margin-top:10px;padding:10px;border:1px solid var(--mp-bd);border-radius:12px;background:#FAFBFD}
+.mp-dyn-row .hd{display:flex;align-items:center;gap:8px}
+.mp-dyn-row .hd .pfx{flex:0 0 auto;min-width:26px;font-size:12px;font-weight:700;color:var(--mp-primary)}
+.mp-dyn-row .hd .idx{flex:0 0 auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--mp-primary-dim);color:var(--mp-primary);font-size:12px;font-weight:800}
+.mp-dyn-row .hd .mp-sel{flex:1;min-width:0;min-height:40px;background-color:var(--mp-card)}
+.mp-dyn-row .hd .del{flex:0 0 auto;width:32px;height:40px;display:flex;align-items:center;justify-content:center;
+  color:var(--mp-tw3);font-size:20px;cursor:pointer;user-select:none}
+.mp-dyn-row .hd .del:active{color:var(--mp-er)}
+.mp-dyn-row .bd{margin-top:8px}
+.mp-dyn-row .bd .mp-seg.sm{background:#E9EEF6}
+/* 动作参数子行：短标签横排（这些标签都短，横排更紧凑） */
+.mp-sub-fr{display:flex;align-items:center;gap:10px;padding:7px 0}
+.mp-sub-fr .l{flex:0 0 auto;width:78px;font-size:13px;color:var(--mp-ts)}
+.mp-sub-fr>*:not(.l){flex:1;min-width:0}
+.mp-sub-fr .mp-sel,.mp-sub-fr .mp-inp{min-height:40px;background-color:var(--mp-card)}
+.mp-sub-fr.col{flex-direction:column;align-items:stretch;gap:8px}
+.mp-sub-fr.col .l{width:auto}
+.mp-chips-wrap{display:flex;flex-wrap:wrap;gap:7px}
+.mp-chip.sm{height:30px;padding:0 12px;font-size:12px}
+
+/* 虚线添加按钮 */
+.mp-add-btn{margin-top:10px;height:42px;display:flex;align-items:center;justify-content:center;
+  border:1px dashed var(--mp-primary);border-radius:10px;color:var(--mp-primary);
+  font-size:13px;font-weight:700;cursor:pointer;user-select:none}
+.mp-add-btn:active{background:var(--mp-primary-dim)}
+.mp-add-btn.dis{border-color:var(--mp-bd);color:var(--mp-tw3)}
+
+/* 「持续满足条件」虚线卡片 */
+.mp-hold{margin-top:12px;padding:12px;border:1px dashed #C9D4E4;border-radius:12px;background:#FAFBFD}
+.mp-hold .hd{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;min-height:24px}
+.mp-hold .hd .tx{font-size:13px;font-weight:650;color:var(--mp-tx)}
+.mp-hold .hint{margin-top:8px;font-size:11px;line-height:1.6;color:var(--mp-tw3)}
+
+/* 风水联动：所引用策略的只读参数表 */
+.mp-lib-view{margin-top:10px;padding:4px 12px;border-radius:10px;background:var(--mp-primary-dim)}
+.mp-lib-view .r{display:flex;align-items:center;justify-content:space-between;min-height:34px;
+  border-top:1px solid rgba(36,87,214,.1)}
+.mp-lib-view .r:first-child{border-top:none}
+.mp-lib-view .r .l{font-size:12px;color:var(--mp-ts)}
+.mp-lib-view .r .v{font-size:13px;font-weight:700;color:var(--mp-primary)}
+
+/* 生效范围房间树：复用 .mp-arb-row 三级行，勾选框与展开箭头分离点击 */
+#roomTree .mp-arb-row .mp-check{margin-right:2px}
+#roomTree .mp-arb-row .bd{cursor:pointer}

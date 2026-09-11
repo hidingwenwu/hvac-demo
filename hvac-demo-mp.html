@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>空调集控管家</title>
+<link rel="stylesheet" href="mp/mp.css">
+</head>
+<body>
+<div id="stage"><div id="phone">
+  <div id="navbar"><span id="nb-back"></span><span id="nb-title"></span><span id="nb-right"></span></div>
+  <div id="pages"></div>
+  <div id="tabbar"></div>
+</div></div>
+<div id="ui-layer"></div>
+<script src="mp/data.js"></script>
+<script src="mp/icons.js"></script>
+<script src="mp/pages/login.js"></script>
+<script src="mp/pages/login-bind.js"></script>
+<script src="mp/pages/home.js"></script>
+<script src="mp/pages/device.js"></script>
+<script src="mp/pages/device-detail.js"></script>
+<script src="mp/pages/group-list.js"></script>
+<script src="mp/pages/group-detail.js"></script>
+<script src="mp/pages/group-form.js"></script>
+<script src="mp/pages/schedule-list.js"></script>
+<script src="mp/pages/schedule-form.js"></script>
+<script src="mp/pages/strategy-list.js"></script>
+<script src="mp/pages/strategy-form.js"></script>
+<script src="mp/pages/env-list.js"></script>
+<script src="mp/pages/ac-room.js"></script>
+<script src="mp/pages/ac-room-bind.js"></script>
+<script src="mp/pages/controller.js"></script>
+<script src="mp/pages/elec-admin.js"></script>
+<script src="mp/pages/elec-tenant-list.js"></script>
+<script src="mp/pages/elec-tenant-detail.js"></script>
+<script src="mp/pages/me.js"></script>
+<script src="mp/pages/me-profile.js"></script>
+<script src="mp/pages/login-settings.js"></script>
+<script src="mp/pages/about.js"></script>
+<script>
+/* ── 路由：页面栈模拟小程序导航 ── */
+MP.TABS=['home','device','me'];
+MP.stack=[];
+MP.cur=function(){ return MP.stack[MP.stack.length-1]; };
+MP.parseHash=function(){ const h=location.hash.replace(/^#\/?/,''); return h||'login'; };
+MP.renderFrame=function(){
+  const f=MP.cur(), pg=MP.pages[f.name], el=f.el;
+  el.innerHTML=''; pg.render(el,f.params||{});
+  document.getElementById('nb-title').textContent=pg.title||'';
+  document.getElementById('nb-back').textContent=(MP.stack.length>1&&!pg.tab)?'‹':'';
+  const rt=document.getElementById('nb-right');
+  rt.innerHTML=pg.note?'<span class="mp-note-btn">'+MP.icon('info')+'</span>':'';
+  if(pg.note)rt.querySelector('.mp-note-btn').onclick=()=>MP.ui.note(pg.note);
+  document.getElementById('tabbar').style.display=pg.tab?'flex':'none';
+  MP.renderTabs();
+  if(pg.mount)pg.mount(el,f.params||{});
+};
+MP.go=function(name,params){   /* navigateTo：右滑进入 */
+  const el=document.createElement('div'); el.className='mp-page pg-in-right';
+  document.getElementById('pages').appendChild(el);
+  MP.stack.push({name,params,el});
+  location.hash='/'+name; MP.renderFrame();
+  requestAnimationFrame(()=>el.classList.remove('pg-in-right'));
+};
+MP.back=function(){            /* navigateBack：左滑返回 */
+  if(MP.stack.length<=1)return;
+  const top=MP.stack.pop(); top.el.classList.add('pg-out-left');
+  setTimeout(()=>top.el.remove(),200);
+  const f=MP.cur(); location.hash='/'+f.name; MP.renderFrame();
+};
+MP.switchTab=function(name){   /* switchTab：栈重置到 Tab 主页 */
+  MP.stack.forEach(f=>f.el.remove());
+  const el=document.createElement('div'); el.className='mp-page';
+  document.getElementById('pages').appendChild(el);
+  MP.stack=[{name,el}];
+  location.hash='/'+name; MP.renderFrame();
+};
+MP.renderTabs=function(){      /* TabBar 3 项（V2.0 对齐现行小程序：首页/设备/我的；R2 起 SVG 线性图标） */
+  const defs=[['home','首页','home'],['device','设备','device'],['me','我的','me']];
+  const bar=document.getElementById('tabbar');
+  bar.innerHTML=defs.map(d=>'<div class="mp-tab'+(MP.cur().name===d[0]?' on':'')+'" data-t="'+d[0]+'"><i>'+MP.icon(d[2])+'</i><span>'+d[1]+'</span></div>').join('');
+  bar.querySelectorAll('.mp-tab').forEach(t=>t.onclick=()=>MP.switchTab(t.dataset.t));
+};
+/* ── 公共组件：MP.ui.toast / MP.ui.confirm / MP.ui.sheet / MP.ui.loading / MP.ui.note ── */
+MP.ui={
+  toast(msg,type){ const l=document.getElementById('ui-layer');
+    const d=document.createElement('div'); d.className='mp-toast '+(type||'info'); d.textContent=msg;
+    l.appendChild(d); setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),300)},2000); },
+  confirm(opt,onOk){ const l=document.getElementById('ui-layer');
+    const w=document.createElement('div'); w.className='mp-mask';
+    w.innerHTML='<div class="mp-modal"><div class="t">'+(opt.title||'提示')+'</div><div class="c">'+(opt.text||'')+'</div>'
+      +'<div class="f"><button class="mp-btn" data-a="no">'+(opt.cancelText||'取消')+'</button>'
+      +'<button class="mp-btn '+(opt.danger?'mp-btn-danger':'mp-btn-primary')+'" data-a="ok">'+(opt.okText||'确定')+'</button></div></div>';
+    l.appendChild(w);
+    w.querySelector('[data-a=no]').onclick=()=>w.remove();
+    w.querySelector('[data-a=ok]').onclick=()=>{w.remove();onOk&&onOk();}; },
+  sheet(opt,onPick){ const l=document.getElementById('ui-layer');
+    const w=document.createElement('div'); w.className='mp-mask mp-mask-sheet';
+    w.innerHTML='<div class="mp-sheet">'+(opt.title?'<div class="t">'+opt.title+'</div>':'')
+      +opt.actions.map(a=>'<div class="mp-sheet-item'+(a.danger?' danger':'')+'" data-k="'+a.key+'">'+a.label+'</div>').join('')
+      +'<div class="mp-sheet-cancel">取消</div></div>';
+    l.appendChild(w);
+    w.querySelector('.mp-sheet-cancel').onclick=()=>w.remove();
+    w.onclick=e=>{ if(e.target===w)w.remove(); };
+    w.querySelectorAll('.mp-sheet-item').forEach(it=>it.onclick=()=>{w.remove();onPick&&onPick(it.dataset.k);}); },
+  loading(text){ const l=document.getElementById('ui-layer');
+    const d=document.createElement('div'); d.className='mp-mask mp-loading'; d.id='mpLoading';
+    d.innerHTML='<div class="mp-spinner"></div><div>'+(text||'加载中…')+'</div>'; l.appendChild(d); },
+  hideLoading(){ const d=document.getElementById('mpLoading'); if(d)d.remove(); },
+  note(notes){ const l=document.getElementById('ui-layer');
+    const w=document.createElement('div'); w.className='mp-mask';
+    w.innerHTML='<div class="mp-modal mp-note"><div class="t">本页改造说明</div><div class="c">'
+      +notes.map(n=>'<div class="mp-note-row"><span class="mp-tag tag-'+({'简化':'info','优化':'ok','新增':'primary','删减':'er'}[n.type]||'info')+'">'+n.type+'</span>'+n.text+'</div>').join('')
+      +'</div><div class="f"><button class="mp-btn mp-btn-primary" data-a="ok">知道了</button></div></div>';
+    l.appendChild(w); w.querySelector('[data-a=ok]').onclick=()=>w.remove(); },
+};
+/* ── 启动：未登录强制进 login；hash 直达 Tab 页 ── */
+(function boot(){
+  let first=MP.parseHash();
+  if(!MP.state.get('loggedIn'))first='login';
+  if(!MP.pages[first])first='home';
+  if(MP.TABS.includes(first))MP.switchTab(first);
+  else{ /* 非 Tab 页（如 login）直达：栈底即为该页 */
+    const el=document.createElement('div'); el.className='mp-page';
+    document.getElementById('pages').appendChild(el);
+    MP.stack=[{name:first,el}]; location.hash='/'+first; MP.renderFrame(); }
+  document.getElementById('nb-back').onclick=()=>MP.back();
+  window.addEventListener('hashchange',()=>{ /* 浏览器返回键不做栈同步（原型简化） */ });
+})();
+</script>
+</body>
+</html>
