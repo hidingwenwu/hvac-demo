@@ -92,7 +92,7 @@ body{
   border-top:1px solid rgba(255,255,255,.08);margin:0 16px;padding:10px 0;flex-shrink:0;gap:24px;}
 .p-foot .rt{margin-left:auto;}
 
-/* ── 系统设备故障告警表格 ── */
+/* ── 最近故障(原系统设备故障告警):表头 + 滚动列表 ── */
 .tbl-hd{display:flex;font-size:13px;color:#8ea3c9;background:rgba(255,255,255,.05);
   margin:8px 16px 0;padding:9px 12px;border-radius:4px;flex-shrink:0;}
 .tbl-hd .c1{width:80px;}
@@ -102,6 +102,15 @@ body{
 .hd-ops{display:flex;align-items:center;gap:14px;margin-left:auto;font-size:12px;color:#c6d4f0;}
 .hd-ops .op-a{display:inline-flex;align-items:center;gap:4px;}
 .hd-ops .op-a b{font-style:normal;font-weight:700;color:#e8a23c;font-size:13px;}
+/* 最近故障滚动区:双份列表无缝循环,悬停暂停 */
+.f-scroll{flex:1;overflow:hidden;position:relative;margin:4px 16px 10px;min-height:0;}
+.f-track{display:flex;flex-direction:column;animation:fScroll linear infinite;}
+.f-scroll:hover .f-track{animation-play-state:paused;}
+.f-row{display:flex;font-size:13px;color:#d1d9ec;padding:7px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05);}
+.f-row .c1{width:80px;color:#7fb2ff;font-weight:600;white-space:nowrap;}
+.f-row .c2{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.f-row .c3{width:150px;text-align:right;color:#8ea3c9;white-space:nowrap;}
+@keyframes fScroll{from{transform:translateY(0);}to{transform:translateY(-50%);}}
 
 /* ── 图表容器 ── */
 .chart{flex:1;min-height:0;}
@@ -147,7 +156,7 @@ body{
           <div class="st"><div class="l"><span class="ic">➤</span>运行数</div><div class="n">30</div></div>
           <div class="st"><div class="l"><span class="ic">⬢</span>锁定数</div><div class="n">587</div></div>
           <div class="st"><div class="l"><span class="ic">◷</span>定时任务数</div><div class="n">1</div></div>
-          <div class="st"><div class="l"><span class="ic err">▲</span>故障数</div><div class="n err">1</div></div>
+          <div class="st"><div class="l"><span class="ic err">▲</span>故障数</div><div class="n err" id="acFaultN">–</div></div>
         </div>
         <div class="p-foot"><span>品牌:海信</span><span>类型:多联机</span><span class="rt">空调系统数量:92</span></div>
       </div>
@@ -164,14 +173,15 @@ body{
         </div>
       </div>
 
-      <!-- 行4:系统设备故障告警 -->
+      <!-- 行4:最近故障(空调故障中未恢复的全部记录,与故障预警同口径) -->
       <div class="panel">
         <div class="p-hd">
-          <div class="p-title">系统设备故障告警</div>
+          <div class="p-title">最近故障</div>
           <div class="hd-ops"><span class="op-a"><b>A</b>自动</span><span class="op-a">◉ 隐藏</span></div>
         </div>
-        <div class="tbl-hd"><span class="c1">序号</span><span class="c2">告警信息</span><span class="c3">发生时间</span></div>
-        <div class="tbl-empty">暂无数据</div>
+        <div class="tbl-hd"><span class="c1">故障代码</span><span class="c2">故障信息</span><span class="c3">发生时间</span></div>
+        <div class="f-scroll" id="fScroll"><div class="f-track" id="fTrack"></div></div>
+        <div class="tbl-empty" id="fEmpty" style="display:none">暂无数据</div>
       </div>
     </div>
 
@@ -230,7 +240,30 @@ body{
   </div>
 </div>
 
+<script src="_alarm-data.js"></script>
 <script>
+/* ============ 故障预警联动(口径与故障预警一致,见 _alarm-data.js $alarmAcActive) ============
+   空调状态总览-故障数 = 空调故障中未恢复的故障总数(未恢复=故障恢复时间为空,项目屏蔽不计);
+   最近故障面板 = 同一清单滚动展示(故障代码/故障信息/发生时间,按发生时间倒序) */
+(function(){
+  var rows=$alarmAcActive();
+  document.getElementById('acFaultN').textContent=rows.length;
+  if(!rows.length){
+    document.getElementById('fScroll').style.display='none';
+    document.getElementById('fEmpty').style.display='flex';
+    return;
+  }
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  var html=rows.map(function(f){
+    var e=$alarmProjEntry(f.brand,f.code);
+    var info=(e&&e.name)||'未知故障';   /* 未收录代码与故障详情同口径显示「未知故障」 */
+    return '<div class="f-row"><span class="c1">'+esc(f.code)+'</span><span class="c2">'+esc(info)+'</span><span class="c3">'+f.devTime+'</span></div>';
+  }).join('');
+  var track=document.getElementById('fTrack');
+  track.innerHTML=html+html;   /* 双份拼接实现无缝循环滚动 */
+  track.style.animationDuration=(rows.length*1.4)+'s';
+})();
+
 /* ============ 真实时钟(日期,每秒刷新) ============ */
 function pad(n){return n<10?'0'+n:''+n;}
 function fmtD(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}

@@ -122,9 +122,9 @@ function renderTrend(){
   days.forEach((d,i)=>{
     const ago=N-1-i;
     if(ago<=6){
-      /* 与统计卡同口径:剔除项目屏蔽故障码;非计费项目剔除计费分摊类 */
+      /* 与统计卡同口径:剔除项目屏蔽故障码与已屏蔽运维故障类型;非计费项目剔除计费分摊类 */
       let n=0;
-      ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill'))n++;});
+      ALARM_OPS_ITEMS.forEach(r=>{if(r.last.slice(0,10)===d&&(PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill')&&$alarmOpsLevel(r)!==0)n++;});
       ALARM_AC_FAULTS.forEach(f=>{if(f.devTime.slice(0,10)===d&&$alarmFaultLevelProj(f)!==0)n++;});
       news.push(n);
       /* 处理完成:仅统计「已处理」(已忽略不计),并按当前项目与计费口径过滤;
@@ -133,7 +133,7 @@ function renderTrend(){
         const s=stAll[k];
         if(s.st!=='done'||(s.time||'').slice(0,10)!==d)return false;
         const r=opsById[k];
-        if(r)return PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill';
+        if(r)return (PROJ_BILL||ALARM_OPS_CATS[r.cat]!=='bill')&&$alarmOpsLevel(r)!==0;
         const f=acById[k];
         if(f)return $alarmFaultLevelProj(f)!==0;
         return false;

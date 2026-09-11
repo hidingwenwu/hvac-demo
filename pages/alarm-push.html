@@ -35,39 +35,49 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 </style>
 </head>
 <body>
-<!-- 本页仅飞奕技术支持运维人员使用,不对项目用户开放(角色约束见需求说明文档,页面内不展示) -->
-<!-- 筛选栏:下拉选择即生效,项目名称输入即筛 -->
+<!-- 本页仅飞奕技术支持运维人员使用,不对项目用户开放(角色约束见需求说明文档,页面内不展示)
+     页面跟随右上角项目切换,仅管理当前项目的短信推送任务;一行=一套推送任务 -->
 <div class="fb">
-  <div class="fi"><input id="fName" list="projList" placeholder="项目名称" style="width:200px" oninput="doQuery()"><datalist id="projList"></datalist></div>
-  <div class="fi"><select id="fSms" style="width:110px" onchange="doQuery()"><option value="">短信推送</option><option value="1">开启</option><option value="0">关闭</option></select></div>
-  <div class="fi"><select id="fLv" style="width:110px" onchange="doQuery()"><option value="">故障等级</option><option value="1">含故障</option><option value="2">含警示</option><option value="3">含提示</option></select></div>
+  <div class="fi"><input id="fName" placeholder="任务名称" style="width:180px" oninput="doQuery()"></div>
+  <div class="fi"><select id="fSt" style="width:110px" onchange="doQuery()"><option value="">启停状态</option><option value="1">启用</option><option value="0">停用</option></select></div>
   <div class="fi"><select id="fMode" style="width:120px" onchange="doQuery()"><option value="">推送方式</option><option value="realtime">实时推送</option><option value="daily">每日汇总</option></select></div>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
+  <button class="btn" onclick="openCodeLib()">故障代码库</button>
+  <button class="btn btnp" style="margin-left:auto" onclick="openDrawer(null)">+ 新增推送任务</button>
 </div>
 
-<!-- 全项目推送配置表 -->
+<!-- 当前项目推送任务表(一行=一套推送任务,任务间范围/接收人/方式/免打扰各自独立) -->
 <div class="tw">
   <table>
     <thead><tr>
-      <th>项目名称</th><th>短信推送</th><th>推送范围</th><th>推送方式</th><th>最近推送</th><th>操作</th>
+      <th>任务名称</th><th>启用</th><th>推送范围</th><th>推送方式</th><th>接收人</th><th>最近推送</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
 <div id="pager"></div>
 
-<!-- 推送配置抽屉(本页全部为短信推送管理:开关/接收人/推送范围/推送策略) -->
+<!-- 推送任务抽屉(新增/编辑共用:任务名称/启停/推送范围/接收人/推送策略) -->
 <div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer" style="width:560px">
-  <div class="dh"><span id="drawerTitle">推送配置</span><span class="dx" onclick="closeDrawer()">✕</span></div>
+  <div class="dh"><span id="drawerTitle">新增推送任务</span><span class="dx" onclick="closeDrawer()">✕</span></div>
   <div class="db">
     <div class="sec">
       <div class="sec-t">基本</div>
       <div class="st-row">
-        <span class="fl2">启用短信推送</span>
+        <span class="fl2">所属项目</span>
+        <span id="dProj" style="color:var(--tx)"></span>
+      </div>
+      <div class="st-row">
+        <span class="fl2"><span style="color:var(--er)">*</span> 任务名称</span>
+        <input id="dTaskName" placeholder="如:故障级实时提醒" style="flex:1" maxlength="30">
+      </div>
+      <div class="st-row">
+        <span class="fl2">启用该任务</span>
         <span class="switch" id="dEnabled" onclick="this.classList.toggle('on')"></span>
       </div>
+      <div class="tip" style="margin-left:98px">同一项目可配置多套推送任务,任务间互不影响;同一预警同时命中多套启用中的任务时,按各任务分别推送。</div>
     </div>
     <div class="sec">
       <div class="sec-t">推送范围</div>
@@ -82,7 +92,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
         <label class="ck"><input type="checkbox" id="dCatOps"> 项目运维</label>
         <label class="ck"><input type="checkbox" id="dCatAc"> 空调故障</label>
       </div>
-      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送故障级;项目屏蔽的故障码不产生推送。</div>
+      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送故障级;项目屏蔽的故障不产生推送。</div>
     </div>
     <div class="sec">
       <div class="sec-t">接收人(可多个)</div>
@@ -129,7 +139,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
   </div>
 </div>
 
-<!-- 推送记录弹窗(按项目) -->
+<!-- 推送记录弹窗(按任务) -->
 <div class="modal" id="dlgLog">
   <div class="dialog" style="width:1280px;max-width:96vw">
     <div class="dh"><span id="logTitle">推送记录</span><span class="dx" onclick="$modalClose('dlgLog')">✕</span></div>
@@ -171,94 +181,103 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 <script src="_ui.js"></script>
 <script src="_alarm-data.js"></script>
 <script>
-/* 项目列表:真实项目 + 演示项目共 100 个示例(数据层 ALARM_PUSH_PROJECTS,不影响主框架项目选择器) */
-let filtered=ALARM_PUSH_PROJECTS.slice();
+/* 当前项目:跟随主框架右上角项目选择器(切换项目时主框架会重载本页) */
+const curProj=$alarmCurProj();
+let tasks=$alarmPushCfgGet(curProj).strategies;
+let filtered=tasks.slice();
 const pg={total:filtered.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderTable()};
-let curProj=null;
+let editId=null;   /* null=新增 */
 let draft=null;
 
-/* 最近推送时间 */
-function lastPush(proj){
-  const row=$alarmPushLogGet().find(r=>r.proj===proj);
+function saveTasks(){$alarmPushCfgSet(curProj,{strategies:tasks});}
+function taskOf(id){return tasks.find(t=>t.id===id)||null;}
+
+/* 最近推送时间(按任务) */
+function lastPush(t){
+  const row=$alarmPushLogGet().find(r=>r.proj===curProj&&r.taskId===t.id);
   return row?row.time:'—';
 }
-function scopeText(cfg){
+function scopeText(sc){
   const parts=[];
-  if(cfg.scope.levels&&cfg.scope.levels.length)
-    parts.push(cfg.scope.levels.slice().sort().map(l=>ALARM_LEVELS[l].short).join('/'));
-  if(cfg.scope.cats&&cfg.scope.cats.length)
-    parts.push(cfg.scope.cats.map(c=>c==='ops'?'项目运维':'空调故障').join('+'));
+  if(sc.levels&&sc.levels.length)
+    parts.push(sc.levels.slice().sort().map(l=>ALARM_LEVELS[l].short).join('/'));
+  if(sc.cats&&sc.cats.length)
+    parts.push(sc.cats.map(c=>c==='ops'?'项目运维':'空调故障').join('+'));
   return parts.length?parts.join(' · '):'<span class="text-sub">未选择</span>';
 }
-/* 项目推送配置:null=从未配置(种子与本地存储均无记录),列表推送范围/推送方式列显示「—」 */
-function cfgOf(p){
-  const saved=$alarmPushCfgAll()[p];
-  return ((saved&&typeof saved==='object')||ALARM_PUSH_CFG_SEED[p])?$alarmPushCfgGet(p):null;
+/* 接收人列:首个接收人 + 等 N 人,悬浮可见全部 */
+function recvText(t){
+  if(!t.receivers.length)return '<span class="text-sub">—</span>';
+  const names=t.receivers.map(r=>r.name);
+  return `<span title="${names.join('、')}">${names[0]}${names.length>1?` 等 ${names.length} 人`:''}</span>`;
+}
+function modeCell(t){
+  const main=t.mode==='daily'?`每日汇总 ${t.dailyTime}`:'实时推送';
+  const sub=(t.mode!=='daily'&&t.dnd&&t.dnd.on)?`<div class="tpl">免打扰 ${t.dnd.from}-${t.dnd.to}</div>`:'';
+  return main+sub;
 }
 function doQuery(){
   const name=document.getElementById('fName').value.trim();
-  const sms=document.getElementById('fSms').value;
-  const lv=document.getElementById('fLv').value;
+  const st=document.getElementById('fSt').value;
   const md=document.getElementById('fMode').value;
-  filtered=ALARM_PUSH_PROJECTS.filter(p=>{
-    if(name&&p.indexOf(name)<0)return false;
-    const cfg=cfgOf(p);
-    const enabled=cfg?cfg.enabled:false;   /* 从未配置视同关闭 */
-    if(sms!==''&&enabled!==(sms==='1'))return false;
-    if(lv!==''&&(!cfg||!(cfg.scope.levels||[]).includes(+lv)))return false;
-    if(md!==''&&(!cfg||(cfg.strategy.mode==='daily'?'daily':'realtime')!==md))return false;
+  filtered=tasks.filter(t=>{
+    if(name&&t.name.indexOf(name)<0)return false;
+    if(st!==''&&t.enabled!==(st==='1'))return false;
+    if(md!==''&&t.mode!==md)return false;
     return true;
   });
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  ['fName'].forEach(id=>document.getElementById(id).value='');
-  ['fSms','fLv','fMode'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fName').value='';
+  document.getElementById('fSt').value='';
+  document.getElementById('fMode').value='';
   doQuery();
 }
 
 function renderTable(){
   const start=(pg.page-1)*pg.size;
   const rows=filtered.slice(start,start+pg.size);
-  document.getElementById('tbody').innerHTML=rows.length?rows.map(p=>{
-    const cfg=cfgOf(p);   /* null=从未配置:推送范围/推送方式显示「—」 */
-    return `<tr>
-      <td>${p}</td>
-      <td><span class="switch ${cfg&&cfg.enabled?'on':''}" onclick="toggleCh('${p}','enabled',this)"></span></td>
-      <td>${cfg?scopeText(cfg):'—'}</td>
-      <td>${cfg?(cfg.strategy.mode==='daily'?'每日汇总 '+cfg.strategy.dailyTime:'实时推送'):'—'}</td>
-      <td>${lastPush(p)}</td>
+  document.getElementById('tbody').innerHTML=rows.length?rows.map(t=>`<tr>
+      <td><b>${t.name}</b></td>
+      <td><span class="switch ${t.enabled?'on':''}" onclick="toggleTask('${t.id}')"></span></td>
+      <td>${scopeText(t.scope)}</td>
+      <td>${modeCell(t)}</td>
+      <td>${recvText(t)}</td>
+      <td>${lastPush(t)}</td>
       <td><span class="op">
-        <a onclick="openDrawer('${p}')">推送配置</a>
-        <a onclick="openLog('${p}')">推送记录</a>
-        <a onclick="openCodeLib('${p}')">故障代码库</a>
+        <a onclick="openDrawer('${t.id}')">编辑</a>
+        <a onclick="openLog('${t.id}')">推送记录</a>
+        <a class="danger" onclick="delTask('${t.id}')">删除</a>
       </span></td>
-    </tr>`;
-  }).join('')
-  :'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+    </tr>`).join('')
+  :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">当前项目暂无推送任务,点击右上角「+ 新增推送任务」创建</span></div></td></tr>';
 }
 
-/* 行内开关:短信通道即时启停 */
-function toggleCh(proj,key,el){
-  const cfg=$alarmPushCfgGet(proj);
-  cfg[key]=!cfg[key];
-  if(key==='enabled'&&cfg.enabled&&!cfg.receivers.length){
-    $msg(`「${proj}」尚未配置接收人,请先点「短信推送配置」完善`,'warning');
+/* 行内开关:任务即时启停 */
+function toggleTask(id){
+  const t=taskOf(id);if(!t)return;
+  t.enabled=!t.enabled;
+  if(t.enabled&&!t.receivers.length){
+    $msg(`「${t.name}」尚未配置接收人,请先点「编辑」完善`,'warning');
   }
-  $alarmPushCfgSet(proj,cfg);
+  saveTasks();
   renderTable();
-  $msg(`「${proj}」短信推送已${cfg[key]?'开启':'关闭'}`);
+  $msg(`「${t.name}」已${t.enabled?'启用':'停用'}`);
 }
 
-/* ── 推送配置抽屉(本页全部为短信推送管理:开关/推送范围/接收人/推送策略) ── */
-function openDrawer(proj){
-  curProj=proj;
-  draft=$alarmPushCfgGet(proj);
-  document.getElementById('drawerTitle').textContent='推送配置 - '+proj;
+/* ── 推送任务抽屉(新增/编辑共用) ── */
+function openDrawer(id){
+  editId=id||null;
+  const src=id?taskOf(id):null;
+  draft=$alarmPushStrategyNorm(src?JSON.parse(JSON.stringify(src)):{id:'st-'+Date.now(),enabled:true});
+  document.getElementById('drawerTitle').textContent=src?('编辑推送任务 - '+src.name):'新增推送任务';
+  document.getElementById('dProj').textContent=curProj;
+  document.getElementById('dTaskName').value=draft.name;
   document.getElementById('dEnabled').classList.toggle('on',!!draft.enabled);
-  /* 推送范围(项目级,作用于短信推送) */
-  const sc=draft.scope||{levels:[1],cats:['ops','ac']};
+  /* 推送范围 */
+  const sc=draft.scope;
   document.getElementById('dLv1').checked=(sc.levels||[]).includes(1);
   document.getElementById('dLv2').checked=(sc.levels||[]).includes(2);
   document.getElementById('dLv3').checked=(sc.levels||[]).includes(3);
@@ -267,18 +286,15 @@ function openDrawer(proj){
   document.getElementById('dAccSel').innerHTML='<option value="">从平台账号选择…</option>'+
     ALARM_ACCOUNTS.map(a=>`<option value="${a.name}">${a.name}(${a.phone})</option>`).join('');
   renderReceivers();
-  /* 策略(mode 已在数据层合并防御,此处再兜底一次) */
-  const mode=(draft.strategy.mode==='daily')?'daily':'realtime';
-  document.querySelector(`input[name="dMode"][value="${mode}"]`).checked=true;
-  document.getElementById('dDailyTime').value=draft.strategy.dailyTime||'09:00';
-  document.getElementById('dDnd').classList.toggle('on',!!(draft.strategy.dnd&&draft.strategy.dnd.on));
+  /* 策略 */
+  document.querySelector(`input[name="dMode"][value="${draft.mode}"]`).checked=true;
+  document.getElementById('dDailyTime').value=draft.dailyTime||'09:00';
+  document.getElementById('dDnd').classList.toggle('on',!!(draft.dnd&&draft.dnd.on));
   syncMode();syncDnd();
-  if(draft.strategy.dnd){
-    document.getElementById('dDndFrom').value=draft.strategy.dnd.from||'22:00';
-    document.getElementById('dDndTo').value=draft.strategy.dnd.to||'08:00';
-    document.getElementById('dExempt').checked=draft.strategy.dnd.exemptL1!==false;
-  }
-  resetCodeUI();   /* 切换项目后清空未完成的验证码流程 */
+  document.getElementById('dDndFrom').value=draft.dnd.from||'22:00';
+  document.getElementById('dDndTo').value=draft.dnd.to||'08:00';
+  document.getElementById('dExempt').checked=draft.dnd.exemptL1!==false;
+  resetCodeUI();   /* 切换任务后清空未完成的验证码流程 */
   document.getElementById('dName').value='';
   document.getElementById('dPhone').value='';
   document.getElementById('drawerMask').classList.add('show');
@@ -383,8 +399,9 @@ function delReceiver(i){
   renderReceivers();
 }
 
-/* 收集草稿(开关/推送范围/推送策略;接收人操作已实时写入 draft) */
+/* 收集草稿(接收人操作已实时写入 draft) */
 function collectDraft(){
+  draft.name=document.getElementById('dTaskName').value.trim();
   draft.enabled=document.getElementById('dEnabled').classList.contains('on');
   const levels=[];
   if(document.getElementById('dLv1').checked)levels.push(1);
@@ -396,34 +413,46 @@ function collectDraft(){
   draft.scope={levels,cats};
   const mode=document.querySelector('input[name="dMode"]:checked').value;
   const dndOn=mode!=='daily'&&document.getElementById('dDnd').classList.contains('on');   /* 每日汇总无免打扰,保存即不生效 */
-  draft.strategy={
-    mode,
-    dailyTime:document.getElementById('dDailyTime').value||'09:00',
-    dnd:{on:dndOn,from:document.getElementById('dDndFrom').value||'22:00',to:document.getElementById('dDndTo').value||'08:00',exemptL1:document.getElementById('dExempt').checked},
-  };
+  draft.mode=mode;
+  draft.dailyTime=document.getElementById('dDailyTime').value||'09:00';
+  draft.dnd={on:dndOn,from:document.getElementById('dDndFrom').value||'22:00',to:document.getElementById('dDndTo').value||'08:00',exemptL1:document.getElementById('dExempt').checked};
 }
 function saveCfg(){
   collectDraft();
+  if(!draft.name){$msg('请填写任务名称','error');return;}
   if(draft.enabled&&!draft.receivers.length){$msg('已开启推送但未添加接收人,请先添加','error');return;}
   if(!draft.scope.levels.length||!draft.scope.cats.length){$msg('推送范围需至少选择一个故障等级和一个故障类别','error');return;}
   /* 每日汇总时刻限定 5:00-12:00(上午完成前一自然日汇总推送,避免午后/晚间打扰) */
-  if(draft.strategy.mode==='daily'){
-    const t=draft.strategy.dailyTime;
+  if(draft.mode==='daily'){
+    const t=draft.dailyTime;
     if(!t||t<'05:00'||t>'12:00'){$msg('每日汇总推送时刻可选范围为 5:00-12:00','error');return;}
   }
-  $alarmPushCfgSet(curProj,draft);
+  const old=taskOf(draft.id);
+  if(old)Object.assign(old,draft);
+  else tasks.push(draft);
+  saveTasks();
   closeDrawer();
-  renderTable();
-  $msg(`「${curProj}」推送配置已保存`);
+  doQuery();
+  $msg(`推送任务「${draft.name}」已保存`);
+}
+/* 删除任务:二次确认;历史推送记录不再展示(后台流水保留) */
+function delTask(id){
+  const t=taskOf(id);if(!t)return;
+  $confirm(`确定删除推送任务「${t.name}」吗?删除后该任务不再推送短信,其历史推送记录不再展示(后台流水保留)。`,()=>{
+    tasks=tasks.filter(x=>x.id!==id);
+    saveTasks();
+    doQuery();
+    $msg(`推送任务「${t.name}」已删除`);
+  });
 }
 
-/* ── 推送记录弹窗(按项目) ── */
-let logProj=null;
+/* ── 推送记录弹窗(按任务) ── */
+let logTask=null;
 let logFiltered=[];
 const logPg={total:0,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderLogTable()};
-function openLog(proj){
-  logProj=proj;
-  document.getElementById('logTitle').textContent='推送记录 - '+proj;
+function openLog(id){
+  logTask=taskOf(id);if(!logTask)return;
+  document.getElementById('logTitle').textContent='推送记录 - '+logTask.name;
   doResetLogFields();
   doQueryLog();
   $modal('dlgLog');
@@ -436,7 +465,7 @@ function lv(id){return document.getElementById(id).value;}
 function doQueryLog(){
   const type=lv('lType'),send=lv('lSend'),recv=lv('lRecv').trim(),s=lv('lStart'),e=lv('lEnd');
   logFiltered=$alarmPushLogGet().filter(r=>
-    r.proj===logProj&&
+    r.proj===curProj&&r.taskId===logTask.id&&
     (!type||r.type===type)&&
     (!send||r.send===send)&&
     (!recv||r.receiver.includes(recv)||(r.phone||'').includes(recv))&&
@@ -465,27 +494,24 @@ function renderLogTable(){
       <td>${r.send==='发送失败'?'<span class="text-er">发送失败</span>':r.send}</td>
       <td>${r.time}</td>
     </tr>`).join('')
-    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">该项目暂无推送记录</span></div></td></tr>';
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">该任务暂无推送记录</span></div></td></tr>';
 }
 
-/* ── 故障代码库弹窗(iframe 复用页面,按项目隔离配置) ── */
-function openCodeLib(proj){
-  const p=proj||$alarmCurProj();
-  document.getElementById('clTitle').textContent=`故障代码库(当前项目:${p})`;
-  document.getElementById('clFrame').src='alarm-code-lib.html?proj='+encodeURIComponent(p);
+/* ── 故障代码库弹窗(iframe 复用页面,按当前项目维护) ── */
+function openCodeLib(){
+  document.getElementById('clTitle').textContent=`故障代码库(当前项目:${curProj})`;
+  document.getElementById('clFrame').src='alarm-code-lib.html?proj='+encodeURIComponent(curProj);
   $modal('dlgCodeLib');
 }
 function closeCodeLib(){
   $modalClose('dlgCodeLib');
   document.getElementById('clFrame').src='about:blank';
   $alarmNotifyParent();   /* 代码库可能有改动,刷新主框架铃铛 */
-  renderTable();          /* 推送范围/最近推送等展示同步刷新 */
+  renderTable();        /* 列表展示同步刷新 */
 }
 /* 点遮罩关闭同样走 closeCodeLib,保证铃铛与列表刷新 */
 document.getElementById('dlgCodeLib').addEventListener('click',e=>{if(e.target.id==='dlgCodeLib')closeCodeLib();});
 
-/* 项目名称筛选:支持手动输入或下拉选择 */
-document.getElementById('projList').innerHTML=ALARM_PUSH_PROJECTS.map(p=>`<option value="${p}">`).join('');
 doQuery();
 </script>
 </body>

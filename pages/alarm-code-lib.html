@@ -19,6 +19,8 @@
 .scn-tip{font-size:12px;line-height:1.6;padding:8px 12px;border-radius:4px;display:none;}
 .scn-tip.s1{background:var(--ok-dim);border:1px solid rgba(103,194,58,.3);color:var(--ok);}
 .scn-tip.s2{background:var(--wn-dim);border:1px solid rgba(230,162,60,.3);color:var(--wn);}
+/* 运维故障被屏蔽行:等级/时长输入弱化 */
+tr.ops-off td:nth-child(5),tr.ops-off td:nth-child(6){opacity:.45;}
 </style>
 </head>
 <body>
@@ -27,18 +29,19 @@
   <div class="cur-proj">当前项目：<b id="curProjName"></b><span>（配置仅对当前项目生效）</span></div>
 </div>
 
-<!-- 页签:项目自定义 | 项目屏蔽 -->
+<!-- 页签:项目自定义 | 项目屏蔽 | 项目运维故障 -->
 <div class="tabs">
   <div class="tab active" data-t="add" onclick="pickTab('add')">项目自定义</div>
   <div class="tab" data-t="blk" onclick="pickTab('blk')">项目屏蔽</div>
+  <div class="tab" data-t="ops" onclick="pickTab('ops')">项目运维故障</div>
 </div>
 
-<!-- ═══════ 项目自定义(仅故障等级自定义) ═══════ -->
+<!-- ═══════ 项目自定义(故障等级 + 持续时长自定义) ═══════ -->
 <div id="tabAdd">
   <div class="hint-bar">
     <span class="hi">ⓘ</span>
     <span>以下故障码在本项目按自定义等级生效（不影响通用代码库与其他项目）。<br>
-    <span class="sub">适用场景：通用代码库中的故障等级与本项目认定不同。如遇通用代码库未收录的故障码需要监测，请联系技术人员维护至通用故障码库（维护后自动纳入全部项目监测范围）。</span></span>
+    <span class="sub">适用场景：通用代码库中的故障等级与本项目认定不同。如遇通用代码库未收录的故障码需要监测，请联系技术人员维护至通用故障码库（维护后自动纳入全部项目监测范围）。「持续时长」仅作用于短信推送：故障持续满该时长仍未恢复才触发推送（0=产生后立即推送），不影响故障记录生成与统计。</span></span>
   </div>
   <div class="fb" style="justify-content:flex-end">
     <button class="btn btns" onclick="openProjAdd(null)">+ 添加自定义故障码</button>
@@ -46,7 +49,7 @@
   <div class="tw">
     <table>
       <thead><tr>
-        <th>序号</th><th>品牌</th><th>故障代码</th><th>故障名称</th><th>通用等级</th><th>本项目等级</th><th>操作</th>
+        <th>序号</th><th>品牌</th><th>故障代码</th><th>故障名称</th><th>通用等级</th><th>本项目等级</th><th>持续时长(分钟)</th><th>操作</th>
       </tr></thead>
       <tbody id="tbAdd"></tbody>
     </table>
@@ -72,6 +75,27 @@
   </div>
 </div>
 
+<!-- ═══════ 项目运维故障(等级/持续时长/屏蔽,行内编辑+统一保存) ═══════ -->
+<div id="tabOps" style="display:none">
+  <div class="hint-bar">
+    <span class="hi">ⓘ</span>
+    <span>以下为项目运维故障的内置类型与默认等级，可按项目调整等级、设定持续时长或屏蔽（仅本项目生效，不影响其他项目），修改后点「保存」统一生效。<br>
+    <span class="sub">「屏蔽」后该类故障在本项目不再产生预警记录、不参与计数统计、不触发短信推送（历史记录同步不再展示），取消屏蔽后恢复；「持续时长」仅作用于短信推送：故障持续满该时长仍未恢复才触发推送（0=产生后立即推送），不影响故障记录生成与统计。</span></span>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>序号</th><th>故障名称</th><th>故障类别</th><th>默认等级</th><th>本项目等级</th><th>持续时长(分钟)</th><th>屏蔽</th>
+      </tr></thead>
+      <tbody id="tbOps"></tbody>
+    </table>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+    <button class="btn" onclick="resetOpsDraft()">取消</button>
+    <button class="btn btnp" onclick="saveOpsCfg()">保存</button>
+  </div>
+</div>
+
 <!-- 项目自定义:添加/编辑弹窗(仅 品牌+故障码+自定义等级;名称/描述/排查建议一律联查通用库) -->
 <div class="modal" id="dlgProjAdd">
   <div class="dialog" style="width:560px">
@@ -94,6 +118,9 @@
             <option value="2">警示(可继续运行,存在隐患)</option>
             <option value="3">提示(提示性信息,无需刻意处理)</option>
           </select>
+        </div>
+        <div class="form-item"><span class="fl"><span style="color:var(--er)">*</span> 持续时长<span class="opt">分钟;满时长未恢复才触发推送,0=立即推送</span></span>
+          <input type="number" id="paMinDur" value="0" min="0" step="1" style="width:120px">
         </div>
       </div>
     </div>
@@ -139,12 +166,15 @@ document.getElementById('curProjName').textContent=curProj;
 if(projParam)document.getElementById('curProjBar').style.display='none';
 
 let tab='add';
+/* 非计费项目:运维故障 tab 不显示计费分摊类(与全链路口径一致) */
+const PROJ_BILL=$alarmProjBill(curProj);
 function pickTab(t){
   tab=t;
   document.querySelectorAll('.tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.t===t));
   document.getElementById('tabAdd').style.display=t==='add'?'block':'none';
   document.getElementById('tabBlk').style.display=t==='blk'?'block':'none';
-  if(t==='add')renderAdd();else renderBlk();
+  document.getElementById('tabOps').style.display=t==='ops'?'block':'none';
+  if(t==='add')renderAdd();else if(t==='blk')renderBlk();else renderOps();
 }
 function lvTag(lv){const L=ALARM_LEVELS[lv];return `<span class="tag ${L.tag}">${L.lb}</span>`;}
 function renderBrandList(){
@@ -152,7 +182,7 @@ function renderBrandList(){
   document.getElementById('paBrandList').innerHTML=brands.map(b=>`<option value="${b}">`).join('');
 }
 
-/* ═══════ 项目自定义(仅故障等级自定义;通用库无此码时须先联系技术人员维护至通用故障码库) ═══════ */
+/* ═══════ 项目自定义(故障等级+持续时长自定义;通用库无此码时须先联系技术人员维护至通用故障码库) ═══════ */
 let paList=[];
 function projAddEntries(){
   const cfg=$alarmProjCodeGet(curProj);
@@ -160,6 +190,7 @@ function projAddEntries(){
     const raw=cfg.adds[k];
     const uni=$alarmCodeLookup(raw.brand,raw.code);
     return {key:k,brand:raw.brand,code:raw.code,level:raw.level,
+      minDur:(Number.isInteger(raw.minDur)&&raw.minDur>=0)?raw.minDur:0,
       name:uni?uni.name:'—',uniLevel:uni?uni.level:null};
   });
 }
@@ -172,12 +203,13 @@ function renderAdd(){
       <td>${e.name}</td>
       <td>${e.uniLevel?lvTag(e.uniLevel):'—'}</td>
       <td>${lvTag(e.level)}</td>
+      <td>${e.minDur>0?e.minDur+' 分钟':'<span class="text-sub">立即推送</span>'}</td>
       <td><span class="op">
         <a onclick="openProjAddIdx(${i})">编辑</a>
         <a class="danger" onclick="delProjAddIdx(${i})">删除</a>
       </span></td>
     </tr>`).join('')
-    :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无项目自定义故障码</span></div></td></tr>';
+    :'<tr><td colspan="8"><div class="empty"><span class="ei">📄</span><span class="et">暂无项目自定义故障码</span></div></td></tr>';
 }
 function openProjAddIdx(i){if(paList[i])openProjAdd(paList[i].key);}
 function delProjAddIdx(i){const e=paList[i];if(e)delProjAdd(e.key,e.name||e.code);}
@@ -194,6 +226,7 @@ function openProjAdd(key){
   document.getElementById('paBrand').disabled=!!key;
   document.getElementById('paCode').disabled=!!key;
   document.getElementById('paLevel').value=raw?String(raw.level):'2';
+  document.getElementById('paMinDur').value=raw&&Number.isInteger(raw.minDur)?raw.minDur:0;
   paKeyChange(true);
   $modal('dlgProjAdd');
 }
@@ -231,11 +264,14 @@ function doSaveProjAdd(){
   /* 仅支持等级自定义:通用库必须已收录该码 */
   const uni=$alarmCodeLookup(brand,code);
   if(!uni){$msg('通用代码库无此故障码,无法自定义等级;请联技术人员维护至通用故障码库','error');return;}
+  /* 持续时长:不小于 0 的整数分钟,0=故障产生后立即执行推送判断 */
+  const minDurStr=document.getElementById('paMinDur').value.trim();
+  if(!/^\d+$/.test(minDurStr)){$msg('持续时长需为不小于 0 的整数分钟','error');return;}
   const key=brand+'|'+code;   /* 键保留原始大小写;匹配时按规则容错(见 _alarm-data.js) */
   const cfg=$alarmProjCodeGet(curProj);
   if(!paEditKey&&$alarmProjAdd(cfg,brand,code)){$msg('该故障码已有项目自定义配置','error');return;}
   if(!paEditKey&&$alarmProjBlockedKey(cfg,brand,code)){$msg('该故障码在项目屏蔽清单中,请先取消屏蔽','error');return;}
-  cfg.adds[key]={brand,code,level:+document.getElementById('paLevel').value};
+  cfg.adds[key]={brand,code,level:+document.getElementById('paLevel').value,minDur:+minDurStr};
   $alarmProjCodeSet(curProj,cfg);
   $modalClose('dlgProjAdd');
   $msg(`「${brand}-${code}」本项目等级已自定义为${ALARM_LEVELS[+document.getElementById('paLevel').value].short}(通用库:${ALARM_LEVELS[uni.level].short}),立即生效`);
@@ -310,6 +346,68 @@ function unBlock(key){
   $alarmProjCodeSet(curProj,cfg);
   $msg(`已取消「${key.replace('|','-')}」的屏蔽`);
   renderBlk();
+}
+
+/* ═══════ 项目运维故障(行内编辑+统一保存;仅本项目生效) ═══════ */
+let opsDraft=null;   /* {故障名称:{level,blocked,minDur}} */
+let opsList=[];      /* 行索引 → 故障名称(避免把名称拼进事件属性) */
+function opsCats(){return Object.keys(ALARM_OPS_CATS).filter(c=>PROJ_BILL||ALARM_OPS_CATS[c]!=='bill');}
+function loadOpsDraft(){
+  opsDraft={};
+  opsList=opsCats();
+  opsList.forEach(c=>{
+    const cfg=$alarmOpsCfgOf(c,curProj);
+    opsDraft[c]={level:cfg.level,blocked:cfg.blocked,minDur:cfg.minDur};
+  });
+}
+function renderOps(){
+  if(!opsDraft)loadOpsDraft();
+  document.getElementById('tbOps').innerHTML=opsList.map((c,i)=>{
+    const d=opsDraft[c];
+    const def=ALARM_OPS_CAT_LV[c]||2;
+    return `<tr class="${d.blocked?'ops-off':''}">
+      <td>${i+1}</td>
+      <td>${c}</td>
+      <td>${ALARM_OPS_CAT_LABEL[ALARM_OPS_CATS[c]]}</td>
+      <td>${lvTag(def)}</td>
+      <td><select style="width:100px" ${d.blocked?'disabled':''} onchange="opsSetLv(${i},this.value)">
+        ${[1,2,3].map(l=>`<option value="${l}" ${d.level===l?'selected':''}>${ALARM_LEVELS[l].lb}</option>`).join('')}
+      </select></td>
+      <td><input type="number" min="0" step="1" value="${d.minDur}" style="width:80px" ${d.blocked?'disabled':''} onchange="opsSetDur(${i},this.value)"></td>
+      <td><span class="switch ${d.blocked?'on':''}" onclick="opsToggleBlock(${i})"></span></td>
+    </tr>`;
+  }).join('');
+}
+function opsSetLv(i,v){opsDraft[opsList[i]].level=+v;}
+function opsSetDur(i,v){opsDraft[opsList[i]].minDur=v;}
+function opsToggleBlock(i){opsDraft[opsList[i]].blocked=!opsDraft[opsList[i]].blocked;renderOps();}
+function resetOpsDraft(){loadOpsDraft();renderOps();$msg('已还原为已保存的配置');}
+function saveOpsCfg(){
+  /* 持续时长校验:不小于 0 的整数分钟 */
+  for(const c of opsList){
+    if(opsDraft[c].blocked)continue;
+    if(!/^\d+$/.test(String(opsDraft[c].minDur).trim())){$msg(`「${c}」持续时长需为不小于 0 的整数分钟`,'error');return;}
+  }
+  /* 新增屏蔽二次确认:屏蔽后不再产生记录/计数/推送,历史记录同步不再展示 */
+  const newly=opsList.filter(c=>opsDraft[c].blocked&&!$alarmOpsCfgOf(c,curProj).blocked);
+  const exec=()=>{
+    const cfg=$alarmProjCodeGet(curProj);
+    cfg.ops={};
+    opsList.forEach(c=>{
+      const d=opsDraft[c];
+      const def=ALARM_OPS_CAT_LV[c]||2;
+      const md=+String(d.minDur).trim()||0;
+      if(d.blocked||+d.level!==def||md>0)cfg.ops[c]={level:+d.level,blocked:!!d.blocked,minDur:md};
+    });
+    $alarmProjCodeSet(curProj,cfg);
+    loadOpsDraft();renderOps();
+    $msg('项目运维故障配置已保存,即时生效');
+  };
+  if(newly.length){
+    $confirm(`屏蔽后,以下故障在本项目不再产生预警记录、计数与短信推送(历史记录同步不再展示):${newly.join('、')}。是否继续?`,exec);
+    return;
+  }
+  exec();
 }
 
 renderAdd();

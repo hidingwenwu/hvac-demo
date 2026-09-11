@@ -245,7 +245,7 @@ let opsLvPick='';
 function renderNameOpts(){
   const cat=document.getElementById('oCat').value;
   const cats=Object.keys(ALARM_OPS_CATS).filter(c=>
-    (!cat||ALARM_OPS_CATS[c]===cat)&&(PROJ_BILL||ALARM_OPS_CATS[c]!=='bill'));
+    (!cat||ALARM_OPS_CATS[c]===cat)&&(PROJ_BILL||ALARM_OPS_CATS[c]!=='bill')&&!$alarmOpsCfgOf(c).blocked);
   document.getElementById('oName').innerHTML='<option value="">全部名称</option>'+cats.map(c=>`<option>${c}</option>`).join('');
 }
 function renderOpsLvCards(){
@@ -253,7 +253,9 @@ function renderOpsLvCards(){
   ALARM_OPS_ITEMS.forEach(r=>{
     if($alarmStatusOf(r))return;
     if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return;
-    cnt[$alarmOpsLevel(r)]++;
+    const lv=$alarmOpsLevel(r);
+    if(lv===0)return;   /* 项目已屏蔽的运维故障不计数 */
+    cnt[lv]++;
   });
   document.getElementById('opsLvCards').innerHTML=[1,2,3].map(lv=>{
     const L=ALARM_LEVELS[lv];
@@ -276,7 +278,9 @@ function doQueryOps(){
         s=ov('oStart'),e=ov('oEnd'),rs=ov('oRecStart'),re=ov('oRecEnd');
   opsFiltered=ALARM_OPS_ITEMS.filter(r=>{
     if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return false;
-    if(lv&&String($alarmOpsLevel(r))!==lv)return false;
+    const rlv=$alarmOpsLevel(r);
+    if(rlv===0)return false;   /* 项目已屏蔽的运维故障不再展示 */
+    if(lv&&String(rlv)!==lv)return false;
     if(cat&&ALARM_OPS_CATS[r.cat]!==cat)return false;
     if(name&&r.cat!==name)return false;
     if(obj&&!r.obj.includes(obj))return false;
@@ -623,11 +627,12 @@ function applyDeepFilter(){
     let opsN=0;
     ALARM_OPS_ITEMS.forEach(r=>{
       if(!PROJ_BILL&&ALARM_OPS_CATS[r.cat]==='bill')return;
+      if($alarmOpsLevel(r)===0)return;   /* 项目已屏蔽不计入落地判定 */
       if(r.last.slice(0,10)!==todayStr)return;
       opsN++;
     });
     if(!opsN){pickTab('ac');return;}
-    doQueryOps();
+    pickTab('ops');
     return;
   }
   /* 等级深链:总览等级卡/铃铛故障级为「项目运维+空调故障」合计,
@@ -645,15 +650,17 @@ function applyDeepFilter(){
       opsN++;
     });
     if(!opsN){pickTab('ac');return;}
-    doQueryOps();
+    pickTab('ops');
     return;
   }
-  /* 无等级:默认落地空调故障;cat=ops 时落项目运维 Tab 并按状态筛选 */
+  /* 无等级:默认落地空调故障;cat=ops 或记录定位(obj,总览最近故障的运维记录入口)时落项目运维 Tab */
   setSt('o',st0);
-  if(cat==='ops'){   /* 仅项目运维类故障 */
-    document.getElementById('oCat').value='';
-    renderNameOpts();
-    doQueryOps();
+  if(cat==='ops'||obj){
+    if(cat==='ops'){   /* 仅项目运维类故障 */
+      document.getElementById('oCat').value='';
+      renderNameOpts();
+    }
+    pickTab('ops');
     return;
   }
   pickTab('ac');

@@ -129,6 +129,7 @@ function renderCounts(){
   let b=0,l=0;
   ALARM_OPS_ITEMS.forEach(r=>{
     if(st[r.id])return;
+    if(!$alarmOpsLevel(r))return;   /* 项目已屏蔽的故障类型不计数 */
     if(ALARM_OPS_CATS[r.cat]==='base')b++;else l++;
   });
   document.getElementById('cntBase').textContent=b;
@@ -138,10 +139,10 @@ function renderCounts(){
     document.getElementById('cntBill').style.display=l?'inline-flex':'none';
   }
 }
-/* 异常类型下拉随 Tab 联动 */
+/* 异常类型下拉随 Tab 联动(项目已屏蔽的类型不再出现) */
 function renderCatOptions(){
   const sel=document.getElementById('fCat');
-  const cats=Object.keys(ALARM_OPS_CATS).filter(c=>ALARM_OPS_CATS[c]===tab);
+  const cats=Object.keys(ALARM_OPS_CATS).filter(c=>ALARM_OPS_CATS[c]===tab&&!$alarmOpsCfgOf(c).blocked);
   sel.innerHTML='<option value="">全部类型</option>'+cats.map(c=>`<option>${c}</option>`).join('');
 }
 
@@ -149,6 +150,7 @@ function val(id){return document.getElementById(id).value;}
 function doQuery(){
   const cat=val('fCat'),obj=val('fObj').trim(),st=val('fSt'),s=val('fStart'),e=val('fEnd');
   filtered=ALARM_OPS_ITEMS.filter(r=>{
+    if(!$alarmOpsLevel(r))return false;   /* 项目已屏蔽的故障类型不再展示 */
     if(ALARM_OPS_CATS[r.cat]!==tab)return false;
     if(cat&&r.cat!==cat)return false;
     if(obj&&!r.obj.includes(obj)&&!r.info.includes(obj))return false;

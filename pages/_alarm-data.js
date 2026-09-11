@@ -5,8 +5,8 @@
    localStorage 键:
      fyAlarmStatus   处理状态覆盖 {id:{st:'done'|'ignored',by,time,note}}
      fyAlarmCodeLib  通用代码库覆盖 {"品牌|代码":{...}}(原型预留,UI 不维护)
-     fyAlarmProjCode 项目故障码配置 { [项目]: {adds:{"品牌|代码":entry}, blocks:["品牌|代码"]} }
-     fyAlarmPushCfg  推送配置(按项目) {项目名:{enabled,receivers,scope,strategy}}
+     fyAlarmProjCode 项目故障码配置 { [项目]: {adds:{"品牌|代码":entry}, blocks:["品牌|代码"], ops:{"故障名称":{level,blocked,minDur}} } }
+     fyAlarmPushCfg  推送任务(按项目) {项目名:{strategies:[{id,name,enabled,scope,receivers,mode,dailyTime,dnd}]}}
      fyAlarmPushLog  用户产生的推送记录,追加在种子记录之前
    ============================================================ */
 
@@ -27,12 +27,6 @@ function $adtAgo(d,h){return $adtFmt(new Date($ADT_NOW.getTime()-(d*24+(h||0))*3
 
 /* ── 项目与平台账号(与主框架项目选择器同源) ── */
 const ALARM_PROJECTS=['产品部测试-按小时预付费','平台测试_新计费','二次分摊-H','分摊计费-ly','平台测试_后付费','001'];
-/* 故障推送页项目列表示例:真实项目 + 演示项目补齐 100 个(仅推送页使用,不影响主框架项目选择器) */
-const ALARM_PUSH_PROJECTS=(()=>{
-  const list=ALARM_PROJECTS.slice();
-  for(let i=list.length+1;i<=100;i++)list.push('演示项目-'+String(i).padStart(3,'0'));
-  return list;
-})();
 const ALARM_ACCOUNTS=[
   {name:'丁文武',phone:'138****6612'},
   {name:'陈品',phone:'139****2210'},
@@ -48,9 +42,10 @@ const ALARM_LEVELS={
   3:{lb:'提示',short:'提示',tag:'thl',color:'#5a8dff',desc:'提示性信息,无需刻意处理'},
 };
 
-/* ── 项目运维故障:故障名称 → 故障类别(base=基础配置 bill=计费分摊) 与 故障等级
+/* ── 项目运维故障:故障名称 → 故障类别(base=基础配置 bill=计费分摊) 与 默认故障等级
      一期范围:基础配置 5 类 + 计费分摊 3 类(电表绑错以"有电量没当量/有当量没电量"两个信号判定)
-     增补:环境感知设备电量低(base/警示,电池类设备电量<20% 触发,与环境感知设备卡片标红同口径) ── */
+     增补:环境感知设备电量低(base/警示,电池类设备电量<20% 触发,与环境感知设备卡片标红同口径)
+     等级为内置默认值,支持项目级自定义与屏蔽(见 fyAlarmProjCode.ops / $alarmOpsCfgOf) ── */
 const ALARM_OPS_CATS={
   '控制器离线':'base','电表离线':'base','环境感知设备离线':'base','环境感知设备电量低':'base',
   '控制器存储空间不够':'base','内机未绑定建筑物':'base',
@@ -474,111 +469,98 @@ const ALARM_AC_FAULTS=(()=>{
   return rows;
 })();
 
-/* ── 推送记录种子(短信;时间相对生成。站内提醒由顶部铃铛承担,不生成流水) ── */
+/* ── 推送记录种子(短信;时间相对生成。站内提醒由顶部铃铛承担,不生成流水)
+     taskId 关联推送任务(ALARM_PUSH_CFG_SEED 内各策略 id),推送记录弹窗按任务过滤 ── */
 const ALARM_PUSH_LOG_SEED=(()=>{
   const rows=[];
-  const add=(proj,chan,receiver,phone,type,title,content,tpl,send,time)=>
-    rows.push({proj,chan,receiver,phone,type,title,content,tpl,send,time});
-  add('产品部测试-按小时预付费','短信','丁文武','138****6612','故障','空调故障预警',
+  const add=(proj,taskId,chan,receiver,phone,type,title,content,tpl,send,time)=>
+    rows.push({proj,taskId,chan,receiver,phone,type,title,content,tpl,send,time});
+  add('产品部测试-按小时预付费','st-p1-1','短信','丁文武','138****6612','故障','空调故障预警',
     '【空调集控】项目:产品部测试-按小时预付费 房间信息:1号楼7层716 内机:1-1-23-2 故障码:内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,3).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','已发送',$adtAgo(0,3));
-  add('产品部测试-按小时预付费','短信','陈品','139****2210','故障','空调故障预警',
+  add('产品部测试-按小时预付费','st-p1-1','短信','陈品','139****2210','故障','空调故障预警',
     '【空调集控】项目:产品部测试-按小时预付费 房间信息:1号楼7层707 内机:1-2-23-5 故障码:排气温度过高(海信-08),等级:故障,时间:'+$adtAgo(0,4).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','已发送',$adtAgo(0,4));
-  add('产品部测试-按小时预付费','短信','丁文武','138****6612','故障','空调故障预警',
+  add('产品部测试-按小时预付费','st-p1-1','短信','丁文武','138****6612','故障','空调故障预警',
     '【空调集控】项目:产品部测试-按小时预付费 房间信息:1号楼7层713 内机:1-1-23-1 故障码:通讯中断(通用-LOST),等级:故障,时间:'+$adtAgo(0,12).slice(0,16)+',请及时登录平台处理。',
     'hvac_fault_sms','发送失败',$adtAgo(0,12));
-  add('平台测试_新计费','短信','王运维','136****5521','警示','项目运维故障预警',
+  add('产品部测试-按小时预付费','st-p1-1','短信','丁文武','138****6612','故障','空调故障预警',
+    '【空调集控】项目:产品部测试-按小时预付费 房间信息:2号楼8层801 内机:3-2-18-2 故障码:内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,5).slice(0,16)+',请及时登录平台处理。',
+    'hvac_fault_sms','已发送',$adtAgo(0,5));
+  add('平台测试_新计费','st-p2-1','短信','王运维','136****5521','警示','项目运维故障预警',
     '【空调集控】项目:平台测试_新计费 对象:电表220415113811 故障:可能绑错空调系统(有电量没当量):当日电量 42.6kWh,绑定的空调系统无当量数据,电费将无法正常分摊,请及时登录平台处理。',
     'hvac_bill_alarm_sms','已发送',$adtAgo(1,6));
-  add('平台测试_新计费','短信','李工','137****8834','警示','项目运维故障预警',
+  add('平台测试_新计费','st-p2-1','短信','李工','137****8834','警示','项目运维故障预警',
     '【空调集控】项目:平台测试_新计费 对象:电表220415114086 故障:未绑定任何空调系统,电量无法分摊,请及时登录平台处理。',
     'hvac_base_alarm_sms','发送中',$adtAgo(0,2));
   /* 每日汇总示例:等级统一「提示」,内容为前一自然日(0:00-24:00)汇总,发送时间=次日设定时刻 */
-  add('平台测试_新计费','短信','王运维','136****5521','提示','预警每日汇总',
+  add('平台测试_新计费','st-p2-2','短信','王运维','136****5521','提示','预警每日汇总',
     '【空调集控】项目:平台测试_新计费 日期:'+$adtAgo(1,0).slice(0,10)+' 新增预警:4 条(故障:0、警示:3、提示:1),请登录平台查看处理。',
     'hvac_fault_daily_sms','已发送',$adtAgo(0,6));
-  add('二次分摊-H','短信','丁文武','138****6612','提示','预警每日汇总',
+  add('二次分摊-H','st-p3-1','短信','丁文武','138****6612','提示','预警每日汇总',
     '【空调集控】项目:二次分摊-H 日期:'+$adtAgo(2,0).slice(0,10)+' 新增预警:6 条(故障:1、警示:3、提示:2),请登录平台查看处理。',
     'hvac_fault_daily_sms','已发送',$adtAgo(1,0));
-  add('二次分摊-H','短信','丁文武','138****6612','提示','预警每日汇总',
+  add('二次分摊-H','st-p3-1','短信','丁文武','138****6612','提示','预警每日汇总',
     '【空调集控】项目:二次分摊-H 日期:'+$adtAgo(3,0).slice(0,10)+' 新增预警:2 条(故障:0、警示:1、提示:1),请登录平台查看处理。',
     'hvac_fault_daily_sms','已发送',$adtAgo(2,0));
-  add('演示项目-009','短信','丁文武','138****6612','故障','空调故障预警',
-    '【空调集控】项目:演示项目-009 房间信息:2号楼8层801 内机:3-2-18-2 故障码:内风机保护(格力-L1),等级:故障,时间:'+$adtAgo(0,5).slice(0,16)+',请及时登录平台处理。',
-    'hvac_fault_sms','已发送',$adtAgo(0,5));
   return rows;
 })();
 
-/* ── 推送配置种子(覆盖多种配置状态示例;不在此表且 localStorage 无记录的项目=从未配置,
-     推送列表的推送范围/推送方式列显示「—」)
-     已启用有推送:产品部测试(实时) / 平台测试_新计费(每日汇总) / 演示项目-009
-     已启用未推送:分摊计费-ly / 演示项目-007
-     已配置未启用:二次分摊-H(有历史记录) / 平台测试_后付费 / 演示项目-008 ── */
+/* ── 推送任务种子(按项目;一个项目可配置多套任务,任务间范围/接收人/方式/免打扰各自独立)
+     覆盖示例:产品部测试(实时+每日汇总双任务) / 平台测试_新计费(运维实时+全量汇总) /
+     二次分摊-H(已停用·有历史记录) / 分摊计费-ly(免打扰时段) / 平台测试_后付费(已停用) ── */
 const ALARM_PUSH_CFG_SEED={
-  /* 已启用·实时·有推送记录 */
-  '产品部测试-按小时预付费':{
-    enabled:true,
-    receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'},{name:'陈品',phone:'139****2210',src:'平台账号'}],
-    scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 已启用·每日汇总·有推送记录 */
-  '平台测试_新计费':{
-    enabled:true,
-    receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
-    scope:{levels:[1,2],cats:['ops','ac']},
-    strategy:{mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 已配置·未启用(有一条历史每日汇总推送记录) */
-  '二次分摊-H':{
-    enabled:false,
-    receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
-    scope:{levels:[1,2,3],cats:['ops','ac']},
-    strategy:{mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 已配置·已启用·从未推送(免打扰时段开启示例) */
-  '分摊计费-ly':{
-    enabled:true,
-    receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
-    scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:true,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 已配置·未启用(仅空调故障示例) */
-  '平台测试_后付费':{
-    enabled:false,
-    receivers:[{name:'陈品',phone:'139****2210',src:'平台账号'},{name:'张技术支持',phone:'135****9012',src:'平台账号'}],
-    scope:{levels:[1,2],cats:['ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 演示项目:已启用·从未推送 */
-  '演示项目-007':{
-    enabled:true,
-    receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
-    scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 演示项目:已配置·未启用 */
-  '演示项目-008':{
-    enabled:false,
-    receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
-    scope:{levels:[1,2],cats:['ac']},
-    strategy:{mode:'daily',dailyTime:'08:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
-  /* 演示项目:已启用·有推送记录 */
-  '演示项目-009':{
-    enabled:true,
-    receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
-    scope:{levels:[1,2,3],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
-  },
+  '产品部测试-按小时预付费':{strategies:[
+    {id:'st-p1-1',name:'故障级实时提醒',enabled:true,
+      scope:{levels:[1],cats:['ops','ac']},
+      receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'},{name:'陈品',phone:'139****2210',src:'平台账号'}],
+      mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+    {id:'st-p1-2',name:'全量预警每日汇总',enabled:true,
+      scope:{levels:[1,2,3],cats:['ops','ac']},
+      receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
+      mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  ]},
+  '平台测试_新计费':{strategies:[
+    {id:'st-p2-1',name:'运维故障实时提醒',enabled:true,
+      scope:{levels:[1,2],cats:['ops']},
+      receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'},{name:'李工',phone:'137****8834',src:'平台账号'}],
+      mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+    {id:'st-p2-2',name:'预警每日汇总',enabled:true,
+      scope:{levels:[1,2],cats:['ops','ac']},
+      receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
+      mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  ]},
+  /* 已停用·有历史每日汇总推送记录 */
+  '二次分摊-H':{strategies:[
+    {id:'st-p3-1',name:'预警每日汇总',enabled:false,
+      scope:{levels:[1,2,3],cats:['ops','ac']},
+      receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
+      mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  ]},
+  /* 免打扰时段开启示例 */
+  '分摊计费-ly':{strategies:[
+    {id:'st-p4-1',name:'故障级实时提醒',enabled:true,
+      scope:{levels:[1],cats:['ops','ac']},
+      receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
+      mode:'realtime',dailyTime:'09:00',dnd:{on:true,from:'22:00',to:'08:00',exemptL1:true}},
+  ]},
+  /* 已停用·仅空调故障示例 */
+  '平台测试_后付费':{strategies:[
+    {id:'st-p5-1',name:'空调故障实时提醒',enabled:false,
+      scope:{levels:[1,2],cats:['ac']},
+      receivers:[{name:'陈品',phone:'139****2210',src:'平台账号'},{name:'张技术支持',phone:'135****9012',src:'平台账号'}],
+      mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
+  ]},
 };
 
-/* ── 项目级故障码配置种子(演示:项目自定义等级——通用库 L7 无主内机 警示→本项目故障) ── */
+/* ── 项目级故障码配置种子
+     演示:项目自定义(通用库 L7 无主内机 警示→本项目故障,持续时长 10 分钟);
+     项目运维故障持续时长(电表可能绑错空调系统 30 分钟,等级仍按默认警示,不影响演示计数口径) ── */
 const ALARM_PROJ_CODE_SEED={
   '产品部测试-按小时预付费':{
-    adds:{'格力|L7':{brand:'格力',code:'L7',level:1}},
+    adds:{'格力|L7':{brand:'格力',code:'L7',level:1,minDur:10}},
     blocks:[],
+    ops:{'电表可能绑错空调系统':{minDur:30}},
   },
 };
 
@@ -635,8 +617,9 @@ function $alarmCodeLookup(brand,code){
   return tryBrand(brand)||(brand!=='通用'?tryBrand('通用'):null);
 }
 
-/* ── 项目级故障码配置:项目自定义(仅等级自定义;通用库未收录码经飞奕维护至通用库) + 项目屏蔽
-     项目生效 = 通用代码库 + 项目自定义等级 − 项目屏蔽(按项目隔离) ── */
+/* ── 项目级故障码配置:项目自定义(等级+持续时长;通用库未收录码经飞奕维护至通用库) + 项目屏蔽
+     + 项目运维故障自定义(ops:等级/屏蔽/持续时长,按故障名称)
+     项目生效 = 通用代码库 + 项目自定义 − 项目屏蔽(按项目隔离);运维故障同理(内置映射 + 项目自定义 − 屏蔽) ── */
 function $alarmProjCodeAll(){return $lsGet('fyAlarmProjCode',{});}
 function $alarmProjCodeGet(proj){
   const saved=$alarmProjCodeAll()[proj];
@@ -645,11 +628,12 @@ function $alarmProjCodeGet(proj){
     return {
       adds:(saved.adds&&typeof saved.adds==='object')?saved.adds:{},
       blocks:Array.isArray(saved.blocks)?saved.blocks:[],
+      ops:(saved.ops&&typeof saved.ops==='object')?saved.ops:{},
     };
   }
   const seed=ALARM_PROJ_CODE_SEED[proj];
   if(seed)return JSON.parse(JSON.stringify(seed));
-  return {adds:{},blocks:[]};
+  return {adds:{},blocks:[],ops:{}};
 }
 function $alarmProjCodeSet(proj,cfg){
   const all=$alarmProjCodeAll();
@@ -686,8 +670,18 @@ function $alarmFaultLevelProj(f,proj){
 }
 function $alarmFaultBlocked(f,proj){return $alarmFaultLevelProj(f,proj)===0;}
 function $alarmFaultEntry(f){return $alarmCodeLookup(f.brand,f.code);}
-/* 运维故障等级 */
-function $alarmOpsLevel(r){return ALARM_OPS_CAT_LV[r.cat]||2;}
+/* 项目运维故障项目级配置解析(字段缺省回退内置默认):{level 等级, blocked 是否屏蔽, minDur 持续时长分钟} */
+function $alarmOpsCfgOf(cat,proj){
+  const cfg=$alarmProjCodeGet(proj||$alarmCurProj());
+  const o=(cfg.ops&&cfg.ops[cat])||{};
+  return {
+    level:+(o.level||ALARM_OPS_CAT_LV[cat]||2),
+    blocked:!!o.blocked,
+    minDur:(Number.isInteger(o.minDur)&&o.minDur>=0)?o.minDur:0,
+  };
+}
+/* 运维故障项目级档位判定:0=本项目已屏蔽;否则 项目自定义等级 > 内置默认等级 */
+function $alarmOpsLevel(r,proj){const c=$alarmOpsCfgOf(r.cat,proj);return c.blocked?0:c.level;}
 
 /* 处理状态(运维故障与空调故障共用,键=记录 id)
    ── 按项目隔离:fyAlarmStatus = { [项目名]: { [记录id]: {st,by,time,note,for} } }
@@ -734,7 +728,8 @@ function $alarmCounts(opts){
     if($alarmStatusOf(r))return;
     const t=ALARM_OPS_CATS[r.cat];
     if(t==='bill'&&!withBill)return;
-    const lv=$alarmOpsLevel(r);
+    const lv=$alarmOpsLevel(r,proj);
+    if(lv===0)return;   /* 项目已屏蔽的运维故障不计数 */
     c.ops++;c[t]++;c['ops'+lv]++;c['lv'+lv]++;
   });
   ALARM_AC_FAULTS.forEach(f=>{
@@ -757,6 +752,7 @@ function $alarmTodayNew(opts){
   ALARM_OPS_ITEMS.forEach(r=>{
     if(r.last.slice(0,10)!==today)return;
     if(!withBill&&ALARM_OPS_CATS[r.cat]==='bill')return;
+    if($alarmOpsLevel(r,proj)===0)return;   /* 项目已屏蔽的运维故障不计入 */
     n++;
   });
   ALARM_AC_FAULTS.forEach(f=>{
@@ -775,7 +771,8 @@ function $alarmRecent(n,opts){
   ALARM_OPS_ITEMS.forEach(r=>{
     const catType=ALARM_OPS_CATS[r.cat];
     if(catType==='bill'&&!withBill)return;
-    const lv=$alarmOpsLevel(r);
+    const lv=$alarmOpsLevel(r,proj);
+    if(lv===0)return;   /* 项目已屏蔽的运维故障不进入最近预警 */
     list.push({kind:'ops',level:lv,id:r.id,title:r.cat,obj:r.obj,info:r.info,time:r.last,done:!!$alarmStatusOf(r),gone:!!r.gone});
   });
   ALARM_AC_FAULTS.forEach(f=>{
@@ -788,29 +785,60 @@ function $alarmRecent(n,opts){
   return list.slice(0,n||10);
 }
 
-/* 推送配置(按项目隔离;种子配置作为默认)
-   站内提醒由顶部铃铛红点承担(全局口径,不受推送配置影响),不设站内信通道。
-   去重为内置规则(不可配置):同一对象同一故障仅首次发生时推送,故障恢复前不重复。 */
-function $alarmPushCfgDefault(){
-  return {enabled:false,receivers:[],scope:{levels:[1],cats:['ops','ac']},
-    strategy:{mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}}};
+/* 空调故障未恢复清单(综合监控大屏「空调状态总览-故障数」与「最近故障」滚动面板共用口径):
+   故障恢复时间为空(未恢复)且未被本项目屏蔽,按故障发生时间倒序;处理状态不影响计数 */
+function $alarmAcActive(proj){
+  const p=proj||$alarmCurProj();
+  return ALARM_AC_FAULTS.filter(f=>!f.gone&&$alarmFaultLevelProj(f,p)!==0)
+    .sort((a,b)=>a.devTime<b.devTime?1:-1);
+}
+
+/* 推送任务(按项目隔离;种子配置作为默认)
+   一个项目可配置多套推送任务,任务间相互独立(推送范围/接收人/推送方式/免打扰各自生效);
+   同一预警同时命中多套启用中的任务时,按各任务分别推送。
+   站内提醒由顶部铃铛红点承担(全局口径,不受推送任务影响),不设站内信通道。
+   去重为内置规则(不可配置):同一任务内,同一对象同一故障仅首次发生时推送,故障恢复前不重复。
+   故障持续时长为故障码粒度配置(见 fyAlarmProjCode,默认 0=立即推送),不在任务上设定。 */
+function $alarmPushStrategyDefault(){
+  return {id:'',name:'',enabled:true,
+    scope:{levels:[1],cats:['ops','ac']},receivers:[],
+    mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}};
+}
+/* 任务结构防御:缺失字段与默认结构逐层合并,避免下游裸解引用报错 */
+function $alarmPushStrategyNorm(s){
+  const d=$alarmPushStrategyDefault();
+  const o=Object.assign({},d,(s&&typeof s==='object')?s:{});
+  o.id=String(o.id||'');
+  o.name=String(o.name||'');
+  o.enabled=o.enabled!==false;
+  o.scope=Object.assign({},d.scope,(s&&s.scope&&typeof s.scope==='object')?s.scope:{});
+  if(!Array.isArray(o.scope.levels))o.scope.levels=d.scope.levels.slice();
+  if(!Array.isArray(o.scope.cats))o.scope.cats=d.scope.cats.slice();
+  o.receivers=Array.isArray(o.receivers)?o.receivers:[];
+  if(o.mode!=='realtime'&&o.mode!=='daily')o.mode='realtime';
+  o.dailyTime=o.dailyTime||'09:00';
+  o.dnd=Object.assign({},d.dnd,(s&&s.dnd&&typeof s.dnd==='object')?s.dnd:{});
+  return o;
 }
 function $alarmPushCfgAll(){return $lsGet('fyAlarmPushCfg',{});}
 function $alarmPushCfgGet(proj){
   const saved=$alarmPushCfgAll()[proj];
-  const base=ALARM_PUSH_CFG_SEED[proj]?JSON.parse(JSON.stringify(ALARM_PUSH_CFG_SEED[proj])):$alarmPushCfgDefault();
-  if(!saved||typeof saved!=='object')return base;
-  /* 存量数据防御:旧版本结构缺失字段时与默认结构逐层合并,避免下游裸解引用报错 */
-  const d=$alarmPushCfgDefault();
-  const cfg=Object.assign({},base,saved);
-  cfg.receivers=Array.isArray(cfg.receivers)?cfg.receivers:[];
-  cfg.scope=Object.assign({},base.scope||d.scope,(saved.scope&&typeof saved.scope==='object')?saved.scope:{});
-  if(!Array.isArray(cfg.scope.levels))cfg.scope.levels=d.scope.levels.slice();
-  if(!Array.isArray(cfg.scope.cats))cfg.scope.cats=d.scope.cats.slice();
-  cfg.strategy=Object.assign({},base.strategy||d.strategy,(saved.strategy&&typeof saved.strategy==='object')?saved.strategy:{});
-  cfg.strategy.dnd=Object.assign({},(base.strategy&&base.strategy.dnd)||d.strategy.dnd,(saved.strategy&&saved.strategy.dnd&&typeof saved.strategy.dnd==='object')?saved.strategy.dnd:{});
-  if(cfg.strategy.mode!=='realtime'&&cfg.strategy.mode!=='daily')cfg.strategy.mode='realtime';
-  return cfg;
+  if(saved&&typeof saved==='object'){
+    if(Array.isArray(saved.strategies))return {strategies:saved.strategies.map($alarmPushStrategyNorm)};
+    /* 旧版单策略结构(2026-09-10 前:{enabled,receivers,scope,strategy})自动迁移为第 1 套任务;
+       旧 strategy.minDuration(策略级故障持续时长)已废弃,迁移时丢弃,改由故障码粒度配置 */
+    if(saved.scope||saved.strategy||Array.isArray(saved.receivers)){
+      const st=saved.strategy&&typeof saved.strategy==='object'?saved.strategy:{};
+      return {strategies:[$alarmPushStrategyNorm({
+        id:'st-1',name:'默认推送任务',enabled:!!saved.enabled,
+        scope:saved.scope,receivers:saved.receivers,
+        mode:st.mode,dailyTime:st.dailyTime,dnd:st.dnd})]};
+    }
+    return {strategies:[]};
+  }
+  const seed=ALARM_PUSH_CFG_SEED[proj];
+  if(seed)return JSON.parse(JSON.stringify(seed));
+  return {strategies:[]};
 }
 function $alarmPushCfgSet(proj,cfg){
   const all=$alarmPushCfgAll();
