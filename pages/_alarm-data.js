@@ -6,7 +6,7 @@
      fyAlarmStatus   处理状态覆盖 {id:{st:'done'|'ignored',by,time,note}}
      fyAlarmCodeLib  通用代码库覆盖 {"品牌|代码":{...}}(原型预留,UI 不维护)
      fyAlarmProjCode 项目故障码配置 { [项目]: {adds:{"品牌|代码":entry}, blocks:["品牌|代码"], ops:{"故障名称":{level,blocked,minDur}} } }
-     fyAlarmPushCfg  推送任务(按项目) {项目名:{strategies:[{id,name,enabled,scope,receivers,mode,dailyTime,dnd}]}}
+     fyAlarmPushCfg  推送任务(按项目) {项目名:{strategies:[{id,name,enabled,scope:{ac:[等级],ops:[等级]},receivers,mode,dailyTime,dnd}]}}
      fyAlarmPushLog  用户产生的推送记录,追加在种子记录之前
    ============================================================ */
 
@@ -512,42 +512,42 @@ const ALARM_PUSH_LOG_SEED=(()=>{
 const ALARM_PUSH_CFG_SEED={
   '产品部测试-按小时预付费':{strategies:[
     {id:'st-p1-1',name:'故障级实时提醒',enabled:true,
-      scope:{levels:[1],cats:['ops','ac']},
+      scope:{ac:[1],ops:[1]},
       receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'},{name:'陈品',phone:'139****2210',src:'平台账号'}],
       mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
     {id:'st-p1-2',name:'全量预警每日汇总',enabled:true,
-      scope:{levels:[1,2,3],cats:['ops','ac']},
+      scope:{ac:[1,2,3],ops:[1,2,3]},
       receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
       mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   ]},
   '平台测试_新计费':{strategies:[
     {id:'st-p2-1',name:'运维故障实时提醒',enabled:true,
-      scope:{levels:[1,2],cats:['ops']},
+      scope:{ac:[],ops:[1,2]},
       receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'},{name:'李工',phone:'137****8834',src:'平台账号'}],
       mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
     {id:'st-p2-2',name:'预警每日汇总',enabled:true,
-      scope:{levels:[1,2],cats:['ops','ac']},
+      scope:{ac:[1,2],ops:[1,2]},
       receivers:[{name:'王运维',phone:'136****5521',src:'平台账号'}],
       mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   ]},
   /* 已停用·有历史每日汇总推送记录 */
   '二次分摊-H':{strategies:[
     {id:'st-p3-1',name:'预警每日汇总',enabled:false,
-      scope:{levels:[1,2,3],cats:['ops','ac']},
+      scope:{ac:[1,2,3],ops:[1,2,3]},
       receivers:[{name:'丁文武',phone:'138****6612',src:'平台账号'}],
       mode:'daily',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   ]},
   /* 免打扰时段开启示例 */
   '分摊计费-ly':{strategies:[
     {id:'st-p4-1',name:'故障级实时提醒',enabled:true,
-      scope:{levels:[1],cats:['ops','ac']},
+      scope:{ac:[1],ops:[1]},
       receivers:[{name:'李工',phone:'137****8834',src:'平台账号'}],
       mode:'realtime',dailyTime:'09:00',dnd:{on:true,from:'22:00',to:'08:00',exemptL1:true}},
   ]},
   /* 已停用·仅空调故障示例 */
   '平台测试_后付费':{strategies:[
     {id:'st-p5-1',name:'空调故障实时提醒',enabled:false,
-      scope:{levels:[1,2],cats:['ac']},
+      scope:{ac:[1,2],ops:[]},
       receivers:[{name:'陈品',phone:'139****2210',src:'平台账号'},{name:'张技术支持',phone:'135****9012',src:'平台账号'}],
       mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}},
   ]},
@@ -670,14 +670,14 @@ function $alarmFaultLevelProj(f,proj){
 }
 function $alarmFaultBlocked(f,proj){return $alarmFaultLevelProj(f,proj)===0;}
 function $alarmFaultEntry(f){return $alarmCodeLookup(f.brand,f.code);}
-/* 项目运维故障项目级配置解析(字段缺省回退内置默认):{level 等级, blocked 是否屏蔽, minDur 持续时长分钟} */
+/* 项目运维故障项目级配置解析(字段缺省回退内置默认):{level 等级, blocked 是否屏蔽, minDur 持续时长分钟(0=立即推送,上限 1440=1 天)} */
 function $alarmOpsCfgOf(cat,proj){
   const cfg=$alarmProjCodeGet(proj||$alarmCurProj());
   const o=(cfg.ops&&cfg.ops[cat])||{};
   return {
     level:+(o.level||ALARM_OPS_CAT_LV[cat]||2),
     blocked:!!o.blocked,
-    minDur:(Number.isInteger(o.minDur)&&o.minDur>=0)?o.minDur:0,
+    minDur:(Number.isInteger(o.minDur)&&o.minDur>=0&&o.minDur<=1440)?o.minDur:0,
   };
 }
 /* 运维故障项目级档位判定:0=本项目已屏蔽;否则 项目自定义等级 > 内置默认等级 */
@@ -801,7 +801,7 @@ function $alarmAcActive(proj){
    故障持续时长为故障码粒度配置(见 fyAlarmProjCode,默认 0=立即推送),不在任务上设定。 */
 function $alarmPushStrategyDefault(){
   return {id:'',name:'',enabled:true,
-    scope:{levels:[1],cats:['ops','ac']},receivers:[],
+    scope:{ac:[1],ops:[1]},receivers:[],   /* 推送范围:空调故障/项目运维分别按等级勾选,默认两类均仅故障级 */
     mode:'realtime',dailyTime:'09:00',dnd:{on:false,from:'22:00',to:'08:00',exemptL1:true}};
 }
 /* 任务结构防御:缺失字段与默认结构逐层合并,避免下游裸解引用报错 */
@@ -811,9 +811,17 @@ function $alarmPushStrategyNorm(s){
   o.id=String(o.id||'');
   o.name=String(o.name||'');
   o.enabled=o.enabled!==false;
-  o.scope=Object.assign({},d.scope,(s&&s.scope&&typeof s.scope==='object')?s.scope:{});
-  if(!Array.isArray(o.scope.levels))o.scope.levels=d.scope.levels.slice();
-  if(!Array.isArray(o.scope.cats))o.scope.cats=d.scope.cats.slice();
+  o.scope=(s&&s.scope&&typeof s.scope==='object')?Object.assign({},s.scope):{};
+  /* 旧版范围结构(2026-09-20 前:{levels:[1,2],cats:['ops','ac']},等级×类别交叉)自动迁移为分类等级:
+     类别被勾选 → 该类继承 levels;未勾选 → 空数组(该类不推送) */
+  if(Array.isArray(o.scope.levels)||Array.isArray(o.scope.cats)){
+    const lv=Array.isArray(o.scope.levels)&&o.scope.levels.length?o.scope.levels:[1];
+    const cats=Array.isArray(o.scope.cats)&&o.scope.cats.length?o.scope.cats:['ops','ac'];
+    o.scope={ac:cats.includes('ac')?lv.slice():[],ops:cats.includes('ops')?lv.slice():[]};
+  }
+  delete o.scope.levels;delete o.scope.cats;
+  if(!Array.isArray(o.scope.ac))o.scope.ac=d.scope.ac.slice();
+  if(!Array.isArray(o.scope.ops))o.scope.ops=d.scope.ops.slice();
   o.receivers=Array.isArray(o.receivers)?o.receivers:[];
   if(o.mode!=='realtime'&&o.mode!=='daily')o.mode='realtime';
   o.dailyTime=o.dailyTime||'09:00';

@@ -44,7 +44,7 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn" onclick="openCodeLib()">故障代码库</button>
-  <button class="btn btnp" style="margin-left:auto" onclick="openDrawer(null)">+ 新增推送任务</button>
+  <button class="btn btnp" onclick="openDrawer(null)">新增推送任务</button>
 </div>
 
 <!-- 当前项目推送任务表(一行=一套推送任务,任务间范围/接收人/方式/免打扰各自独立) -->
@@ -58,41 +58,36 @@ td.cell-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-spa
 </div>
 <div id="pager"></div>
 
-<!-- 推送任务抽屉(新增/编辑共用:任务名称/启停/推送范围/接收人/推送策略) -->
+<!-- 推送任务抽屉(新增/编辑共用:任务名称/推送范围/接收人/推送策略;启停统一经列表「启用」列开关,新建默认启用) -->
 <div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer" style="width:560px">
   <div class="dh"><span id="drawerTitle">新增推送任务</span><span class="dx" onclick="closeDrawer()">✕</span></div>
   <div class="db">
     <div class="sec">
-      <div class="sec-t">基本</div>
-      <div class="st-row">
-        <span class="fl2">所属项目</span>
-        <span id="dProj" style="color:var(--tx)"></span>
-      </div>
       <div class="st-row">
         <span class="fl2"><span style="color:var(--er)">*</span> 任务名称</span>
         <input id="dTaskName" placeholder="如:故障级实时提醒" style="flex:1" maxlength="30">
       </div>
-      <div class="st-row">
-        <span class="fl2">启用该任务</span>
-        <span class="switch" id="dEnabled" onclick="this.classList.toggle('on')"></span>
-      </div>
-      <div class="tip" style="margin-left:98px">同一项目可配置多套推送任务,任务间互不影响;同一预警同时命中多套启用中的任务时,按各任务分别推送。</div>
     </div>
     <div class="sec">
       <div class="sec-t">推送范围</div>
-      <div style="font-size:12px;color:var(--ts);margin-bottom:8px">故障等级</div>
-      <div class="ck-row">
-        <label class="ck"><input type="checkbox" id="dLv1"> <span class="tag ter">故障</span></label>
-        <label class="ck"><input type="checkbox" id="dLv2"> <span class="tag twn">警示</span></label>
-        <label class="ck"><input type="checkbox" id="dLv3"> <span class="tag thl">提示</span></label>
+      <div class="st-row">
+        <span class="fl2">空调故障</span>
+        <div class="ck-row">
+          <label class="ck"><input type="checkbox" id="dAcLv1"> <span class="tag ter">故障</span></label>
+          <label class="ck"><input type="checkbox" id="dAcLv2"> <span class="tag twn">警示</span></label>
+          <label class="ck"><input type="checkbox" id="dAcLv3"> <span class="tag thl">提示</span></label>
+        </div>
       </div>
-      <div style="font-size:12px;color:var(--ts);margin:12px 0 8px">故障类别</div>
-      <div class="ck-row">
-        <label class="ck"><input type="checkbox" id="dCatOps"> 项目运维</label>
-        <label class="ck"><input type="checkbox" id="dCatAc"> 空调故障</label>
+      <div class="st-row">
+        <span class="fl2">项目运维</span>
+        <div class="ck-row">
+          <label class="ck"><input type="checkbox" id="dOpsLv1"> <span class="tag ter">故障</span></label>
+          <label class="ck"><input type="checkbox" id="dOpsLv2"> <span class="tag twn">警示</span></label>
+          <label class="ck"><input type="checkbox" id="dOpsLv3"> <span class="tag thl">提示</span></label>
+        </div>
       </div>
-      <div class="tip">仅勾选范围内新产生的预警才会推送短信,默认仅推送故障级;项目屏蔽的故障不产生推送。</div>
+      <div class="tip" style="margin-left:98px">仅勾选范围内新产生的预警才会推送短信,项目屏蔽的故障不产生推送。</div>
     </div>
     <div class="sec">
       <div class="sec-t">接收人(可多个)</div>
@@ -198,11 +193,10 @@ function lastPush(t){
   return row?row.time:'—';
 }
 function scopeText(sc){
+  const fmt=arr=>arr.slice().sort((a,b)=>a-b).map(l=>ALARM_LEVELS[l].short).join('/');
   const parts=[];
-  if(sc.levels&&sc.levels.length)
-    parts.push(sc.levels.slice().sort().map(l=>ALARM_LEVELS[l].short).join('/'));
-  if(sc.cats&&sc.cats.length)
-    parts.push(sc.cats.map(c=>c==='ops'?'项目运维':'空调故障').join('+'));
+  if(sc.ac&&sc.ac.length)parts.push('空调故障:'+fmt(sc.ac));
+  if(sc.ops&&sc.ops.length)parts.push('项目运维:'+fmt(sc.ops));
   return parts.length?parts.join(' · '):'<span class="text-sub">未选择</span>';
 }
 /* 接收人列:首个接收人 + 等 N 人,悬浮可见全部 */
@@ -273,16 +267,15 @@ function openDrawer(id){
   const src=id?taskOf(id):null;
   draft=$alarmPushStrategyNorm(src?JSON.parse(JSON.stringify(src)):{id:'st-'+Date.now(),enabled:true});
   document.getElementById('drawerTitle').textContent=src?('编辑推送任务 - '+src.name):'新增推送任务';
-  document.getElementById('dProj').textContent=curProj;
   document.getElementById('dTaskName').value=draft.name;
-  document.getElementById('dEnabled').classList.toggle('on',!!draft.enabled);
-  /* 推送范围 */
+  /* 推送范围:空调故障/项目运维分别按等级勾选 */
   const sc=draft.scope;
-  document.getElementById('dLv1').checked=(sc.levels||[]).includes(1);
-  document.getElementById('dLv2').checked=(sc.levels||[]).includes(2);
-  document.getElementById('dLv3').checked=(sc.levels||[]).includes(3);
-  document.getElementById('dCatOps').checked=(sc.cats||[]).includes('ops');
-  document.getElementById('dCatAc').checked=(sc.cats||[]).includes('ac');
+  document.getElementById('dAcLv1').checked=(sc.ac||[]).includes(1);
+  document.getElementById('dAcLv2').checked=(sc.ac||[]).includes(2);
+  document.getElementById('dAcLv3').checked=(sc.ac||[]).includes(3);
+  document.getElementById('dOpsLv1').checked=(sc.ops||[]).includes(1);
+  document.getElementById('dOpsLv2').checked=(sc.ops||[]).includes(2);
+  document.getElementById('dOpsLv3').checked=(sc.ops||[]).includes(3);
   document.getElementById('dAccSel').innerHTML='<option value="">从平台账号选择…</option>'+
     ALARM_ACCOUNTS.map(a=>`<option value="${a.name}">${a.name}(${a.phone})</option>`).join('');
   renderReceivers();
@@ -328,11 +321,17 @@ function renderReceivers(){
     ?draft.receivers.map((r,i)=>`<span class="rc-tag">${r.name}(${r.phone})<span class="rx" onclick="delReceiver(${i})">✕</span></span>`).join('')
     :'<span class="text-sub" style="font-size:12px">暂未添加接收人</span>';
 }
+/* 手机号跨任务去重:同一项目内一个手机号只允许存在于一个推送任务(允许存在于不同项目的任务) */
+function phoneInOtherTask(phone){
+  return tasks.find(t=>t.id!==draft.id&&t.receivers.some(r=>r.phone===phone))||null;
+}
 function addFromAccount(){
   const name=document.getElementById('dAccSel').value;
   if(!name){$msg('请先选择平台账号','warning');return;}
   const acc=ALARM_ACCOUNTS.find(a=>a.name===name);
   if(draft.receivers.some(r=>r.phone===acc.phone)){$msg('该账号已在接收人列表中','warning');return;}
+  const dup=phoneInOtherTask(acc.phone);
+  if(dup){$msg(`该手机号已在任务「${dup.name}」中配置,同一项目内一个手机号只允许存在于一个推送任务`,'warning');return;}
   draft.receivers.push({name:acc.name,phone:acc.phone,src:'平台账号'});
   document.getElementById('dAccSel').value='';
   renderReceivers();
@@ -362,6 +361,8 @@ function sendVerifyCode(){
   if(!name){$msg('请填写姓名','error');return;}
   if(!/^1\d{10}$/.test(phone)){$msg('手机号格式不正确(11 位数字,1 开头)','error');return;}
   if(draft.receivers.some(r=>r.phone===phone)){$msg('该手机号已在接收人列表中','warning');return;}
+  const dup=phoneInOtherTask(phone);
+  if(dup){$msg(`该手机号已在任务「${dup.name}」中配置,同一项目内一个手机号只允许存在于一个推送任务`,'warning');return;}
   const code=String(Math.floor(100000+Math.random()*900000));
   pendingCode={phone,code,expire:Date.now()+5*60*1000};
   document.getElementById('dCodeRow').style.display='flex';
@@ -387,6 +388,8 @@ function verifyAndAdd(){
   if(!input||input!==pendingCode.code){$msg('验证码错误,请重新输入','error');return;}
   if(!name){$msg('请填写姓名','error');return;}
   if(draft.receivers.some(r=>r.phone===phone)){$msg('该手机号已在接收人列表中','warning');return;}
+  const dup=phoneInOtherTask(phone);
+  if(dup){$msg(`该手机号已在任务「${dup.name}」中配置,同一项目内一个手机号只允许存在于一个推送任务`,'warning');return;}
   draft.receivers.push({name,phone,src:'手动添加(已验证)'});
   document.getElementById('dName').value='';
   document.getElementById('dPhone').value='';
@@ -399,18 +402,17 @@ function delReceiver(i){
   renderReceivers();
 }
 
-/* 收集草稿(接收人操作已实时写入 draft) */
+/* 收集草稿(接收人操作已实时写入 draft;enabled 不在抽屉编辑:新建默认启用,启停统一经列表「启用」列开关) */
 function collectDraft(){
   draft.name=document.getElementById('dTaskName').value.trim();
-  draft.enabled=document.getElementById('dEnabled').classList.contains('on');
-  const levels=[];
-  if(document.getElementById('dLv1').checked)levels.push(1);
-  if(document.getElementById('dLv2').checked)levels.push(2);
-  if(document.getElementById('dLv3').checked)levels.push(3);
-  const cats=[];
-  if(document.getElementById('dCatOps').checked)cats.push('ops');
-  if(document.getElementById('dCatAc').checked)cats.push('ac');
-  draft.scope={levels,cats};
+  const ac=[],ops=[];
+  if(document.getElementById('dAcLv1').checked)ac.push(1);
+  if(document.getElementById('dAcLv2').checked)ac.push(2);
+  if(document.getElementById('dAcLv3').checked)ac.push(3);
+  if(document.getElementById('dOpsLv1').checked)ops.push(1);
+  if(document.getElementById('dOpsLv2').checked)ops.push(2);
+  if(document.getElementById('dOpsLv3').checked)ops.push(3);
+  draft.scope={ac,ops};
   const mode=document.querySelector('input[name="dMode"]:checked').value;
   const dndOn=mode!=='daily'&&document.getElementById('dDnd').classList.contains('on');   /* 每日汇总无免打扰,保存即不生效 */
   draft.mode=mode;
@@ -421,7 +423,12 @@ function saveCfg(){
   collectDraft();
   if(!draft.name){$msg('请填写任务名称','error');return;}
   if(draft.enabled&&!draft.receivers.length){$msg('已开启推送但未添加接收人,请先添加','error');return;}
-  if(!draft.scope.levels.length||!draft.scope.cats.length){$msg('推送范围需至少选择一个故障等级和一个故障类别','error');return;}
+  if(!draft.scope.ac.length&&!draft.scope.ops.length){$msg('推送范围需至少选择一个故障等级(空调故障或项目运维)','error');return;}
+  /* 手机号跨任务去重兜底:同一项目内一个手机号只允许存在于一个推送任务(允许存在于不同项目的任务) */
+  for(const r of draft.receivers){
+    const dup=tasks.find(x=>x.id!==draft.id&&x.receivers.some(rr=>rr.phone===r.phone));
+    if(dup){$msg(`接收人 ${r.name}(${r.phone}) 已在任务「${dup.name}」中,同一项目内一个手机号只允许存在于一个推送任务`,'error');return;}
+  }
   /* 每日汇总时刻限定 5:00-12:00(上午完成前一自然日汇总推送,避免午后/晚间打扰) */
   if(draft.mode==='daily'){
     const t=draft.dailyTime;
