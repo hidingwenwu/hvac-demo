@@ -57,10 +57,11 @@ body{
 .gauges{flex:1;display:flex;min-height:0;}
 .gauges>div{flex:1;min-width:0;}
 
-/* ── 运行数环形图 + 中心文字 + 底部图例 ── */
+/* ── 运行环形图 + 中心文字 + 底部图例 ── */
 .run-body{flex:1;position:relative;min-height:0;}
 #runPie{position:absolute;inset:0;}
-.run-center{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+/* 中心文字可悬停(展示「运行」口径提示)+可点击(跳空调控制:在线且开机),只覆盖环心空白区,不影响外环 */
+.run-center{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;user-select:none;cursor:pointer;}
 .run-center .n{font-size:34px;font-weight:700;color:#fff;line-height:1.05;}
 .run-center .t{font-size:13px;color:#c6d4f0;margin-top:2px;}
 .run-legend{display:flex;justify-content:center;gap:12px;padding:0 4px 10px;flex-shrink:0;}
@@ -88,6 +89,8 @@ body{
 .st .n{font-size:30px;font-weight:700;color:#fff;margin-top:8px;
   font-family:'DIN Alternate','Bahnschrift','Helvetica Neue',Arial,sans-serif;}
 .st .n.err{color:#f5493d;}
+/* 可点击统计项:点击跳转对应页面(空调状态总览带筛选规则) */
+.st.lk{cursor:pointer;}
 .p-foot{display:flex;align-items:center;font-size:13px;color:#c6d4f0;
   border-top:1px solid rgba(255,255,255,.08);margin:0 16px;padding:10px 0;flex-shrink:0;gap:24px;}
 .p-foot .rt{margin-left:auto;}
@@ -138,7 +141,7 @@ body{
         <div class="panel">
           <div class="run-body">
             <div id="runPie"></div>
-            <div class="run-center"><div class="n">30</div><div class="t">运行数</div></div>
+            <div class="run-center" title="在线且开机状态的空调" onclick="go('ctrl-ac','online=在线&amp;onoff=开机')"><div class="n">166</div><div class="t">运行</div></div>
           </div>
           <div class="run-legend">
             <span><i style="background:#2f7bf5"></i>制冷</span>
@@ -149,28 +152,29 @@ body{
         </div>
       </div>
 
-      <!-- 行2:空调状态总览 -->
+      <!-- 行2:空调状态总览(数值与空调控制页机队筛选结果一致:总数620/关机385/离线69/锁定413/故障32动态;运行环形图166=制冷162+除湿4) -->
       <div class="panel">
         <div class="p-hd"><div class="p-title">空调状态总览</div></div>
         <div class="stat-row">
-          <div class="st"><div class="l"><span class="ic">◉</span>总数</div><div class="n">620</div></div>
-          <div class="st"><div class="l"><span class="ic">⏻</span>关机</div><div class="n">588</div></div>
-          <div class="st"><div class="l"><span class="ic">⊘</span>离线</div><div class="n">2</div></div>
-          <div class="st"><div class="l"><span class="ic">⬢</span>锁定</div><div class="n">587</div></div>
-          <div class="st"><div class="l"><span class="ic err">▲</span>故障</div><div class="n err" id="acFaultN">–</div></div>
+          <div class="st lk" title="空调总数量" onclick="go('ctrl-ac','')"><div class="l"><span class="ic">◉</span>总数</div><div class="n">620</div></div>
+          <div class="st lk" title="在线且关机状态的空调" onclick="go('ctrl-ac','online=在线&amp;onoff=关机')"><div class="l"><span class="ic">⏻</span>关机</div><div class="n">385</div></div>
+          <div class="st lk" title="离线状态的空调" onclick="go('ctrl-ac','online=离线')"><div class="l"><span class="ic">⊘</span>离线</div><div class="n">69</div></div>
+          <div class="st lk" title="在线且存在任意锁定的空调" onclick="go('ctrl-ac','online=在线&amp;lock=已锁定')"><div class="l"><span class="ic">⬢</span>锁定</div><div class="n">413</div></div>
+          <div class="st lk" title="在线且存在故障的空调" onclick="go('ctrl-ac','online=在线&amp;fault=故障')"><div class="l"><span class="ic err">▲</span>故障</div><div class="n err" id="acFaultN">–</div></div>
         </div>
         <div class="p-foot"><span>品牌:海信</span><span>类型:多联机</span><span class="rt">空调系统数量:92</span></div>
       </div>
 
-      <!-- 行3:项目情况总览(底行按项目配置显示:电表仅计费项目;环境感知设备仅配置了传感器的项目) -->
+      <!-- 行3:项目情况总览(点击跳转对应管理页,数值与各页实际数据一致:房间=空调与房间关系列表数,控制器=控制器管理主机数,
+           群组=群组控制列表数,日程=日程管理任务数,子账户=子账号列表数;底行按项目配置显示:电表仅计费项目,环境感知设备仅配置了传感器的项目) -->
       <div class="panel">
         <div class="p-hd"><div class="p-title">项目情况总览</div></div>
         <div class="stat-row">
-          <div class="st"><div class="l"><span class="ic">⌂</span>房间</div><div class="n">618</div></div>
-          <div class="st"><div class="l"><span class="ic">▦</span>控制器</div><div class="n">7</div></div>
-          <div class="st"><div class="l"><span class="ic">⊞</span>群组</div><div class="n">1</div></div>
-          <div class="st"><div class="l"><span class="ic">◷</span>定时任务</div><div class="n">1</div></div>
-          <div class="st"><div class="l"><span class="ic">◐</span>子账户</div><div class="n">0</div></div>
+          <div class="st lk" onclick="go('device-ac-room','')"><div class="l"><span class="ic">⌂</span>房间</div><div class="n">618</div></div>
+          <div class="st lk" onclick="go('device-controller','')"><div class="l"><span class="ic">▦</span>控制器</div><div class="n">14</div></div>
+          <div class="st lk" onclick="go('ctrl-group','')"><div class="l"><span class="ic">⊞</span>群组</div><div class="n">3</div></div>
+          <div class="st lk" onclick="go('ctrl-schedule','')"><div class="l"><span class="ic">◷</span>日程</div><div class="n">6</div></div>
+          <div class="st lk" onclick="go('device-sub','')"><div class="l"><span class="ic">◐</span>子账户</div><div class="n">9</div></div>
         </div>
         <div class="p-foot" id="projFoot"><span class="rt hl" id="projFootRt"></span></div>
       </div>
@@ -244,6 +248,15 @@ body{
 
 <script src="_alarm-data.js"></script>
 <script>
+/* ============ 统计项点击跳转 ============
+   空调状态总览(及运行环形图)→ 空调控制页,URL 带入筛选,规则与各项悬停提示口径一致;
+   项目情况总览 → 对应管理页(房间=空调与房间关系,控制器=控制器管理,群组=群组控制,日程=日程管理,子账户=子账号列表) */
+function go(id,q){
+  try{
+    if(window.parent!==window&&typeof parent.nav==='function'){parent.nav(id,q);return;}   /* 主框架内(http 访问):切菜单并带参 */
+  }catch(e){/* file:// 直接打开时跨 frame 访问抛 SecurityError,走降级 */}
+  location.href=id+'.html'+(q?'?'+q:'');   /* 独立打开 / file:// 受限:iframe 内同目录直跳 */
+}
 /* ============ 故障预警联动(口径与故障预警一致,见 _alarm-data.js $alarmAcActive) ============
    空调状态总览「故障」= 空调故障中未恢复的故障总数(未恢复=故障恢复时间为空,项目屏蔽不计);
    最近故障面板 = 同一清单滚动展示(故障代码/故障信息/发生时间,按发生时间倒序) */
@@ -340,7 +353,7 @@ function gaugeOpt(val,label,c1,c2){
 mk('gaugeSet').setOption(gaugeOpt(24.3,'平均设定温度','#3ee6c0','#2fd06f'));
 mk('gaugeIn').setOption(gaugeOpt(27.9,'平均室内温度','#4da0ff','#1f65ff'));
 
-/* ============ 运行数环形图(制冷/制热/送风/除湿) ============ */
+/* ============ 运行环形图(制冷/制热/送风/除湿) ============ */
 mk('runPie').setOption({
   backgroundColor:'transparent',
   series:[{
@@ -348,8 +361,8 @@ mk('runPie').setOption({
     label:{show:false},labelLine:{show:false},
     itemStyle:{borderColor:'#0d1531',borderWidth:2},
     data:[
-      {name:'制冷',value:28,itemStyle:{color:'#2f7bf5'}},
-      {name:'除湿',value:2,itemStyle:{color:'#f2a24c'}},
+      {name:'制冷',value:162,itemStyle:{color:'#2f7bf5'}},
+      {name:'除湿',value:4,itemStyle:{color:'#f2a24c'}},
       {name:'制热',value:0,itemStyle:{color:'#f25b4c'}},
       {name:'送风',value:0,itemStyle:{color:'#3ad08a'}}
     ]
