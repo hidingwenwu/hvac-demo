@@ -340,7 +340,17 @@ const ACS=FLEET.units.map((u,n)=>{
 let view='card';
 let filtered=ACS.slice();
 const sel=new Set();
-const pg={total:0,page:1,size:12,sizes:[12,60,120],onChange:()=>renderCards()};
+/* ── 分页:默认每页数量按可视区动态计算(卡片 255×174、间距 14,行×列尽量填满页面),其余档固定 60/120/9999 ── */
+let defSize=0;
+function calcDefSize(){
+  const w=document.getElementById('gridWrap');
+  if(!w||!w.clientWidth)return defSize||12;   /* 可视化布局下卡片区隐藏,保留现值不重算 */
+  const cols=Math.max(1,Math.floor((w.clientWidth+14)/269));
+  const rows=Math.max(1,Math.floor((w.clientHeight+14)/188));
+  return cols*rows;
+}
+defSize=calcDefSize();
+const pg={total:0,page:1,size:defSize,sizes:[...new Set([defSize,60,120,9999])],onChange:()=>renderCards()};
 
 /* ── 建筑树:楼栋-楼层-房间 三级(由空调数据动态构建,共享组件见 _ui.js) ── */
 let treeSel=null;
@@ -376,6 +386,7 @@ function resetFilter(){
 }
 function toggleMore(){
   document.getElementById('moreFilters').classList.toggle('show');
+  followDefSize();   /* 更多筛选展开/收起会改变卡片区高度,动态默认档跟随重算 */
 }
 
 /* ── 选择 ── */
@@ -623,6 +634,15 @@ function copyHostNo(){
 })();
 
 /* ── 初始化 ── */
+/* 窗口尺寸变化:仍停留在动态默认档时跟随重算填满;手动切到 60/120/9999 后不打扰 */
+function followDefSize(){
+  const nd=calcDefSize();if(nd===defSize)return;
+  const onDef=pg.size===defSize;
+  defSize=nd;pg.sizes=[...new Set([nd,60,120,9999])];
+  if(onDef){pg.size=nd;pg.page=1;}
+  renderPager();renderCards();
+}
+window.addEventListener('resize',followDefSize);
 /* URL 带入筛选(综合监控大屏统计项跳转):onoff=开机|关机,online=在线|离线,fault=正常|故障,lock=已锁定|未锁定;
    含故障/锁定条件时自动展开「更多筛选」让生效条件可见 */
 (function(){
