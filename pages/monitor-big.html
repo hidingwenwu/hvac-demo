@@ -94,7 +94,6 @@ body{
 .p-foot{display:flex;align-items:center;font-size:13px;color:#c6d4f0;
   border-top:1px solid rgba(255,255,255,.08);margin:0 16px;padding:10px 0;flex-shrink:0;gap:24px;}
 .p-foot .rt{margin-left:auto;}
-.p-foot .hl{color:#f56c6c;}
 
 /* ── 最近故障(原系统设备故障告警):表头 + 滚动列表 ── */
 .tbl-hd{display:flex;font-size:13px;color:#8ea3c9;background:rgba(255,255,255,.05);
@@ -152,7 +151,7 @@ body{
         </div>
       </div>
 
-      <!-- 行2:空调状态总览(数值与空调控制页机队筛选结果一致:总数620/关机385/离线69/锁定413/故障32动态;运行环形图166=制冷162+除湿4) -->
+      <!-- 行2:空调状态总览(数值与空调控制页机队筛选结果一致:总数620/关机385/离线69/锁定413/定时79/故障32动态;运行环形图166=制冷162+除湿4) -->
       <div class="panel">
         <div class="p-hd"><div class="p-title">空调状态总览</div></div>
         <div class="stat-row">
@@ -160,23 +159,26 @@ body{
           <div class="st lk" title="在线且关机状态的空调" onclick="go('ctrl-ac','online=在线&amp;onoff=关机')"><div class="l"><span class="ic">⏻</span>关机</div><div class="n">385</div></div>
           <div class="st lk" title="离线状态的空调" onclick="go('ctrl-ac','online=离线')"><div class="l"><span class="ic">⊘</span>离线</div><div class="n">69</div></div>
           <div class="st lk" title="在线且存在任意锁定的空调" onclick="go('ctrl-ac','online=在线&amp;lock=已锁定')"><div class="l"><span class="ic">⬢</span>锁定</div><div class="n">413</div></div>
+          <div class="st lk" title="在线且存在定时任务的空调" onclick="go('ctrl-ac','online=在线&amp;timing=有定时')"><div class="l"><span class="ic">◷</span>定时</div><div class="n">79</div></div>
           <div class="st lk" title="在线且存在故障的空调" onclick="go('ctrl-ac','online=在线&amp;fault=故障')"><div class="l"><span class="ic err">▲</span>故障</div><div class="n err" id="acFaultN">–</div></div>
         </div>
         <div class="p-foot"><span>品牌:海信</span><span>类型:多联机</span><span class="rt">空调系统数量:92</span></div>
       </div>
 
       <!-- 行3:项目情况总览(点击跳转对应管理页,数值与各页实际数据一致:房间=空调与房间关系列表数,控制器=控制器管理主机数,
-           群组=群组控制列表数,日程=日程管理任务数,子账户=子账号列表数;底行按项目配置显示:电表仅计费项目,环境感知设备仅配置了传感器的项目) -->
+           电表=电表管理条数,群组=群组控制列表数,日程=日程管理任务数,子账户=子账号列表数;
+           电表仅计费项目显示,底行环境感知设备仅配置了传感器的项目显示) -->
       <div class="panel">
         <div class="p-hd"><div class="p-title">项目情况总览</div></div>
         <div class="stat-row">
           <div class="st lk" onclick="go('device-ac-room','')"><div class="l"><span class="ic">⌂</span>房间</div><div class="n">618</div></div>
           <div class="st lk" onclick="go('device-controller','')"><div class="l"><span class="ic">▦</span>控制器</div><div class="n">14</div></div>
+          <div class="st lk" id="stMeter" onclick="go('device-meter','')"><div class="l"><span class="ic">◨</span>电表</div><div class="n">92</div></div>
           <div class="st lk" onclick="go('ctrl-group','')"><div class="l"><span class="ic">⊞</span>群组</div><div class="n">3</div></div>
           <div class="st lk" onclick="go('ctrl-schedule','')"><div class="l"><span class="ic">◷</span>日程</div><div class="n">6</div></div>
           <div class="st lk" onclick="go('device-sub','')"><div class="l"><span class="ic">◐</span>子账户</div><div class="n">9</div></div>
         </div>
-        <div class="p-foot" id="projFoot"><span class="rt hl" id="projFootRt"></span></div>
+        <div class="p-foot" id="projFoot"><span class="rt" id="projFootRt"></span></div>
       </div>
 
       <!-- 行4:最近故障(空调故障中未恢复的全部记录,与故障预警同口径) -->
@@ -279,17 +281,15 @@ function go(id,q){
   track.style.animationDuration=(rows.length*1.4)+'s';
 })();
 
-/* ============ 项目情况总览底行(按项目实际配置显示) ============
-   电表数量:仅计费项目展示(集控项目无电表;是否计费与故障预警同口径,见 _alarm-data.js $alarmProjBill,001 为集控项目);
-   环境感知设备数量:仅项目配置了传感器时展示(原型 mock:当前项目已配置 42 台,与环境感知设备管理页 22+8+12 一致);
-   两项均不展示时隐藏整个底行 */
+/* ============ 项目情况总览:按项目实际配置显示 ============
+   电表统计项:仅计费项目展示(集控项目无电表;是否计费与故障预警同口径,见 _alarm-data.js $alarmProjBill,001 为集控项目);
+   底行环境感知设备数量:仅项目配置了传感器时展示(原型 mock:当前项目已配置 42 台,与环境感知设备管理页 22+8+12 一致),
+   未配置则隐藏整个底行 */
 (function(){
-  var items=[];
-  if($alarmProjBill($alarmCurProj()))items.push('电表: 92');
+  if(!$alarmProjBill($alarmCurProj()))document.getElementById('stMeter').style.display='none';
   var HAS_SENSOR=true;   /* mock:实际平台按项目是否接入环境感知设备决定 */
-  if(HAS_SENSOR)items.push('环境感知设备: 42');
-  if(!items.length){document.getElementById('projFoot').style.display='none';return;}
-  document.getElementById('projFootRt').textContent=items.join('　');
+  if(!HAS_SENSOR){document.getElementById('projFoot').style.display='none';return;}
+  document.getElementById('projFootRt').textContent='环境感知设备: 42';
 })();
 
 /* ============ 真实时钟(日期,每秒刷新) ============ */

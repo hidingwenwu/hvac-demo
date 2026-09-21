@@ -181,7 +181,7 @@
       <span class="mf-grp"><span class="mf-lb">房间温度范围</span><input type="number" min="16" max="31" style="width:64px" placeholder="16"><span class="mf-sep">至</span><input type="number" min="16" max="31" style="width:64px" placeholder="31"></span>
       <select style="width:110px"><option>空调模式</option><option>制冷</option><option>制热</option><option>送风</option><option>除湿</option></select>
       <select style="width:110px" id="fFault" onchange="applyFilter()"><option value="">故障状态</option><option>正常</option><option>故障</option></select>
-      <select style="width:110px"><option>定时状态</option><option>有定时</option><option>无定时</option></select>
+      <select style="width:110px" id="fTiming" onchange="applyFilter()"><option value="">定时状态</option><option>有定时</option><option>无定时</option></select>
       <input placeholder="空调地址" style="width:120px">
       <select style="width:100px"><option>风速</option><option>自动</option><option>低风</option><option>中风</option><option>高风</option></select>
       <select style="width:110px" id="fLock" onchange="applyFilter()"><option value="">锁定状态</option><option>已锁定</option><option>未锁定</option></select>
@@ -326,6 +326,7 @@ const ACS=FLEET.units.map((u,n)=>{
     mode:['制冷','制冷','制冷','除湿'][n%4],
     wind:['自动','低风','中风','中低风','高风'][n%5],
     on,lost,lock:n%3!==0,online:n%9!==0,        /* 在线/离线独立生成(约1/9离线),不与故障绑定:故障机多为在线,与「故障=在线且存在故障」口径一致 */
+    timing:n%7===2,                             /* 定时:存在定时任务的空调(约1/7),支撑「定时状态」筛选与统计 */
     tenant:u.tenant,
     faultCode:lost?String(30+n%8):null,
     host:'B0000016000012402401290001'+String(16+n%60).padStart(4,'0'),
@@ -365,13 +366,15 @@ function applyFilter(){
   const ol=document.getElementById('fOnline').value;
   const ft=document.getElementById('fFault').value;
   const lk=document.getElementById('fLock').value;
+  const tm=document.getElementById('fTiming').value;
   filtered=ACS.filter(a=>
     (!kw||a.room.includes(kw))&&
     $tree3Match(treeSel,{fl:a.fl+'层',room:a.room})&&
     (!oo||(oo==='开机')===a.on)&&
     (!ol||(ol==='在线')===a.online)&&
     (!ft||(ft==='故障')===a.lost)&&
-    (!lk||(lk==='已锁定')===a.lock)
+    (!lk||(lk==='已锁定')===a.lock)&&
+    (!tm||(tm==='有定时')===a.timing)
   );
   /* 筛选变化即修剪选择集:不在当前结果中的自动取消,避免批量控制误伤看不见的空调 */
   const inScope=new Set(filtered.map(a=>a.id));
@@ -381,7 +384,7 @@ function applyFilter(){
 }
 function resetFilter(){
   document.getElementById('roomSearch').value='';
-  ['fOnOff','fOnline','fFault','fLock'].forEach(id=>document.getElementById(id).value='');
+  ['fOnOff','fOnline','fFault','fLock','fTiming'].forEach(id=>document.getElementById(id).value='');
   treeSel=null;renderTree();applyFilter();
 }
 function toggleMore(){
@@ -643,14 +646,14 @@ function followDefSize(){
   renderPager();renderCards();
 }
 window.addEventListener('resize',followDefSize);
-/* URL 带入筛选(综合监控大屏统计项跳转):onoff=开机|关机,online=在线|离线,fault=正常|故障,lock=已锁定|未锁定;
-   含故障/锁定条件时自动展开「更多筛选」让生效条件可见 */
+/* URL 带入筛选(综合监控大屏统计项跳转):onoff=开机|关机,online=在线|离线,fault=正常|故障,lock=已锁定|未锁定,timing=有定时|无定时;
+   含故障/锁定/定时条件时自动展开「更多筛选」让生效条件可见 */
 (function(){
   const q=new URLSearchParams(location.search);
-  [['fOnOff','onoff'],['fOnline','online'],['fFault','fault'],['fLock','lock']].forEach(([id,k])=>{
+  [['fOnOff','onoff'],['fOnline','online'],['fFault','fault'],['fLock','lock'],['fTiming','timing']].forEach(([id,k])=>{
     const v=q.get(k);if(v)document.getElementById(id).value=v;
   });
-  if(q.get('fault')||q.get('lock'))document.getElementById('moreFilters').classList.add('show');
+  if(q.get('fault')||q.get('lock')||q.get('timing'))document.getElementById('moreFilters').classList.add('show');
 })();
 renderTree();
 applyFilter();
