@@ -60,8 +60,17 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_billing-gw.js"></script>
 <script src="_allocation.js"></script>
 <script>
+/* ── 非计费网关置零(计费管控演示):
+      B2-2(fa…0343,内机地址 1- 前缀)不在计费网关列表内时,其下房间用量/费用展示为 0(行保留);
+      在「系统管理-计费网关列表」添加该 SN 后刷新本页即恢复 ── */
+const NB_GW='fa000001400001240240614000100343';
+function zeroNonBilling(r){
+  return (r.addr.startsWith('1-')&&!HvacBillingGw.isBilling(NB_GW))?{...r,use:'0.00',fee:'0.00'}:r;
+}
+
 const allocation=window.HvacAllocation;
 let dailyMode='unit';
 /* ── 模拟数据(租户为房号、内机地址"2-3-15-7"式、用量两位小数、按日生成) ── */
@@ -109,7 +118,7 @@ function switchDailyMode(mode){
 }
 function doQuery(){
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
-  const rows=ROWS.filter(r=>
+  const rows=ROWS.map(zeroNonBilling).filter(r=>
     (!s||r.date>=s)&&(!e||r.date<=e)&&
     $tree3Match(treeSel,r)
   );

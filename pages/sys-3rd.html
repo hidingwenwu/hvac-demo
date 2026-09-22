@@ -11,12 +11,15 @@
 th.ck,td.ck{width:44px;}
 /* SN 等宽展示 */
 .sn{font-family:Consolas,Menlo,monospace;font-size:12.5px;}
+/* 备注列:超长省略,悬停 title 看全文 */
+.rmk{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
 </head>
 <body>
-<!-- 筛选栏:网关SN + 注册时间 + 查询/重置/批量删除/批量添加 -->
+<!-- 筛选栏:网关SN + 创建人 + 注册时间 + 查询/重置/批量删除/批量添加 -->
 <div class="fb">
   <div class="fi"><input id="fSn" placeholder="网关SN" style="width:200px"></div>
+  <div class="fi"><input id="fBy" placeholder="创建人" style="width:150px"></div>
   <div class="fi"><span class="fl">注册时间</span>
     <input type="date" id="fStart" style="width:150px"><span class="text-sub">至</span><input type="date" id="fEnd" style="width:150px">
   </div>
@@ -30,7 +33,7 @@ th.ck,td.ck{width:44px;}
   <table>
     <thead><tr>
       <th class="ck"><input type="checkbox" id="ckAll" onclick="toggleAll(this)"></th>
-      <th>序号</th><th>网关SN</th><th>注册时间</th><th>创建人</th><th>操作</th>
+      <th>序号</th><th>网关SN</th><th>注册时间</th><th>创建人</th><th>备注</th><th>操作</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -47,6 +50,11 @@ th.ck,td.ck{width:44px;}
         <textarea id="addSn" rows="7" placeholder="请输入32位网关SN,一行一个,例:&#10;fa000001400001240260519000100145"></textarea>
         <span class="text-sub" style="font-size:12px">支持一次添加多个网关,每行一个 32 位 SN(16进制字符)</span>
       </div>
+      <div class="form-item">
+        <span class="fl">备注</span>
+        <textarea id="addRemark" rows="2" maxlength="200" placeholder="选填,200字以内;本批次网关共用一个备注" oninput="document.getElementById('rmkCnt').textContent=this.value.length+'/200'"></textarea>
+        <span class="text-sub" style="font-size:12px;text-align:right" id="rmkCnt">0/200</span>
+      </div>
     </div>
     <div class="df">
       <button class="btn" onclick="$modalClose('dlgAdd')">关闭</button>
@@ -60,16 +68,16 @@ th.ck,td.ck{width:44px;}
 /* ── 模拟数据:首10条取自线上截图,其余按同形态生成,共725条(与线上分页一致) ── */
 const DEVICES=(()=>{
   const rows=[
-    {sn:'864918088278716',time:'2026-07-03 10:19:34',by:'chuhuojilu'},
-    {sn:'864918088259690',time:'2026-07-03 10:19:34',by:'chuhuojilu'},
-    {sn:'864918088269434',time:'2026-07-03 10:19:34',by:'chuhuojilu'},
-    {sn:'fa000001400001240260519000100145',time:'2026-06-29 18:11:19',by:'chuhuojilu2'},
-    {sn:'fa000001400001240260226000100145',time:'2026-06-29 09:38:12',by:'chuhuojilu2'},
-    {sn:'860608072036568',time:'2026-06-25 13:04:36',by:'chuhuojilu'},
-    {sn:'864423069849445',time:'',by:''},   /* 线上存在注册时间/创建人为空的历史数据 */
-    {sn:'864423069867181',time:'',by:''},
-    {sn:'864423069849346',time:'',by:''},
-    {sn:'864423061759634',time:'',by:''}
+    {sn:'864918088278716',time:'2026-07-03 10:19:34',by:'chuhuojilu',remark:'展厅温控面板'},
+    {sn:'864918088259690',time:'2026-07-03 10:19:34',by:'chuhuojilu',remark:''},
+    {sn:'864918088269434',time:'2026-07-03 10:19:34',by:'chuhuojilu',remark:''},
+    {sn:'fa000001400001240260519000100145',time:'2026-06-29 18:11:19',by:'chuhuojilu2',remark:'现场试用网关'},
+    {sn:'fa000001400001240260226000100145',time:'2026-06-29 09:38:12',by:'chuhuojilu2',remark:''},
+    {sn:'860608072036568',time:'2026-06-25 13:04:36',by:'chuhuojilu',remark:''},
+    {sn:'864423069849445',time:'',by:'',remark:''},   /* 线上存在注册时间/创建人为空的历史数据 */
+    {sn:'864423069867181',time:'',by:'',remark:''},
+    {sn:'864423069849346',time:'',by:'',remark:''},
+    {sn:'864423061759634',time:'',by:'',remark:''}
   ];
   /* 伪随机(定值种子,保证每次渲染一致) */
   let seed=20260703;
@@ -84,7 +92,8 @@ const DEVICES=(()=>{
       // 主体为32位hex串,穿插少量15位数字SN(与线上一致)
       sn:i%4===3?('8609350724'+String(35155+Math.floor(rnd()*90000)).padStart(5,'0')):hex32(),
       time:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,
-      by:i%3===0?'chuhuojilu2':'chuhuojilu'
+      by:i%3===0?'chuhuojilu2':'chuhuojilu',
+      remark:''
     });
   }
   return rows;
@@ -97,16 +106,18 @@ const pg={total:DEVICES.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>r
 
 function doQuery(){
   const sn=document.getElementById('fSn').value.trim().toLowerCase();
+  const by=document.getElementById('fBy').value.trim().toLowerCase();
   const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
   filtered=DEVICES.filter(r=>
     (!sn||r.sn.toLowerCase().includes(sn))&&
+    (!by||(r.by||'').toLowerCase().includes(by))&&
     (!s||(r.time&&r.time>=s))&&(!e||(r.time&&r.time<=e+' 23:59:59'))
   );
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderTable();
 }
 function doReset(){
-  ['fSn','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
+  ['fSn','fBy','fStart','fEnd'].forEach(id=>document.getElementById(id).value='');
   checked.clear();doQuery();
 }
 function renderTable(){
@@ -116,9 +127,10 @@ function renderTable(){
     <tr>
       <td class="ck"><input type="checkbox" ${checked.has(r.sn)?'checked':''} onclick="toggleOne('${r.sn}',this)"></td>
       <td>${s+i+1}</td><td class="sn">${r.sn}</td><td>${r.time}</td><td>${r.by}</td>
+      <td class="rmk" title="${r.remark||''}">${r.remark||'-'}</td>
       <td><span class="op"><a class="danger" onclick="delOne('${r.sn}')">删除</a></span></td>
     </tr>`).join('')
-    :'<tr><td colspan="6"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+    :'<tr><td colspan="7"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
   // 全选框状态跟随当前页
   document.getElementById('ckAll').checked=rows.length>0&&rows.every(r=>checked.has(r.sn));
 }
@@ -146,8 +158,13 @@ function batchDel(){
   $confirm(`确定删除选中的 ${checked.size} 个网关注册信息吗?`,()=>{removeSns([...checked]);$msg('删除成功');});
 }
 
-/* ── 批量添加 ── */
-function openAdd(){document.getElementById('addSn').value='';$modal('dlgAdd');}
+/* ── 批量添加(可填备注,200字以内,本批次共用) ── */
+function openAdd(){
+  document.getElementById('addSn').value='';
+  document.getElementById('addRemark').value='';
+  document.getElementById('rmkCnt').textContent='0/200';
+  $modal('dlgAdd');
+}
 function submitAdd(){
   const lines=document.getElementById('addSn').value.split('\n').map(s=>s.trim()).filter(Boolean);
   if(!lines.length)return $msg('请输入网关SN','warning');
@@ -155,9 +172,10 @@ function submitAdd(){
   if(bad)return $msg(`SN格式错误:${bad}(需为32位16进制串)`,'error');
   const dup=lines.find(s=>DEVICES.some(r=>r.sn.toLowerCase()===s.toLowerCase()));
   if(dup)return $msg(`网关 ${dup} 已注册,请勿重复添加`,'error');
+  const remark=document.getElementById('addRemark').value.trim();
   const p=n=>String(n).padStart(2,'0'),d=new Date();
   const now=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-  lines.reverse().forEach(sn=>DEVICES.unshift({sn:sn.toLowerCase(),time:now,by:'chuhuojilu'}));
+  lines.reverse().forEach(sn=>DEVICES.unshift({sn:sn.toLowerCase(),time:now,by:'chuhuojilu',remark}));
   $modalClose('dlgAdd');
   $msg(`成功添加 ${lines.length} 个网关`);
   doQuery();

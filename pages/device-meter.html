@@ -20,6 +20,18 @@
 .detail-grid{display:grid;grid-template-columns:120px 1fr;gap:10px 14px;font-size:13px;}
 .detail-grid .k{color:var(--ts);text-align:right;}
 .detail-grid .v{color:var(--tx);word-break:break-all;}
+/* ── 系统(主外机)关联弹窗(照线上截图:左添加绑定 / 右已绑定) ── */
+.sn{font-family:Consolas,Menlo,monospace;font-size:12.5px;}
+.bind-wrap{display:flex;gap:18px;min-height:340px;}
+.bind-col{flex:1;display:flex;flex-direction:column;min-width:0;}
+.bind-cap{font-size:13.5px;font-weight:600;color:var(--txw);margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;}
+.bind-sn{border:1px solid var(--bd2);border-radius:4px;max-height:150px;overflow:auto;margin-bottom:12px;}
+.bind-sn .bsn{padding:7px 10px;font-family:Consolas,Menlo,monospace;font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bind-sn .bsn:hover{background:var(--primary-dim);}
+.bind-sn .bsn.sel{color:var(--primary);background:var(--primary-dim);}
+.bind-sys{border:1px solid var(--bd2);border-radius:4px;flex:1;min-height:110px;max-height:170px;overflow:auto;padding:6px 10px;}
+.bind-sys label{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx);line-height:26px;cursor:pointer;}
+.bind-act{margin-top:14px;text-align:center;}
 </style>
 </head>
 <body>
@@ -123,21 +135,35 @@
   </div>
 </div>
 
-<!-- 系统绑定弹窗 -->
+<!-- 系统(主外机)关联弹窗(照线上截图:左侧仅列计费网关,点选 SN 后勾选系统添加绑定;右侧已绑定可解除) -->
 <div class="modal" id="dlgBind">
-  <div class="dialog" style="width:520px">
-    <div class="dh"><span>系统绑定</span><span class="dx" onclick="$modalClose('dlgBind')">✕</span></div>
+  <div class="dialog" style="width:920px">
+    <div class="dh"><span id="bindTitle">电表 — 系统(主外机)关联</span><span class="dx" onclick="$modalClose('dlgBind')">✕</span></div>
     <div class="db">
-      <div class="tw"><table>
-        <thead><tr><th>序号</th><th>绑定房间</th><th>绑定类型</th><th>绑定时间</th></tr></thead>
-        <tbody id="bindBody"></tbody>
-      </table></div>
+      <div class="bind-wrap">
+        <div class="bind-col">
+          <div class="bind-cap"><span>添加系统(主外机)绑定</span></div>
+          <div class="bind-sn" id="bindSns"></div>
+          <div class="bind-cap"><span>系统(主外机地址)</span><span class="text-sub" style="font-weight:400" id="bindSelCnt">当前0条</span></div>
+          <div class="bind-sys" id="bindSys"></div>
+          <div class="bind-act"><button class="btn btnp" onclick="bindAdd()">添加绑定 →</button></div>
+        </div>
+        <div class="bind-col">
+          <div class="bind-cap"><span id="bindCnt">已绑定0个系统(主外机)</span></div>
+          <div class="tw"><table>
+            <thead><tr><th style="width:36px"><input type="checkbox" id="bindAllCk" onclick="bindCheckAll(this.checked)"></th><th>主机编号</th><th>系统(主外机地址)</th></tr></thead>
+            <tbody id="bindBody"></tbody>
+          </table></div>
+          <div class="bind-act"><button class="btn btnp" onclick="bindRemove()">← 解除绑定</button></div>
+        </div>
+      </div>
     </div>
     <div class="df"><button class="btn" onclick="$modalClose('dlgBind')">关闭</button></div>
   </div>
 </div>
 
 <script src="_ui.js"></script>
+<script src="_billing-gw.js"></script>
 <script>
 /* ── 主机列表(与控制器管理一致) ── */
 const HOSTS=[
@@ -158,7 +184,7 @@ function hostForFloor(fl){
 const METERS=(()=>{
   const M=(name,host,addr,st,reading,commTime,crtTime)=>({
     name,host:host.code,cid:host.cid,addr,st,proto:'DLT645-2007',ratio:1,
-    after:reading,before:reading,commTime,crtTime,_ck:false});
+    after:reading,before:reading,commTime,crtTime,systems:[],_ck:false});
   const rows=[
     M('13-2',HOSTS[2],'220413099863','正常运行','10342.19','2026-07-03 10:02:52','2025-06-26 22:00:47'),
     M('13-1',HOSTS[2],'220413099684','正常运行','7267.53','2026-07-03 10:02:52','2025-06-26 21:56:57'),
@@ -187,6 +213,9 @@ const METERS=(()=>{
       i++;
     });
   });
+  /* 每块电表预绑定 1 个 B2-1 集控网关下的系统(主外机),与卡片「系统绑定(1)」初始口径一致 */
+  const SYS=['2-1-7','2-1-8','2-2-8','2-3-2','2-3-4','2-3-14','2-3-15'];
+  rows.forEach((m,i)=>m.systems=[{gw:'fa000001400001240240614000100379',sys:SYS[i%SYS.length]}]);
   return rows;
 })();
 
@@ -198,7 +227,9 @@ const pg={total:METERS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>re
 
 document.getElementById('fHost').innerHTML='<option value="">请选择主机</option>'+
   HOSTS.map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
-document.getElementById('aHost').innerHTML=HOSTS.map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
+/* 添加电表的所属主机下拉只展示计费网关列表内的网关(计费/不计费管控口径) */
+document.getElementById('aHost').innerHTML=HOSTS.filter(h=>HvacBillingGw.isBilling(h.code))
+  .map(h=>`<option value="${h.code}">${h.name}</option>`).join('');
 
 function doQuery(){
   const host=document.getElementById('fHost').value;
@@ -228,7 +259,7 @@ function renderCards(){
       <div class="card-ft">
         <button class="btn btnp" onclick="readNow(${i})">立即抄表</button>
         <button class="btn btnp" onclick="openEdit(${i})">编辑</button>
-        <button class="btn btnp" onclick="openBind(${i})">系统绑定(1)</button>
+        <button class="btn btnp" onclick="openBind(${i})">系统绑定(${m.systems.length})</button>
       </div>
     </div>`;
   }).join(''):'<div class="empty" style="grid-column:1/-1"><span class="ei">📄</span><span class="et">暂无数据</span></div>';
@@ -297,11 +328,71 @@ function delMeters(){
   });
 }
 function readNow(i){$msg(`电表「${METERS[i].name}」抄表指令已下发`);}
+
+/* ── 系统(主外机)关联 ──
+   左侧网关 SN 列表只展示计费网关列表内、且带空调系统的网关(计费管控);
+   点选 SN 后勾选系统 → 添加绑定;右侧已绑定列表可勾选解除 */
+const GW_SYSTEMS={'fa000001400001240240614000100379':['2-1-7','2-1-8','2-2-8','2-3-2','2-3-4','2-3-14','2-3-15']};  /* B2-1 */
+let bindIdx=-1,bindGw='',sysCk=new Set(),boundCk=new Set();
+
+function bindableGws(){return HOSTS.filter(h=>HvacBillingGw.isBilling(h.code)&&GW_SYSTEMS[h.code]);}
+function sysMeterCnt(gw,sys){return METERS.filter(m=>m.systems.some(s=>s.gw===gw&&s.sys===sys)).length;}
+
 function openBind(i){
+  bindIdx=i;sysCk.clear();boundCk.clear();
   const m=METERS[i];
-  document.getElementById('bindBody').innerHTML=
-    `<tr><td>1</td><td>${m.name}</td><td>房间计费</td><td>${m.crtTime}</td></tr>`;
+  document.getElementById('bindTitle').textContent=`电表${m.addr} — 系统(主外机)关联`;
+  const gws=bindableGws();
+  bindGw=gws.length?gws[0].code:'';
+  renderBindPanels();
   $modal('dlgBind');
+}
+function renderBindPanels(){
+  const m=METERS[bindIdx];
+  const gws=bindableGws();
+  /* 左:网关SN列表(仅计费网关;B2-2 不在计费列表内,故不出现) */
+  document.getElementById('bindSns').innerHTML=gws.length?gws.map(h=>
+    `<div class="bsn${h.code===bindGw?' sel':''}" title="${h.name}" onclick="bindPickGw('${h.code}')">${h.code}</div>`).join('')
+    :'<div class="empty" style="padding:26px"><span class="et">暂无计费网关</span></div>';
+  /* 左:所选网关下可绑定系统(排除已绑定) */
+  const sys=(GW_SYSTEMS[bindGw]||[]).filter(sy=>!m.systems.some(s=>s.gw===bindGw&&s.sys===sy));
+  document.getElementById('bindSys').innerHTML=sys.length?sys.map(sy=>
+    `<label><input type="checkbox" ${sysCk.has(sy)?'checked':''} onchange="tglSys('${sy}',this.checked)">${sy}</label>`).join('')
+    :'<div class="empty" style="padding:26px"><span class="et">暂无可绑定系统</span></div>';
+  document.getElementById('bindSelCnt').textContent='当前'+sysCk.size+'条';
+  /* 右:已绑定 */
+  document.getElementById('bindCnt').textContent=`已绑定${m.systems.length}个系统(主外机)`;
+  document.getElementById('bindBody').innerHTML=m.systems.length?m.systems.map(s=>{
+    const key=s.gw+'|'+s.sys;
+    return `<tr><td><input type="checkbox" ${boundCk.has(key)?'checked':''} onchange="tglBound('${key}',this.checked)"></td>
+      <td class="sn">${s.gw}</td><td>${s.sys}(当前已关联${sysMeterCnt(s.gw,s.sys)}个电表)</td></tr>`;
+  }).join(''):'<tr><td colspan="3"><div class="empty" style="padding:26px"><span class="et">暂无数据</span></div></td></tr>';
+  document.getElementById('bindAllCk').checked=m.systems.length>0&&m.systems.every(s=>boundCk.has(s.gw+'|'+s.sys));
+}
+function tglSys(sy,ck){ck?sysCk.add(sy):sysCk.delete(sy);document.getElementById('bindSelCnt').textContent='当前'+sysCk.size+'条';}
+function tglBound(key,ck){ck?boundCk.add(key):boundCk.delete(key);renderBindPanels();}
+function bindPickGw(code){bindGw=code;sysCk.clear();renderBindPanels();}
+function bindCheckAll(ck){
+  const m=METERS[bindIdx];
+  boundCk.clear();if(ck)m.systems.forEach(s=>boundCk.add(s.gw+'|'+s.sys));
+  renderBindPanels();
+}
+function bindAdd(){
+  if(!bindGw)return $msg('暂无可绑定的计费网关','warning');
+  if(!sysCk.size)return $msg('请先勾选要绑定的系统','warning');
+  const m=METERS[bindIdx];
+  sysCk.forEach(sy=>m.systems.push({gw:bindGw,sys:sy}));
+  sysCk.clear();renderBindPanels();renderCards();
+  $msg('绑定成功');
+}
+function bindRemove(){
+  if(!boundCk.size)return $msg('请先勾选要解除的系统','warning');
+  const m=METERS[bindIdx];
+  $confirm(`确定解除选中的 ${boundCk.size} 个系统绑定吗?`,()=>{
+    m.systems=m.systems.filter(s=>!boundCk.has(s.gw+'|'+s.sys));
+    boundCk.clear();renderBindPanels();renderCards();
+    $msg('解除绑定成功');
+  });
 }
 
 doQuery();

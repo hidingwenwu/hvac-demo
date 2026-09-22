@@ -61,7 +61,16 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_billing-gw.js"></script>
 <script>
+/* ── 非计费网关置零(计费管控演示):
+      B2-2(fa…0343,内机地址 1- 前缀)不在计费网关列表内时,平台不再拉取其当量,
+      相关房间当量展示为 0(行保留);在「系统管理-计费网关列表」添加该 SN 后刷新本页即恢复 ── */
+const NB_GW='fa000001400001240240614000100343';
+function zeroNonBilling(r){
+  return (r.addr.startsWith('1-')&&!HvacBillingGw.isBilling(NB_GW))?{...r,eq:'0.0'}:r;
+}
+
 /* ── 模拟数据(楼号/楼层/房间号,公区为中走廊·西走廊,当量多为0.0偶有大整数) ── */
 const ROWS=(()=>{
   const rows=[];
@@ -105,7 +114,7 @@ function doQuery(){
   const eqSel=document.getElementById('fEq').value;
   const state=document.getElementById('fState').value;
   const addr=document.getElementById('fAddr').value.trim();
-  filtered=ROWS.filter(r=>
+  filtered=ROWS.map(zeroNonBilling).filter(r=>
     (!s||r.date>=s)&&(!e||r.date<=e)&&
     (!eqSel||(eqSel==='gt0'?+r.eq>0:+r.eq===0))&&
     (!state||r.state===state)&&

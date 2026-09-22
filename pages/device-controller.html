@@ -38,11 +38,22 @@
 .cfg-group-title{font-size:13px;font-weight:600;color:var(--txw);}
 .cfg-sw-row{display:flex;align-items:center;gap:12px;}
 .cfg-sw-state{font-size:12.5px;color:var(--ts);}
+/* ── 温控器详情弹窗(左标签右值,照线上截图) ── */
+.tkv{display:flex;justify-content:space-between;gap:16px;font-size:13px;line-height:34px;}
+.tkv .k{color:var(--ts);white-space:nowrap;}
+.tkv .v{color:var(--tx);text-align:right;word-break:break-all;}
+/* 温控器列表 设备编号等宽展示 */
+.sn{font-family:Consolas,Menlo,monospace;font-size:12.5px;}
 </style>
 </head>
 <body>
-<div class="tabs"><div class="tab active">主机管理</div><div class="tab" onclick="$msg('原型演示:温控器管理','info')">温控器管理</div></div>
+<div class="tabs">
+  <div class="tab active" id="tabBtnHost" onclick="switchTab('host')">主机管理</div>
+  <div class="tab" id="tabBtnTstat" onclick="switchTab('tstat')">温控器管理</div>
+</div>
 
+<!-- ══════════ 主机管理 ══════════ -->
+<div id="tabHost">
 <!-- 筛选栏 -->
 <div class="fb">
   <input id="fCode" placeholder="主机编号" style="width:150px">
@@ -51,6 +62,9 @@
   <input id="fModel" placeholder="型号" style="width:150px">
   <select id="fOnline" style="width:140px">
     <option value="">选择在线状态</option><option>在线</option><option>离线</option>
+  </select>
+  <select id="fBilling" style="width:140px">
+    <option value="">是否计费版本</option><option>是</option><option>否</option>
   </select>
   <button class="btn btnp" onclick="doQuery()">搜索</button>
   <button class="btn" onclick="doReset()">重置</button>
@@ -67,6 +81,82 @@
 <!-- 主机卡片网格 -->
 <div class="cards" id="cards"></div>
 <div id="pager"></div>
+</div><!-- /tabHost -->
+
+<!-- ══════════ 温控器管理(按线上截图还原) ══════════ -->
+<div id="tabTstat" style="display:none">
+<!-- 筛选栏 -->
+<div class="fb">
+  <input id="tCode" placeholder="请输入设备编号" style="width:200px">
+  <input id="tName" placeholder="请输入设备名称" style="width:150px">
+  <input id="tCid" placeholder="请输入通信id" style="width:150px">
+  <select id="tOnline" style="width:140px">
+    <option value="">选择在线状态</option><option>在线</option><option>离线</option>
+  </select>
+  <button class="btn btnp" onclick="tQuery()">搜索</button>
+  <button class="btn" onclick="tReset()">重置</button>
+  <div class="toolbar-right">
+    <button class="btn btnp" onclick="tDispatch()">⇩ 下发配置</button>
+    <button class="btn btnp" onclick="tUpgrade()">＋ 加入升级计划</button>
+    <button class="btn btnp" onclick="tOpenAdd()">＋ 添加</button>
+  </div>
+</div>
+
+<!-- 温控器表格 -->
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th style="width:44px"><input type="checkbox" id="tAll" onclick="tCheckAll(this.checked)"></th>
+      <th>设备编号</th><th>设备名称</th><th>通信id</th><th>版本</th><th>是否在线</th><th>设备时间</th>
+      <th>管线阀</th><th>冷量</th><th>表征数量</th><th>通信时间</th><th>操作</th>
+    </tr></thead>
+    <tbody id="tBody"></tbody>
+  </table>
+</div>
+<div id="tPager"></div>
+</div><!-- /tabTstat -->
+
+<!-- 温控器详情弹窗(按线上截图:左标签右值;新增「是否计费版本」) -->
+<div class="modal" id="dlgTstatDetail">
+  <div class="dialog" style="width:560px">
+    <div class="dh"><span>温控器详情</span><span class="dx" onclick="$modalClose('dlgTstatDetail')">✕</span></div>
+    <div class="db" id="tDetailBody"></div>
+    <div class="df"><button class="btn" onclick="$modalClose('dlgTstatDetail')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 编辑温控器弹窗 -->
+<div class="modal" id="dlgTstatEdit">
+  <div class="dialog" style="width:460px">
+    <div class="dh"><span>编辑温控器</span><span class="dx" onclick="$modalClose('dlgTstatEdit')">✕</span></div>
+    <div class="db">
+      <div class="form-row"><span class="fl">设备名称</span><input id="teName" class="flex1" placeholder="请输入设备名称"></div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgTstatEdit')">取消</button>
+      <button class="btn btnp" onclick="tSaveEdit()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加温控器弹窗 -->
+<div class="modal" id="dlgTstatAdd">
+  <div class="dialog" style="width:480px">
+    <div class="dh"><span>添加温控器</span><span class="dx" onclick="$modalClose('dlgTstatAdd')">✕</span></div>
+    <div class="db" style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+      <div class="form-row"><span class="fl"><span class="req">*</span>设备编号</span><input id="taCode" class="flex1" placeholder="请输入设备编号"></div>
+      <div class="form-row"><span class="fl">设备名称</span><input id="taName" class="flex1" placeholder="请输入设备名称"></div>
+      <div class="form-row"><span class="fl"><span class="req">*</span>通信id</span><input id="taCid" class="flex1" placeholder="请输入通信id"></div>
+      <div class="form-row"><span class="fl">型号</span>
+        <select id="taModel" class="flex1"><option>F16G</option></select>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgTstatAdd')">取消</button>
+      <button class="btn btnp" onclick="tSaveAdd()">提交</button>
+    </div>
+  </div>
+</div>
 
 <!-- 主机详情弹窗 -->
 <div class="modal" id="dlgDetail">
@@ -136,23 +226,24 @@
 </div>
 
 <script src="_ui.js"></script>
+<script src="_billing-gw.js"></script>
 <script>
 /* ── 模拟数据(与线上形态一致):分体机控制器(参照测试环境「平台测试_分体机」项目)+ 抄表器/网关 ── */
 const HOSTS=[
-  {name:'FD01G分体控制器',code:'eace218166bd23ba958f704bca84d4fc',mac:'70:4B:CA:84:D4:FE',cid:14,model:'FD01G',ver:'0.114.0.0.15',online:'离线',hasNew:'是',commTime:'2026-07-29 14:09:43',devTime:'2026-07-29 05:10:10',crtTime:'2026-05-21 10:00:31'},
-  {name:'1235',code:'e309bbe96817fc0f0139ece334a2f178',mac:'EC:E3:34:A2:F1:7A',cid:13,model:'FD01G',ver:'0.114.0.0.4',online:'离线',hasNew:'是',commTime:'2026-03-30 16:29:15',devTime:'2026-03-30 16:29:13',crtTime:'2026-01-12 21:11:50'},
-  {name:'开发自测2026040212345678',code:'860935079871097',mac:'',cid:12,model:'hrjn',ver:'1.0.1',online:'离线',hasNew:'否',commTime:'2026-04-23 16:22:17',devTime:'2026-04-23 16:22:16',crtTime:'2026-04-02 08:53:06'},
-  {name:'HRJN测试设备',code:'860935071588111',mac:'',cid:11,model:'hrjn',ver:'1.0.0',online:'离线',hasNew:'否',commTime:'2025-09-15 12:45:11',devTime:'2025-09-15 12:45:13',crtTime:'2025-09-04 13:37:19'},
-  {name:'DBX可用设备',code:'864423069849445',mac:'',cid:10,model:'dbx',ver:'1.0.1',online:'离线',hasNew:'否',commTime:'2026-07-29 05:10:11',devTime:'2026-07-29 05:10:10',crtTime:'2025-11-17 17:07:39'},
-  {name:'DBX测试设备2',code:'864423061759634',mac:'',cid:9,model:'dbx',ver:'1.0.1',online:'在线',hasNew:'否',commTime:'2026-07-29 13:20:41',devTime:'2026-07-29 13:20:41',crtTime:'2025-11-17 17:07:39'},
-  {name:'OC可用设备',code:'00010121ff000008',mac:'',cid:8,model:'oc',ver:'0.4.1',online:'在线',hasNew:'否',commTime:'2026-07-29 13:24:58',devTime:'2026-07-29 13:24:58',crtTime:'2025-09-28 14:54:37'},
-  {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',mac:'9c:9e:6e:e0:ef:a6',cid:7,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:27',devTime:'2026-07-03 10:16:00',crtTime:'2025-06-27 11:23:00'},
-  {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',mac:'9c:9e:6e:e0:2b:4e',cid:6,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:20',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 11:23:00'},
-  {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',mac:'9c:9e:6e:df:73:72',cid:5,model:'E74G',ver:'18.41.0.0.102',online:'在线',hasNew:'是',commTime:'2026-07-03 10:16:19',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 21:10:06'},
-  {name:'B2-6-10层抄表器',code:'a176334174880a5db4679c9e6ea66b30',mac:'9c:9e:6e:a6:6b:32',cid:4,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:19:25',devTime:'2026-07-03 10:19:20',crtTime:'2025-06-27 14:36:04'},
-  {name:'B2-3-5层抄表器',code:'aec0109604dd731c62659c9e6ee291b4',mac:'9c:9e:6e:e2:91:b6',cid:3,model:'E74G',ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:19:18',devTime:'2026-07-03 10:19:19',crtTime:'2025-06-27 14:47:42'},
-  {name:'B2-1',code:'fa00000140000124024061400010 0379'.replace(/ /g,''),mac:'00:01:60:AC:D3:7F',cid:2,model:'A02FG',ver:'82.216.0.3.3',online:'在线',hasNew:'否',commTime:'2026-07-03 10:18:13',devTime:'2026-07-03 10:18:14',crtTime:'2025-06-24 16:00:05'},
-  {name:'B2-2',code:'fa00000140000124024061400010 0343'.replace(/ /g,''),mac:'00:01:9B:14:68:39',cid:1,model:'A02FG',ver:'82.216.0.3.3',online:'在线',hasNew:'否',commTime:'2026-07-03 10:16:25',devTime:'2026-07-03 10:16:27',crtTime:'2025-06-24 15:44:48'}
+  {name:'FD01G分体控制器',code:'eace218166bd23ba958f704bca84d4fc',mac:'70:4B:CA:84:D4:FE',cid:14,model:'FD01G',ver:'0.114.0.0.15',online:'离线',commTime:'2026-07-29 14:09:43',devTime:'2026-07-29 05:10:10',crtTime:'2026-05-21 10:00:31'},
+  {name:'1235',code:'e309bbe96817fc0f0139ece334a2f178',mac:'EC:E3:34:A2:F1:7A',cid:13,model:'FD01G',ver:'0.114.0.0.4',online:'离线',commTime:'2026-03-30 16:29:15',devTime:'2026-03-30 16:29:13',crtTime:'2026-01-12 21:11:50'},
+  {name:'开发自测2026040212345678',code:'860935079871097',mac:'',cid:12,model:'hrjn',ver:'1.0.1',online:'离线',commTime:'2026-04-23 16:22:17',devTime:'2026-04-23 16:22:16',crtTime:'2026-04-02 08:53:06'},
+  {name:'HRJN测试设备',code:'860935071588111',mac:'',cid:11,model:'hrjn',ver:'1.0.0',online:'离线',commTime:'2025-09-15 12:45:11',devTime:'2025-09-15 12:45:13',crtTime:'2025-09-04 13:37:19'},
+  {name:'DBX可用设备',code:'864423069849445',mac:'',cid:10,model:'dbx',ver:'1.0.1',online:'离线',commTime:'2026-07-29 05:10:11',devTime:'2026-07-29 05:10:10',crtTime:'2025-11-17 17:07:39'},
+  {name:'DBX测试设备2',code:'864423061759634',mac:'',cid:9,model:'dbx',ver:'1.0.1',online:'在线',commTime:'2026-07-29 13:20:41',devTime:'2026-07-29 13:20:41',crtTime:'2025-11-17 17:07:39'},
+  {name:'OC可用设备',code:'00010121ff000008',mac:'',cid:8,model:'oc',ver:'0.4.1',online:'在线',commTime:'2026-07-29 13:24:58',devTime:'2026-07-29 13:24:58',crtTime:'2025-09-28 14:54:37'},
+  {name:'B2-21-25层抄表器',code:'391df10258d42f83cee49c9e6ee0efa4',mac:'9c:9e:6e:e0:ef:a6',cid:7,model:'E74G',ver:'18.41.0.0.105',online:'在线',commTime:'2026-07-03 10:16:27',devTime:'2026-07-03 10:16:00',crtTime:'2025-06-27 11:23:00'},
+  {name:'B2-16-20层抄表器',code:'275b647a7878e52540b69c9e6ee02b4c',mac:'9c:9e:6e:e0:2b:4e',cid:6,model:'E74G',ver:'18.41.0.0.105',online:'在线',commTime:'2026-07-03 10:16:20',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 11:23:00'},
+  {name:'B2-11-15层抄表器',code:'861d5345da5643d49dbd9c9e6edf7370',mac:'9c:9e:6e:df:73:72',cid:5,model:'E74G',ver:'18.41.0.0.102',online:'在线',commTime:'2026-07-03 10:16:19',devTime:'2026-07-03 10:15:59',crtTime:'2025-06-27 21:10:06'},
+  {name:'B2-6-10层抄表器',code:'a176334174880a5db4679c9e6ea66b30',mac:'9c:9e:6e:a6:6b:32',cid:4,model:'E74G',ver:'18.41.0.0.105',online:'在线',commTime:'2026-07-03 10:19:25',devTime:'2026-07-03 10:19:20',crtTime:'2025-06-27 14:36:04'},
+  {name:'B2-3-5层抄表器',code:'aec0109604dd731c62659c9e6ee291b4',mac:'9c:9e:6e:e2:91:b6',cid:3,model:'E74G',ver:'18.41.0.0.105',online:'在线',commTime:'2026-07-03 10:19:18',devTime:'2026-07-03 10:19:19',crtTime:'2025-06-27 14:47:42'},
+  {name:'B2-1',code:'fa00000140000124024061400010 0379'.replace(/ /g,''),mac:'00:01:60:AC:D3:7F',cid:2,model:'A02FG',ver:'82.216.0.3.3',online:'在线',commTime:'2026-07-03 10:18:13',devTime:'2026-07-03 10:18:14',crtTime:'2025-06-24 16:00:05'},
+  {name:'B2-2',code:'fa00000140000124024061400010 0343'.replace(/ /g,''),mac:'00:01:9B:14:68:39',cid:1,model:'A02FG',ver:'82.216.0.3.3',online:'在线',commTime:'2026-07-03 10:16:25',devTime:'2026-07-03 10:16:27',crtTime:'2025-06-24 15:44:48'}
 ];
 HOSTS.forEach(h=>h._ck=false);
 
@@ -162,16 +253,28 @@ const EDIT_SVG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stro
 let filtered=HOSTS.slice(),editIdx=-1;
 const pg={total:HOSTS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>renderCards()};
 
+/* 是否计费版本:SN 在共享计费网关列表(_billing-gw.js)内 = 是,否则 = 否 */
+function billingText(code){return HvacBillingGw.isBilling(code)?'是':'否';}
+
+/* ── 页签切换:主机管理 / 温控器管理 ── */
+function switchTab(t){
+  document.getElementById('tabBtnHost').classList.toggle('active',t==='host');
+  document.getElementById('tabBtnTstat').classList.toggle('active',t==='tstat');
+  document.getElementById('tabHost').style.display=t==='host'?'':'none';
+  document.getElementById('tabTstat').style.display=t==='tstat'?'':'none';
+  document.title='控制器管理 - '+(t==='host'?'主机管理':'温控器管理');
+}
+
 function doQuery(){
-  const code=v('fCode'),name=v('fName'),cid=v('fCid'),model=v('fModel'),online=v('fOnline');
+  const code=v('fCode'),name=v('fName'),cid=v('fCid'),model=v('fModel'),online=v('fOnline'),billing=v('fBilling');
   filtered=HOSTS.filter(h=>
     (!code||h.code.includes(code))&&(!name||h.name.includes(name))&&
     (!cid||String(h.cid)===cid)&&(!model||h.model.toLowerCase().includes(model.toLowerCase()))&&
-    (!online||h.online===online));
+    (!online||h.online===online)&&(!billing||billingText(h.code)===billing));
   pg.page=1;pg.total=filtered.length;
   $pager('pager',pg);renderCards();
 }
-function doReset(){['fCode','fName','fCid','fModel','fOnline'].forEach(id=>document.getElementById(id).value='');doQuery();}
+function doReset(){['fCode','fName','fCid','fModel','fOnline','fBilling'].forEach(id=>document.getElementById(id).value='');doQuery();}
 function v(id){return document.getElementById(id).value.trim();}
 
 function renderCards(){
@@ -187,7 +290,7 @@ function renderCards(){
       </div>
       ${kv('主机编号',h.code)}${kv('蓝牙MAC',h.mac)}${kv('通信id',h.cid)}${kv('型号',h.model)}
       ${kv('主机版本号',h.ver)}${kv('是否在线',h.online==='在线'?h.online:'<span class="text-er">'+h.online+'</span>')}
-      ${kv('是否有新版本',h.hasNew)}${kv('通信时间',h.commTime)}${kv('设备时间',h.devTime)}${kv('创建时间',h.crtTime)}
+      ${kv('是否计费版本',billingText(h.code))}${kv('通信时间',h.commTime)}${kv('设备时间',h.devTime)}${kv('创建时间',h.crtTime)}
       <div class="card-ft">
         <button class="btn btnp" onclick="syncHost(${i})">手动同步</button>
         <button class="btn" onclick="rebootHost(${i})">重启</button>
@@ -361,7 +464,7 @@ function sendPf(){
 function showDetail(i){
   const h=HOSTS[i];
   const F=[['主机名称',h.name],['主机编号',h.code],['蓝牙MAC',h.mac],['通信id',h.cid],['型号',h.model],
-    ['主机版本号',h.ver],['是否在线',h.online],['是否有新版本',h.hasNew],
+    ['主机版本号',h.ver],['是否在线',h.online],['是否计费版本',billingText(h.code)],
     ['通信时间',h.commTime],['设备时间',h.devTime],['创建时间',h.crtTime]];
   document.getElementById('detailGrid').innerHTML=F.map(([k,val])=>`<span class="k">${k}:</span><span class="v">${val}</span>`).join('');
   $modal('dlgDetail');
@@ -377,7 +480,7 @@ function saveCreate(){
   const code=v('cCode'),name=v('cName'),cid=v('cCid');
   if(!code||!name||!cid)return $msg('请填写完整信息','warning');
   HOSTS.push({name,code,mac:'9c:9e:6e:'+cid+'0:00:0'+cid,cid:+cid||cid,model:document.getElementById('cModel').value,
-    ver:'18.41.0.0.105',online:'在线',hasNew:'否',commTime:'2026-07-03 10:20:00',devTime:'2026-07-03 10:20:00',crtTime:'2026-07-03 10:20:00',_ck:false});
+    ver:'18.41.0.0.105',online:'在线',commTime:'2026-07-03 10:20:00',devTime:'2026-07-03 10:20:00',crtTime:'2026-07-03 10:20:00',_ck:false});
   $modalClose('dlgCreate');$msg('新建成功');doQuery();
 }
 function openEnergy(){
@@ -390,7 +493,100 @@ function syncHost(i){$confirm(`确定手动同步主机「${HOSTS[i].name}」的
 function rebootHost(i){$confirm(`确定重启主机「${HOSTS[i].name}」吗?`,()=>$msg('重启指令已下发'));}
 function replaceHost(i){$confirm(`确定替换主机「${HOSTS[i].name}」吗?`,()=>$msg('替换成功'));}
 
-doQuery();
+/* ══════════════════════════════════════════════════════════
+   温控器管理(列表/详情字段照线上截图;型号均为 F16G)
+   「是否计费版本」仅在详情弹窗展示:SN 在计费网关列表内 = 是
+   ══════════════════════════════════════════════════════════ */
+const TSTATS=[
+  {code:'e2048988197047e7c3f982ff0c2c4f908',name:'',cid:7,model:'F16G',ver:'0.24.2.0.10',online:'在线',fault:'否',devTime:'2026-09-22 16:46:23',commTime:'2026-09-22 16:46:25',crtTime:'2025-03-07 09:03:28',valve:'2管制3线阀',cold:100,repr:1,_ck:false},
+  {code:'8e0489881970827c3f982ff0aec4f908',name:'',cid:6,model:'F16G',ver:'0.24.2.0.10',online:'在线',fault:'否',devTime:'2026-09-22 16:46:57',commTime:'2026-09-22 16:46:57',crtTime:'2025-03-07 09:05:12',valve:'',cold:100,repr:1,_ck:false},
+  {code:'d0058988197090233f982ff0d0b5f908',name:'',cid:5,model:'F16G',ver:'0.24.2.0.17',online:'离线',fault:'否',devTime:'2026-07-27 11:00:44',commTime:'2026-07-27 11:01:07',crtTime:'2025-03-07 09:08:40',valve:'',cold:100,repr:1,_ck:false},
+  {code:'dd05898819700b233f982ff00db5f908',name:'',cid:4,model:'F16G',ver:'0.24.2.0.10',online:'在线',fault:'否',devTime:'2026-09-22 16:46:45',commTime:'2026-09-22 16:46:46',crtTime:'2025-03-07 09:11:03',valve:'',cold:100,repr:1,_ck:false}
+];
+let tFiltered=TSTATS.slice(),tEditIdx=-1;
+const tPg={total:TSTATS.length,page:1,size:10,sizes:[10,20,30,50],onChange:()=>tRender()};
+
+function tQuery(){
+  const code=v('tCode').toLowerCase(),name=v('tName'),cid=v('tCid'),online=v('tOnline');
+  tFiltered=TSTATS.filter(t=>
+    (!code||t.code.toLowerCase().includes(code))&&(!name||(t.name||'').includes(name))&&
+    (!cid||String(t.cid)===cid)&&(!online||t.online===online));
+  tPg.page=1;tPg.total=tFiltered.length;
+  $pager('tPager',tPg);tRender();
+}
+function tReset(){['tCode','tName','tCid','tOnline'].forEach(id=>document.getElementById(id).value='');tQuery();}
+
+function tRender(){
+  const s=(tPg.page-1)*tPg.size;
+  const rows=tFiltered.slice(s,s+tPg.size);
+  document.getElementById('tBody').innerHTML=rows.length?rows.map(t=>{
+    const i=TSTATS.indexOf(t);
+    return `<tr>
+      <td><input type="checkbox" ${t._ck?'checked':''} onchange="TSTATS[${i}]._ck=this.checked;tSyncAll()"></td>
+      <td class="sn">${t.code}</td><td>${t.name||''}</td><td>${t.cid}</td><td>${t.ver}</td>
+      <td>${t.online==='在线'?t.online:'<span class="text-er">'+t.online+'</span>'}</td>
+      <td>${t.devTime}</td><td>${t.valve||''}</td><td>${t.cold}</td><td>${t.repr}</td><td>${t.commTime}</td>
+      <td><span class="op">
+        <a onclick="tOpenEdit(${i})">编辑</a><a onclick="tDetail(${i})">详情</a><a onclick="tSync(${i})">手动同步</a><a onclick="tReboot(${i})">重启</a><a onclick="tBind(${i})">绑定</a>
+      </span></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="12"><div class="empty"><span class="ei">📄</span><span class="et">暂无数据</span></div></td></tr>';
+  tSyncAll();
+}
+function tCheckAll(ck){
+  const s=(tPg.page-1)*tPg.size;
+  tFiltered.slice(s,s+tPg.size).forEach(t=>t._ck=ck);
+  tRender();
+}
+function tSyncAll(){
+  const s=(tPg.page-1)*tPg.size;
+  const rows=tFiltered.slice(s,s+tPg.size);
+  document.getElementById('tAll').checked=rows.length>0&&rows.every(t=>t._ck);
+}
+
+/* ── 温控器详情(照线上截图逐行;「是否计费版本」插在「是否故障」后) ── */
+function tDetail(i){
+  const t=TSTATS[i];
+  const F=[['4G温控器编号',t.code],['通信id',t.cid],['型号',t.model],['设备名称',t.name||'—'],
+    ['设备版本号',t.ver],['是否故障',t.fault],['是否计费版本',billingText(t.code)],
+    ['通信时间',t.commTime],['设备时间',t.devTime],['创建时间',t.crtTime],
+    ['制冷阈值','正阈值：0 负阈值：0'],['制热阈值','正阈值：0 负阈值：0'],
+    ['是否来电自动开机','—'],['是否使用外置传感器','—'],['温度达到设定值后','—']];
+  document.getElementById('tDetailBody').innerHTML=F.map(([k,val])=>`<div class="tkv"><span class="k">${k}</span><span class="v">${val}</span></div>`).join('');
+  $modal('dlgTstatDetail');
+}
+
+/* ── 温控器 编辑 / 添加 / 操作 ── */
+function tOpenEdit(i){tEditIdx=i;document.getElementById('teName').value=TSTATS[i].name;$modal('dlgTstatEdit');}
+function tSaveEdit(){
+  TSTATS[tEditIdx].name=document.getElementById('teName').value.trim();
+  $modalClose('dlgTstatEdit');$msg('保存成功');tRender();
+}
+function tOpenAdd(){['taCode','taName','taCid'].forEach(id=>document.getElementById(id).value='');$modal('dlgTstatAdd');}
+function tSaveAdd(){
+  const code=v('taCode'),cid=v('taCid');
+  if(!code||!cid)return $msg('请填写完整信息','warning');
+  if(TSTATS.some(t=>t.code.toLowerCase()===code.toLowerCase()))return $msg('设备编号已存在,请勿重复添加','error');
+  TSTATS.push({code,name:document.getElementById('taName').value.trim(),cid:+cid||cid,model:document.getElementById('taModel').value,
+    ver:'0.24.2.0.10',online:'在线',fault:'否',devTime:'2026-09-22 16:50:00',commTime:'2026-09-22 16:50:00',crtTime:'2026-09-22 16:50:00',
+    valve:'',cold:100,repr:1,_ck:false});
+  $modalClose('dlgTstatAdd');$msg('添加成功');tQuery();
+}
+function tSync(i){$confirm(`确定手动同步温控器「${TSTATS[i].code}」的数据吗?`,()=>$msg('同步指令已下发'));}
+function tReboot(i){$confirm(`确定重启温控器「${TSTATS[i].code}」吗?`,()=>$msg('重启指令已下发'));}
+function tBind(i){$msg('原型演示:温控器绑定','info');}
+function tDispatch(){
+  const n=TSTATS.filter(t=>t._ck).length;
+  if(!n)return $msg('请先勾选温控器','warning');
+  $confirm(`确定对选中的 ${n} 台温控器下发配置吗?`,()=>$msg('下发成功'));
+}
+function tUpgrade(){
+  const n=TSTATS.filter(t=>t._ck).length;
+  if(!n)return $msg('请先勾选温控器','warning');
+  $confirm(`确定将选中的 ${n} 台温控器加入升级计划吗?`,()=>$msg('加入升级计划成功'));
+}
+
+doQuery();tQuery();
 </script>
 </body>
 </html>
