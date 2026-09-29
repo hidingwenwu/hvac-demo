@@ -8,11 +8,13 @@
 /* ── 页面专有样式 ── */
 .host-cell{font-family:Consolas,Menlo,monospace;font-size:12px;}   /* 智能主机 hex 串 */
 .pick-table td{cursor:default;}
+.sum-use{margin-left:auto;font-size:13px;color:var(--ts);}  /* 筛选栏行内右侧·累计用量 */
+.sum-use b{color:var(--txw);font-size:21px;margin:0 2px;}
 </style>
 </head>
 <body>
 
-<!-- ── 筛选栏 · 第一行(照线上:主机信息列表 / 电表地址+选择 / 发生时间 / 电表读数 / 用量) ── -->
+<!-- ── 筛选栏(flex 自动换行,按页面宽度分配,不固定每行数量;字段顺序照线上) ── -->
 <div class="fb">
   <div class="fi">
     <select id="fHost" style="width:220px">
@@ -44,10 +46,6 @@
       <option value="gt20">20 以上</option>
     </select>
   </div>
-</div>
-
-<!-- ── 筛选栏 · 第二行(状态类型 + 操作按钮) ── -->
-<div class="fb">
   <div class="fi">
     <select id="fStatus" style="width:190px">
       <option value="">状态类型</option>
@@ -59,6 +57,8 @@
   <button class="btn" onclick="doReset()">重置</button>
   <button class="btn btnp" onclick="$msg('导出成功,请在下载中心查看')">⬆ 导出</button>
   <button class="btn btnp" onclick="$msg('已下发手动抄表指令,请稍后查询最新读数')">手动获取</button>
+  <!-- ── 累计用量(靠右,随查询结果联动,获取失败记录不计入) ── -->
+  <span class="sum-use">查询范围内累计用量：<b id="sumUse">0.00</b> kWh</span>
 </div>
 
 <!-- ── 数据表格(8 列,与线上一致) ── -->
@@ -168,6 +168,9 @@ function doQuery(){
       (!st||r.st===st);
   });
   pg.page=1;pg.total=filtered.length;
+  /* 查询范围内累计用量:仅统计获取成功的记录('--' 不计入) */
+  document.getElementById('sumUse').textContent=
+    filtered.reduce((a,r)=>a+(parseFloat(r.use)||0),0).toFixed(2);
   $pager('pager',pg);renderTable();
 }
 function doReset(){
