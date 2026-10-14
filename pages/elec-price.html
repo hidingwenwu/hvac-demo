@@ -32,6 +32,9 @@
 .date-form input.pr{width:110px;}
 .rule-edit input[type=date]{width:130px;height:26px;font-size:12px;padding:0 6px;}
 .rule-edit input.pr{width:76px;height:26px;font-size:12px;padding:0 8px;}
+/* 排除日期弹窗:节假日展开后条目较多,限高滚动+表头吸顶 */
+#dlgExc .tw{max-height:300px;overflow:auto;}
+#dlgExc thead th{position:sticky;top:0;z-index:1;}
 .proto-note{font-size:12px;color:var(--tw3);margin-top:14px;}
 </style>
 </head>
@@ -65,6 +68,7 @@
     <input id="segPrice" placeholder="输入电费价格" style="width:150px">
     <span class="unit">元/度</span>
     <button class="btn btnp" onclick="addSeg()">添加</button>
+    <button class="btn" onclick="openExcDlg()">排除日期</button>
   </div>
   <div class="tip"><b style="color:var(--tx)">提示:</b> 如果全天统一电费价格，只需要设定 <span class="link">默认其它时间段电价</span></div>
 
@@ -122,6 +126,35 @@
   </div>
 </div>
 
+<!-- 排除日期设置弹窗(仅按小时计费项目) -->
+<div class="modal" id="dlgExc">
+  <div class="dialog" style="width:650px">
+    <div class="dh"><span>排除日期设置</span><span class="dx" onclick="$modalClose('dlgExc')">✕</span></div>
+    <div class="db">
+      <div class="desc" style="margin-bottom:10px"><b>设定说明:</b> 排除日期当天不执行峰谷时段电价，全天按"默认其它时间段电价"计费。法定节假日仅包含当年内剩余法定节假日。</div>
+      <div class="date-form">
+        <input type="date" id="excDate" title="选择日期">
+        <button class="btn btnp" onclick="addExcDate()">排除</button>
+        <button class="btn" onclick="addExcRule('workday')">排除工作日</button>
+        <button class="btn" onclick="addExcRule('weekend')">排除周末</button>
+        <button class="btn" onclick="addExcHolidays()">排除法定节假日</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th style="width:70px">序号</th><th class="tl" style="padding-left:14px">排除日期</th><th style="width:170px">修改时间</th><th style="width:100px">操作</th>
+          </tr></thead>
+          <tbody id="excBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="df">
+      <button class="btn" onclick="$modalClose('dlgExc')">取 消</button>
+      <button class="btn btnp" onclick="submitExc()">提 交</button>
+    </div>
+  </div>
+</div>
+
 <script src="_ui.js"></script>
 <script>
 /* ── 项目上下文(壳写入 localStorage;独立打开时默认后付费按天项目) ── */
@@ -146,7 +179,7 @@ if(!DATE_PRICE_ON)document.getElementById('btnDate').style.display='none';
 if(!HOURLY)document.getElementById('touPanel').style.display='none';
 document.getElementById('protoNote').textContent=
   `当前项目:${PROJ.name}(${PROJ.pay==='pre'?'预付费':'后付费'}·${HOURLY?'按小时':'按天'}计费)。`+
-  '原型标注:峰谷电价设定仅按小时计费项目支持;指定日期电价设定仅按天计费且后付费项目支持。';
+  '原型标注:峰谷电价设定与排除日期仅按小时计费项目支持,被排除日期全天按默认电价计费;指定日期电价设定仅按天计费且后付费项目支持;法定节假日排除按当年节假日安排展开为创建日之后的具体日期。';
 
 /* ── 时间下拉 ── */
 function fillTimeSel(el,from,to,ph){
@@ -347,6 +380,91 @@ function delRule(i){
 function submitRules(){
   $modalClose('dlgDate');
   $msg(`指定日期电价已保存,共 ${RULES.length} 条规则`);
+}
+
+/* ── 排除日期(仅按小时计费项目,随峰谷面板显隐) ──
+   被排除日期当天不执行峰谷时段电价,全天按默认电价计费;
+   工作日/周末存为长期生效的规则条目,与单日排除混排;
+   法定节假日展开为具体日期(仅创建日之后、当年以内,次年安排公布后需重新排除);
+   每条记录排除动作的发生时间(修改时间) */
+const EXC_RULE_LABEL={workday:'所有工作日(周一至周五)',weekend:'周末(周六、周日)'};
+const EXC_RULE_ORDER=['workday','weekend'];
+/* 当年法定节假日安排(原型模拟:节假日安排每年1月1日前后发布,故仅内置当年) */
+const HOLIDAYS=[
+  {lb:'元旦',dates:['2026-01-01','2026-01-02','2026-01-03']},
+  {lb:'春节',dates:['2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-21','2026-02-22']},
+  {lb:'清明节',dates:['2026-04-04','2026-04-05','2026-04-06']},
+  {lb:'劳动节',dates:['2026-05-01','2026-05-02','2026-05-03','2026-05-04','2026-05-05']},
+  {lb:'端午节',dates:['2026-06-19','2026-06-20','2026-06-21']},
+  {lb:'中秋节',dates:['2026-09-25','2026-09-26','2026-09-27']},
+  {lb:'国庆节',dates:['2026-10-01','2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07']},
+];
+function holidayName(d){const h=HOLIDAYS.find(h=>h.dates.includes(d));return h?`（${h.lb}）`:'';}
+/* 预置演示数据:5月手工排除单日 + 模拟 2026-09-20 点击"排除法定节假日"展开的当年剩余日期 */
+let EXC={
+  rules:[],
+  dates:[{d:'2026-05-20',upd:'2026-05-08 14:20:00'}]
+    .concat(HOLIDAYS.flatMap(h=>h.dates).filter(d=>d>'2026-09-20').map(d=>({d,upd:'2026-09-20 10:30:00'})))
+};
+function sortExcDates(){EXC.dates.sort((a,b)=>a.d<b.d?-1:1);}
+sortExcDates();
+function excRows(){
+  return EXC_RULE_ORDER.map(k=>EXC.rules.find(r=>r.k===k)).filter(Boolean)
+    .map(r=>({type:'rule',key:r.k,label:EXC_RULE_LABEL[r.k],upd:r.upd}))
+    .concat(EXC.dates.map(r=>({type:'date',key:r.d,label:r.d+holidayName(r.d),upd:r.upd})));
+}
+function renderExc(){
+  const rows=excRows();
+  document.getElementById('excBody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td class="tl" style="padding-left:14px">${r.label}</td>
+      <td>${r.upd}</td>
+      <td><span class="op" style="gap:6px">
+        <button class="btn btnd btn-mini" onclick="delExc('${r.type}','${r.key}')">删除</button></span></td>
+    </tr>`).join('')
+  :'<tr><td colspan="4"><div class="empty" style="padding:26px"><span class="et">暂无排除日期,请在上方选择日期或使用快捷按钮排除</span></div></td></tr>';
+}
+function openExcDlg(){
+  document.getElementById('excDate').value='';
+  renderExc();
+  $modal('dlgExc');
+}
+function addExcDate(){
+  const d=document.getElementById('excDate').value;
+  if(!d){$msg('请选择排除日期','warning');return;}
+  if(EXC.dates.some(x=>x.d===d)){$msg('该日期已在排除列表中','warning');return;}
+  EXC.dates.push({d,upd:nowTs()});sortExcDates();
+  document.getElementById('excDate').value='';
+  renderExc();$msg('添加成功');
+}
+function addExcRule(k){
+  if(EXC.rules.some(r=>r.k===k)){$msg(`「${EXC_RULE_LABEL[k]}」已在排除列表中`,'warning');return;}
+  if((k==='workday'&&EXC.rules.some(r=>r.k==='weekend'))||(k==='weekend'&&EXC.rules.some(r=>r.k==='workday'))){
+    $msg('工作日与周末不可同时排除,否则峰谷电价将永不生效','error');return;
+  }
+  EXC.rules.push({k,upd:nowTs()});renderExc();$msg('添加成功');
+}
+/* 法定节假日:展开为创建日之后、当年以内的具体日期(次年安排未公布,不展开) */
+function addExcHolidays(){
+  const today=nowTs().slice(0,10);
+  const cand=HOLIDAYS.flatMap(h=>h.dates).filter(d=>d>today&&d.slice(0,4)===today.slice(0,4));
+  if(!cand.length){$msg('当年剩余时间内已无法定节假日,待次年安排公布后再行排除','warning');return;}
+  const add=cand.filter(d=>!EXC.dates.some(x=>x.d===d));
+  if(!add.length){$msg('当年剩余法定节假日均已在排除列表中','warning');return;}
+  const ts=nowTs();
+  add.forEach(d=>EXC.dates.push({d,upd:ts}));
+  sortExcDates();renderExc();$msg(`已排除 ${add.length} 个法定节假日日期`);
+}
+function delExc(type,key){
+  if(type==='rule')EXC.rules=EXC.rules.filter(x=>x.k!==key);
+  else EXC.dates=EXC.dates.filter(x=>x.d!==key);
+  renderExc();$msg('删除成功');
+}
+function submitExc(){
+  $modalClose('dlgExc');
+  const n=EXC.rules.length+EXC.dates.length;
+  $msg(n?`排除日期已保存,共 ${n} 条`:'排除日期已保存,当前无排除项');
 }
 
 function renderAll(){
