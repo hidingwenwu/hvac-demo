@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 
 const LIVE = path.join(__dirname, 'live-full', 'pages-u2');
-const NB = path.join(__dirname, 'live-full', 'pages-nb');
 const PROTO = path.join(__dirname, '..', 'pages');
 
 /* 现网名 → 原型文件名 映射 */
@@ -20,12 +19,6 @@ const MAP = {
   '组织管理': 'sys-org', '日志入口': 'sys-log', '对接平台管理': 'sys-platform',
   '第三方设备注册': 'sys-3rd', '计费网关列表': 'sys-bill-gw', '物联网卡片': 'sys-iot-card',
 };
-const NB_MAP = {
-  'nb2-租户管理': 'elec-nb-tenant', 'nb2-电费查询': 'elec-nb-query', 'nb-用电量统计': 'elec-nb-stat',
-  'nb-分摊异常处理': 'elec-nb-abnormal', 'nb-异常处理操作记录': 'elec-nb-abnormal-log',
-  'nb-异常查询': 'elec-nb-abnormal-query', 'nb-当量数据查询': 'elec-nb-eq',
-};
-
 function extract(html) {
   const placeholders = [...html.matchAll(/placeholder="([^"]{2,20})"/g)].map(m => m[1]);
   const ths = [...html.matchAll(/<th[^>]*>([\s\S]{0,40}?)<\/th>/g)].map(m => m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, '')).filter(t => t && t.length <= 12);
@@ -59,17 +52,6 @@ for (const [liveName, protoName] of Object.entries(MAP)) {
     btnProtoOnly: bt.onlyB.filter(x => !/确 定|取 消/.test(x)).slice(0, 12),
   });
 }
-for (const [liveName, protoName] of Object.entries(NB_MAP)) {
-  const lf = path.join(NB, liveName + '.html');
-  const pf = path.join(PROTO, protoName + '.html');
-  if (!fs.existsSync(lf)) { report.push({ page: 'NB/' + liveName, proto: protoName, error: 'no live html' }); continue; }
-  if (!fs.existsSync(pf)) { report.push({ page: 'NB/' + liveName, proto: protoName, error: 'NO PROTO PAGE' }); continue; }
-  const L = extract(fs.readFileSync(lf, 'utf8'));
-  const P = extract(fs.readFileSync(pf, 'utf8'));
-  const th = diffSet(L.ths.length ? L.ths : L.elCols, P.ths.length ? P.ths : P.elCols);
-  report.push({ page: 'NB/' + liveName, proto: protoName, colLiveOnly: th.onlyA.slice(0, 25), colProtoOnly: th.onlyB.slice(0, 25) });
-}
-
 fs.writeFileSync(path.join(__dirname, 'live-full', 'diff-report.json'), JSON.stringify(report, null, 1));
 /* 打印摘要:只列有差异的 */
 for (const r of report) {

@@ -209,8 +209,7 @@ const ICONS={
    可见性标记(对齐现网按项目特性动态显隐):
    env      环境感知类(集中控制-环境感知监测/节能策略-环境感知联动·风水联动/设备管理-环境感知设备管理)
    ultimate 极致节能(仅模拟器项目)
-   nb       新计费功能组
-   admin    系统管理扩展项(账号/角色/菜单按钮/项目偏好/x2000/公告/操作指引) ── */
+   admin    管理扩展项(项目偏好/x2000/公告/操作指引/故障推送) ── */
 const MENU=[
   {t:'d',id:'overview-big',ic:'overview',lb:'项目总览大屏'},
   {t:'d',id:'monitor-big',ic:'monitor',lb:'综合监控大屏'},
@@ -258,15 +257,6 @@ const MENU=[
       {id:'elec-price',lb:'电价设定'},
       {id:'elec-common-area',lb:'公区空调分摊'},
     ]},
-    {lb:'新计费功能',nb:1,sub:[
-      {id:'elec-nb-tenant',lb:'租户管理'},
-      {id:'elec-nb-query',lb:'电费查询'},
-      {id:'elec-nb-stat',lb:'用电量统计'},
-      {id:'elec-nb-abnormal',lb:'分摊异常处理'},
-      {id:'elec-nb-abnormal-log',lb:'异常处理操作记录'},
-      {id:'elec-nb-abnormal-query',lb:'异常查询'},
-      {id:'elec-nb-eq',lb:'当量数据查询'},
-    ]},
   ]},
   {t:'g',ic:'alarm',lb:'故障预警',ch:[
     {id:'alarm-overview',lb:'故障总览'},
@@ -280,10 +270,7 @@ const MENU=[
     {id:'ops-r7',lb:'R7设备详情'},
   ]},
   {t:'g',ic:'sys',lb:'系统管理',ch:[
-    {id:'sys-account',lb:'账号管理',admin:1},
     {id:'sys-org',lb:'组织管理'},
-    {id:'sys-role',lb:'角色管理',admin:1},
-    {id:'sys-menu',lb:'菜单按钮',admin:1},
     {id:'sys-log',lb:'日志入口'},
     {id:'sys-platform',lb:'对接平台管理'},
     {id:'sys-3rd',lb:'第三方设备注册'},
@@ -408,14 +395,14 @@ function $msgTop(t){
 }
 /* 项目切换:计费元数据+菜单特性标记写入 localStorage,子页面按此决定形态
    pay: pre=预付费 post=后付费 | unit: hour=按小时 day=按天
-   env=环境感知类页面 | ultimate=极致节能 | nb=新计费功能 | admin=系统管理扩展项
+   env=环境感知类页面 | ultimate=极致节能 | admin=管理扩展项
    (与现网一致:菜单随项目特性动态显隐) */
 const PROJ_META={
-  '产品部测试-按小时预付费':{pay:'pre',unit:'hour',env:1,ultimate:1,nb:1,admin:1,logo:'飞奕',meters:92},
-  '平台测试_新计费':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '二次分摊-H':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '分摊计费-ly':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
-  '平台测试_后付费':{pay:'post',unit:'day',nb:1,admin:1,meters:92},
+  '产品部测试-按小时预付费':{pay:'pre',unit:'hour',env:1,ultimate:1,admin:1,logo:'飞奕',meters:92},
+  '平台测试_新计费':{pay:'post',unit:'day',admin:1,meters:92},
+  '二次分摊-H':{pay:'post',unit:'day',admin:1,meters:92},
+  '分摊计费-ly':{pay:'post',unit:'day',admin:1,meters:92},
+  '平台测试_后付费':{pay:'post',unit:'day',admin:1,meters:92},
   '001':{pay:'post',unit:'day',env:1,meters:0},
 };
 const projSel=document.getElementById('projSel');
@@ -451,7 +438,7 @@ function applyProjMeta(){
 /* 菜单过滤:按当前项目特性裁剪(渲染时调用) */
 function menuForProj(){
   const m=curMeta();
-  const ok=it=>!(it.env&&!m.env)&&!(it.ultimate&&!m.ultimate)&&!(it.nb&&!m.nb)&&!(it.admin&&!m.admin);
+  const ok=it=>!(it.env&&!m.env)&&!(it.ultimate&&!m.ultimate)&&!(it.admin&&!m.admin);
   return MENU.map(g=>{
     if(g.energy&&m.meters===0)return null;
     if(g.t==='d')return g;
